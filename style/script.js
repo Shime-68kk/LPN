@@ -122,6 +122,44 @@ i++) {
 setTimeout(createHeart,Math["random"]()*0xbb8);
 }
 setInterval(createHeart,0x190);
+let originalVolume = 1.0;
+let fadeInterval = null;
+
+function fadeVolume(targetVolume, duration = 1000) {
+  const audioPlayerEl = document.getElementById("audio-player");
+  if (!audioPlayerEl) return;
+  
+  if (fadeInterval) {
+    clearInterval(fadeInterval);
+  }
+  
+  const stepTime = 50;
+  const steps = duration / stepTime;
+  const volumeDifference = targetVolume - audioPlayerEl.volume;
+  const volumeStep = volumeDifference / steps;
+  
+  let currentStep = 0;
+  
+  fadeInterval = setInterval(() => {
+    currentStep++;
+    let nextVolume = audioPlayerEl.volume + volumeStep;
+    
+    if (volumeStep > 0 && nextVolume >= targetVolume) {
+      audioPlayerEl.volume = targetVolume;
+      clearInterval(fadeInterval);
+    } else if (volumeStep < 0 && nextVolume <= targetVolume) {
+      audioPlayerEl.volume = targetVolume;
+      clearInterval(fadeInterval);
+    } else {
+      audioPlayerEl.volume = Math.max(0, Math.min(1, nextVolume));
+    }
+    
+    if (currentStep >= steps) {
+      clearInterval(fadeInterval);
+    }
+  }, stepTime);
+}
+
 const btnLetter = document.getElementById("btn-letter");
 const letterOverlay = document.getElementById("letter-overlay");
 const closeLetter = document.getElementById("close-letter");
@@ -165,6 +203,14 @@ if (btnLetter) {
       letterOverlay.classList.add("active");
     }
     
+    // Audio Ducking: fade music volume down to 20%
+    if (isPlaying && audioPlayer) {
+      originalVolume = audioPlayer.volume;
+      if (originalVolume > 0.2) {
+        fadeVolume(0.2, 1000);
+      }
+    }
+    
     // Clear and reset typing pointers so it types clean from start on every reopen!
     clearTimeout(typingInterval);
     if (letterBody) {
@@ -183,6 +229,12 @@ if (closeLetter) {
     if (letterOverlay) {
       letterOverlay.classList.remove("active");
     }
+    
+    // Audio Ducking: restore original music volume
+    if (isPlaying && audioPlayer) {
+      fadeVolume(originalVolume, 1000);
+    }
+    
     clearTimeout(typingInterval);
     isTyping = false;
   });
