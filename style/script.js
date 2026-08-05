@@ -2041,3 +2041,78 @@ function initHeartTrail() {
 }
 initHeartTrail();
 
+// Mobile Device Motion Shake Detection to trigger Heart Rain
+let lastShakeX = null, lastShakeY = null, lastShakeZ = null;
+let lastShakeUpdate = 0;
+const SHAKE_THRESHOLD = 800; // Adjust sensitivity
+let isShakeCooldown = false;
+
+function initShakeDetection() {
+  if (typeof DeviceMotionEvent !== 'undefined') {
+    const handleMotion = (e) => {
+      const lockScreenEl = document.getElementById("lock-screen");
+      const isUnlocked = lockScreenEl && lockScreenEl.classList.contains("unlocked");
+      if (!isUnlocked) return; // Only trigger when fully unlocked
+      
+      const curTime = Date.now();
+      if ((curTime - lastShakeUpdate) > 100) {
+        const diffTime = curTime - lastShakeUpdate;
+        
+        const acc = e.accelerationIncludingGravity;
+        if (!acc) return;
+        
+        const x = acc.x;
+        const y = acc.y;
+        const z = acc.z;
+        
+        if (lastShakeX !== null) {
+          const speed = Math.abs(x + y + z - lastShakeX - lastShakeY - lastShakeZ) / diffTime * 10000;
+          
+          if (speed > SHAKE_THRESHOLD && !isShakeCooldown) {
+            isShakeCooldown = true;
+            
+            // Trigger heart confetti explosion
+            triggerHeartConfetti();
+            
+            // Haptic feedback vibration (300ms)
+            if (navigator.vibrate) {
+              navigator.vibrate(300);
+            }
+            
+            // Cooldown of 3 seconds to prevent duplicate triggers
+            setTimeout(() => {
+              isShakeCooldown = false;
+            }, 3000);
+          }
+        }
+        
+        lastShakeX = x;
+        lastShakeY = y;
+        lastShakeZ = z;
+        lastShakeUpdate = curTime;
+      }
+    };
+
+    // Prompt permission for iOS 13+ upon first user interaction
+    const requestiOSPermission = () => {
+      if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission()
+          .then(permissionState => {
+            if (permissionState === 'granted') {
+              window.addEventListener('devicemotion', handleMotion);
+            }
+          })
+          .catch(console.error);
+      } else {
+        window.addEventListener('devicemotion', handleMotion);
+      }
+      document.removeEventListener('click', requestiOSPermission);
+      document.removeEventListener('touchstart', requestiOSPermission);
+    };
+
+    document.addEventListener('click', requestiOSPermission);
+    document.addEventListener('touchstart', requestiOSPermission);
+  }
+}
+initShakeDetection();
+
