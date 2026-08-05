@@ -251,6 +251,18 @@ if (btnLetter) {
       letterOverlay.classList.add("active");
     }
     
+    // Unlock Web Audio API context directly inside the synchronous click gesture!
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    } catch (e) {
+      console.error("Failed to unlock AudioContext on click:", e);
+    }
+    
     // Audio Ducking: fade music volume down to 20%
     if (isPlaying && audioPlayer) {
       originalVolume = audioPlayer.volume;
