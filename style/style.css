@@ -1841,11 +1841,18 @@ body::before {
 }
 
 /* Show details on hover or when active */
-.love-counter-floating:hover .counter-details,
 .love-counter-floating.active .counter-details {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
+}
+
+@media (hover: hover) {
+  .love-counter-floating:hover .counter-details {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
 }
 
 .details-title {
