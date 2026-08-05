@@ -1183,8 +1183,19 @@ return _0x5b9762();
 }
 ;
 if(!lockScreen||lockScreen["classList"]["contains"](_0x1a0b85["YRGxp"]))return;
-if(_0x1a0b85["KwBVm"](_0x36d45e["key"],'0')&&_0x1a0b85["bxRji"](_0x36d45e["key"],'9'))_0x1a0b85["whyEj"](handleInput,_0x36d45e["key"]);
-else _0x1a0b85["bbZwY"](_0x36d45e["key"],_0x1a0b85["WSVgA"])&&_0x1a0b85["aojzr"](deleteLastDigit);
+if(_0x1a0b85["KwBVm"](_0x36d45e["key"],'0')&&_0x1a0b85["bxRji"](_0x36d45e["key"],'9')) {
+  _0x1a0b85["whyEj"](handleInput,_0x36d45e["key"]);
+  if (popSound) {
+    const clone = popSound.cloneNode();
+    clone.play();
+  }
+} else if(_0x1a0b85["bbZwY"](_0x36d45e["key"],_0x1a0b85["WSVgA"])) {
+  _0x1a0b85["aojzr"](deleteLastDigit);
+  if (popSound) {
+    const clone = popSound.cloneNode();
+    clone.play();
+  }
+}
 }
 );
 const resetLockBtn=document["getElementById"]("btn-reset-lock");
