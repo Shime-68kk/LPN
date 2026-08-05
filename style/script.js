@@ -174,7 +174,7 @@ let isTyping = false;
 
 let audioCtx = null;
 
-function playWritingSound() {
+function playWritingSound(char) {
   try {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -183,7 +183,28 @@ function playWritingSound() {
       audioCtx.resume();
     }
     
-    const bufferSize = audioCtx.sampleRate * 0.08;
+    // Determine punctuation vs standard letter
+    const isPunctuation = [".", ",", "!", "?", "❤️", "-", "(", ")", ";", ":"].includes(char);
+    
+    // Varied duration: shorter for punctuation, expressive for letters
+    let duration = isPunctuation 
+      ? (Math.random() * 0.02 + 0.03) // 30ms to 50ms (dry tap)
+      : (Math.random() * 0.05 + 0.06); // 60ms to 110ms (stroke)
+      
+    // Varied volume: softer, balanced
+    let baseVolume = isPunctuation
+      ? (Math.random() * 0.03 + 0.03) // 0.03 to 0.06 volume
+      : (Math.random() * 0.04 + 0.05); // 0.05 to 0.09 volume (very soft & cozy!)
+      
+    // Varied pitch: lower for punctuation, higher scratchy for letters
+    let filterFreq = isPunctuation
+      ? (800 + Math.random() * 400) // 800Hz to 1200Hz
+      : (1400 + Math.random() * 1000); // 1400Hz to 2400Hz
+      
+    // Varied resonance (Q factor)
+    let filterQ = isPunctuation ? 1.5 : (2.0 + Math.random() * 3.0);
+    
+    const bufferSize = audioCtx.sampleRate * duration;
     const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     const data = buffer.getChannelData(0);
     
@@ -196,12 +217,12 @@ function playWritingSound() {
     
     const filter = audioCtx.createBiquadFilter();
     filter.type = "bandpass";
-    filter.frequency.value = 1500 + Math.random() * 800;
-    filter.Q.value = 3.0;
+    filter.frequency.value = filterFreq;
+    filter.Q.value = filterQ;
     
     const gainNode = audioCtx.createGain();
-    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+    gainNode.gain.setValueAtTime(baseVolume, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
     
     noiseSource.connect(filter);
     filter.connect(gainNode);
@@ -232,7 +253,7 @@ function typeWriter() {
     
     // Play scratch sound for non-space characters
     if (char && char !== " " && char !== "\n") {
-      playWritingSound();
+      playWritingSound(char);
     }
     
     if (charIndex < letterText[paragraphIndex].length) {
