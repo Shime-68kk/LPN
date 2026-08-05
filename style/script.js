@@ -1869,3 +1869,123 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+// Initialize canvas for interactive mouse/touch trail
+function initHeartTrail() {
+  const canvas = document.createElement("canvas");
+  canvas.style.position = "fixed";
+  canvas.style.top = "0";
+  canvas.style.left = "0";
+  canvas.style.width = "100vw";
+  canvas.style.height = "100vh";
+  canvas.style.pointerEvents = "none";
+  canvas.style.zIndex = "9999";
+  document.body.appendChild(canvas);
+
+  const ctx = canvas.getContext("2d");
+  let particles = [];
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas();
+
+  class Particle {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+      this.size = Math.random() * 12 + 8; // Size between 8px and 20px
+      this.alpha = 1;
+      this.decay = Math.random() * 0.02 + 0.015; // Fade out speed
+      this.vx = (Math.random() - 0.5) * 1.5; // Drift sideways
+      this.vy = -Math.random() * 1 - 0.5; // Drift upwards
+      
+      // Sweet pastel color palette (pinks and purples)
+      const colors = [
+        { r: 244, g: 63, b: 94 },  // Rose
+        { r: 236, g: 72, b: 153 }, // Pink
+        { r: 168, g: 85, b: 247 }, // Purple
+        { r: 217, g: 70, b: 239 }, // Fuchsia
+        { r: 251, g: 113, b: 133 } // Light pink
+      ];
+      this.color = colors[Math.floor(Math.random() * colors.length)];
+      this.angle = Math.random() * Math.PI * 2;
+      this.spin = (Math.random() - 0.5) * 0.05;
+    }
+
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      this.alpha -= this.decay;
+      this.angle += this.spin;
+    }
+
+    draw() {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.angle);
+      ctx.globalAlpha = this.alpha;
+      
+      // Draw heart path centered at (0, 0)
+      ctx.beginPath();
+      // Draw scale relative to size
+      const s = this.size / 10;
+      ctx.scale(s, s);
+      
+      ctx.moveTo(0, -3);
+      ctx.bezierCurveTo(2, -7, 7, -7, 7, -2);
+      ctx.bezierCurveTo(7, 2, 2, 6, 0, 9);
+      ctx.bezierCurveTo(-2, 6, -7, 2, -7, -2);
+      ctx.bezierCurveTo(-7, -7, -2, -7, 0, -3);
+      
+      ctx.fillStyle = `rgb(${this.color.r}, ${this.color.g}, ${this.color.b})`;
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function addParticle(clientX, clientY) {
+    particles.push(new Particle(clientX, clientY));
+    if (particles.length > 80) {
+      particles.shift();
+    }
+  }
+
+  let lastMove = 0;
+  function handleMove(e) {
+    const now = Date.now();
+    if (now - lastMove < 25) return; // Limit creation to 40fps for performance
+    lastMove = now;
+
+    const x = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
+    const y = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
+    
+    addParticle(x, y);
+    if (Math.random() > 0.5) {
+      addParticle(x + (Math.random() - 0.5) * 10, y + (Math.random() - 0.5) * 10);
+    }
+  }
+
+  window.addEventListener("mousemove", handleMove);
+  window.addEventListener("touchmove", handleMove, { passive: true });
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.update();
+      if (p.alpha <= 0) {
+        particles.splice(i, 1);
+      } else {
+        p.draw();
+      }
+    }
+    
+    requestAnimationFrame(animate);
+  }
+  animate();
+}
+initHeartTrail();
+
