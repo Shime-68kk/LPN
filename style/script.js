@@ -765,26 +765,7 @@ else _0x562058["wqkZq"](_0x562058["WHFUZ"],_0x562058["WHFUZ"])?_0x562058["TgSnM"
 }
 ),prevBtn['addEventListener']("click",prevSong),nextBtn["addEventListener"]("click",nextSong),audioPlayer["addEventListener"]("timeupdate",updateProgress),audioPlayer["addEventListener"]('ended',nextSong),progressBar["addEventListener"]("click",setProgress);
 const popSound=document["getElementById"]('pop-sound');
-window['addEventListener']('click',()=> {
-const _0xb20478= {
-'epBjv':function(_0x12e23e,_0xe2a1e3) {
-return _0x12e23e(_0xe2a1e3);
-}
-,'IFZFm':function(_0x2a2a11,_0x407ef7) {
-return _0x2a2a11!==_0x407ef7;
-}
-,'toWSH':"TQrUL"
-}
-;
-if(popSound) {
-if(_0xb20478["IFZFm"](_0xb20478['toWSH'],_0xb20478["toWSH"]))_0x1a6324['stopPropagation'](),cITZvU['epBjv'](_0x3556fa,_0x12b298);
-else {
-const _0x4f1e9d=popSound["cloneNode"]();
-_0x4f1e9d["play"]();
-}
-}
-}
-,!![]),loadSong(songs[songIndex]);
+loadSong(songs[songIndex]);
 const lockScreen=document["getElementById"]("lock-screen"),mainContent=document['getElementById']('main-content'),passDots=document["querySelectorAll"](".dot"),numBtns=document["querySelectorAll"](".num-btn[data-value]"),deleteBtn=document["querySelector"](".num-btn.delete-btn");
 let enteredPin='';
 const correctPin="4680";
@@ -1022,6 +1003,10 @@ return _0x56919c(_0x493a42);
 ;
 _0x2329b6["addEventListener"](_0x1df0f8["gxjhn"],_0x58b51b=> {
 _0x58b51b["stopPropagation"](),_0x1df0f8['cdfMU'](handleInput,_0x2329b6["getAttribute"]("data-value"));
+if (popSound) {
+  const clone = popSound.cloneNode();
+  clone.play();
+}
 }
 );
 }
@@ -1034,6 +1019,10 @@ return _0x4f61ab();
 }
 ;
 _0x2b9e61["stopPropagation"](),_0x1b6c8f['oxdOl'](deleteLastDigit);
+if (popSound) {
+  const clone = popSound.cloneNode();
+  clone.play();
+}
 }
 );
 document['addEventListener']("keydown",_0x36d45e=> {
@@ -1223,6 +1212,10 @@ if (envelope) {
         const loveCounter = document.getElementById("love-counter-floating");
         if (loveCounter) {
           loveCounter.classList.remove("hidden");
+          loveCounter.classList.add("first-unlock-highlight");
+          setTimeout(() => {
+            loveCounter.classList.remove("first-unlock-highlight");
+          }, 3000);
         }
         
         // Show mascot widget
@@ -1381,10 +1374,9 @@ function updateUpcomingEvent() {
 }
 
 // Mobile tap compatibility to toggle detailed view
-const loveCounterBadge = document.getElementById("love-counter-badge");
 const loveCounterFloating = document.getElementById("love-counter-floating");
-if (loveCounterBadge && loveCounterFloating) {
-  loveCounterBadge.addEventListener("click", (e) => {
+if (loveCounterFloating) {
+  loveCounterFloating.addEventListener("click", (e) => {
     e.stopPropagation();
     loveCounterFloating.classList.toggle("active");
   });

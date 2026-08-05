@@ -1216,10 +1216,9 @@ body::before {
   }
 
   .num-btn {
-    width: 55px;
-    /* Nút bấm nhỏ lại */
-    height: 55px;
-    font-size: 1.2rem;
+    width: 70px;
+    height: 70px;
+    font-size: 1.5rem;
   }
 
   .numpad {
@@ -2591,6 +2590,28 @@ body.night-mode .menu-item:active {
 
 .carousel-arrow-btn.next {
   right: 5px;
+}
+
+/* Highlight glow for first time unlock */
+@keyframes heart-unlock-glow {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.7);
+  }
+  50% {
+    transform: scale(1.12);
+    box-shadow: 0 0 20px 10px rgba(236, 72, 153, 0.3);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0);
+  }
+}
+
+.love-counter-floating.first-unlock-highlight .counter-badge {
+  animation: heart-unlock-glow 1.2s infinite ease-in-out !important;
+  border-color: #ec4899 !important;
+  background-color: #fdf2f8 !important;
 }
 
 .hidden {
