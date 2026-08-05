@@ -170,6 +170,47 @@ let paragraphIndex = 0;
 let charIndex = 0;
 let isTyping = false;
 
+let audioCtx = null;
+
+function playWritingSound() {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    
+    const bufferSize = audioCtx.sampleRate * 0.08;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    
+    const noiseSource = audioCtx.createBufferSource();
+    noiseSource.buffer = buffer;
+    
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.value = 1500 + Math.random() * 800;
+    filter.Q.value = 3.0;
+    
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.setValueAtTime(0.015, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
+    
+    noiseSource.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    noiseSource.start();
+  } catch (err) {
+    console.error("Web Audio API not supported or blocked:", err);
+  }
+}
+
 function typeWriter() {
   if (paragraphIndex < letterText.length) {
     isTyping = true;
@@ -181,9 +222,16 @@ function typeWriter() {
       }
       letterBody.appendChild(currentParagraph);
     }
-    currentParagraph.textContent += letterText[paragraphIndex][charIndex];
+    
+    const char = letterText[paragraphIndex][charIndex];
+    currentParagraph.textContent += char;
     charIndex++;
     letterBody.scrollTop = letterBody.scrollHeight;
+    
+    // Play scratch sound for non-space characters
+    if (char && char !== " " && char !== "\n") {
+      playWritingSound();
+    }
     
     if (charIndex < letterText[paragraphIndex].length) {
       typingInterval = setTimeout(typeWriter, 30);
