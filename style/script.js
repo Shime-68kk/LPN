@@ -198,8 +198,8 @@ function playWritingSound() {
     filter.Q.value = 3.0;
     
     const gainNode = audioCtx.createGain();
-    gainNode.gain.setValueAtTime(0.015, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
+    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
     
     noiseSource.connect(filter);
     filter.connect(gainNode);
