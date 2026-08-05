@@ -1647,14 +1647,40 @@ body::before {
   display: block;
 }
 
-/* Vinyl rotation animation when playing */
+/* Vinyl rotation and shadow pulse animation when playing */
+.music-control-floating.playing {
+  animation: pulse-vinyl-glow 1.2s infinite ease-in-out;
+}
+
 .music-control-floating.playing .disc-wrapper {
-  animation: spin-vinyl 4s linear infinite;
+  animation: spin-vinyl 4s linear infinite, pulse-vinyl-shadow 1.2s infinite ease-in-out;
 }
 
 @keyframes spin-vinyl {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-vinyl-glow {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.08); }
+  60% { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+
+@keyframes pulse-vinyl-shadow {
+  0% {
+    box-shadow: 0 8px 24px rgba(147, 51, 234, 0.25);
+  }
+  30% {
+    box-shadow: 0 0 25px 12px rgba(147, 51, 234, 0.55);
+  }
+  60% {
+    box-shadow: 0 4px 12px rgba(147, 51, 234, 0.15);
+  }
+  100% {
+    box-shadow: 0 8px 24px rgba(147, 51, 234, 0.25);
+  }
 }
 
 /* Floating overlay play/pause indicator */
