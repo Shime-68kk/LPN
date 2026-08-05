@@ -1062,10 +1062,16 @@ else _0x1a0b85["bbZwY"](_0x36d45e["key"],_0x1a0b85["WSVgA"])&&_0x1a0b85["aojzr"]
 );
 const resetLockBtn=document["getElementById"]("btn-reset-lock");
 resetLockBtn&&resetLockBtn["addEventListener"]("click",()=> {
-localStorage.clear();
-window["location"]["reload"]();
-}
-);
+  if (lockScreen) {
+    lockScreen.classList.remove("unlocked");
+  }
+  if (mainContent) {
+    mainContent.classList.remove("main-content-visible");
+    mainContent.classList.add("main-content-hidden");
+  }
+  enteredPin = '';
+  updateDots();
+});
 
 // Secret overlay interaction
 const btnSecret = document.getElementById("btn-secret");
