@@ -1,6 +1,8 @@
 // Cấu hình ngày bắt đầu yêu nhau (định dạng: YYYY-MM-DD hoặc YYYY-MM-DDTHH:MM:SS)
 // Bạn có thể chỉnh sửa ngày này tùy ý nhé!
 const ANNIVERSARY_DATE = "2024-03-08T00:00:00";
+let audioPlayer = null;
+let isPlaying = false;
 
 // Cấu hình Discord Webhook URL để nhận thông báo thời gian thật khi bấm nút đồng ý
 const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1534358624040910971/Cbckwdq-vB9yQmYaqNcHHFAbEVKfOdxe4G4NpF6q3kJDLmAopR92o-QP66dddtZe-Gg8";
@@ -299,8 +301,11 @@ if (closeLetter) {
     isTyping = false;
   });
 }
-const btnMusic=document["getElementById"]("btn-music"),musicOverlay=document["getElementById"]("music-overlay"),closeMusic=document["getElementById"]("close-music"),audioPlayer=document["getElementById"]("audio-player"),playPauseBtn=document['getElementById']("play-pause-btn"),prevBtn=document['getElementById']("prev-btn"),nextBtn=document["getElementById"]('next-btn'),progressBar=document["getElementById"]("progress-bar"),progress=document["getElementById"]("progress"),currentTimeEl=document["getElementById"]('current-time'),durationEl=document["getElementById"]("duration"),songTitle=document["getElementById"]('song-title'),songArtist=document["getElementById"]("song-artist"),albumArt=document["querySelector"]("#album-art img"),songListContainer=document["getElementById"]("song-list-container");
-let songIndex=0x0,isPlaying=![];
+const btnMusic=document["getElementById"]("btn-music"),musicOverlay=document["getElementById"]("music-overlay"),closeMusic=document["getElementById"]("close-music");
+audioPlayer=document["getElementById"]("audio-player");
+const playPauseBtn=document['getElementById']("play-pause-btn"),prevBtn=document['getElementById']("prev-btn"),nextBtn=document["getElementById"]('next-btn'),progressBar=document["getElementById"]("progress-bar"),progress=document["getElementById"]("progress"),currentTimeEl=document["getElementById"]('current-time'),durationEl=document["getElementById"]("duration"),songTitle=document["getElementById"]('song-title'),songArtist=document["getElementById"]("song-artist"),albumArt=document["querySelector"]("#album-art img"),songListContainer=document["getElementById"]("song-list-container");
+let songIndex=0x0;
+isPlaying=![];
 function loadSong(_0x4a22c8) {
 const _0x2cf4ca= {
 'HJfPF':"4|1|3|2|0",'llkji':function(_0x24623d) {
