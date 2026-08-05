@@ -1640,6 +1640,12 @@ body::before {
   background: #ffffff;
 }
 
+.disc-wrapper svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 /* Vinyl rotation animation when playing */
 .music-control-floating.playing .disc-wrapper {
   animation: spin-vinyl 4s linear infinite;
