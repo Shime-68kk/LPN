@@ -486,6 +486,7 @@ function populatePolaroidStack() {
   
   polaroidZIndex = imageFiles.length + 5;
 }
+populatePolaroidStack();
 
 function initPolaroidDrag(card, src, initialX, initialY, initialRotate) {
   let isDragging = false;
@@ -632,7 +633,6 @@ if (lightboxOverlay) {
 
 if (btnImage) {
   btnImage.addEventListener("click", () => {
-    populatePolaroidStack();
     if (imageOverlay) {
       imageOverlay.classList.add("active");
     }
