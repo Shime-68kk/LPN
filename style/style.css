@@ -2918,38 +2918,62 @@ body.night-mode .menu-item:active {
   100% { transform: scale(1); }
 }
 
-/* Mascot Suggestion Hint */
+/* Mascot Suggestion Hint (floating speech bubble on the right of Mascot) */
 .mascot-hint-bubble {
   position: absolute;
-  bottom: 110px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 90px;
+  top: 50%;
+  transform: translateY(-50%);
   background: #9333ea;
   color: white;
-  padding: 8px 15px;
-  border-radius: 20px;
+  padding: 6px 12px;
+  border-radius: 12px;
   font-size: 0.8rem;
   white-space: nowrap;
   box-shadow: 0 5px 15px rgba(147, 51, 234, 0.3);
   z-index: 106;
   pointer-events: none;
-  animation: hint-float 2s infinite alternate ease-in-out;
+  animation: hint-bubble-float 1s infinite alternate ease-in-out;
 }
 
 .mascot-hint-bubble::after {
   content: "";
   position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
   border-width: 6px;
   border-style: solid;
-  border-color: #9333ea transparent transparent transparent;
+  border-color: transparent #9333ea transparent transparent;
 }
 
-@keyframes hint-float {
-  from { transform: translateX(-50%) translateY(0); }
-  to { transform: translateX(-50%) translateY(-6px); }
+@keyframes hint-bubble-float {
+  from { transform: translateY(-50%) translateX(0); }
+  to { transform: translateY(-50%) translateX(6px); }
+}
+
+/* Flying reaction emoji (Messenger-style) */
+.mascot-reaction-fly {
+  position: absolute;
+  font-size: 3rem;
+  pointer-events: none;
+  z-index: 2500;
+  animation: emoji-fly-fade 1.8s cubic-bezier(0.075, 0.82, 0.165, 1) forwards;
+}
+
+@keyframes emoji-fly-fade {
+  0% {
+    transform: translate(20px, 20px) scale(0.3) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    transform: translate(20px, -20px) scale(1.25) rotate(15deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(20px, -150px) scale(0.7) rotate(-15deg);
+    opacity: 0;
+  }
 }
 
 /* Mascot Mood Animations */

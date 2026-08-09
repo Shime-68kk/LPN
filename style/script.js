@@ -2335,6 +2335,24 @@ const moodEmojis = {
 // Mascot click handler to toggle mood menu or show sweet message
 let mascotTaps = parseInt(localStorage.getItem("mascotTapCount") || "0");
 
+// Messenger-style flying emoji reaction trigger
+function triggerReactionFly(emoji) {
+  if (!mascotWidget) return;
+  const element = document.createElement("div");
+  element.className = "mascot-reaction-fly";
+  element.innerText = emoji;
+  
+  // Position slightly offset to center
+  element.style.left = "15px";
+  element.style.top = "-10px";
+  
+  mascotWidget.appendChild(element);
+  
+  setTimeout(() => {
+    element.remove();
+  }, 1800);
+}
+
 if (mascotWidget) {
   // Show hint bubble initially, then hide after 5 seconds
   setTimeout(() => {
@@ -2347,18 +2365,26 @@ if (mascotWidget) {
     }
   }, 3000);
 
-  // Touch and Hold logic for mobile/desktop
+  // Touch and Hold (long press) logic to pop up the reaction selection bar
   let holdTimeout;
-  const startHold = () => {
+  
+  const startHold = (e) => {
     holdTimeout = setTimeout(() => {
       if (mascotMoodMenu) mascotMoodMenu.classList.remove("hidden");
       if (mascotHintBubble) mascotHintBubble.classList.add("hidden");
-    }, 600); // 600ms hold to show mood selector
+      
+      // Vibrate mobile device briefly on long press reveal (haptic feedback)
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+    }, 500); // 500ms hold to trigger reaction bar
   };
+  
   const endHold = () => {
     clearTimeout(holdTimeout);
   };
   
+  // Register hold events
   mascotWidget.addEventListener("mousedown", startHold);
   mascotWidget.addEventListener("touchstart", startHold, { passive: true });
   window.addEventListener("mouseup", endHold);
@@ -2375,12 +2401,12 @@ if (mascotWidget) {
       unlockAchievement("cung-nung", "Cưng Nựng");
     }
 
-    // Toggle mood menu if not open, or trigger normal bubble quote if click
+    // If the reaction bar is not shown, trigger normal click reaction
     if (mascotMoodMenu && mascotMoodMenu.classList.contains("hidden")) {
-      // Spawn 5 hearts bursting from mascot
+      // Spawn 5 small hearts bursting from mascot
       spawnMascotHearts();
       
-      // má ửng hồng
+      // Blushing cheeks
       const cheeks = document.querySelectorAll(".mascot-avatar circle[fill='#fda4af']");
       cheeks.forEach(c => {
         c.style.transition = "transform 0.3s ease, fill 0.3s ease";
@@ -2440,6 +2466,10 @@ moodButtons.forEach(btn => {
     e.stopPropagation();
     const mood = btn.getAttribute("data-mood");
     const moodTitle = btn.title;
+    const emoji = moodEmojis[mood];
+    
+    // Trigger flying emoji reaction (Messenger-style)
+    triggerReactionFly(emoji);
     
     // Save mood
     localStorage.setItem("mascotMood", mood);
@@ -2452,7 +2482,7 @@ moodButtons.forEach(btn => {
     
     // Apply badge
     if (mascotMoodBadge) {
-      mascotMoodBadge.innerText = moodEmojis[mood];
+      mascotMoodBadge.innerText = emoji;
       mascotMoodBadge.classList.remove("hidden");
     }
     
@@ -2470,11 +2500,8 @@ moodButtons.forEach(btn => {
       clone.play();
     }
     
-    // Spawn hearts
-    spawnMascotHearts();
-    
     // Send Discord message
-    sendDiscordNotification(`🧸 **Lệ Thủy đã chọn biểu cảm [${moodEmojis[mood]} - ${moodTitle}] cho gấu Mascot!** \n💬 Lời thì thầm: *"${moodQuotes[mood]}"*`);
+    sendDiscordNotification(`🧸 **Lệ Thủy đã thả cảm xúc [${emoji} - ${moodTitle}] cho gấu Mascot!** \n💬 Lời thì thầm: *"${moodQuotes[mood]}"*`);
   });
 });
 
