@@ -1017,33 +1017,20 @@ function unlock() {
   localStorage.removeItem("wrongPassCount");
   localStorage.removeItem("lockoutEndTime");
 
-  // If secret was already completed on this browser, show the 4 icons directly and hide the secret option
-  if (localStorage.getItem("secretUnlocked") === "true") {
-    const btnSecretEl = document.getElementById("btn-secret");
-    if (btnSecretEl) btnSecretEl.classList.add("hidden");
-    
-    const loveCounter = document.getElementById("love-counter-floating");
-    if (loveCounter) loveCounter.classList.remove("hidden");
-    
-    const mascot = document.getElementById("mascot-widget");
-    if (mascot) mascot.classList.remove("hidden");
-    
-    const lockedItems = document.querySelectorAll(".locked-item");
-    lockedItems.forEach((item) => {
-      item.classList.remove("hidden");
-      item.style.animation = "none";
-      item.style.opacity = "1";
-      item.style.transform = "scale(1)";
-    });
-  } else {
-    const btnSecretEl = document.getElementById("btn-secret");
-    if (btnSecretEl) btnSecretEl.classList.remove("hidden");
-    
-    const lockedItems = document.querySelectorAll(".locked-item");
-    lockedItems.forEach((item) => {
-      item.classList.add("hidden");
-    });
-  }
+  // Show all elements directly upon passcode unlock
+  const loveCounter = document.getElementById("love-counter-floating");
+  if (loveCounter) loveCounter.classList.remove("hidden");
+  
+  const mascot = document.getElementById("mascot-widget");
+  if (mascot) mascot.classList.remove("hidden");
+  
+  const lockedItems = document.querySelectorAll(".locked-item");
+  lockedItems.forEach((item) => {
+    item.classList.remove("hidden");
+    item.style.animation = "none";
+    item.style.opacity = "1";
+    item.style.transform = "scale(1)";
+  });
 }
 function fail() {
   const _0x3da771 = {
@@ -1227,28 +1214,7 @@ const acceptScales = [1.0, 1.4, 1.8, 2.2, 2.6];
 const rejectScales = [1.0, 0.75, 0.50, 0.25, 0];
 let proposalCompleted = false;
 
-if (btnSecret && secretOverlay) {
-  btnSecret.addEventListener("click", () => {
-    clickCount = 0;
-    
-    if (btnAccept) {
-      btnAccept.style.left = acceptLefts[0];
-      btnAccept.style.transform = `translate(-50%, -50%) scale(${acceptScales[0]})`;
-    }
-    if (btnReject) {
-      btnReject.style.left = rejectLefts[0];
-      btnReject.style.transform = `translate(-50%, -50%) scale(${rejectScales[0]})`;
-      btnReject.style.opacity = "1";
-      btnReject.style.pointerEvents = "auto";
-      btnReject.classList.remove("hidden");
-    }
-    
-    if (secretProposal) secretProposal.classList.remove("hidden");
-    if (secretSuccess) secretSuccess.classList.add("hidden");
-    
-    secretOverlay.classList.add("active");
-  });
-}
+// Secret button click listener removed
 
 if (btnReject) {
   btnReject.addEventListener("click", (e) => {
@@ -2353,6 +2319,110 @@ function triggerReactionFly(emoji) {
   }, 1800);
 }
 
+// Mascot Face & Expression Animation Engine
+const eyeGroups = ["normal", "happy", "sleep", "angry"];
+
+function setMascotEyes(type) {
+  eyeGroups.forEach(g => {
+    const el = document.getElementById(`mascot-eyes-${g}`);
+    if (el) {
+      if (g === type) el.classList.remove("hidden");
+      else el.classList.add("hidden");
+    }
+  });
+}
+
+function applyMascotExpression(mood) {
+  const head = document.getElementById("mascot-head");
+  const earL = document.getElementById("mascot-ear-l");
+  const earR = document.getElementById("mascot-ear-r");
+  const mouth = document.getElementById("mascot-mouth");
+  const cheeks = document.querySelectorAll(".mascot-avatar circle[fill='#fda4af'], #mascot-cheek-l, #mascot-cheek-r");
+  
+  if (!mascotAvatarEl) return;
+  
+  // Clear existing reset timer
+  if (window.mascotResetTimer) {
+    clearTimeout(window.mascotResetTimer);
+  }
+  
+  // Apply visual expression based on mood selection
+  if (mood === "happy") {
+    setMascotEyes("happy");
+    if (head) head.setAttribute("fill", "#fef3c7"); // bright light warm yellow
+    if (earL) earL.setAttribute("fill", "#fef3c7");
+    if (earR) earR.setAttribute("fill", "#fef3c7");
+    if (mouth) mouth.setAttribute("d", "M45 56 Q50 62 55 56"); // smiley mouth
+    cheeks.forEach(c => {
+      c.style.fill = "#f43f5e"; // bright blushing pink
+      c.style.transform = "scale(1.2)";
+      c.style.transformOrigin = "center";
+    });
+    mascotAvatarEl.className = "mascot-avatar mood-happy";
+  } else if (mood === "missing") {
+    setMascotEyes("normal");
+    if (head) head.setAttribute("fill", "#fed7aa"); // loving warm orange-yellow
+    if (earL) earL.setAttribute("fill", "#fed7aa");
+    if (earR) earR.setAttribute("fill", "#fed7aa");
+    if (mouth) mouth.setAttribute("d", "M47 56 Q50 54 53 56"); // cute small smile
+    cheeks.forEach(c => {
+      c.style.fill = "#ec4899";
+      c.style.transform = "scale(1.15)";
+      c.style.transformOrigin = "center";
+    });
+    mascotAvatarEl.className = "mascot-avatar mood-missing";
+  } else if (mood === "tired") {
+    setMascotEyes("sleep");
+    if (head) head.setAttribute("fill", "#cbd5e1"); // sleepy light slate gray
+    if (earL) earL.setAttribute("fill", "#cbd5e1");
+    if (earR) earR.setAttribute("fill", "#cbd5e1");
+    if (mouth) mouth.setAttribute("d", "M48 56 A 2 2 0 1 1 52 56 A 2 2 0 1 1 48 56"); // small yawn 'o' circle mouth
+    cheeks.forEach(c => {
+      c.style.fill = "#94a3b8"; // pale cheeks
+    });
+    mascotAvatarEl.className = "mascot-avatar mood-tired";
+  } else if (mood === "angry") {
+    setMascotEyes("angry");
+    if (head) head.setAttribute("fill", "#fca5a5"); // angry light red face!
+    if (earL) earL.setAttribute("fill", "#fca5a5");
+    if (earR) earR.setAttribute("fill", "#fca5a5");
+    if (mouth) mouth.setAttribute("d", "M46 58 Q50 54 54 58"); // angry frown curve
+    cheeks.forEach(c => {
+      c.style.fill = "#dc2626"; // deep angry red cheeks!
+      c.style.transform = "scale(1.1)";
+    });
+    mascotAvatarEl.className = "mascot-avatar mood-angry";
+  }
+  
+  // Return to cute original state after 4 seconds
+  window.mascotResetTimer = setTimeout(() => {
+    resetMascotExpression();
+  }, 4000);
+}
+
+function resetMascotExpression() {
+  const head = document.getElementById("mascot-head");
+  const earL = document.getElementById("mascot-ear-l");
+  const earR = document.getElementById("mascot-ear-r");
+  const mouth = document.getElementById("mascot-mouth");
+  const cheeks = document.querySelectorAll(".mascot-avatar circle[fill='#fda4af'], #mascot-cheek-l, #mascot-cheek-r");
+  
+  if (!mascotAvatarEl) return;
+  
+  setMascotEyes("normal");
+  if (head) head.setAttribute("fill", "#fef08a");
+  if (earL) earL.setAttribute("fill", "#fef08a");
+  if (earR) earR.setAttribute("fill", "#fef08a");
+  if (mouth) mouth.setAttribute("d", "M46 56 Q50 52 54 56 Q50 58 46 56");
+  
+  cheeks.forEach(c => {
+    c.style.fill = "#fda4af";
+    c.style.transform = "none";
+  });
+  
+  mascotAvatarEl.className = "mascot-avatar";
+}
+
 if (mascotWidget) {
   // Show hint bubble initially, then hide after 5 seconds
   setTimeout(() => {
@@ -2365,69 +2435,43 @@ if (mascotWidget) {
     }
   }, 3000);
 
-  // Touch and Hold (long press) logic to pop up the reaction selection bar
-  let holdTimeout;
-  
-  const startHold = (e) => {
-    holdTimeout = setTimeout(() => {
-      if (mascotMoodMenu) mascotMoodMenu.classList.remove("hidden");
-      if (mascotHintBubble) mascotHintBubble.classList.add("hidden");
-      
-      // Vibrate mobile device briefly on long press reveal (haptic feedback)
-      if (navigator.vibrate) {
-        navigator.vibrate(50);
-      }
-    }, 500); // 500ms hold to trigger reaction bar
-  };
-  
-  const endHold = () => {
-    clearTimeout(holdTimeout);
-  };
-  
-  // Register hold events
-  mascotWidget.addEventListener("mousedown", startHold);
-  mascotWidget.addEventListener("touchstart", startHold, { passive: true });
-  window.addEventListener("mouseup", endHold);
-  window.addEventListener("touchend", endHold);
-
-  // Standard click logic
+  // Toggle Mascot Mood Menu directly on CLICK/TAP (Easy and robust, no long-press issues!)
   mascotWidget.addEventListener("click", (e) => {
     e.stopPropagation();
     
-    // Increment mascot taps
+    // Toggle reaction menu visibility
+    if (mascotMoodMenu) {
+      const isHidden = mascotMoodMenu.classList.contains("hidden");
+      if (isHidden) {
+        mascotMoodMenu.classList.remove("hidden");
+        if (mascotHintBubble) mascotHintBubble.classList.add("hidden");
+        
+        // Vibrate mobile device briefly (haptic feedback)
+        if (navigator.vibrate) {
+          navigator.vibrate(30);
+        }
+      } else {
+        mascotMoodMenu.classList.add("hidden");
+      }
+    }
+    
+    // Increment mascot taps count
     mascotTaps++;
     localStorage.setItem("mascotTapCount", mascotTaps.toString());
     if (mascotTaps >= 10) {
       unlockAchievement("cung-nung", "Cưng Nựng");
     }
 
-    // If the reaction bar is not shown, trigger normal click reaction
-    if (mascotMoodMenu && mascotMoodMenu.classList.contains("hidden")) {
-      // Spawn 5 small hearts bursting from mascot
-      spawnMascotHearts();
-      
-      // Blushing cheeks
-      const cheeks = document.querySelectorAll(".mascot-avatar circle[fill='#fda4af']");
-      cheeks.forEach(c => {
-        c.style.transition = "transform 0.3s ease, fill 0.3s ease";
-        c.style.fill = "#f43f5e";
-        c.style.transform = "scale(1.2)";
-        setTimeout(() => {
-          c.style.fill = "#fda4af";
-          c.style.transform = "scale(1)";
-        }, 2000);
-      });
-      
-      // Normal speech bubble reaction
-      const currentMood = localStorage.getItem("mascotMood") || "none";
-      if (currentMood !== "none" && moodQuotes[currentMood]) {
-        if (mascotBubbleText) mascotBubbleText.innerText = moodQuotes[currentMood];
-      } else {
-        // Random mascot message
-        triggerMascotBubble();
-      }
-      if (mascotSpeechBubble) mascotSpeechBubble.classList.remove("hidden");
+    // Trigger normal dialog bubble and hearts
+    spawnMascotHearts();
+    
+    const currentMood = localStorage.getItem("mascotMood") || "none";
+    if (currentMood !== "none" && moodQuotes[currentMood]) {
+      if (mascotBubbleText) mascotBubbleText.innerText = moodQuotes[currentMood];
+    } else {
+      triggerMascotBubble();
     }
+    if (mascotSpeechBubble) mascotSpeechBubble.classList.remove("hidden");
   });
 }
 
@@ -2468,23 +2512,11 @@ moodButtons.forEach(btn => {
     const moodTitle = btn.title;
     const emoji = moodEmojis[mood];
     
-    // Trigger flying emoji reaction (Messenger-style)
+    // Trigger Messenger-style flying emoji reaction
     triggerReactionFly(emoji);
     
-    // Save mood
-    localStorage.setItem("mascotMood", mood);
-    
-    // Apply animation CSS class to mascot
-    if (mascotAvatarEl) {
-      mascotAvatarEl.className = "mascot-avatar"; // Reset classes
-      mascotAvatarEl.classList.add(`mood-${mood}`);
-    }
-    
-    // Apply badge
-    if (mascotMoodBadge) {
-      mascotMoodBadge.innerText = emoji;
-      mascotMoodBadge.classList.remove("hidden");
-    }
+    // Apply visual face reaction expression and state animation
+    applyMascotExpression(mood);
     
     // Change speech bubble
     if (mascotBubbleText) mascotBubbleText.innerText = moodQuotes[mood];
