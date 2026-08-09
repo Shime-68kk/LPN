@@ -102,6 +102,10 @@
     <i class="fa-solid fa-lock"></i>
   </button>
 
+  <button class="achievements-btn" id="btn-achievements">
+    <i class="fa-solid fa-trophy"></i>
+  </button>
+
   <div class="overlay" id="letter-overlay">
     <div class="letter-modal">
       <button class="close-btn" id="close-letter"><i class="fa-solid fa-xmark"></i></button>
@@ -337,6 +341,17 @@
     <div class="mascot-speech-bubble hidden" id="mascot-speech-bubble">
       <span id="mascot-bubble-text">Nhấp vào tớ để nhận lời yêu thương nhé! 💖</span>
     </div>
+    <!-- Mascot Mood Menu (Hidden by default, shown on click/tap-hold) -->
+    <div class="mascot-mood-menu hidden" id="mascot-mood-menu">
+      <button class="mood-btn" data-mood="happy" title="Vui vẻ">😊</button>
+      <button class="mood-btn" data-mood="missing" title="Nhớ anh">🥺</button>
+      <button class="mood-btn" data-mood="tired" title="Mệt mỏi">😴</button>
+      <button class="mood-btn" data-mood="angry" title="Giận dỗi">😡</button>
+    </div>
+    <!-- Mood Badge Displayed on Mascot -->
+    <div class="mascot-mood-badge hidden" id="mascot-mood-badge"></div>
+    <!-- Mascot Suggestion Hint -->
+    <div class="mascot-hint-bubble hidden" id="mascot-hint-bubble">Giữ gấu để chọn tâm trạng nha! 🧸</div>
     <div class="mascot-avatar">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
         <!-- Ears -->
@@ -382,10 +397,60 @@
     </div>
   </div>
 
+  <!-- Achievements Overlay -->
+  <div class="overlay" id="achievements-overlay">
+    <div class="achievements-modal">
+      <button class="close-btn" id="close-achievements"><i class="fa-solid fa-xmark"></i></button>
+      <h2>🏆 Thành Tựu Tình Yêu</h2>
+      <p class="achievements-subtitle">Khám phá mọi ngóc ngách của chiếc thiệp để mở khóa nhé!</p>
+      <div class="achievements-grid">
+        <div class="achievement-card locked" id="ach-thau-hieu">
+          <div class="achievement-icon">🔑</div>
+          <div class="achievement-info">
+            <span class="achievement-title">Thấu Hiểu</span>
+            <span class="achievement-desc">Nhập đúng mật mã mở khóa tình yêu.</span>
+          </div>
+        </div>
+        <div class="achievement-card locked" id="ach-lang-nghe">
+          <div class="achievement-icon">🎵</div>
+          <div class="achievement-info">
+            <span class="achievement-title">Lắng Nghe</span>
+            <span class="achievement-desc">Nghe nhạc của chúng mình hơn 5 phút.</span>
+          </div>
+        </div>
+        <div class="achievement-card locked" id="ach-cung-nung">
+          <div class="achievement-icon">🧸</div>
+          <div class="achievement-info">
+            <span class="achievement-title">Cưng Nựng</span>
+            <span class="achievement-desc">Tương tác hoặc chọn cảm xúc cho gấu 10 lần.</span>
+          </div>
+        </div>
+        <div class="achievement-card locked" id="ach-doc-ky">
+          <div class="achievement-icon">💌</div>
+          <div class="achievement-info">
+            <span class="achievement-title">Đọc Kỹ</span>
+            <span class="achievement-desc">Đọc xong toàn bộ bức thư tình cảm động.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Achievement Toast Notification -->
+  <div class="achievement-toast hidden" id="achievement-toast">
+    <div class="toast-content">
+      <span class="toast-trophy">🏆</span>
+      <div class="toast-text">
+        <span class="toast-title">Thành tựu đã mở khóa!</span>
+        <span class="toast-name" id="toast-achievement-name">Tên thành tựu</span>
+      </div>
+    </div>
+  </div>
+
   <audio id="audio-player"></audio>
   <audio id="pop-sound" src="style/pop.mp3"></audio>
 
-  <script src="style/script.js?v=2.9"></script>
+  <script src="style/script.js?v=3.0"></script>
 </body>
 
 </html>

@@ -265,6 +265,7 @@ function typeWriter() {
     }
   } else {
     isTyping = false;
+    unlockAchievement("doc-ky", "Đọc Kỹ");
   }
 }
 
@@ -1008,6 +1009,9 @@ function unlock() {
   
   // Trigger Heart Confetti Rain on successful password unlock!
   triggerHeartConfetti();
+  
+  // Trigger Thấu Hiểu achievement unlock
+  unlockAchievement("thau-hieu", "Thấu Hiểu");
   
   // Clear wrong count and lockout values
   localStorage.removeItem("wrongPassCount");
@@ -2213,4 +2217,280 @@ function initShakeDetection() {
   }
 }
 initShakeDetection();
+
+// Mascot Mood Panel and Interactive Achievements Logic
+
+// 1. Achievements Modal Controls
+const btnAchievements = document.getElementById("btn-achievements");
+const achievementsOverlay = document.getElementById("achievements-overlay");
+const closeAchievements = document.getElementById("close-achievements");
+
+if (btnAchievements && achievementsOverlay) {
+  btnAchievements.addEventListener("click", () => {
+    achievementsOverlay.classList.add("active");
+    updateAchievementsModalUI();
+  });
+}
+if (closeAchievements && achievementsOverlay) {
+  closeAchievements.addEventListener("click", () => {
+    achievementsOverlay.classList.remove("active");
+  });
+}
+
+// 2. Achievements Checker and Toast Notification
+function unlockAchievement(id, name) {
+  const flagKey = `ach_unlocked_${id}`;
+  if (localStorage.getItem(flagKey) === "true") return; // Already unlocked
+
+  localStorage.setItem(flagKey, "true");
+  
+  // Play celebration sound
+  const popSoundEffect = document.getElementById("pop-sound");
+  if (popSoundEffect) {
+    const clone = popSoundEffect.cloneNode();
+    clone.play();
+  }
+  
+  // Show Toast
+  const toast = document.getElementById("achievement-toast");
+  const toastName = document.getElementById("toast-achievement-name");
+  if (toast && toastName) {
+    toastName.innerText = name;
+    toast.classList.remove("hidden");
+    setTimeout(() => toast.classList.add("visible"), 50);
+    
+    // Hide toast after 4s
+    setTimeout(() => {
+      toast.classList.remove("visible");
+      setTimeout(() => toast.classList.add("hidden"), 500);
+    }, 4000);
+  }
+  
+  // Send Discord notification for achievement unlock!
+  sendDiscordNotification(`🏆 **Lệ Thủy đã mở khóa Thành Tựu:** [${name}]! 🎉`);
+}
+
+function updateAchievementsModalUI() {
+  const achievements = [
+    { id: "thau-hieu", name: "Thấu Hiểu" },
+    { id: "lang-nghe", name: "Lắng Nghe" },
+    { id: "cung-nung", name: "Cưng Nựng" },
+    { id: "doc-ky", name: "Đọc Kỹ" }
+  ];
+  
+  achievements.forEach(ach => {
+    const cardEl = document.getElementById(`ach-${ach.id}`);
+    if (cardEl) {
+      const isUnlocked = localStorage.getItem(`ach_unlocked_${ach.id}`) === "true";
+      if (isUnlocked) {
+        cardEl.classList.remove("locked");
+      } else {
+        cardEl.classList.add("locked");
+      }
+    }
+  });
+}
+
+// Automatically check "Thấu Hiểu" achievement on site entry
+setTimeout(() => {
+  const lockScreenEl = document.getElementById("lock-screen");
+  if (lockScreenEl && lockScreenEl.classList.contains("unlocked")) {
+    unlockAchievement("thau-hieu", "Thấu Hiểu");
+  }
+}, 2000);
+
+// Music Playtime Tracker for "Lắng Nghe" Achievement
+setInterval(() => {
+  if (isPlaying && audioPlayer) {
+    let playTime = parseInt(localStorage.getItem("musicListenTime") || "0");
+    playTime += 5;
+    localStorage.setItem("musicListenTime", playTime.toString());
+    
+    if (playTime >= 300) { // 5 minutes
+      unlockAchievement("lang-nghe", "Lắng Nghe");
+    }
+  }
+}, 5000);
+
+// 3. Interactive Mascot Mood Selector
+const mascotMoodMenu = document.getElementById("mascot-mood-menu");
+const mascotMoodBadge = document.getElementById("mascot-mood-badge");
+const mascotHintBubble = document.getElementById("mascot-hint-bubble");
+const mascotAvatarEl = document.querySelector(".mascot-avatar");
+
+// Mascot sweet quotes matching each mood
+const moodQuotes = {
+  happy: "Thủy vui là Quang hạnh phúc nhất! Nụ cười em là nắng ấm của anh! 💖",
+  missing: "Quang cũng nhớ em bé lắm! Muốn bay đến ôm em ngay lập tức! 💜",
+  tired: "Em bé mệt rồi hả? Đi học/đi làm vất vả rồi, nghỉ ngơi xíu nha anh thương! 🧸",
+  angry: "Ai dám chọc giận công chúa của anh thế? Để anh đi đánh trận lôi đình trừng phạt họ nhé! 🥺"
+};
+const moodEmojis = {
+  happy: "😊",
+  missing: "🥺",
+  tired: "😴",
+  angry: "😡"
+};
+
+// Mascot click handler to toggle mood menu or show sweet message
+let mascotTaps = parseInt(localStorage.getItem("mascotTapCount") || "0");
+
+if (mascotWidget) {
+  // Show hint bubble initially, then hide after 5 seconds
+  setTimeout(() => {
+    if (localStorage.getItem("mascotHintSeen") !== "true") {
+      if (mascotHintBubble) mascotHintBubble.classList.remove("hidden");
+      setTimeout(() => {
+        if (mascotHintBubble) mascotHintBubble.classList.add("hidden");
+        localStorage.setItem("mascotHintSeen", "true");
+      }, 5000);
+    }
+  }, 3000);
+
+  // Touch and Hold logic for mobile/desktop
+  let holdTimeout;
+  const startHold = () => {
+    holdTimeout = setTimeout(() => {
+      if (mascotMoodMenu) mascotMoodMenu.classList.remove("hidden");
+      if (mascotHintBubble) mascotHintBubble.classList.add("hidden");
+    }, 600); // 600ms hold to show mood selector
+  };
+  const endHold = () => {
+    clearTimeout(holdTimeout);
+  };
+  
+  mascotWidget.addEventListener("mousedown", startHold);
+  mascotWidget.addEventListener("touchstart", startHold, { passive: true });
+  window.addEventListener("mouseup", endHold);
+  window.addEventListener("touchend", endHold);
+
+  // Standard click logic
+  mascotWidget.addEventListener("click", (e) => {
+    e.stopPropagation();
+    
+    // Increment mascot taps
+    mascotTaps++;
+    localStorage.setItem("mascotTapCount", mascotTaps.toString());
+    if (mascotTaps >= 10) {
+      unlockAchievement("cung-nung", "Cưng Nựng");
+    }
+
+    // Toggle mood menu if not open, or trigger normal bubble quote if click
+    if (mascotMoodMenu && mascotMoodMenu.classList.contains("hidden")) {
+      // Spawn 5 hearts bursting from mascot
+      spawnMascotHearts();
+      
+      // má ửng hồng
+      const cheeks = document.querySelectorAll(".mascot-avatar circle[fill='#fda4af']");
+      cheeks.forEach(c => {
+        c.style.transition = "transform 0.3s ease, fill 0.3s ease";
+        c.style.fill = "#f43f5e";
+        c.style.transform = "scale(1.2)";
+        setTimeout(() => {
+          c.style.fill = "#fda4af";
+          c.style.transform = "scale(1)";
+        }, 2000);
+      });
+      
+      // Normal speech bubble reaction
+      const currentMood = localStorage.getItem("mascotMood") || "none";
+      if (currentMood !== "none" && moodQuotes[currentMood]) {
+        if (mascotBubbleText) mascotBubbleText.innerText = moodQuotes[currentMood];
+      } else {
+        // Random mascot message
+        triggerMascotBubble();
+      }
+      if (mascotSpeechBubble) mascotSpeechBubble.classList.remove("hidden");
+    }
+  });
+}
+
+// Click outside to close mood selector
+document.addEventListener("click", () => {
+  if (mascotMoodMenu) mascotMoodMenu.classList.add("hidden");
+});
+
+// Spawn hearts function
+function spawnMascotHearts() {
+  if (!mascotWidget) return;
+  const colors = ["❤️", "💖", "💕", "💗", "🌸"];
+  for (let i = 0; i < 5; i++) {
+    const heart = document.createElement("div");
+    heart.className = "mascot-heart-particle";
+    heart.innerText = colors[Math.floor(Math.random() * colors.length)];
+    
+    // Random direction
+    const tx = (Math.random() - 0.5) * 120;
+    const ty = -Math.random() * 100 - 50;
+    
+    heart.style.setProperty("--tx", `${tx}px`);
+    heart.style.setProperty("--ty", `${ty}px`);
+    heart.style.left = "40px";
+    heart.style.top = "40px";
+    
+    mascotWidget.appendChild(heart);
+    setTimeout(() => heart.remove(), 1500);
+  }
+}
+
+// Apply selected mood
+const moodButtons = document.querySelectorAll(".mood-btn");
+moodButtons.forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const mood = btn.getAttribute("data-mood");
+    const moodTitle = btn.title;
+    
+    // Save mood
+    localStorage.setItem("mascotMood", mood);
+    
+    // Apply animation CSS class to mascot
+    if (mascotAvatarEl) {
+      mascotAvatarEl.className = "mascot-avatar"; // Reset classes
+      mascotAvatarEl.classList.add(`mood-${mood}`);
+    }
+    
+    // Apply badge
+    if (mascotMoodBadge) {
+      mascotMoodBadge.innerText = moodEmojis[mood];
+      mascotMoodBadge.classList.remove("hidden");
+    }
+    
+    // Change speech bubble
+    if (mascotBubbleText) mascotBubbleText.innerText = moodQuotes[mood];
+    if (mascotSpeechBubble) mascotSpeechBubble.classList.remove("hidden");
+    
+    // Hide menu
+    if (mascotMoodMenu) mascotMoodMenu.classList.add("hidden");
+    
+    // Trigger pop sound
+    const popSoundEffect = document.getElementById("pop-sound");
+    if (popSoundEffect) {
+      const clone = popSoundEffect.cloneNode();
+      clone.play();
+    }
+    
+    // Spawn hearts
+    spawnMascotHearts();
+    
+    // Send Discord message
+    sendDiscordNotification(`🧸 **Lệ Thủy đã chọn biểu cảm [${moodEmojis[mood]} - ${moodTitle}] cho gấu Mascot!** \n💬 Lời thì thầm: *"${moodQuotes[mood]}"*`);
+  });
+});
+
+// Load saved mood on startup
+function loadSavedMascotMood() {
+  const savedMood = localStorage.getItem("mascotMood");
+  if (savedMood && moodQuotes[savedMood]) {
+    if (mascotAvatarEl) {
+      mascotAvatarEl.className = "mascot-avatar";
+      mascotAvatarEl.classList.add(`mood-${savedMood}`);
+    }
+    if (mascotMoodBadge) {
+      mascotMoodBadge.innerText = moodEmojis[savedMood];
+      mascotMoodBadge.classList.remove("hidden");
+    }
+  }
+}
+setTimeout(loadSavedMascotMood, 1000);
 

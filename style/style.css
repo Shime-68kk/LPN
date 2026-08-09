@@ -2658,3 +2658,368 @@ body.night-mode .menu-item:active {
   display: none !important;
 }
 
+/* Achievements floating button */
+.achievements-btn {
+  position: fixed;
+  bottom: 85px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  color: #d946ef;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(217, 70, 239, 0.2);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 100;
+  display: none;
+}
+
+.main-content-visible ~ .achievements-btn {
+  display: flex;
+}
+
+.achievements-btn:hover {
+  transform: scale(1.1) rotate(-10deg);
+  background: white;
+  box-shadow: 0 8px 25px rgba(217, 70, 239, 0.3);
+}
+
+.achievements-btn:active {
+  transform: scale(0.9);
+}
+
+/* Achievements Modal */
+.achievements-modal {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 30px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 15px 35px rgba(147, 51, 234, 0.2);
+  position: relative;
+  text-align: center;
+  border: 2px solid rgba(147, 51, 234, 0.1);
+  transform: scale(0.9);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.overlay.active .achievements-modal {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.achievements-modal h2 {
+  font-family: "Playfair Display", serif;
+  color: #7c3aed;
+  margin-bottom: 5px;
+  font-size: 1.8rem;
+}
+
+.achievements-subtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-bottom: 25px;
+}
+
+.achievements-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.achievement-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  border-radius: 12px;
+  background: #fdf4ff;
+  border: 1px solid #fae8ff;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.achievement-card.locked {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  opacity: 0.6;
+  filter: grayscale(1);
+}
+
+.achievement-icon {
+  font-size: 1.8rem;
+  background: white;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.achievement-card.locked .achievement-icon {
+  background: #e5e7eb;
+}
+
+.achievement-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.achievement-title {
+  font-weight: 700;
+  color: #86198f;
+  font-size: 1.05rem;
+}
+
+.achievement-card.locked .achievement-title {
+  color: #4b5563;
+}
+
+.achievement-desc {
+  font-size: 0.8rem;
+  color: #701a75;
+  margin-top: 2px;
+}
+
+.achievement-card.locked .achievement-desc {
+  color: #9ca3af;
+}
+
+/* Toast notification */
+.achievement-toast {
+  position: fixed;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #d946ef, #8b5cf6);
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+  padding: 15px 25px;
+  z-index: 9999;
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+  min-width: 280px;
+  max-width: 90%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.achievement-toast.visible {
+  top: 20px;
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.toast-trophy {
+  font-size: 2rem;
+  animation: toast-bounce 1s infinite alternate;
+}
+
+.toast-text {
+  display: flex;
+  flex-direction: column;
+  color: white;
+}
+
+.toast-title {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.toast-name {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+@keyframes toast-bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-5px); }
+}
+
+/* Mascot Mood Selector */
+.mascot-mood-menu {
+  position: absolute;
+  bottom: 110px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 2px solid rgba(147, 51, 234, 0.2);
+  border-radius: 30px;
+  padding: 8px 12px;
+  display: flex;
+  gap: 10px;
+  box-shadow: 0 10px 25px rgba(147, 51, 234, 0.15);
+  z-index: 105;
+  animation: mood-menu-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes mood-menu-pop {
+  from { transform: translateX(-50%) scale(0.7); opacity: 0; }
+  to { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
+.mood-btn {
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.mood-btn:hover {
+  transform: scale(1.25) translateY(-3px);
+}
+
+/* Mascot Mood Badge */
+.mascot-mood-badge {
+  position: absolute;
+  top: 15px;
+  right: -5px;
+  background: white;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  border: 1.5px solid #9333ea;
+  z-index: 104;
+  animation: badge-pulse 1.5s infinite;
+}
+
+@keyframes badge-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* Mascot Suggestion Hint */
+.mascot-hint-bubble {
+  position: absolute;
+  bottom: 110px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #9333ea;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  box-shadow: 0 5px 15px rgba(147, 51, 234, 0.3);
+  z-index: 106;
+  pointer-events: none;
+  animation: hint-float 2s infinite alternate ease-in-out;
+}
+
+.mascot-hint-bubble::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: #9333ea transparent transparent transparent;
+}
+
+@keyframes hint-float {
+  from { transform: translateX(-50%) translateY(0); }
+  to { transform: translateX(-50%) translateY(-6px); }
+}
+
+/* Mascot Mood Animations */
+.mascot-avatar.mood-happy {
+  animation: mascot-happy-bounce 0.6s infinite alternate cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.mascot-avatar.mood-missing {
+  animation: mascot-missing-heart 1.2s infinite ease-in-out;
+}
+
+.mascot-avatar.mood-tired {
+  animation: mascot-tired-float 3s infinite ease-in-out;
+}
+
+.mascot-avatar.mood-angry {
+  animation: mascot-angry-shake 0.4s infinite;
+}
+
+@keyframes mascot-happy-bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-12px); }
+}
+
+@keyframes mascot-missing-heart {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.06); }
+  50% { transform: scale(0.96); }
+  70% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+@keyframes mascot-tired-float {
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(-2deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+@keyframes mascot-angry-shake {
+  0% { transform: translate(1px, 1px) rotate(0deg); }
+  10% { transform: translate(-1px, -1px) rotate(-1deg); }
+  20% { transform: translate(-2px, 0px) rotate(1deg); }
+  30% { transform: translate(1px, 2px) rotate(0deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  60% { transform: translate(-2px, 1px) rotate(0deg); }
+  70% { transform: translate(2px, 1px) rotate(-1deg); }
+  80% { transform: translate(-1px, -1px) rotate(1deg); }
+  90% { transform: translate(1px, 2px) rotate(0deg); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+/* Heart particles for Mascot */
+.mascot-heart-particle {
+  position: absolute;
+  font-size: 1.2rem;
+  color: #fda4af;
+  pointer-events: none;
+  z-index: 1000;
+  animation: mascot-heart-drift 1.5s forwards ease-out;
+}
+
+@keyframes mascot-heart-drift {
+  0% {
+    transform: translate(0, 0) scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx), var(--ty)) scale(1.2);
+    opacity: 0;
+  }
+}
+
