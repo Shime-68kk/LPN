@@ -1436,13 +1436,7 @@ function updateLoveCounter() {
   
   if (!loveDaysEl && !detailsTimeEl) return;
   
-  let startMs = localStorage.getItem("anniversaryStartDate");
-  if (!startMs) {
-    // Fallback if not accepted yet (e.g. testing)
-    startMs = new Date(ANNIVERSARY_DATE).getTime();
-  } else {
-    startMs = parseInt(startMs);
-  }
+  const startMs = new Date(ANNIVERSARY_DATE).getTime();
   
   const now = Date.now();
   const diffTime = Math.max(0, now - startMs);
