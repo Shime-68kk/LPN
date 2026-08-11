@@ -12,7 +12,7 @@
     href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="style/style.css?v=3.6" />
+  <link rel="stylesheet" href="style/style.css?v=3.9" />
 </head>
 
 <body>
@@ -315,6 +315,12 @@
           </label>
           <input type="file" id="diary-photo-input" accept="image/*" style="display: none;" />
           
+          <!-- Date/Time Picker -->
+          <div class="diary-datetime-wrapper">
+            <i class="fa-regular fa-calendar-days"></i>
+            <input type="datetime-local" id="diary-datetime-input" />
+          </div>
+          
           <button class="save-diary-btn" id="btn-save-diary">Ghi Sổ 💜</button>
         </div>
         
@@ -470,7 +476,7 @@
   <audio id="audio-player"></audio>
   <audio id="pop-sound" src="style/pop.mp3"></audio>
 
-  <script src="style/script.js?v=3.8"></script>
+  <script src="style/script.js?v=3.9"></script>
 </body>
 
 </html>

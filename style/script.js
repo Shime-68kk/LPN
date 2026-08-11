@@ -1513,13 +1513,19 @@ const diaryImagePreviewContainer = document.getElementById("diary-image-preview-
 const diaryImagePreview = document.getElementById("diary-image-preview");
 const btnRemovePreview = document.getElementById("btn-remove-preview");
 const diaryEntriesList = document.getElementById("diary-entries-list");
+const diaryDatetimeInput = document.getElementById("diary-datetime-input");
 
 let selectedDiaryImageBase64 = null;
+let editingEntryId = null; // Stores the Firebase ID of the entry currently being edited
 
 // Open/Close Modal
 if (btnDiary && diaryOverlay) {
   btnDiary.addEventListener("click", () => {
     diaryOverlay.classList.add("active");
+    // Set default local time on opening
+    if (diaryDatetimeInput) {
+      diaryDatetimeInput.value = getLocalDateTimeString();
+    }
     syncDiaryFromFirebase();
   });
 }
@@ -1586,6 +1592,12 @@ if (btnRemovePreview) {
   });
 }
 
+// Get local ISO date-time string (YYYY-MM-DDTHH:MM) for datetime-local input
+function getLocalDateTimeString(dateObj = new Date()) {
+  const tzOffset = dateObj.getTimezoneOffset() * 60000;
+  return (new Date(dateObj - tzOffset)).toISOString().slice(0, 16);
+}
+
 // Reset Form fields
 function resetDiaryForm() {
   if (diaryInput) diaryInput.value = "";
@@ -1593,6 +1605,17 @@ function resetDiaryForm() {
   selectedDiaryImageBase64 = null;
   if (diaryImagePreviewContainer) diaryImagePreviewContainer.classList.add("hidden");
   if (diaryImagePreview) diaryImagePreview.src = "";
+  
+  // Reset date/time to current local time
+  if (diaryDatetimeInput) {
+    diaryDatetimeInput.value = getLocalDateTimeString();
+  }
+  
+  // Reset edit state
+  editingEntryId = null;
+  if (btnSaveDiary) {
+    btnSaveDiary.innerText = "Ghi Sổ 💜";
+  }
 }
 
 // Automatically migrate legacy offline-only entries (without IDs) to Firebase
@@ -1757,7 +1780,47 @@ async function saveDiaryEntryToFirebase(newEntry) {
   }
 }
 
-// Save Entry Click Event
+// Update existing entry in Firebase and Local Cache
+async function updateDiaryEntryInFirebase(id, updatedEntry) {
+  const entries = JSON.parse(localStorage.getItem("loveDiaryEntries") || "[]");
+  const index = entries.findIndex(e => e.id === id);
+  
+  if (index !== -1) {
+    entries[index] = { id, ...updatedEntry };
+    localStorage.setItem("loveDiaryEntries", JSON.stringify(entries));
+    renderDiaryEntries();
+  }
+  
+  resetDiaryForm();
+  
+  try {
+    const response = await fetch(`${FIREBASE_DB_URL}diary/${id}.json`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(updatedEntry)
+    });
+    if (!response.ok) throw new Error("Update failed");
+    
+    // Send Discord message for edit
+    if (DISCORD_WEBHOOK_URL) {
+      let messageContent = `📝 **Một trang nhật ký tình yêu vừa được chỉnh sửa!** 💕\n`;
+      if (updatedEntry.text) {
+        messageContent += `📝 *"${updatedEntry.text}"*\n`;
+      }
+      fetch(DISCORD_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: messageContent })
+      }).catch(console.error);
+    }
+  } catch (err) {
+    console.error("Failed to update Firebase:", err);
+  }
+}
+
+// Save/Update Entry Click Event
 if (btnSaveDiary) {
   btnSaveDiary.addEventListener("click", () => {
     const text = diaryInput ? diaryInput.value.trim() : "";
@@ -1766,18 +1829,25 @@ if (btnSaveDiary) {
       return;
     }
 
-    // CẤU HÌNH ÉP MỐC THỜI GIAN (Hỗ trợ Quang re-up bài cũ đúng ngày 09/08/2026 lúc 18:57)
-    // Sau khi re-up bài này xong, bạn hãy sửa dòng dưới từ true thành false rồi push lên nhé!
-    const useForcedTime = true; 
-    const forcedTimestamp = 1786276620000; // Mốc 18:57 ngày 09/08/2026
+    // Read timestamp from datetime-local input
+    let timestamp = Date.now();
+    if (diaryDatetimeInput && diaryDatetimeInput.value) {
+      timestamp = new Date(diaryDatetimeInput.value).getTime();
+    }
 
-    const newEntry = {
+    const entryData = {
       text: text,
       image: selectedDiaryImageBase64,
-      timestamp: useForcedTime ? forcedTimestamp : Date.now()
+      timestamp: timestamp
     };
     
-    saveDiaryEntryToFirebase(newEntry);
+    if (editingEntryId) {
+      // Edit Mode
+      updateDiaryEntryInFirebase(editingEntryId, entryData);
+    } else {
+      // Create Mode
+      saveDiaryEntryToFirebase(entryData);
+    }
   });
 }
 
@@ -1820,11 +1890,49 @@ function renderDiaryEntries() {
       </div>
       <div class="diary-item-text">${entry.text}</div>
       ${imageHtml}
-      <button class="delete-entry-btn" data-id="${entry.id || ''}" data-index="${index}"><i class="fa-solid fa-trash-can"></i></button>
+      <div class="diary-item-actions">
+        <button class="edit-entry-btn" data-id="${entry.id || ''}" data-index="${index}"><i class="fa-solid fa-pencil"></i></button>
+        <button class="delete-entry-btn-active" data-id="${entry.id || ''}" data-index="${index}"><i class="fa-solid fa-trash-can"></i></button>
+      </div>
     `;
     
+    // Add edit listener
+    const editBtn = diaryItem.querySelector(".edit-entry-btn");
+    if (editBtn) {
+      editBtn.addEventListener("click", () => {
+        editingEntryId = entry.id || null;
+        if (diaryInput) diaryInput.value = entry.text || "";
+        
+        // Fill preview image
+        selectedDiaryImageBase64 = entry.image;
+        if (entry.image) {
+          if (diaryImagePreview) diaryImagePreview.src = entry.image;
+          if (diaryImagePreviewContainer) diaryImagePreviewContainer.classList.remove("hidden");
+        } else {
+          if (diaryImagePreviewContainer) diaryImagePreviewContainer.classList.add("hidden");
+          if (diaryImagePreview) diaryImagePreview.src = "";
+        }
+        
+        // Fill Date/Time picker
+        if (diaryDatetimeInput) {
+          diaryDatetimeInput.value = getLocalDateTimeString(new Date(entry.timestamp));
+        }
+        
+        // Change button text
+        if (btnSaveDiary) {
+          btnSaveDiary.innerText = "Cập Nhật 💜";
+        }
+        
+        // Smooth scroll to top of overlay form
+        const overlayContent = document.querySelector(".diary-overlay-content");
+        if (overlayContent) {
+          overlayContent.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      });
+    }
+
     // Add delete listener
-    const deleteBtn = diaryItem.querySelector(".delete-entry-btn");
+    const deleteBtn = diaryItem.querySelector(".delete-entry-btn-active");
     if (deleteBtn) {
       deleteBtn.addEventListener("click", () => {
         if (confirm("Em có chắc chắn muốn xóa dòng nhật ký này không? 🥺")) {

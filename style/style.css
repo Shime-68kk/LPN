@@ -2139,19 +2139,67 @@ body::before {
 }
 
 .delete-entry-btn {
+  display: none; /* Deprecated single button in favor of group actions */
+}
+
+/* Diary item action buttons grouping (pencil + trash) */
+.diary-item-actions {
   position: absolute;
   top: 1.2rem;
   right: 1.2rem;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.edit-entry-btn, .diary-item-actions .delete-entry-btn-active {
   background: transparent;
   border: none;
   color: #cbd5e1;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   transition: color 0.2s ease;
+  padding: 0;
+  display: inline-block;
 }
 
-.delete-entry-btn:hover {
+.edit-entry-btn:hover {
+  color: #9333ea;
+}
+
+.diary-item-actions .delete-entry-btn-active:hover {
   color: #ef4444;
+}
+
+/* Beautiful Date/Time Picker input formatting */
+.diary-datetime-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1.5px solid rgba(147, 51, 234, 0.2);
+  border-radius: 12px;
+  padding: 6px 12px;
+  color: #9333ea;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.diary-datetime-wrapper:focus-within {
+  border-color: #9333ea;
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+}
+
+.diary-datetime-wrapper input[type="datetime-local"] {
+  border: none;
+  background: transparent;
+  color: #6b21a8;
+  font-family: inherit;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+  padding: 0;
 }
 
 /* Floating Mascot Widget (Bottom-Left) */
