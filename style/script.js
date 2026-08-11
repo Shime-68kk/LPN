@@ -1513,19 +1513,15 @@ const diaryImagePreviewContainer = document.getElementById("diary-image-preview-
 const diaryImagePreview = document.getElementById("diary-image-preview");
 const btnRemovePreview = document.getElementById("btn-remove-preview");
 const diaryEntriesList = document.getElementById("diary-entries-list");
-const diaryDatetimeInput = document.getElementById("diary-datetime-input");
 
 let selectedDiaryImageBase64 = null;
 let editingEntryId = null; // Stores the Firebase ID of the entry currently being edited
+let editingEntryTimestamp = null; // Stores the original timestamp of the entry currently being edited
 
 // Open/Close Modal
 if (btnDiary && diaryOverlay) {
   btnDiary.addEventListener("click", () => {
     diaryOverlay.classList.add("active");
-    // Set default local time on opening
-    if (diaryDatetimeInput) {
-      diaryDatetimeInput.value = getLocalDateTimeString();
-    }
     syncDiaryFromFirebase();
   });
 }
@@ -1592,12 +1588,6 @@ if (btnRemovePreview) {
   });
 }
 
-// Get local ISO date-time string (YYYY-MM-DDTHH:MM) for datetime-local input
-function getLocalDateTimeString(dateObj = new Date()) {
-  const tzOffset = dateObj.getTimezoneOffset() * 60000;
-  return (new Date(dateObj - tzOffset)).toISOString().slice(0, 16);
-}
-
 // Reset Form fields
 function resetDiaryForm() {
   if (diaryInput) diaryInput.value = "";
@@ -1606,13 +1596,9 @@ function resetDiaryForm() {
   if (diaryImagePreviewContainer) diaryImagePreviewContainer.classList.add("hidden");
   if (diaryImagePreview) diaryImagePreview.src = "";
   
-  // Reset date/time to current local time
-  if (diaryDatetimeInput) {
-    diaryDatetimeInput.value = getLocalDateTimeString();
-  }
-  
   // Reset edit state
   editingEntryId = null;
+  editingEntryTimestamp = null;
   if (btnSaveDiary) {
     btnSaveDiary.innerText = "Ghi Sổ 💜";
   }
@@ -1829,23 +1815,22 @@ if (btnSaveDiary) {
       return;
     }
 
-    // Read timestamp from datetime-local input
-    let timestamp = Date.now();
-    if (diaryDatetimeInput && diaryDatetimeInput.value) {
-      timestamp = new Date(diaryDatetimeInput.value).getTime();
-    }
-
-    const entryData = {
-      text: text,
-      image: selectedDiaryImageBase64,
-      timestamp: timestamp
-    };
-    
     if (editingEntryId) {
-      // Edit Mode
+      // Edit Mode - preserve original timestamp, add isEdited flag
+      const entryData = {
+        text: text,
+        image: selectedDiaryImageBase64,
+        timestamp: editingEntryTimestamp,
+        isEdited: true
+      };
       updateDiaryEntryInFirebase(editingEntryId, entryData);
     } else {
-      // Create Mode
+      // Create Mode - use current local time
+      const entryData = {
+        text: text,
+        image: selectedDiaryImageBase64,
+        timestamp: Date.now()
+      };
       saveDiaryEntryToFirebase(entryData);
     }
   });
@@ -1884,9 +1869,12 @@ function renderDiaryEntries() {
       imageHtml = `<img class="diary-item-img" src="${entry.image}" loading="lazy" alt="Diary Image" />`;
     }
     
+    // Add '(đã chỉnh sửa)' indicator if it was edited
+    const editedHtml = entry.isEdited ? ` <span class="diary-item-edited">(đã chỉnh sửa)</span>` : "";
+    
     diaryItem.innerHTML = `
       <div class="diary-item-date">
-        <i class="fa-regular fa-clock"></i> ${timeStr} ngày ${dateStr}
+        <i class="fa-regular fa-clock"></i> ${timeStr} ngày ${dateStr}${editedHtml}
       </div>
       <div class="diary-item-text">${entry.text}</div>
       ${imageHtml}
@@ -1901,6 +1889,8 @@ function renderDiaryEntries() {
     if (editBtn) {
       editBtn.addEventListener("click", () => {
         editingEntryId = entry.id || null;
+        editingEntryTimestamp = entry.timestamp; // Cache original timestamp
+        
         if (diaryInput) diaryInput.value = entry.text || "";
         
         // Fill preview image
@@ -1911,11 +1901,6 @@ function renderDiaryEntries() {
         } else {
           if (diaryImagePreviewContainer) diaryImagePreviewContainer.classList.add("hidden");
           if (diaryImagePreview) diaryImagePreview.src = "";
-        }
-        
-        // Fill Date/Time picker
-        if (diaryDatetimeInput) {
-          diaryDatetimeInput.value = getLocalDateTimeString(new Date(entry.timestamp));
         }
         
         // Change button text
