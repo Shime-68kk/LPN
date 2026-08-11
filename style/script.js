@@ -7,6 +7,9 @@ let isPlaying = false;
 // Cấu hình Discord Webhook URL để nhận thông báo thời gian thật khi bấm nút đồng ý
 const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1534358624040910971/Cbckwdq-vB9yQmYaqNcHHFAbEVKfOdxe4G4NpF6q3kJDLmAopR92o-QP66dddtZe-Gg8";
 
+// Cấu hình Firebase Database URL để đồng bộ nhật ký giữa các thiết bị
+const FIREBASE_DB_URL = "https://yeult-diary-default-rtdb.asia-southeast1.firebasedatabase.app/"; // Hãy thay thế bằng link database Firebase của bạn
+
 function sendDiscordNotification(timeString) {
   if (DISCORD_WEBHOOK_URL) {
     fetch(DISCORD_WEBHOOK_URL, {
@@ -1517,7 +1520,7 @@ let selectedDiaryImageBase64 = null;
 if (btnDiary && diaryOverlay) {
   btnDiary.addEventListener("click", () => {
     diaryOverlay.classList.add("active");
-    renderDiaryEntries();
+    syncDiaryFromFirebase();
   });
 }
 
@@ -1592,7 +1595,105 @@ function resetDiaryForm() {
   if (diaryImagePreview) diaryImagePreview.src = "";
 }
 
-// Save Entry
+// Sync Diary from Firebase
+async function syncDiaryFromFirebase() {
+  if (!diaryEntriesList) return;
+  
+  // Show loading indicator
+  diaryEntriesList.innerHTML = `
+    <div style="text-align: center; color: #9333ea; margin-top: 30px; font-size: 0.95rem;">
+      <i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i>Đang đồng bộ nhật ký từ đám mây... 💕
+    </div>
+  `;
+  
+  try {
+    const response = await fetch(`${FIREBASE_DB_URL}diary.json`);
+    if (!response.ok) throw new Error("Fetch failed");
+    const data = await response.json();
+    
+    const entries = [];
+    if (data) {
+      Object.keys(data).forEach(key => {
+        entries.push({
+          id: key,
+          ...data[key]
+        });
+      });
+    }
+    
+    // Sort by timestamp descending
+    entries.sort((a, b) => b.timestamp - a.timestamp);
+    
+    // Cache locally
+    localStorage.setItem("loveDiaryEntries", JSON.stringify(entries));
+  } catch (err) {
+    console.error("Could not sync with Firebase, using cache:", err);
+  }
+  
+  // Draw UI
+  renderDiaryEntries();
+}
+
+// Send Discord notification when diary entry is added
+function sendDiscordNotificationForDiary(entry) {
+  if (DISCORD_WEBHOOK_URL) {
+    let messageContent = `✍️ **Nhật ký tình yêu vừa có trang mới!** 💕\n`;
+    if (entry.text) {
+      messageContent += `📝 *"${entry.text}"*\n`;
+    }
+    if (entry.image) {
+      messageContent += `📸 *Có đính kèm hình ảnh kỉ niệm.*`;
+    }
+    
+    fetch(DISCORD_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        content: messageContent
+      })
+    }).catch(err => console.error("Webhook notification failed:", err));
+  }
+}
+
+// Save Entry to Firebase and Local Cache
+async function saveDiaryEntryToFirebase(newEntry) {
+  // Prepend to local cache to keep UI instant and snappy
+  const entries = JSON.parse(localStorage.getItem("loveDiaryEntries") || "[]");
+  entries.unshift(newEntry);
+  localStorage.setItem("loveDiaryEntries", JSON.stringify(entries));
+  renderDiaryEntries();
+  
+  resetDiaryForm();
+  
+  try {
+    const response = await fetch(`${FIREBASE_DB_URL}diary.json`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(newEntry)
+    });
+    if (!response.ok) throw new Error("Post failed");
+    const result = await response.json();
+    
+    // Update cache with correct Firebase key ID
+    if (result && result.name) {
+      newEntry.id = result.name;
+      entries[0] = newEntry;
+      localStorage.setItem("loveDiaryEntries", JSON.stringify(entries));
+      renderDiaryEntries();
+    }
+    
+    // Send Discord message
+    sendDiscordNotificationForDiary(newEntry);
+  } catch (err) {
+    console.error("Failed to save to Firebase:", err);
+  }
+}
+
+// Save Entry Click Event
 if (btnSaveDiary) {
   btnSaveDiary.addEventListener("click", () => {
     const text = diaryInput ? diaryInput.value.trim() : "";
@@ -1601,18 +1702,13 @@ if (btnSaveDiary) {
       return;
     }
 
-    const entries = JSON.parse(localStorage.getItem("loveDiaryEntries") || "[]");
     const newEntry = {
       text: text,
       image: selectedDiaryImageBase64,
       timestamp: Date.now()
     };
     
-    entries.unshift(newEntry); // Add to the top of the list
-    localStorage.setItem("loveDiaryEntries", JSON.stringify(entries));
-    
-    resetDiaryForm();
-    renderDiaryEntries();
+    saveDiaryEntryToFirebase(newEntry);
   });
 }
 
@@ -1651,7 +1747,7 @@ function renderDiaryEntries() {
       </div>
       <div class="diary-item-text">${entry.text}</div>
       ${imageHtml}
-      <button class="delete-entry-btn" data-index="${index}"><i class="fa-solid fa-trash-can"></i></button>
+      <button class="delete-entry-btn" data-id="${entry.id || ''}" data-index="${index}"><i class="fa-solid fa-trash-can"></i></button>
     `;
     
     // Add delete listener
@@ -1659,7 +1755,9 @@ function renderDiaryEntries() {
     if (deleteBtn) {
       deleteBtn.addEventListener("click", () => {
         if (confirm("Em có chắc chắn muốn xóa dòng nhật ký này không? 🥺")) {
-          deleteDiaryEntry(index);
+          const entryId = deleteBtn.getAttribute("data-id");
+          const entryIndex = parseInt(deleteBtn.getAttribute("data-index"));
+          deleteDiaryEntry(entryId, entryIndex);
         }
       });
     }
@@ -1669,11 +1767,34 @@ function renderDiaryEntries() {
 }
 
 // Delete Diary Entry
-function deleteDiaryEntry(index) {
+async function deleteDiaryEntry(id, index) {
   const entries = JSON.parse(localStorage.getItem("loveDiaryEntries") || "[]");
   entries.splice(index, 1);
   localStorage.setItem("loveDiaryEntries", JSON.stringify(entries));
   renderDiaryEntries();
+  
+  if (id) {
+    try {
+      const response = await fetch(`${FIREBASE_DB_URL}diary/${id}.json`, {
+        method: "DELETE"
+      });
+      if (!response.ok) throw new Error("Delete failed");
+      
+      if (DISCORD_WEBHOOK_URL) {
+        fetch(DISCORD_WEBHOOK_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            content: `🗑️ **Một trang nhật ký tình yêu vừa được xóa.**`
+          })
+        }).catch(console.error);
+      }
+    } catch (err) {
+      console.error("Failed to delete from Firebase:", err);
+    }
+  }
 }
 
 // Mascot Daily Notes logic
