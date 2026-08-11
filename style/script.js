@@ -1766,10 +1766,15 @@ if (btnSaveDiary) {
       return;
     }
 
+    // CẤU HÌNH ÉP MỐC THỜI GIAN (Hỗ trợ Quang re-up bài cũ đúng ngày 09/08/2026 lúc 18:57)
+    // Sau khi re-up bài này xong, bạn hãy sửa dòng dưới từ true thành false rồi push lên nhé!
+    const useForcedTime = true; 
+    const forcedTimestamp = 1786276620000; // Mốc 18:57 ngày 09/08/2026
+
     const newEntry = {
       text: text,
       image: selectedDiaryImageBase64,
-      timestamp: Date.now()
+      timestamp: useForcedTime ? forcedTimestamp : Date.now()
     };
     
     saveDiaryEntryToFirebase(newEntry);
