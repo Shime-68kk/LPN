@@ -12,7 +12,7 @@
     href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="style/style.css?v=4.0" />
+  <link rel="stylesheet" href="style/style.css?v=5.0" />
 </head>
 
 <body>
@@ -343,11 +343,20 @@
     <div class="mascot-hint-bubble hidden" id="mascot-hint-bubble">Giữ để thả cảm xúc 🧸</div>
     <div class="mascot-avatar">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <!-- Mascot Angel Wings (Unlocked at >= 30 days, placed at the back) -->
+        <g id="mascot-wings" class="hidden">
+          <!-- Left Wing -->
+          <path d="M 18 55 Q 0 42 -4 58 Q 2 68 18 64 Z" fill="#fbcfe8" stroke="#f472b6" stroke-width="2" opacity="0.85" />
+          <!-- Right Wing -->
+          <path d="M 82 55 Q 100 42 104 58 Q 98 68 82 64 Z" fill="#fbcfe8" stroke="#f472b6" stroke-width="2" opacity="0.85" />
+        </g>
+
         <!-- Ears -->
         <circle cx="28" cy="25" r="14" fill="#fef08a" stroke="#9333ea" stroke-width="4.5" id="mascot-ear-l" />
-        <circle cx="28" cy="25" r="7" fill="#fda4af" />
+        <circle cx="28" cy="25" r="7" fill="#fda4af" id="mascot-ear-l-inner" />
         <circle cx="72" cy="25" r="14" fill="#fef08a" stroke="#9333ea" stroke-width="4.5" id="mascot-ear-r" />
-        <circle cx="72" cy="25" r="7" fill="#fda4af" />
+        <circle cx="72" cy="25" r="7" fill="#fda4af" id="mascot-ear-r-inner" />
+        
         <!-- Head -->
         <circle cx="50" cy="50" r="38" fill="#fef08a" stroke="#9333ea" stroke-width="4.5" id="mascot-head" />
         <!-- Cheeks -->
@@ -385,15 +394,53 @@
         <!-- Mouth/Snout -->
         <path d="M46 56 Q50 52 54 56 Q50 58 46 56" fill="none" stroke="#9333ea" stroke-width="3" stroke-linecap="round" id="mascot-mouth" />
         <circle cx="50" cy="53" r="2.5" fill="#9333ea" id="mascot-snout" />
+        
         <!-- Cute little heart on head -->
         <path d="M50 22 C50 22 49 20 47 20 C45.5 20 44 21.5 44 23 C44 24.5 46.5 27 50 30 C53.5 27 56 24.5 56 23 C56 21.5 54.5 20 53 20 C51 20 50 22 50 22 Z" fill="#f43f5e" stroke="#9333ea" stroke-width="1.5" />
+        
+        <!-- Accessories Unlocked via Love Milestones -->
+        <!-- Mascot Crown (>= 10 days) -->
+        <g id="mascot-crown" class="hidden">
+          <path d="M 40 18 L 43 23 L 50 13 L 57 23 L 60 18 L 57 27 L 43 27 Z" fill="#fbbf24" stroke="#b45309" stroke-width="1.8" stroke-linejoin="round" />
+          <circle cx="40" cy="18" r="1.8" fill="#fff" />
+          <circle cx="50" cy="13" r="1.8" fill="#fff" />
+          <circle cx="60" cy="18" r="1.8" fill="#fff" />
+        </g>
+
+        <!-- Mascot Bowtie (>= 20 days) -->
+        <g id="mascot-bowtie" class="hidden">
+          <path d="M 50 87 L 43 81 L 43 93 Z" fill="#f43f5e" stroke="#9333ea" stroke-width="1.5" />
+          <path d="M 50 87 L 57 81 L 57 93 Z" fill="#f43f5e" stroke="#9333ea" stroke-width="1.5" />
+          <circle cx="50" cy="87" r="3" fill="#fda4af" stroke="#9333ea" stroke-width="1.5" />
+        </g>
+
+        <!-- Mascot Sunglasses (>= 40 days) -->
+        <g id="mascot-sunglasses" class="hidden">
+          <ellipse cx="36" cy="48" rx="8.5" ry="6.5" fill="#1e293b" stroke="#0f172a" stroke-width="1.8" />
+          <ellipse cx="64" cy="48" rx="8.5" ry="6.5" fill="#1e293b" stroke="#0f172a" stroke-width="1.8" />
+          <path d="M 44.5 47 Q 50 44 55.5 47" fill="none" stroke="#0f172a" stroke-width="2" />
+          <path d="M 31 46 L 34 44" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" />
+          <path d="M 59 46 L 62 44" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" />
+        </g>
+
+        <!-- Mascot Party Hat (>= 50 days) -->
+        <g id="mascot-partyhat" class="hidden">
+          <path d="M 38 22 L 50 2 L 62 22 Z" fill="#ec4899" stroke="#9333ea" stroke-width="1.8" stroke-linejoin="round" />
+          <path d="M 41 17 Q 50 14 59 17" fill="none" stroke="#f43f5e" stroke-width="1.8" />
+          <path d="M 44 12 Q 50 9 56 12" fill="none" stroke="#fbbf24" stroke-width="1.8" />
+          <path d="M 47 7 Q 50 4 53 7" fill="none" stroke="#60a5fa" stroke-width="1.8" />
+          <circle cx="50" cy="2" r="2.5" fill="#ffffff" stroke="#9333ea" stroke-width="1.5" />
+        </g>
+
+        <!-- Mascot Angel Halo (>= 60 days) -->
+        <g id="mascot-halo" class="hidden">
+          <ellipse cx="50" cy="8" rx="14" ry="4" fill="none" stroke="#fbbf24" stroke-width="2.5" />
+        </g>
+
         <!-- Mascot Sleeping Hat (Only shown during night mode) -->
         <g id="mascot-sleeping-hat" class="hidden">
-          <!-- Cone curved to the right droop -->
           <path d="M 34 16 C 35 -6, 70 -5, 74 20 Z" fill="#c084fc" stroke="#9333ea" stroke-width="4.5" stroke-linejoin="round" />
-          <!-- White/cream fluffy band at the bottom -->
           <rect x="25" y="10" width="50" height="11" rx="5.5" fill="#ffffff" stroke="#9333ea" stroke-width="4.5" />
-          <!-- Fluffy pom-pom at the end -->
           <circle cx="75" cy="22" r="7.5" fill="#ffffff" stroke="#9333ea" stroke-width="4.5" />
         </g>
       </svg>
@@ -444,6 +491,57 @@
             <span class="achievement-desc">Đọc xong toàn bộ bức thư tình cảm động.</span>
           </div>
         </div>
+
+        <!-- Section divider -->
+        <div class="achievement-section-header">🧸 Tiến Hóa Gấu Mascot</div>
+
+        <div class="achievement-card locked" id="ach-milestone-10">
+          <div class="achievement-icon">👑</div>
+          <div class="achievement-info">
+            <span class="achievement-title">Mốc 10 Ngày: Vương Miện Hoàng Gia</span>
+            <span class="achievement-desc">Đạt 10 ngày yêu nhau. Mở khóa Vương Miện vàng và hiệu ứng Tim Neon lấp lánh.</span>
+          </div>
+        </div>
+
+        <div class="achievement-card locked" id="ach-milestone-20">
+          <div class="achievement-icon">🎀</div>
+          <div class="achievement-info">
+            <span class="achievement-title">Mốc 20 Ngày: Nơ Cổ Tình Yêu</span>
+            <span class="achievement-desc">Đạt 20 ngày yêu nhau. Mở khóa Nơ Cổ trái tim xinh xắn.</span>
+          </div>
+        </div>
+
+        <div class="achievement-card locked" id="ach-milestone-30">
+          <div class="achievement-icon">👼</div>
+          <div class="achievement-info">
+            <span class="achievement-title">Mốc 30 Ngày: Thiên Thần Bé Nhỏ (1 Tháng)</span>
+            <span class="achievement-desc">Tròn 1 tháng yêu nhau. Gấu tiến hóa thành màu Hồng cùng Đôi Cánh thiên thần.</span>
+          </div>
+        </div>
+
+        <div class="achievement-card locked" id="ach-milestone-40">
+          <div class="achievement-icon">😎</div>
+          <div class="achievement-info">
+            <span class="achievement-title">Mốc 40 Ngày: Kính Râm Siêu Ngầu</span>
+            <span class="achievement-desc">Đạt 40 ngày yêu nhau. Mở khóa Kính Mát thời thượng.</span>
+          </div>
+        </div>
+
+        <div class="achievement-card locked" id="ach-milestone-50">
+          <div class="achievement-icon">🥳</div>
+          <div class="achievement-info">
+            <span class="achievement-title">Mốc 50 Ngày: Mũ Tiệc Vui Vẻ</span>
+            <span class="achievement-desc">Đạt 50 ngày yêu nhau. Mở khóa Mũ Sinh Nhật chóp hồng tinh nghịch.</span>
+          </div>
+        </div>
+
+        <div class="achievement-card locked" id="ach-milestone-60">
+          <div class="achievement-icon">✨</div>
+          <div class="achievement-info">
+            <span class="achievement-title">Mốc 60 Ngày: Thiên Sứ Hào Quang (2 Tháng)</span>
+            <span class="achievement-desc">Tròn 2 tháng yêu nhau. Gấu tiến hóa thành màu Vàng Kim cùng Vòng Hào Quang hộ mệnh.</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -470,7 +568,7 @@
   <audio id="audio-player"></audio>
   <audio id="pop-sound" src="style/pop.mp3"></audio>
 
-  <script src="style/script.js?v=4.2"></script>
+  <script src="style/script.js?v=5.0"></script>
 </body>
 
 </html>

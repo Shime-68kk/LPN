@@ -1402,6 +1402,126 @@ if (closeCustomAlertBtn) {
   });
 }
 
+// Update Mascot accessories and styling based on elapsed days (with performance optimization)
+function updateMascotEvolution(diffDays) {
+  const crown = document.getElementById("mascot-crown");
+  const bowtie = document.getElementById("mascot-bowtie");
+  const wings = document.getElementById("mascot-wings");
+  const sunglasses = document.getElementById("mascot-sunglasses");
+  const partyhat = document.getElementById("mascot-partyhat");
+  const halo = document.getElementById("mascot-halo");
+  
+  const earL = document.getElementById("mascot-ear-l");
+  const earLInner = document.getElementById("mascot-ear-l-inner");
+  const earR = document.getElementById("mascot-ear-r");
+  const earRInner = document.getElementById("mascot-ear-r-inner");
+  const head = document.getElementById("mascot-head");
+  
+  const counterBadge = document.getElementById("love-counter-badge");
+  const heartPulse = counterBadge ? counterBadge.querySelector(".heart-pulse") : null;
+  
+  // 10 Days Milestone
+  if (diffDays >= 10) {
+    if (crown) crown.classList.remove("hidden");
+    if (counterBadge) counterBadge.classList.add("neon-glow");
+    if (heartPulse && heartPulse.innerText !== "❤️") heartPulse.innerText = "❤️";
+  } else {
+    if (crown) crown.classList.add("hidden");
+    if (counterBadge) counterBadge.classList.remove("neon-glow");
+    if (heartPulse && heartPulse.innerText !== "💖") heartPulse.innerText = "💖";
+  }
+  
+  // 20 Days Milestone
+  if (diffDays >= 20) {
+    if (bowtie) bowtie.classList.remove("hidden");
+  } else {
+    if (bowtie) bowtie.classList.add("hidden");
+  }
+  
+  // 30 Days Milestone (1 Month Anniversary Event)
+  if (diffDays >= 30) {
+    if (wings) wings.classList.remove("hidden");
+    if (counterBadge) {
+      counterBadge.classList.remove("neon-glow");
+      counterBadge.classList.add("wings-glow");
+    }
+    if (heartPulse && heartPulse.innerText !== "💝") heartPulse.innerText = "💝";
+    
+    // Evolve color: Pink Bear (#fbcfe8)
+    if (head) head.setAttribute("fill", "#fbcfe8");
+    if (earL) earL.setAttribute("fill", "#fbcfe8");
+    if (earR) earR.setAttribute("fill", "#fbcfe8");
+    if (earLInner) earLInner.setAttribute("fill", "#f9a8d4");
+    if (earRInner) earRInner.setAttribute("fill", "#f9a8d4");
+  } else {
+    if (wings) wings.classList.add("hidden");
+    if (counterBadge) counterBadge.classList.remove("wings-glow");
+    
+    // Default yellow color
+    if (head) head.setAttribute("fill", "#fef08a");
+    if (earL) earL.setAttribute("fill", "#fef08a");
+    if (earR) earR.setAttribute("fill", "#fef08a");
+    if (earLInner) earLInner.setAttribute("fill", "#fda4af");
+    if (earRInner) earRInner.setAttribute("fill", "#fda4af");
+  }
+  
+  // 40 Days Milestone
+  if (diffDays >= 40) {
+    if (sunglasses) sunglasses.classList.remove("hidden");
+  } else {
+    if (sunglasses) sunglasses.classList.add("hidden");
+  }
+  
+  // 50 Days Milestone
+  if (diffDays >= 50) {
+    if (partyhat) partyhat.classList.remove("hidden");
+  } else {
+    if (partyhat) partyhat.classList.add("hidden");
+  }
+  
+  // 60 Days Milestone (2 Months Anniversary Event)
+  if (diffDays >= 60) {
+    if (halo) halo.classList.remove("hidden");
+    if (counterBadge) {
+      counterBadge.classList.remove("wings-glow");
+      counterBadge.classList.add("angel-glow");
+    }
+    if (heartPulse && heartPulse.innerText !== "💘") heartPulse.innerText = "💘";
+    
+    // Celestial color: Golden Yellow (#fcd34d) and Gold Wings
+    if (head) head.setAttribute("fill", "#fcd34d");
+    if (earL) earL.setAttribute("fill", "#fcd34d");
+    if (earR) earR.setAttribute("fill", "#fcd34d");
+    if (earLInner) earLInner.setAttribute("fill", "#fda4af");
+    if (earRInner) earRInner.setAttribute("fill", "#fda4af");
+    
+    const wingPaths = wings ? wings.querySelectorAll("path") : [];
+    wingPaths.forEach(p => {
+      p.setAttribute("fill", "#fde047");
+      p.setAttribute("stroke", "#eab308");
+    });
+  } else {
+    if (halo) halo.classList.add("hidden");
+    if (counterBadge) counterBadge.classList.remove("angel-glow");
+    
+    const wingPaths = wings ? wings.querySelectorAll("path") : [];
+    wingPaths.forEach(p => {
+      p.setAttribute("fill", "#fbcfe8");
+      p.setAttribute("stroke", "#f472b6");
+    });
+  }
+}
+
+// Check and trigger mascot milestone achievements
+function checkMascotMilestoneUnlocks(diffDays) {
+  if (diffDays >= 10) unlockAchievement("milestone-10", "Mốc 10 Ngày: Vương Miện Hoàng Gia");
+  if (diffDays >= 20) unlockAchievement("milestone-20", "Mốc 20 Ngày: Nơ Cổ Tình Yêu");
+  if (diffDays >= 30) unlockAchievement("milestone-30", "Mốc 30 Ngày: Thiên Thần Bé Nhỏ");
+  if (diffDays >= 40) unlockAchievement("milestone-40", "Mốc 40 Ngày: Kính Râm Siêu Ngầu");
+  if (diffDays >= 50) unlockAchievement("milestone-50", "Mốc 50 Ngày: Mũ Tiệc Vui Vẻ");
+  if (diffDays >= 60) unlockAchievement("milestone-60", "Mốc 60 Ngày: Thiên Sứ Hào Quang");
+}
+
 // Love Counter logic
 function updateLoveCounter() {
   const loveDaysEl = document.getElementById("love-days-count");
@@ -1414,8 +1534,13 @@ function updateLoveCounter() {
   const now = Date.now();
   const diffTime = Math.max(0, now - startMs);
   
-  // Calculate days, hours, minutes, seconds
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  // Calculate days, hours, minutes, seconds (support manual query param ?testDays=X for testing evolution)
+  const urlParams = new URLSearchParams(window.location.search);
+  const testDaysParam = urlParams.get("testDays");
+  let diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  if (testDaysParam !== null) {
+    diffDays = parseInt(testDaysParam, 10);
+  }
   const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const diffMinutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
   const diffSeconds = Math.floor((diffTime % (1000 * 60)) / 1000);
@@ -1427,6 +1552,10 @@ function updateLoveCounter() {
   if (detailsTimeEl) {
     detailsTimeEl.innerText = `${diffDays} ngày ${diffHours} giờ ${diffMinutes} phút ${diffSeconds} giây`;
   }
+
+  // Update Mascot accessories and styling based on milestones
+  updateMascotEvolution(diffDays);
+  checkMascotMilestoneUnlocks(diffDays);
 
   // Update birthday countdown
   updateUpcomingEvent();
@@ -2526,7 +2655,13 @@ function updateAchievementsModalUI() {
     { id: "thau-hieu", name: "Thấu Hiểu" },
     { id: "lang-nghe", name: "Lắng Nghe" },
     { id: "cung-nung", name: "Cưng Nựng" },
-    { id: "doc-ky", name: "Đọc Kỹ" }
+    { id: "doc-ky", name: "Đọc Kỹ" },
+    { id: "milestone-10", name: "Mốc 10 Ngày" },
+    { id: "milestone-20", name: "Mốc 20 Ngày" },
+    { id: "milestone-30", name: "Mốc 30 Ngày" },
+    { id: "milestone-40", name: "Mốc 40 Ngày" },
+    { id: "milestone-50", name: "Mốc 50 Ngày" },
+    { id: "milestone-60", name: "Mốc 60 Ngày" }
   ];
   
   achievements.forEach(ach => {
