@@ -12,7 +12,7 @@
     href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="style/style.css?v=2.0" />
+  <link rel="stylesheet" href="style/style.css?v=3.5" />
 </head>
 
 <body>
@@ -337,13 +337,6 @@
     <div class="mascot-speech-bubble hidden" id="mascot-speech-bubble">
       <span id="mascot-bubble-text">Nhấp vào tớ để nhận lời yêu thương nhé! 💖</span>
     </div>
-    <!-- Mascot Mood Menu (Hidden by default, shown on click/tap-hold) -->
-    <div class="mascot-mood-menu hidden" id="mascot-mood-menu">
-      <button class="mood-btn" data-mood="happy" title="Vui vẻ">😊</button>
-      <button class="mood-btn" data-mood="missing" title="Nhớ anh">🥺</button>
-      <button class="mood-btn" data-mood="tired" title="Mệt mỏi">😴</button>
-      <button class="mood-btn" data-mood="angry" title="Giận dỗi">😡</button>
-    </div>
     <!-- Mood Badge Displayed on Mascot -->
     <div class="mascot-mood-badge hidden" id="mascot-mood-badge"></div>
     <!-- Mascot Suggestion Hint -->
@@ -453,6 +446,14 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Mascot Mood Menu (Hidden by default, shown on tap-hold, direct body child to prevent parent transformations clipping) -->
+  <div class="mascot-mood-menu hidden" id="mascot-mood-menu">
+    <button class="mood-btn" data-mood="happy" title="Vui vẻ">😊</button>
+    <button class="mood-btn" data-mood="missing" title="Nhớ anh">🥺</button>
+    <button class="mood-btn" data-mood="tired" title="Mệt mỏi">😴</button>
+    <button class="mood-btn" data-mood="angry" title="Giận dỗi">😡</button>
   </div>
 
   <!-- Achievement Toast Notification -->

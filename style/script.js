@@ -2619,10 +2619,10 @@ if (mascotWidget) {
   });
 }
 
-// Click/tap outside the mascot widget → close mood selector
+// Click/tap outside the mascot widget and the mood menu itself → close mood selector
 document.addEventListener("click", (e) => {
-  if (mascotWidget && !mascotWidget.contains(e.target)) {
-    if (mascotMoodMenu) mascotMoodMenu.classList.add("hidden");
+  if (mascotWidget && !mascotWidget.contains(e.target) && mascotMoodMenu && !mascotMoodMenu.contains(e.target)) {
+    mascotMoodMenu.classList.add("hidden");
   }
 });
 
