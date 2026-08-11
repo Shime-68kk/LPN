@@ -1595,6 +1595,43 @@ function resetDiaryForm() {
   if (diaryImagePreview) diaryImagePreview.src = "";
 }
 
+// Automatically migrate legacy offline-only entries (without IDs) to Firebase
+async function migrateLocalEntriesToFirebase() {
+  try {
+    const localEntries = JSON.parse(localStorage.getItem("loveDiaryEntries") || "[]");
+    const unmigrated = localEntries.filter(entry => !entry.id);
+    
+    if (unmigrated.length === 0) return;
+    
+    console.log(`Migrating ${unmigrated.length} offline entries to Firebase...`);
+    
+    for (let entry of unmigrated) {
+      const response = await fetch(`${FIREBASE_DB_URL}diary.json`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          text: entry.text || "",
+          image: entry.image || null,
+          timestamp: entry.timestamp
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result && result.name) {
+          entry.id = result.name;
+        }
+      }
+    }
+    
+    localStorage.setItem("loveDiaryEntries", JSON.stringify(localEntries));
+  } catch (err) {
+    console.error("Error during entry migration:", err);
+  }
+}
+
 // Sync Diary from Firebase
 // Pagination state for diary performance optimization
 let diaryVisibleCount = 10;
@@ -1602,6 +1639,9 @@ let diaryVisibleCount = 10;
 // Sync Diary from Firebase (Offline-first progressive sync)
 async function syncDiaryFromFirebase() {
   if (!diaryEntriesList) return;
+  
+  // Run background migration for any legacy offline-only entries first
+  await migrateLocalEntriesToFirebase();
   
   const cachedDataStr = localStorage.getItem("loveDiaryEntries");
   const hasCache = !!cachedDataStr;
