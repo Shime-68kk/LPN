@@ -1871,23 +1871,7 @@ const mascotNoteOverlay = document.getElementById("mascot-note-overlay");
 const mascotNoteContent = document.getElementById("mascot-note-content");
 const closeMascotNote = document.getElementById("close-mascot-note");
 
-// Click Mascot to see a random sweet message
-if (mascotWidget) {
-  mascotWidget.addEventListener("click", () => {
-    const combinedNotes = getMascotMessages();
-    const randomIndex = Math.floor(Math.random() * combinedNotes.length);
-    if (mascotNoteContent) {
-      mascotNoteContent.innerText = combinedNotes[randomIndex];
-    }
-    if (mascotNoteOverlay) {
-      mascotNoteOverlay.classList.add("active");
-    }
-    // Hide speech bubble immediately when clicked
-    if (mascotSpeechBubble) {
-      mascotSpeechBubble.classList.add("hidden");
-    }
-  });
-}
+// Older click Mascot overlay note event listener removed to prevent screen blocks and enable Messenger-style reaction bar
 
 // Close Note modal
 if (closeMascotNote && mascotNoteOverlay) {
