@@ -2529,60 +2529,101 @@ function resetMascotExpression() {
 }
 
 if (mascotWidget) {
-  // Show hint bubble initially, then hide after 5 seconds
+  // Show hint bubble initially, then hide after 6 seconds
   setTimeout(() => {
     if (localStorage.getItem("mascotHintSeen") !== "true") {
       if (mascotHintBubble) mascotHintBubble.classList.remove("hidden");
       setTimeout(() => {
         if (mascotHintBubble) mascotHintBubble.classList.add("hidden");
         localStorage.setItem("mascotHintSeen", "true");
-      }, 5000);
+      }, 6000);
     }
   }, 3000);
 
-  // Toggle Mascot Mood Menu directly on CLICK/TAP (Easy and robust, no long-press issues!)
-  mascotWidget.addEventListener("click", (e) => {
-    e.stopPropagation();
-    
-    // Toggle reaction menu visibility
+  let holdTimer = null;
+  let didLongPress = false;
+
+  // Helper: trigger nuzzle wobble on the avatar
+  function nuzzleMascot() {
+    if (!mascotAvatarEl) return;
+    mascotAvatarEl.classList.remove("nuzzle");
+    // Force reflow so the animation restarts every tap
+    void mascotAvatarEl.offsetWidth;
+    mascotAvatarEl.classList.add("nuzzle");
+    setTimeout(() => mascotAvatarEl.classList.remove("nuzzle"), 650);
+  }
+
+  // Helper: hide reaction menu and speech bubble
+  function hideMoodMenu() {
+    if (mascotMoodMenu) mascotMoodMenu.classList.add("hidden");
+  }
+  function showMoodMenu() {
     if (mascotMoodMenu) {
-      const isHidden = mascotMoodMenu.classList.contains("hidden");
-      if (isHidden) {
-        mascotMoodMenu.classList.remove("hidden");
-        if (mascotHintBubble) mascotHintBubble.classList.add("hidden");
-        
-        // Vibrate mobile device briefly (haptic feedback)
-        if (navigator.vibrate) {
-          navigator.vibrate(30);
-        }
-      } else {
-        mascotMoodMenu.classList.add("hidden");
-      }
+      // Hide speech bubble so they don't overlap
+      if (mascotSpeechBubble) mascotSpeechBubble.classList.add("hidden");
+      if (mascotHintBubble) mascotHintBubble.classList.add("hidden");
+      mascotMoodMenu.classList.remove("hidden");
     }
-    
-    // Increment mascot taps count
-    mascotTaps++;
-    localStorage.setItem("mascotTapCount", mascotTaps.toString());
-    if (mascotTaps >= 10) {
-      unlockAchievement("cung-nung", "Cưng Nựng");
+    if (navigator.vibrate) navigator.vibrate(40);
+  }
+
+  // PRESS START - start long-press timer
+  const onPressStart = (e) => {
+    didLongPress = false;
+    holdTimer = setTimeout(() => {
+      didLongPress = true;
+      showMoodMenu();
+    }, 500);
+  };
+
+  // PRESS END - if short tap (no long press) → nuzzle + speech bubble
+  const onPressEnd = (e) => {
+    if (holdTimer) clearTimeout(holdTimer);
+
+    if (!didLongPress) {
+      // Short tap: nuzzle wobble + show sweet speech bubble
+      nuzzleMascot();
+      spawnMascotHearts();
+
+      // Increment mascot taps count
+      mascotTaps++;
+      localStorage.setItem("mascotTapCount", mascotTaps.toString());
+      if (mascotTaps >= 10) unlockAchievement("cung-nung", "Cưng Nựng");
+
+      // Show speech bubble with current mood quote or random message
+      const currentMood = localStorage.getItem("mascotMood") || "none";
+      if (currentMood !== "none" && moodQuotes[currentMood]) {
+        if (mascotBubbleText) mascotBubbleText.innerText = moodQuotes[currentMood];
+      } else {
+        triggerMascotBubble();
+      }
+      if (mascotSpeechBubble) mascotSpeechBubble.classList.remove("hidden");
+      // Auto-hide speech bubble after 4s
+      setTimeout(() => {
+        if (mascotSpeechBubble) mascotSpeechBubble.classList.add("hidden");
+      }, 4000);
     }
 
-    // Trigger normal dialog bubble and hearts
-    spawnMascotHearts();
-    
-    const currentMood = localStorage.getItem("mascotMood") || "none";
-    if (currentMood !== "none" && moodQuotes[currentMood]) {
-      if (mascotBubbleText) mascotBubbleText.innerText = moodQuotes[currentMood];
-    } else {
-      triggerMascotBubble();
-    }
-    if (mascotSpeechBubble) mascotSpeechBubble.classList.remove("hidden");
+    didLongPress = false;
+  };
+
+  // Prevent context menu on long-press mobile
+  mascotWidget.addEventListener("contextmenu", (e) => e.preventDefault());
+
+  mascotWidget.addEventListener("mousedown", onPressStart);
+  mascotWidget.addEventListener("touchstart", onPressStart, { passive: true });
+  mascotWidget.addEventListener("mouseup", onPressEnd);
+  mascotWidget.addEventListener("touchend", onPressEnd, { passive: true });
+  mascotWidget.addEventListener("mouseleave", () => {
+    if (holdTimer) clearTimeout(holdTimer);
   });
 }
 
-// Click outside to close mood selector
-document.addEventListener("click", () => {
-  if (mascotMoodMenu) mascotMoodMenu.classList.add("hidden");
+// Click/tap outside the mascot widget → close mood selector
+document.addEventListener("click", (e) => {
+  if (mascotWidget && !mascotWidget.contains(e.target)) {
+    if (mascotMoodMenu) mascotMoodMenu.classList.add("hidden");
+  }
 });
 
 // Spawn hearts function

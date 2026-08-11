@@ -2855,42 +2855,63 @@ body.night-mode .menu-item:active {
   to { transform: translateY(-5px); }
 }
 
-/* Mascot Mood Selector */
+/* Mascot Mood Selector - anchored to the LEFT edge of widget, always visible */
 .mascot-mood-menu {
   position: absolute;
-  bottom: 110px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 2px solid rgba(147, 51, 234, 0.2);
-  border-radius: 30px;
-  padding: 8px 12px;
+  /* Sits above the bear, aligned to left edge of the widget */
+  bottom: 80px;
+  left: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid rgba(147, 51, 234, 0.25);
+  border-radius: 40px;
+  padding: 10px 14px;
   display: flex;
-  gap: 10px;
-  box-shadow: 0 10px 25px rgba(147, 51, 234, 0.15);
-  z-index: 105;
-  animation: mood-menu-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  gap: 6px;
+  box-shadow: 0 8px 24px rgba(147, 51, 234, 0.2), 0 2px 6px rgba(0,0,0,0.08);
+  z-index: 2500;
+  transform-origin: bottom left;
+  animation: mood-menu-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  white-space: nowrap;
 }
 
 @keyframes mood-menu-pop {
-  from { transform: translateX(-50%) scale(0.7); opacity: 0; }
-  to { transform: translateX(-50%) scale(1); opacity: 1; }
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 .mood-btn {
   background: none;
   border: none;
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   cursor: pointer;
-  padding: 4px;
+  padding: 5px;
   border-radius: 50%;
-  transition: all 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
-.mood-btn:hover {
-  transform: scale(1.25) translateY(-3px);
+.mood-btn:hover, .mood-btn:active {
+  transform: scale(1.4) translateY(-6px);
+}
+
+/* Nuzzle wobble animation on tap */
+@keyframes mascot-nuzzle {
+  0%   { transform: rotate(0deg) scale(1); }
+  15%  { transform: rotate(-8deg) scale(1.08); }
+  30%  { transform: rotate(7deg) scale(1.06); }
+  45%  { transform: rotate(-5deg) scale(1.04); }
+  60%  { transform: rotate(4deg) scale(1.02); }
+  75%  { transform: rotate(-2deg) scale(1.01); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+.mascot-avatar.nuzzle {
+  animation: mascot-nuzzle 0.6s ease-in-out !important;
 }
 
 /* Mascot Mood Badge */
