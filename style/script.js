@@ -1863,10 +1863,10 @@ function renderDiaryEntries() {
     const diaryItem = document.createElement("div");
     diaryItem.className = "diary-item";
     
-    // Optimized: set loading="lazy" and zoom-in cursor
+    // Optimized: set loading="lazy" to let browser load image only when scrolled into view
     let imageHtml = "";
     if (entry.image) {
-      imageHtml = `<img class="diary-item-img" src="${entry.image}" loading="lazy" alt="Diary Image" style="cursor: zoom-in;" />`;
+      imageHtml = `<img class="diary-item-img" src="${entry.image}" loading="lazy" alt="Diary Image" />`;
     }
     
     // Add '(đã chỉnh sửa)' indicator if it was edited
@@ -1883,14 +1883,6 @@ function renderDiaryEntries() {
         <button class="delete-entry-btn-active" data-id="${entry.id || ''}" data-index="${index}"><i class="fa-solid fa-trash-can"></i></button>
       </div>
     `;
-    
-    // Add click listener to image to open lightbox
-    const diaryImg = diaryItem.querySelector(".diary-item-img");
-    if (diaryImg) {
-      diaryImg.addEventListener("click", () => {
-        openLightbox(entry.image);
-      });
-    }
     
     // Add edit listener
     const editBtn = diaryItem.querySelector(".edit-entry-btn");
