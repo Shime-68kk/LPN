@@ -19,8 +19,6 @@ body {
     Roboto,
     sans-serif;
   background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 50%, #a78bfa 100%);
-  background-size: 400% 400%;
-  animation: gradientBG 15s ease infinite;
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -2337,6 +2335,7 @@ body::before {
   border-radius: 50%;
   pointer-events: none;
   animation: float-firefly infinite ease-in-out;
+  will-change: transform, opacity;
 }
 
 @keyframes float-firefly {
@@ -2353,8 +2352,6 @@ body::before {
 /* Midnight Constellation Mode Styles */
 body.night-mode {
   background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
-  background-size: 400% 400%;
-  animation: nightGradientBG 15s ease infinite;
 }
 
 @keyframes nightGradientBG {
@@ -3066,5 +3063,28 @@ body.night-mode .menu-item:active {
     transform: translate(var(--tx), var(--ty)) scale(1.2);
     opacity: 0;
   }
+}
+
+/* Load More Diary Button */
+.load-more-diary-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: rgba(147, 51, 234, 0.08);
+  border: 2px dashed rgba(147, 51, 234, 0.25);
+  border-radius: 12px;
+  color: #9333ea;
+  font-weight: bold;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.load-more-diary-btn:hover {
+  background: rgba(147, 51, 234, 0.15);
+  border-color: #9333ea;
+  transform: translateY(-2px);
 }
 

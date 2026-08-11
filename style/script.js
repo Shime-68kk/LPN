@@ -1596,15 +1596,27 @@ function resetDiaryForm() {
 }
 
 // Sync Diary from Firebase
+// Pagination state for diary performance optimization
+let diaryVisibleCount = 10;
+
+// Sync Diary from Firebase (Offline-first progressive sync)
 async function syncDiaryFromFirebase() {
   if (!diaryEntriesList) return;
   
-  // Show loading indicator
-  diaryEntriesList.innerHTML = `
-    <div style="text-align: center; color: #9333ea; margin-top: 30px; font-size: 0.95rem;">
-      <i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i>Đang đồng bộ nhật ký từ đám mây... 💕
-    </div>
-  `;
+  const cachedDataStr = localStorage.getItem("loveDiaryEntries");
+  const hasCache = !!cachedDataStr;
+  
+  // 1. If we have local cache, render it immediately (0ms delay) to keep the app responsive!
+  if (hasCache) {
+    renderDiaryEntries();
+  } else {
+    // Show loading spinner only if we don't have cached data yet
+    diaryEntriesList.innerHTML = `
+      <div style="text-align: center; color: #9333ea; margin-top: 30px; font-size: 0.95rem;">
+        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i>Đang tải nhật ký lần đầu... 💕
+      </div>
+    `;
+  }
   
   try {
     const response = await fetch(`${FIREBASE_DB_URL}diary.json`);
@@ -1624,14 +1636,23 @@ async function syncDiaryFromFirebase() {
     // Sort by timestamp descending
     entries.sort((a, b) => b.timestamp - a.timestamp);
     
-    // Cache locally
-    localStorage.setItem("loveDiaryEntries", JSON.stringify(entries));
+    // 2. Compare with cache to avoid unnecessary DOM repaint if nothing changed
+    const newDataStr = JSON.stringify(entries);
+    if (newDataStr !== cachedDataStr) {
+      localStorage.setItem("loveDiaryEntries", newDataStr);
+      renderDiaryEntries();
+    }
   } catch (err) {
     console.error("Could not sync with Firebase, using cache:", err);
+    // If fetch fails and we don't have cache, show error message
+    if (!hasCache) {
+      diaryEntriesList.innerHTML = `
+        <div style="text-align: center; color: #ef4444; margin-top: 30px; font-size: 0.95rem;">
+          <i class="fa-solid fa-triangle-exclamation" style="margin-right: 8px;"></i>Không thể kết nối máy chủ. Em hãy thử lại sau nhé! 🥺
+        </div>
+      `;
+    }
   }
-  
-  // Draw UI
-  renderDiaryEntries();
 }
 
 // Send Discord notification when diary entry is added
@@ -1663,6 +1684,9 @@ async function saveDiaryEntryToFirebase(newEntry) {
   const entries = JSON.parse(localStorage.getItem("loveDiaryEntries") || "[]");
   entries.unshift(newEntry);
   localStorage.setItem("loveDiaryEntries", JSON.stringify(entries));
+  
+  // Reset visibility pagination count so the new entry at the top is seen
+  diaryVisibleCount = 10;
   renderDiaryEntries();
   
   resetDiaryForm();
@@ -1712,7 +1736,7 @@ if (btnSaveDiary) {
   });
 }
 
-// Render Diary Entries
+// Render Diary Entries (with Pagination & Lazy Loading to prevent CPU heating/lag)
 function renderDiaryEntries() {
   if (!diaryEntriesList) return;
   
@@ -1728,7 +1752,10 @@ function renderDiaryEntries() {
     return;
   }
   
-  entries.forEach((entry, index) => {
+  // Render only up to diaryVisibleCount to keep DOM lightweight
+  const visibleEntries = entries.slice(0, diaryVisibleCount);
+  
+  visibleEntries.forEach((entry, index) => {
     const dateObj = new Date(entry.timestamp);
     const timeStr = dateObj.toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' });
     const dateStr = dateObj.toLocaleDateString("vi-VN", { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -1736,9 +1763,10 @@ function renderDiaryEntries() {
     const diaryItem = document.createElement("div");
     diaryItem.className = "diary-item";
     
+    // Optimized: set loading="lazy" to let browser load image only when scrolled into view
     let imageHtml = "";
     if (entry.image) {
-      imageHtml = `<img class="diary-item-img" src="${entry.image}" alt="Diary Image" />`;
+      imageHtml = `<img class="diary-item-img" src="${entry.image}" loading="lazy" alt="Diary Image" />`;
     }
     
     diaryItem.innerHTML = `
@@ -1764,6 +1792,19 @@ function renderDiaryEntries() {
     
     diaryEntriesList.appendChild(diaryItem);
   });
+  
+  // If there are more entries, append the Load More button
+  if (entries.length > diaryVisibleCount) {
+    const loadMoreBtn = document.createElement("button");
+    loadMoreBtn.className = "load-more-diary-btn";
+    loadMoreBtn.id = "btn-load-more-diary";
+    loadMoreBtn.innerHTML = `Xem thêm nhật ký cũ... <i class="fa-solid fa-chevron-down" style="margin-left: 5px;"></i>`;
+    loadMoreBtn.addEventListener("click", () => {
+      diaryVisibleCount += 10;
+      renderDiaryEntries();
+    });
+    diaryEntriesList.appendChild(loadMoreBtn);
+  }
 }
 
 // Delete Diary Entry
@@ -1955,7 +1996,8 @@ function initFireflies() {
   const firefliesContainer = document.getElementById("fireflies-bg");
   if (!firefliesContainer) return;
   
-  const count = 25;
+  // Reduced to 15 particles for much better mobile CPU & battery performance
+  const count = 15;
   for (let i = 0; i < count; i++) {
     const firefly = document.createElement("div");
     firefly.className = "firefly";
