@@ -19,7 +19,7 @@
     href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="style/style.css?v=27.0" />
+  <link rel="stylesheet" href="style/style.css?v=28.0" />
 </head>
 
 <body>
@@ -529,40 +529,23 @@
   <div class="overlay" id="achievements-overlay">
     <div class="achievements-modal">
       <button class="close-btn" id="close-achievements"><i class="fa-solid fa-xmark"></i></button>
-      <h2>🏆 Thành Tựu Tình Yêu</h2>
-      <p class="achievements-subtitle">Khám phá mọi ngóc ngách của chiếc thiệp để mở khóa nhé!</p>
-      <div class="achievements-grid">
-        <div class="achievement-card locked" id="ach-thau-hieu">
-          <div class="achievement-icon">🔑</div>
-          <div class="achievement-info">
-            <span class="achievement-title">Thấu Hiểu</span>
-            <span class="achievement-desc">Nhập đúng mật mã mở khóa tình yêu.</span>
-          </div>
+      <h2>🏆 Thành Tựu & Chuỗi Hành Trình Yêu</h2>
+      <p class="achievements-subtitle">Hoàn thành các cột mốc và hành trình gắn kết để mở khóa danh hiệu nhé!</p>
+      
+      <!-- Progress Bar Tracker -->
+      <div class="achievement-progress-box">
+        <div class="achievement-progress-info">
+          <span>Tiến Trình Chuỗi Mở Khóa</span>
+          <span id="achievement-progress-text">0/10 danh hiệu</span>
         </div>
-        <div class="achievement-card locked" id="ach-lang-nghe">
-          <div class="achievement-icon">🎵</div>
-          <div class="achievement-info">
-            <span class="achievement-title">Lắng Nghe</span>
-            <span class="achievement-desc">Nghe nhạc của chúng mình hơn 5 phút.</span>
-          </div>
+        <div class="achievement-progress-track">
+          <div class="achievement-progress-fill" id="achievement-progress-fill"></div>
         </div>
-        <div class="achievement-card locked" id="ach-cung-nung">
-          <div class="achievement-icon">🧸</div>
-          <div class="achievement-info">
-            <span class="achievement-title">Cưng Nựng</span>
-            <span class="achievement-desc">Tương tác hoặc chọn cảm xúc cho gấu 10 lần.</span>
-          </div>
-        </div>
-        <div class="achievement-card locked" id="ach-doc-ky">
-          <div class="achievement-icon">💌</div>
-          <div class="achievement-info">
-            <span class="achievement-title">Đọc Kỹ</span>
-            <span class="achievement-desc">Đọc xong toàn bộ bức thư tình cảm động.</span>
-          </div>
-        </div>
+      </div>
 
-        <!-- Section divider -->
-        <div class="achievement-section-header">🔥 Tiến Hóa Thần Lửa Mascot & Tủ Đồ</div>
+      <div class="achievements-grid">
+        <!-- Section 1: Milestones Streak -->
+        <div class="achievement-section-header">🔥 CHUỖI TIẾN HÓA CỘT MỐC (Mở Khóa Tủ Đồ)</div>
 
         <div class="achievement-card locked" id="ach-milestone-10">
           <div class="achievement-icon">👑</div>
@@ -611,8 +594,41 @@
             <span class="achievement-desc">Tròn 2 tháng yêu nhau. Mở khóa Thần Lửa Hoàng Kim 🌟 và Vòng Hào Quang ✨ trong Tủ Đồ.</span>
           </div>
         </div>
+
+        <!-- Section 2: Interactive Bonding Actions -->
+        <div class="achievement-section-header">💞 HÀNH TRÌNH TƯƠNG TÁC & GẮN KẾT</div>
+
+        <div class="achievement-card locked" id="ach-thau-hieu">
+          <div class="achievement-icon">🔑</div>
+          <div class="achievement-info">
+            <span class="achievement-title">Thấu Hiểu</span>
+            <span class="achievement-desc">Nhập đúng mật mã mở khóa tình yêu.</span>
+          </div>
+        </div>
+        <div class="achievement-card locked" id="ach-doc-ky">
+          <div class="achievement-icon">💌</div>
+          <div class="achievement-info">
+            <span class="achievement-title">Đọc Kỹ</span>
+            <span class="achievement-desc">Đọc xong toàn bộ bức thư tình cảm động.</span>
+          </div>
+        </div>
+        <div class="achievement-card locked" id="ach-cung-nung">
+          <div class="achievement-icon">🧸</div>
+          <div class="achievement-info">
+            <span class="achievement-title">Cưng Nựng</span>
+            <span class="achievement-desc">Tương tác hoặc chọn cảm xúc cho Thần Lửa 10 lần.</span>
+          </div>
+        </div>
+        <div class="achievement-card locked" id="ach-lang-nghe">
+          <div class="achievement-icon">🎵</div>
+          <div class="achievement-info">
+            <span class="achievement-title">Lắng Nghe</span>
+            <span class="achievement-desc">Nghe nhạc của chúng mình hơn 5 phút.</span>
+          </div>
+        </div>
       </div>
     </div>
+  </div>
   </div>
 
   <!-- Mascot Wardrobe Overlay (Slide-up drawer) -->
@@ -664,7 +680,7 @@
   <audio id="audio-player"></audio>
   <audio id="pop-sound" src="style/pop.mp3"></audio>
 
-  <script src="style/script.js?v=27.0"></script>
+  <script src="style/script.js?v=28.0"></script>
 </body>
 
 </html>

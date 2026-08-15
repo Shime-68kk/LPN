@@ -2795,6 +2795,63 @@ body.night-mode .menu-item:active {
   text-align: left;
 }
 
+/* Achievement Progress Bar & Category Headers */
+.achievement-progress-box {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1.5px solid #e9d5ff;
+  border-radius: 16px;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 15px rgba(147, 51, 234, 0.08);
+}
+
+.achievement-progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #7e22ce;
+}
+
+.achievement-progress-track {
+  width: 100%;
+  height: 10px;
+  background: #f3e8ff;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.achievement-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ec4899, #a855f7, #3b82f6);
+  border-radius: 10px;
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+}
+
+.achievement-section-header {
+  grid-column: 1 / -1;
+  font-weight: 800;
+  color: #9333ea;
+  font-size: 0.95rem;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.achievement-section-header::after {
+  content: "";
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, #e9d5ff, transparent);
+}
+
 .achievement-card.locked {
   background: #f3f4f6;
   border: 1px solid #e5e7eb;

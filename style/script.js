@@ -2775,30 +2775,75 @@ function unlockAchievement(id, name) {
 }
 
 function updateAchievementsModalUI() {
-  const achievements = [
-    { id: "thau-hieu", name: "Thấu Hiểu" },
-    { id: "lang-nghe", name: "Lắng Nghe" },
-    { id: "cung-nung", name: "Cưng Nựng" },
-    { id: "doc-ky", name: "Đọc Kỹ" },
-    { id: "milestone-10", name: "Mốc 10 Ngày" },
-    { id: "milestone-20", name: "Mốc 20 Ngày" },
-    { id: "milestone-30", name: "Mốc 30 Ngày" },
-    { id: "milestone-40", name: "Mốc 40 Ngày" },
-    { id: "milestone-50", name: "Mốc 50 Ngày" },
-    { id: "milestone-60", name: "Mốc 60 Ngày" }
-  ];
+  // Calculate current love days dynamically
+  const startMs = new Date(ANNIVERSARY_DATE).getTime();
+  const diffTime = Math.max(0, Date.now() - startMs);
   
+  const urlParams = new URLSearchParams(window.location.search);
+  const testDaysParam = urlParams.get("testDays");
+  let diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  if (testDaysParam !== null) {
+    diffDays = parseInt(testDaysParam, 10);
+  }
+
+  const milestoneDaysMap = {
+    "milestone-10": 10,
+    "milestone-20": 20,
+    "milestone-30": 30,
+    "milestone-40": 40,
+    "milestone-50": 50,
+    "milestone-60": 60
+  };
+
+  const achievements = [
+    { id: "thau-hieu" },
+    { id: "doc-ky" },
+    { id: "cung-nung" },
+    { id: "lang-nghe" },
+    { id: "milestone-10" },
+    { id: "milestone-20" },
+    { id: "milestone-30" },
+    { id: "milestone-40" },
+    { id: "milestone-50" },
+    { id: "milestone-60" }
+  ];
+
+  let unlockedCount = 0;
+
   achievements.forEach(ach => {
     const cardEl = document.getElementById(`ach-${ach.id}`);
-    if (cardEl) {
-      const isUnlocked = localStorage.getItem(`ach_unlocked_${ach.id}`) === "true";
+    if (!cardEl) return;
+
+    let isUnlocked = false;
+    const reqDays = milestoneDaysMap[ach.id];
+
+    if (reqDays !== undefined) {
+      // Evaluate milestone achievements based strictly on actual current diffDays!
+      isUnlocked = diffDays >= reqDays;
       if (isUnlocked) {
-        cardEl.classList.remove("locked");
+        localStorage.setItem(`ach_unlocked_${ach.id}`, "true");
       } else {
-        cardEl.classList.add("locked");
+        localStorage.removeItem(`ach_unlocked_${ach.id}`);
       }
+    } else {
+      isUnlocked = localStorage.getItem(`ach_unlocked_${ach.id}`) === "true";
+    }
+
+    if (isUnlocked) {
+      unlockedCount++;
+      cardEl.classList.remove("locked");
+      cardEl.classList.add("unlocked");
+    } else {
+      cardEl.classList.add("locked");
+      cardEl.classList.remove("unlocked");
     }
   });
+
+  // Update summary progress bar
+  const progressTextEl = document.getElementById("achievement-progress-text");
+  const progressBarEl = document.getElementById("achievement-progress-fill");
+  if (progressTextEl) progressTextEl.innerText = `${unlockedCount}/10 danh hiệu`;
+  if (progressBarEl) progressBarEl.style.width = `${(unlockedCount / 10) * 100}%`;
 }
 
 // Automatically check "Thấu Hiểu" achievement on site entry
