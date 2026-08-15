@@ -1416,12 +1416,12 @@ function applyMascotOutfit(outfit) {
   
   // Apply outfit skins
   if (outfit.skin === "pink") widget.classList.add("outfit-skin-pink");
+  if (outfit.skin === "purple") widget.classList.add("outfit-skin-purple");
   if (outfit.skin === "gold") widget.classList.add("outfit-skin-gold");
-  
+
   // Apply accessory tags
   if (outfit.crown) widget.classList.add("outfit-crown");
   if (outfit.bowtie) widget.classList.add("outfit-bowtie");
-  if (outfit.wings) widget.classList.add("outfit-wings");
   if (outfit.sunglasses) widget.classList.add("outfit-sunglasses");
   if (outfit.partyhat) widget.classList.add("outfit-partyhat");
   if (outfit.halo) widget.classList.add("outfit-halo");
@@ -1434,7 +1434,10 @@ function applyMascotOutfit(outfit) {
     if (outfit.skin === "gold" || outfit.halo) {
       counterBadge.classList.add("angel-glow");
       if (heartPulse) heartPulse.innerText = "💘";
-    } else if (outfit.skin === "pink" || outfit.wings) {
+    } else if (outfit.skin === "purple") {
+      counterBadge.classList.add("wings-glow");
+      if (heartPulse) heartPulse.innerText = "💜";
+    } else if (outfit.skin === "pink") {
       counterBadge.classList.add("wings-glow");
       if (heartPulse) heartPulse.innerText = "💝";
     } else if (outfit.crown) {
@@ -1452,10 +1455,9 @@ function initMascotWardrobe(diffDays) {
   // Default values based on current milestones if no custom saves exist
   if (Object.keys(outfit).length === 0) {
     outfit = {
-      skin: (diffDays >= 60 ? "gold" : (diffDays >= 30 ? "pink" : "yellow")),
+      skin: (diffDays >= 60 ? "gold" : (diffDays >= 40 ? "purple" : (diffDays >= 30 ? "pink" : "yellow"))),
       crown: diffDays >= 10,
       bowtie: diffDays >= 20,
-      wings: diffDays >= 30,
       sunglasses: diffDays >= 40,
       partyhat: false,
       halo: diffDays >= 60
@@ -1503,20 +1505,21 @@ function renderWardrobeUI(diffDays) {
   const outfit = JSON.parse(localStorage.getItem("loveMascotOutfit") || "{}");
   wardrobeSections.innerHTML = "";
   
-  // 1. Category: Màu Thần Lửa Chuỗi TikTok
+  // 1. Category: Màu Lông & Thân Bé Pet
   const skinSection = document.createElement("div");
   skinSection.className = "wardrobe-section";
   skinSection.innerHTML = `
-    <span class="category-title">🔥 Màu Thần Lửa Chuỗi TikTok</span>
+    <span class="category-title">🎨 Màu Lông & Thân Bé Pet</span>
     <div class="wardrobe-items" id="wardrobe-skins"></div>
   `;
   wardrobeSections.appendChild(skinSection);
   const skinsContainer = skinSection.querySelector("#wardrobe-skins");
   
   const skinsData = [
-    { id: "yellow", name: "Đỏ Cam Chuỗi", icon: "🔥", minDays: 0 },
-    { id: "pink", name: "Lửa Hồng Yêu", icon: "💖", minDays: 30 },
-    { id: "gold", name: "Lửa Hoàng Kim", icon: "🌟", minDays: 60 }
+    { id: "yellow", name: "Vàng Kem", icon: "💛", minDays: 0 },
+    { id: "pink", name: "Hồng Phấn", icon: "💖", minDays: 30 },
+    { id: "purple", name: "Tím Mộng Mơ", icon: "💜", minDays: 40 },
+    { id: "gold", name: "Vàng Kim", icon: "🌟", minDays: 60 }
   ];
   
   skinsData.forEach(skin => {

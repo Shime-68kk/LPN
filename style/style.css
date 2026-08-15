@@ -3382,21 +3382,49 @@ body.night-mode .menu-item:active {
   display: block !important;
 }
 
-/* SVG Skin Color Customizations for TikTok Streak Mascot */
+/* SVG Skin Color Customizations for Plush Animal Pet Mascot */
+#mascot-widget.outfit-skin-yellow #mascot-head,
+#mascot-widget.outfit-skin-yellow #mascot-body,
+#mascot-widget.outfit-skin-yellow #mascot-ear-l,
+#mascot-widget.outfit-skin-yellow #mascot-ear-r,
+#mascot-widget.outfit-skin-yellow #mascot-arm-l,
+#mascot-widget.outfit-skin-yellow #mascot-arm-r,
+#mascot-widget.outfit-skin-yellow #mascot-foot-l,
+#mascot-widget.outfit-skin-yellow #mascot-foot-r {
+  fill: url(#skinYellow) !important;
+}
+
+#mascot-widget.outfit-skin-pink #mascot-head,
 #mascot-widget.outfit-skin-pink #mascot-body,
+#mascot-widget.outfit-skin-pink #mascot-ear-l,
+#mascot-widget.outfit-skin-pink #mascot-ear-r,
 #mascot-widget.outfit-skin-pink #mascot-arm-l,
 #mascot-widget.outfit-skin-pink #mascot-arm-r,
 #mascot-widget.outfit-skin-pink #mascot-foot-l,
 #mascot-widget.outfit-skin-pink #mascot-foot-r {
-  fill: url(#streakPinkGrad) !important;
+  fill: url(#skinPink) !important;
 }
 
+#mascot-widget.outfit-skin-purple #mascot-head,
+#mascot-widget.outfit-skin-purple #mascot-body,
+#mascot-widget.outfit-skin-purple #mascot-ear-l,
+#mascot-widget.outfit-skin-purple #mascot-ear-r,
+#mascot-widget.outfit-skin-purple #mascot-arm-l,
+#mascot-widget.outfit-skin-purple #mascot-arm-r,
+#mascot-widget.outfit-skin-purple #mascot-foot-l,
+#mascot-widget.outfit-skin-purple #mascot-foot-r {
+  fill: url(#skinPurple) !important;
+}
+
+#mascot-widget.outfit-skin-gold #mascot-head,
 #mascot-widget.outfit-skin-gold #mascot-body,
+#mascot-widget.outfit-skin-gold #mascot-ear-l,
+#mascot-widget.outfit-skin-gold #mascot-ear-r,
 #mascot-widget.outfit-skin-gold #mascot-arm-l,
 #mascot-widget.outfit-skin-gold #mascot-arm-r,
 #mascot-widget.outfit-skin-gold #mascot-foot-l,
 #mascot-widget.outfit-skin-gold #mascot-foot-r {
-  fill: url(#streakGoldGrad) !important;
+  fill: url(#skinGold) !important;
 }
 
 /* Float crown hover animations */
