@@ -19,7 +19,7 @@
     href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="style/style.css?v=9.0" />
+  <link rel="stylesheet" href="style/style.css?v=10.0" />
 </head>
 
 <body>
@@ -384,10 +384,18 @@
           </filter>
         </defs>
 
-        <!-- BACK LAYER: Angel Wings (Unlocked at >= 30 days) -->
+        <!-- BACK LAYER: Fluffy Layered Angel Wings (Unlocked at >= 30 days) -->
         <g id="mascot-wings" class="hidden">
-          <path d="M 22 42 Q 2 22 -6 42 Q -2 60 20 58 Q 6 50 22 42 Z" fill="url(#wingGrad)" stroke="#f472b6" stroke-width="1.8" filter="url(#softShadow)" />
-          <path d="M 78 42 Q 98 22 106 42 Q 102 60 80 58 Q 94 50 78 42 Z" fill="url(#wingGrad)" stroke="#f472b6" stroke-width="1.8" filter="url(#softShadow)" />
+          <!-- Left Wing (Fluffy Feathers) -->
+          <g filter="url(#softShadow)">
+            <path d="M 24 38 C 14 16, -2 22, -8 34 C -12 40, -4 45, 4 45 C -4 50, 2 56, 12 55 C 4 58, 12 63, 22 58 C 24 54, 25 46, 24 38 Z" fill="url(#wingGrad)" stroke="#f472b6" stroke-width="1.8" />
+            <path d="M 22 40 C 14 26, 4 30, 0 38 C -2 42, 4 45, 10 44 C 4 48, 10 52, 18 50 C 22 48, 23 44, 22 40 Z" fill="#ffffff" opacity="0.65" stroke="#f472b6" stroke-width="1" />
+          </g>
+          <!-- Right Wing (Fluffy Feathers) -->
+          <g filter="url(#softShadow)">
+            <path d="M 76 38 C 86 16, 102 22, 108 34 C 112 40, 104 45, 96 45 C 104 50, 98 56, 88 55 C 96 58, 88 63, 78 58 C 76 54, 75 46, 76 38 Z" fill="url(#wingGrad)" stroke="#f472b6" stroke-width="1.8" />
+            <path d="M 78 40 C 86 26, 96 30, 100 38 C 102 42, 96 45, 90 44 C 96 48, 90 52, 82 50 C 78 48, 77 44, 78 40 Z" fill="#ffffff" opacity="0.65" stroke="#f472b6" stroke-width="1" />
+          </g>
         </g>
 
         <!-- SITTING FEET / PAWS (Chân gấu ngồi) -->
@@ -673,7 +681,7 @@
   <audio id="audio-player"></audio>
   <audio id="pop-sound" src="style/pop.mp3"></audio>
 
-  <script src="style/script.js?v=9.0"></script>
+  <script src="style/script.js?v=10.0"></script>
 </body>
 
 </html>
