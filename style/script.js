@@ -1503,20 +1503,20 @@ function renderWardrobeUI(diffDays) {
   const outfit = JSON.parse(localStorage.getItem("loveMascotOutfit") || "{}");
   wardrobeSections.innerHTML = "";
   
-  // 1. Category: Màu Lông & Thân Gấu
+  // 1. Category: Màu Thần Lửa Chuỗi TikTok
   const skinSection = document.createElement("div");
   skinSection.className = "wardrobe-section";
   skinSection.innerHTML = `
-    <span class="category-title">🎨 Màu Lông & Thân Gấu</span>
+    <span class="category-title">🔥 Màu Thần Lửa Chuỗi TikTok</span>
     <div class="wardrobe-items" id="wardrobe-skins"></div>
   `;
   wardrobeSections.appendChild(skinSection);
   const skinsContainer = skinSection.querySelector("#wardrobe-skins");
   
   const skinsData = [
-    { id: "yellow", name: "Gấu Vàng", icon: "💛", minDays: 0 },
-    { id: "pink", name: "Gấu Hồng", icon: "💖", minDays: 30 },
-    { id: "gold", name: "Gấu Hoàng Kim", icon: "🌟", minDays: 60 }
+    { id: "yellow", name: "Đỏ Cam Chuỗi", icon: "🔥", minDays: 0 },
+    { id: "pink", name: "Lửa Hồng Yêu", icon: "💖", minDays: 30 },
+    { id: "gold", name: "Lửa Hoàng Kim", icon: "🌟", minDays: 60 }
   ];
   
   skinsData.forEach(skin => {
@@ -1545,17 +1545,17 @@ function renderWardrobeUI(diffDays) {
     skinsContainer.appendChild(item);
   });
 
-  // 2. Categorized Accessory Sections
+  // 2. Categorized Accessory Sections (No wings!)
   const categories = [
     {
-      title: "👑 Mũ & Trang Trí Đầu",
+      title: "👑 Mũ & Vương Miện Hoàng Gia",
       items: [
         { id: "crown", name: "Vương Miện 3D", icon: "👑", minDays: 10 },
         { id: "partyhat", name: "Mũ Tiệc Tiệp", icon: "🥳", minDays: 50 }
       ]
     },
     {
-      title: "😎 Kính Mát Thời Trang",
+      title: "😎 Kính Mát Thời Trang TikTok",
       items: [
         { id: "sunglasses", name: "Kính Trái Tim Ngầu", icon: "😎", minDays: 40 }
       ]
@@ -1567,9 +1567,8 @@ function renderWardrobeUI(diffDays) {
       ]
     },
     {
-      title: "👼 Cánh & Hào Quang Thiên Thần",
+      title: "✨ Hào Quang Thiên Thần",
       items: [
-        { id: "wings", name: "Cánh Thiên Thần", icon: "👼", minDays: 30 },
         { id: "halo", name: "Vòng Hào Quang", icon: "✨", minDays: 60 }
       ]
     }
