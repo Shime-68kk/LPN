@@ -1451,10 +1451,10 @@ function applyMascotOutfit(outfit) {
 function initMascotWardrobe(diffDays) {
   let outfit = JSON.parse(localStorage.getItem("loveMascotOutfit") || "{}");
   
-  // Default values based on current milestones if no custom saves exist
+  // Default values: Mặc định chọn màu Tím Mộng Mơ 💜 ban đầu khi mới vào
   if (Object.keys(outfit).length === 0) {
     outfit = {
-      skin: (diffDays >= 60 ? "gold" : (diffDays >= 40 ? "purple" : (diffDays >= 30 ? "pink" : "yellow"))),
+      skin: "purple", // Mặc định Thần Lửa Tím Mộng Mơ 💜
       crown: diffDays >= 10,
       bowtie: diffDays >= 20,
       sunglasses: diffDays >= 40,
@@ -1515,9 +1515,9 @@ function renderWardrobeUI(diffDays) {
   const skinsContainer = skinSection.querySelector("#wardrobe-skins");
   
   const skinsData = [
+    { id: "purple", name: "Tím Mộng Mơ", icon: "💜", minDays: 0 },
     { id: "yellow", name: "Vàng Kem", icon: "💛", minDays: 0 },
     { id: "pink", name: "Hồng Phấn", icon: "💖", minDays: 30 },
-    { id: "purple", name: "Tím Mộng Mơ", icon: "💜", minDays: 40 },
     { id: "gold", name: "Vàng Kim", icon: "🌟", minDays: 60 }
   ];
   
