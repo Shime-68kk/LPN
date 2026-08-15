@@ -1497,14 +1497,22 @@ function initMascotWardrobe(diffDays) {
 }
 
 function renderWardrobeUI(diffDays) {
-  const skinsContainer = document.getElementById("wardrobe-skins");
-  const accessoriesContainer = document.getElementById("wardrobe-accessories");
-  if (!skinsContainer || !accessoriesContainer) return;
+  const wardrobeSections = document.querySelector(".wardrobe-sections");
+  if (!wardrobeSections) return;
   
   const outfit = JSON.parse(localStorage.getItem("loveMascotOutfit") || "{}");
+  wardrobeSections.innerHTML = "";
   
-  // 1. Render skins list
-  skinsContainer.innerHTML = "";
+  // 1. Category: Màu Lông & Thân Gấu
+  const skinSection = document.createElement("div");
+  skinSection.className = "wardrobe-section";
+  skinSection.innerHTML = `
+    <span class="category-title">🎨 Màu Lông & Thân Gấu</span>
+    <div class="wardrobe-items" id="wardrobe-skins"></div>
+  `;
+  wardrobeSections.appendChild(skinSection);
+  const skinsContainer = skinSection.querySelector("#wardrobe-skins");
+  
   const skinsData = [
     { id: "yellow", name: "Gấu Vàng", icon: "💛", minDays: 0 },
     { id: "pink", name: "Gấu Hồng", icon: "💖", minDays: 30 },
@@ -1536,51 +1544,82 @@ function renderWardrobeUI(diffDays) {
     }
     skinsContainer.appendChild(item);
   });
-  
-  // 2. Render accessories list
-  accessoriesContainer.innerHTML = "";
-  const accessoriesData = [
-    { id: "crown", name: "Vương Miện", icon: "👑", category: "head", minDays: 10 },
-    { id: "bowtie", name: "Nơ Cổ", icon: "🎀", category: "neck", minDays: 20 },
-    { id: "wings", name: "Cánh Thiên Thần", icon: "👼", category: "back", minDays: 30 },
-    { id: "sunglasses", name: "Kính Râm Ngầu", icon: "😎", category: "eyes", minDays: 40 },
-    { id: "partyhat", name: "Mũ Sinh Nhật", icon: "🥳", category: "head", minDays: 50 },
-    { id: "halo", name: "Hào Quang", icon: "✨", category: "aura", minDays: 60 }
-  ];
-  
-  accessoriesData.forEach(acc => {
-    const item = document.createElement("div");
-    const isUnlocked = diffDays >= acc.minDays;
-    const isActive = outfit[acc.id] === true;
-    item.className = `wardrobe-item ${isUnlocked ? "" : "locked"} ${isActive ? "active" : ""}`;
-    
-    if (isUnlocked) {
-      item.innerHTML = `
-        <span class="wardrobe-item-icon">${acc.icon}</span>
-        <span class="wardrobe-item-name">${acc.name}</span>
-      `;
-      item.addEventListener("click", () => {
-        const newState = !outfit[acc.id];
-        outfit[acc.id] = newState;
-        
-        // Mutually exclusive: Crown & Party Hat (only one head item allowed)
-        if (newState) {
-          if (acc.id === "crown") outfit.partyhat = false;
-          if (acc.id === "partyhat") outfit.crown = false;
-        }
-        
-        localStorage.setItem("loveMascotOutfit", JSON.stringify(outfit));
-        applyMascotOutfit(outfit);
-        renderWardrobeUI(diffDays);
-      });
-    } else {
-      item.innerHTML = `
-        <span class="wardrobe-item-icon">🔒</span>
-        <span class="wardrobe-item-name">${acc.name}</span>
-        <span class="wardrobe-item-lock-hint">Đạt ${acc.minDays} ngày</span>
-      `;
+
+  // 2. Categorized Accessory Sections
+  const categories = [
+    {
+      title: "👑 Mũ & Trang Trí Đầu",
+      items: [
+        { id: "crown", name: "Vương Miện 3D", icon: "👑", minDays: 10 },
+        { id: "partyhat", name: "Mũ Tiệc Tiệp", icon: "🥳", minDays: 50 }
+      ]
+    },
+    {
+      title: "😎 Kính Mát Thời Trang",
+      items: [
+        { id: "sunglasses", name: "Kính Trái Tim Ngầu", icon: "😎", minDays: 40 }
+      ]
+    },
+    {
+      title: "🎀 Nơ & Trang Trí Cổ",
+      items: [
+        { id: "bowtie", name: "Nơ Lụa Hồng", icon: "🎀", minDays: 20 }
+      ]
+    },
+    {
+      title: "👼 Cánh & Hào Quang Thiên Thần",
+      items: [
+        { id: "wings", name: "Cánh Thiên Thần", icon: "👼", minDays: 30 },
+        { id: "halo", name: "Vòng Hào Quang", icon: "✨", minDays: 60 }
+      ]
     }
-    accessoriesContainer.appendChild(item);
+  ];
+
+  categories.forEach(cat => {
+    const section = document.createElement("div");
+    section.className = "wardrobe-section";
+    section.innerHTML = `
+      <span class="category-title">${cat.title}</span>
+      <div class="wardrobe-items"></div>
+    `;
+    const container = section.querySelector(".wardrobe-items");
+
+    cat.items.forEach(acc => {
+      const item = document.createElement("div");
+      const isUnlocked = diffDays >= acc.minDays;
+      const isActive = outfit[acc.id] === true;
+      item.className = `wardrobe-item ${isUnlocked ? "" : "locked"} ${isActive ? "active" : ""}`;
+
+      if (isUnlocked) {
+        item.innerHTML = `
+          <span class="wardrobe-item-icon">${acc.icon}</span>
+          <span class="wardrobe-item-name">${acc.name}</span>
+        `;
+        item.addEventListener("click", () => {
+          const newState = !outfit[acc.id];
+          outfit[acc.id] = newState;
+
+          // Mutually exclusive head items (Crown vs Party Hat)
+          if (newState) {
+            if (acc.id === "crown") outfit.partyhat = false;
+            if (acc.id === "partyhat") outfit.crown = false;
+          }
+
+          localStorage.setItem("loveMascotOutfit", JSON.stringify(outfit));
+          applyMascotOutfit(outfit);
+          renderWardrobeUI(diffDays);
+        });
+      } else {
+        item.innerHTML = `
+          <span class="wardrobe-item-icon">🔒</span>
+          <span class="wardrobe-item-name">${acc.name}</span>
+          <span class="wardrobe-item-lock-hint">Đạt ${acc.minDays} ngày</span>
+        `;
+      }
+      container.appendChild(item);
+    });
+
+    wardrobeSections.appendChild(section);
   });
 }
 

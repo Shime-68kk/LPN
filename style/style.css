@@ -3380,10 +3380,15 @@ body.night-mode .menu-item:active {
   display: block !important;
 }
 
-/* SVG Skin Color Customizations for Bear */
+/* SVG Skin Color Customizations for Full-Body Bear */
 #mascot-widget.outfit-skin-pink #mascot-head,
+#mascot-widget.outfit-skin-pink #mascot-body,
 #mascot-widget.outfit-skin-pink #mascot-ear-l,
-#mascot-widget.outfit-skin-pink #mascot-ear-r {
+#mascot-widget.outfit-skin-pink #mascot-ear-r,
+#mascot-widget.outfit-skin-pink #mascot-arm-l,
+#mascot-widget.outfit-skin-pink #mascot-arm-r,
+#mascot-widget.outfit-skin-pink #mascot-foot-l,
+#mascot-widget.outfit-skin-pink #mascot-foot-r {
   fill: #fbcfe8 !important;
 }
 #mascot-widget.outfit-skin-pink #mascot-ear-l-inner,
@@ -3392,8 +3397,13 @@ body.night-mode .menu-item:active {
 }
 
 #mascot-widget.outfit-skin-gold #mascot-head,
+#mascot-widget.outfit-skin-gold #mascot-body,
 #mascot-widget.outfit-skin-gold #mascot-ear-l,
-#mascot-widget.outfit-skin-gold #mascot-ear-r {
+#mascot-widget.outfit-skin-gold #mascot-ear-r,
+#mascot-widget.outfit-skin-gold #mascot-arm-l,
+#mascot-widget.outfit-skin-gold #mascot-arm-r,
+#mascot-widget.outfit-skin-gold #mascot-foot-l,
+#mascot-widget.outfit-skin-gold #mascot-foot-r {
   fill: #fcd34d !important;
 }
 #mascot-widget.outfit-skin-gold #mascot-ear-l-inner,

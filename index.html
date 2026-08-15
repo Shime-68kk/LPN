@@ -19,7 +19,7 @@
     href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="style/style.css?v=7.0" />
+  <link rel="stylesheet" href="style/style.css?v=8.0" />
 </head>
 
 <body>
@@ -347,13 +347,7 @@
     <!-- Mood Badge Displayed on Mascot -->
     <div class="mascot-mood-badge hidden" id="mascot-mood-badge"></div>
     <!-- Mascot Suggestion Hint -->
-    <div class="mascot-hint-bubble hidden" id="mascot-hint-bubble">Giữ để thả cảm xúc 🧸</div>
-    <!-- Mascot Wardrobe Toggle Button -->
-    <button class="mascot-wardrobe-btn" id="btn-mascot-wardrobe" title="Tủ đồ bé gấu">
-      <i class="fa-solid fa-shirt"></i>
-    </button>
-    <div class="mascot-avatar">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
         <defs>
           <!-- Soft gradients for 3D Plush effect -->
           <linearGradient id="headGradYellow" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -384,116 +378,142 @@
           </filter>
         </defs>
 
-        <!-- Mascot Angel Wings (Unlocked at >= 30 days) -->
+        <!-- BACK LAYER: Angel Wings (Unlocked at >= 30 days) -->
         <g id="mascot-wings" class="hidden">
-          <path d="M 20 48 Q 2 32 -6 50 Q -2 66 18 64 Q 6 56 20 48 Z" fill="url(#wingGrad)" stroke="#f472b6" stroke-width="1.8" filter="url(#softShadow)" />
-          <path d="M 80 48 Q 98 32 106 50 Q 102 66 82 64 Q 94 56 80 48 Z" fill="url(#wingGrad)" stroke="#f472b6" stroke-width="1.8" filter="url(#softShadow)" />
+          <path d="M 22 42 Q 2 22 -6 42 Q -2 60 20 58 Q 6 50 22 42 Z" fill="url(#wingGrad)" stroke="#f472b6" stroke-width="1.8" filter="url(#softShadow)" />
+          <path d="M 78 42 Q 98 22 106 42 Q 102 60 80 58 Q 94 50 78 42 Z" fill="url(#wingGrad)" stroke="#f472b6" stroke-width="1.8" filter="url(#softShadow)" />
         </g>
 
-        <!-- Ears -->
+        <!-- SITTING FEET / PAWS (Chân gấu ngồi) -->
         <g filter="url(#softShadow)">
-          <ellipse cx="23" cy="23" rx="14" ry="13" fill="url(#headGradYellow)" stroke="#4c1d95" stroke-width="2.5" id="mascot-ear-l" />
-          <ellipse cx="23" cy="24" rx="7.5" ry="7" fill="#fda4af" opacity="0.9" id="mascot-ear-l-inner" />
-          <ellipse cx="77" cy="23" rx="14" ry="13" fill="url(#headGradYellow)" stroke="#4c1d95" stroke-width="2.5" id="mascot-ear-r" />
-          <ellipse cx="77" cy="24" rx="7.5" ry="7" fill="#fda4af" opacity="0.9" id="mascot-ear-r-inner" />
+          <ellipse cx="22" cy="84" rx="12" ry="9" fill="url(#headGradYellow)" stroke="#4c1d95" stroke-width="2.2" id="mascot-foot-l" />
+          <ellipse cx="22" cy="85" rx="6" ry="4.5" fill="#fda4af" />
+          <circle cx="18" cy="81" r="1.8" fill="#fda4af" />
+          <circle cx="22" cy="79" r="1.8" fill="#fda4af" />
+          <circle cx="26" cy="81" r="1.8" fill="#fda4af" />
+
+          <ellipse cx="78" cy="84" rx="12" ry="9" fill="url(#headGradYellow)" stroke="#4c1d95" stroke-width="2.2" id="mascot-foot-r" />
+          <ellipse cx="78" cy="85" rx="6" ry="4.5" fill="#fda4af" />
+          <circle cx="74" cy="81" r="1.8" fill="#fda4af" />
+          <circle cx="78" cy="79" r="1.8" fill="#fda4af" />
+          <circle cx="82" cy="81" r="1.8" fill="#fda4af" />
         </g>
 
-        <!-- Main Chubby Head -->
-        <path d="M 50 14 C 22 14, 10 32, 10 54 C 10 76, 26 86, 50 86 C 74 86, 90 76, 90 54 C 90 32, 78 14, 50 14 Z" fill="url(#headGradYellow)" stroke="#4c1d95" stroke-width="2.6" filter="url(#softShadow)" id="mascot-head" />
+        <!-- CHUBBY SITTING BODY & CREAM TUMMY (Thân gấu & Bụng) -->
+        <g filter="url(#softShadow)">
+          <ellipse cx="50" cy="68" rx="26" ry="21" fill="url(#headGradYellow)" stroke="#4c1d95" stroke-width="2.4" id="mascot-body" />
+          <ellipse cx="50" cy="69" rx="16" ry="13" fill="#ffffff" stroke="#f1f5f9" stroke-width="1" />
+        </g>
+
+        <!-- FRONT ARMS / PAWS (Tay gấu) -->
+        <g filter="url(#softShadow)">
+          <ellipse cx="26" cy="62" rx="7" ry="10" fill="url(#headGradYellow)" stroke="#4c1d95" stroke-width="2.2" transform="rotate(18 26 62)" id="mascot-arm-l" />
+          <ellipse cx="74" cy="62" rx="7" ry="10" fill="url(#headGradYellow)" stroke="#4c1d95" stroke-width="2.2" transform="rotate(-18 74 62)" id="mascot-arm-r" />
+        </g>
+
+        <!-- EARS (Tai gấu) -->
+        <g filter="url(#softShadow)">
+          <ellipse cx="23" cy="17" rx="12" ry="11" fill="url(#headGradYellow)" stroke="#4c1d95" stroke-width="2.4" id="mascot-ear-l" />
+          <ellipse cx="23" cy="18" rx="6" ry="5.5" fill="#fda4af" opacity="0.9" id="mascot-ear-l-inner" />
+          <ellipse cx="77" cy="17" rx="12" ry="11" fill="url(#headGradYellow)" stroke="#4c1d95" stroke-width="2.4" id="mascot-ear-r" />
+          <ellipse cx="77" cy="18" rx="6" ry="5.5" fill="#fda4af" opacity="0.9" id="mascot-ear-r-inner" />
+        </g>
+
+        <!-- MAIN CHIBI HEAD (Đầu gấu chibi) -->
+        <path d="M 50 10 C 26 10, 15 25, 15 42 C 15 58, 28 66, 50 66 C 72 66, 85 58, 85 42 C 85 25, 74 10, 50 10 Z" fill="url(#headGradYellow)" stroke="#4c1d95" stroke-width="2.5" filter="url(#softShadow)" id="mascot-head" />
         
         <!-- Soft Blushing Cheeks -->
-        <circle cx="24" cy="61" r="6" fill="#f43f5e" opacity="0.4" id="mascot-cheek-l" />
-        <circle cx="76" cy="61" r="6" fill="#f43f5e" opacity="0.4" id="mascot-cheek-r" />
+        <circle cx="25" cy="47" r="5" fill="#f43f5e" opacity="0.4" id="mascot-cheek-l" />
+        <circle cx="75" cy="47" r="5" fill="#f43f5e" opacity="0.4" id="mascot-cheek-r" />
 
         <!-- Cream Snout Patch -->
-        <ellipse cx="50" cy="59" rx="14" ry="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+        <ellipse cx="50" cy="46" rx="12" ry="8.5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
         <!-- Snout Nose & Mouth -->
-        <ellipse cx="50" cy="52" rx="3.5" ry="2.5" fill="#3b0764" id="mascot-snout" />
-        <path d="M 44 57 Q 47 61 50 58 Q 53 61 56 57" fill="none" stroke="#3b0764" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" id="mascot-mouth" />
+        <ellipse cx="50" cy="41" rx="3.2" ry="2.2" fill="#3b0764" id="mascot-snout" />
+        <path d="M 44 45 Q 47 49 50 46 Q 53 49 56 45" fill="none" stroke="#3b0764" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="mascot-mouth" />
         
         <!-- Expressive Kawaii Eyes -->
         <!-- Normal Glossy Eyes -->
         <g id="mascot-eyes-normal">
-          <ellipse cx="34" cy="46" rx="5" ry="6" fill="#3b0764" />
-          <circle cx="32.5" cy="44" r="2.2" fill="#ffffff" />
-          <circle cx="35.5" cy="48" r="1" fill="#ffffff" />
+          <ellipse cx="35" cy="35" rx="4.5" ry="5.5" fill="#3b0764" />
+          <circle cx="33.5" cy="33.2" r="2" fill="#ffffff" />
+          <circle cx="36.2" cy="36.8" r="0.9" fill="#ffffff" />
           
-          <ellipse cx="66" cy="46" rx="5" ry="6" fill="#3b0764" />
-          <circle cx="64.5" cy="44" r="2.2" fill="#ffffff" />
-          <circle cx="67.5" cy="48" r="1" fill="#ffffff" />
+          <ellipse cx="65" cy="35" rx="4.5" ry="5.5" fill="#3b0764" />
+          <circle cx="63.5" cy="33.2" r="2" fill="#ffffff" />
+          <circle cx="66.2" cy="36.8" r="0.9" fill="#ffffff" />
         </g>
         
         <!-- Happy Eyes -->
         <g id="mascot-eyes-happy" class="hidden">
-          <path d="M 29 47 Q 34 40 39 47" fill="none" stroke="#3b0764" stroke-width="3" stroke-linecap="round" />
-          <path d="M 61 47 Q 66 40 71 47" fill="none" stroke="#3b0764" stroke-width="3" stroke-linecap="round" />
+          <path d="M 30 36 Q 35 29 40 36" fill="none" stroke="#3b0764" stroke-width="2.8" stroke-linecap="round" />
+          <path d="M 60 36 Q 65 29 70 36" fill="none" stroke="#3b0764" stroke-width="2.8" stroke-linecap="round" />
         </g>
 
         <!-- Sleep Eyes -->
         <g id="mascot-eyes-sleep" class="hidden">
-          <path d="M 29 46 Q 34 51 39 46" fill="none" stroke="#3b0764" stroke-width="3" stroke-linecap="round" />
-          <path d="M 61 46 Q 66 51 71 46" fill="none" stroke="#3b0764" stroke-width="3" stroke-linecap="round" />
+          <path d="M 30 35 Q 35 40 40 35" fill="none" stroke="#3b0764" stroke-width="2.8" stroke-linecap="round" />
+          <path d="M 60 35 Q 65 40 70 35" fill="none" stroke="#3b0764" stroke-width="2.8" stroke-linecap="round" />
         </g>
 
         <!-- Angry Eyes -->
         <g id="mascot-eyes-angry" class="hidden">
-          <line x1="28" y1="41" x2="39" y2="46" stroke="#3b0764" stroke-width="3" stroke-linecap="round" />
-          <line x1="72" y1="41" x2="61" y2="46" stroke="#3b0764" stroke-width="3" stroke-linecap="round" />
-          <ellipse cx="34" cy="48" rx="4" ry="4.5" fill="#3b0764" />
-          <ellipse cx="66" cy="48" rx="4" ry="4.5" fill="#3b0764" />
+          <line x1="29" y1="30" x2="40" y2="35" stroke="#3b0764" stroke-width="2.8" stroke-linecap="round" />
+          <line x1="71" y1="30" x2="60" y2="35" stroke="#3b0764" stroke-width="2.8" stroke-linecap="round" />
+          <ellipse cx="35" cy="37" rx="3.8" ry="4.2" fill="#3b0764" />
+          <ellipse cx="65" cy="37" rx="3.8" ry="4.2" fill="#3b0764" />
         </g>
 
         <!-- Cute heart accent on forehead -->
-        <path d="M50 20 C50 20 49 18 47 18 C45.5 18 44 19.5 44 21 C44 22.5 46.5 25 50 28 C53.5 25 56 22.5 56 21 C56 19.5 54.5 18 53 18 C51 18 50 20 50 20 Z" fill="#f43f5e" stroke="#991b1b" stroke-width="1" />
+        <path d="M 50 15 C 50 15 49 13.5 47.5 13.5 C 46 13.5 45 14.5 45 16 C 45 17.5 47 19.5 50 22 C 53 19.5 55 17.5 55 16 C 55 14.5 54 13.5 52.5 13.5 C 51 13.5 50 15 50 15 Z" fill="#f43f5e" stroke="#991b1b" stroke-width="0.8" />
         
-        <!-- Accessories Unlocked via Love Milestones -->
+        <!-- ACCESSORIES UNLOCKED VIA LOVE MILESTONES -->
         <!-- Mascot Crown (>= 10 days) -->
         <g id="mascot-crown" class="hidden" filter="url(#softShadow)">
-          <path d="M 36 18 L 40 24 L 50 12 L 60 24 L 64 18 L 61 29 L 39 29 Z" fill="url(#crownGrad)" stroke="#b45309" stroke-width="1.8" stroke-linejoin="round" />
-          <rect x="38" y="27" width="24" height="4" rx="2" fill="#f59e0b" stroke="#78350f" stroke-width="1" />
-          <circle cx="36" cy="18" r="2.2" fill="#ef4444" stroke="#991b1b" stroke-width="1" />
-          <circle cx="50" cy="12" r="2.5" fill="#3b82f6" stroke="#1e40af" stroke-width="1" />
-          <circle cx="64" cy="18" r="2.2" fill="#ef4444" stroke="#991b1b" stroke-width="1" />
+          <path d="M 37 13 L 41 18 L 50 7 L 59 18 L 63 13 L 60 23 L 40 23 Z" fill="url(#crownGrad)" stroke="#b45309" stroke-width="1.6" stroke-linejoin="round" />
+          <rect x="39" y="21" width="22" height="3" rx="1.5" fill="#f59e0b" stroke="#78350f" stroke-width="0.8" />
+          <circle cx="37" cy="13" r="1.8" fill="#ef4444" stroke="#991b1b" stroke-width="0.8" />
+          <circle cx="50" cy="7" r="2.2" fill="#3b82f6" stroke="#1e40af" stroke-width="0.8" />
+          <circle cx="63" cy="13" r="1.8" fill="#ef4444" stroke="#991b1b" stroke-width="0.8" />
         </g>
 
         <!-- Mascot Bowtie (>= 20 days) -->
         <g id="mascot-bowtie" class="hidden" filter="url(#softShadow)">
-          <path d="M 50 82 C 40 74, 34 82, 38 88 C 42 92, 48 85, 50 82 Z" fill="#ec4899" stroke="#be185d" stroke-width="1.6" />
-          <path d="M 50 82 C 60 74, 66 82, 62 88 C 58 92, 52 85, 50 82 Z" fill="#ec4899" stroke="#be185d" stroke-width="1.6" />
-          <path d="M 47 85 L 42 94 L 46 93 Z" fill="#db2777" />
-          <path d="M 53 85 L 58 94 L 54 93 Z" fill="#db2777" />
-          <circle cx="50" cy="83" r="3.5" fill="#fda4af" stroke="#be185d" stroke-width="1.6" />
+          <path d="M 50 63 C 40 56, 34 63, 38 69 C 42 73, 48 66, 50 63 Z" fill="#ec4899" stroke="#be185d" stroke-width="1.5" />
+          <path d="M 50 63 C 60 56, 66 63, 62 69 C 58 73, 52 66, 50 63 Z" fill="#ec4899" stroke="#be185d" stroke-width="1.5" />
+          <path d="M 47 65 L 43 74 L 46 73 Z" fill="#db2777" />
+          <path d="M 53 65 L 57 74 L 54 73 Z" fill="#db2777" />
+          <circle cx="50" cy="64" r="3" fill="#fda4af" stroke="#be185d" stroke-width="1.5" />
         </g>
 
         <!-- Mascot Sunglasses (>= 40 days) -->
         <g id="mascot-sunglasses" class="hidden" filter="url(#softShadow)">
-          <path d="M 35 45 C 35 41 31 39 27 39 C 22 39 20 43 20 48 C 20 53 29 57 35 60 C 41 57 50 53 50 48 C 50 43 48 39 43 39 C 39 39 35 45 35 45 Z" fill="url(#glassGrad)" stroke="#0f172a" stroke-width="1.8" />
-          <path d="M 65 45 C 65 41 61 39 57 39 C 52 39 50 43 50 48 C 50 53 59 57 65 60 C 71 57 80 53 80 48 C 80 43 78 39 73 39 C 69 39 65 45 65 45 Z" fill="url(#glassGrad)" stroke="#0f172a" stroke-width="1.8" />
-          <path d="M 44 46 Q 50 44 56 46" fill="none" stroke="#0f172a" stroke-width="2" />
-          <path d="M 24 43 L 28 41" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" />
-          <path d="M 54 43 L 58 41" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" />
+          <path d="M 35 34 C 35 30 31 28 27 28 C 22 28 20 32 20 37 C 20 42 29 46 35 49 C 41 46 50 42 50 37 C 50 32 48 28 43 28 C 39 28 35 34 35 34 Z" fill="url(#glassGrad)" stroke="#0f172a" stroke-width="1.6" />
+          <path d="M 65 34 C 65 30 61 28 57 28 C 52 28 50 32 50 37 C 50 42 59 46 65 49 C 71 46 80 42 80 37 C 80 32 78 28 73 28 C 69 28 65 34 65 34 Z" fill="url(#glassGrad)" stroke="#0f172a" stroke-width="1.6" />
+          <path d="M 44 35 Q 50 33 56 35" fill="none" stroke="#0f172a" stroke-width="1.8" />
+          <path d="M 24 32 L 28 30" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round" />
+          <path d="M 54 32 L 58 30" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round" />
         </g>
 
         <!-- Mascot Party Hat (>= 50 days) -->
         <g id="mascot-partyhat" class="hidden" filter="url(#softShadow)">
-          <path d="M 38 20 L 50 -2 L 62 20 Z" fill="#ec4899" stroke="#be185d" stroke-width="1.8" stroke-linejoin="round" />
-          <path d="M 40 15 Q 50 12 60 15" fill="none" stroke="#fbbf24" stroke-width="2" />
-          <path d="M 43 9 Q 50 6 57 9" fill="none" stroke="#60a5fa" stroke-width="2" />
-          <path d="M 46 3 Q 50 1 54 3" fill="none" stroke="#34d399" stroke-width="2" />
-          <circle cx="50" cy="-2" r="3.5" fill="#ffffff" stroke="#be185d" stroke-width="1.5" />
+          <path d="M 39 15 L 50 -5 L 61 15 Z" fill="#ec4899" stroke="#be185d" stroke-width="1.6" stroke-linejoin="round" />
+          <path d="M 41 11 Q 50 8 59 11" fill="none" stroke="#fbbf24" stroke-width="1.8" />
+          <path d="M 44 5 Q 50 2 56 5" fill="none" stroke="#60a5fa" stroke-width="1.8" />
+          <circle cx="50" cy="-5" r="3" fill="#ffffff" stroke="#be185d" stroke-width="1.2" />
         </g>
 
         <!-- Mascot Angel Halo (>= 60 days) -->
         <g id="mascot-halo" class="hidden">
-          <ellipse cx="50" cy="5" rx="16" ry="4.5" fill="none" stroke="#fbbf24" stroke-width="3" filter="drop-shadow(0 0 5px #f59e0b)" />
-          <ellipse cx="50" cy="5" rx="15" ry="3.5" fill="none" stroke="#fef08a" stroke-width="1" />
+          <ellipse cx="50" cy="2" rx="15" ry="4" fill="none" stroke="#fbbf24" stroke-width="2.6" filter="drop-shadow(0 0 5px #f59e0b)" />
+          <ellipse cx="50" cy="2" rx="14" ry="3" fill="none" stroke="#fef08a" stroke-width="1" />
         </g>
 
         <!-- Mascot Sleeping Hat (Only shown during night mode) -->
         <g id="mascot-sleeping-hat" class="hidden" filter="url(#softShadow)">
-          <path d="M 30 18 C 30 -5, 75 -2, 78 28 Z" fill="#a855f7" stroke="#6b21a8" stroke-width="2.5" stroke-linejoin="round" />
-          <rect x="23" y="12" width="46" height="10" rx="5" fill="#ffffff" stroke="#6b21a8" stroke-width="2" />
-          <circle cx="78" cy="28" r="6" fill="#ffffff" stroke="#6b21a8" stroke-width="2" />
+          <path d="M 28 14 C 28 -8, 73 -5, 76 24 Z" fill="#a855f7" stroke="#6b21a8" stroke-width="2.2" stroke-linejoin="round" />
+          <rect x="21" y="9" width="44" height="9" rx="4.5" fill="#ffffff" stroke="#6b21a8" stroke-width="1.8" />
+          <circle cx="76" cy="24" r="5.5" fill="#ffffff" stroke="#6b21a8" stroke-width="1.8" />
         </g>
       </svg>
     </div>
@@ -647,7 +667,7 @@
   <audio id="audio-player"></audio>
   <audio id="pop-sound" src="style/pop.mp3"></audio>
 
-  <script src="style/script.js?v=7.0"></script>
+  <script src="style/script.js?v=8.0"></script>
 </body>
 
 </html>
