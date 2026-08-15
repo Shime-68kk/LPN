@@ -1647,9 +1647,9 @@ function renderWardrobeUI(diffDays) {
 // Check and trigger mascot milestone achievements
 function checkMascotMilestoneUnlocks(diffDays) {
   if (diffDays >= 10) unlockAchievement("milestone-10", "Mốc 10 Ngày: Vương Miện Hoàng Gia");
-  if (diffDays >= 20) unlockAchievement("milestone-20", "Mốc 20 Ngày: Nơ Cổ Tình Yêu");
-  if (diffDays >= 30) unlockAchievement("milestone-30", "Mốc 30 Ngày: Thiên Thần Bé Nhỏ");
-  if (diffDays >= 40) unlockAchievement("milestone-40", "Mốc 40 Ngày: Kính Râm Siêu Ngầu");
+  if (diffDays >= 20) unlockAchievement("milestone-20", "Mốc 20 Ngày: Nơ Lụa Hồng");
+  if (diffDays >= 30) unlockAchievement("milestone-30", "Mốc 30 Ngày: Lửa Hồng Phấn");
+  if (diffDays >= 40) unlockAchievement("milestone-40", "Mốc 40 Ngày: Kính Trái Tim Ngầu");
   if (diffDays >= 50) unlockAchievement("milestone-50", "Mốc 50 Ngày: Mũ Tiệc Vui Vẻ");
   if (diffDays >= 60) unlockAchievement("milestone-60", "Mốc 60 Ngày: Thiên Sứ Hào Quang");
 }
