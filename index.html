@@ -19,7 +19,7 @@
     href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="style/style.css?v=8.0" />
+  <link rel="stylesheet" href="style/style.css?v=9.0" />
 </head>
 
 <body>
@@ -347,7 +347,13 @@
     <!-- Mood Badge Displayed on Mascot -->
     <div class="mascot-mood-badge hidden" id="mascot-mood-badge"></div>
     <!-- Mascot Suggestion Hint -->
-         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <div class="mascot-hint-bubble hidden" id="mascot-hint-bubble">Giữ để thả cảm xúc 🧸</div>
+    <!-- Mascot Wardrobe Toggle Button -->
+    <button class="mascot-wardrobe-btn" id="btn-mascot-wardrobe" title="Tủ đồ bé gấu">
+      <i class="fa-solid fa-shirt"></i>
+    </button>
+    <div class="mascot-avatar">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
         <defs>
           <!-- Soft gradients for 3D Plush effect -->
           <linearGradient id="headGradYellow" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -667,7 +673,7 @@
   <audio id="audio-player"></audio>
   <audio id="pop-sound" src="style/pop.mp3"></audio>
 
-  <script src="style/script.js?v=8.0"></script>
+  <script src="style/script.js?v=9.0"></script>
 </body>
 
 </html>
