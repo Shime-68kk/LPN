@@ -3,6 +3,24 @@
   padding: 0;
   box-sizing: border-box;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+/* Prevent accidental text selections on interactive components during tap-hold/double-tap */
+button,
+a,
+.nav-btn,
+.mood-btn,
+.mascot-widget,
+.music-floating-btn,
+.music-control-btn,
+.achievement-card,
+.wish-toggle-btn,
+.close-btn,
+.fullscreen-btn {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 body {
