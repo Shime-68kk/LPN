@@ -1402,114 +1402,186 @@ if (closeCustomAlertBtn) {
   });
 }
 
-// Update Mascot accessories and styling based on elapsed days (with performance optimization)
-function updateMascotEvolution(diffDays) {
-  const crown = document.getElementById("mascot-crown");
-  const bowtie = document.getElementById("mascot-bowtie");
-  const wings = document.getElementById("mascot-wings");
-  const sunglasses = document.getElementById("mascot-sunglasses");
-  const partyhat = document.getElementById("mascot-partyhat");
-  const halo = document.getElementById("mascot-halo");
+// Mascot Wardrobe Logic (CSS-driven rendering for maximum performance & zero CPU heat)
+let isWardrobeInitialized = false;
+
+function applyMascotOutfit(outfit) {
+  const widget = document.getElementById("mascot-widget");
+  if (!widget) return;
   
-  const earL = document.getElementById("mascot-ear-l");
-  const earLInner = document.getElementById("mascot-ear-l-inner");
-  const earR = document.getElementById("mascot-ear-r");
-  const earRInner = document.getElementById("mascot-ear-r-inner");
-  const head = document.getElementById("mascot-head");
+  // Rebuild class list preserving base classes
+  const isHidden = widget.classList.contains("hidden");
+  widget.className = "mascot-widget";
+  if (isHidden) widget.classList.add("hidden");
   
+  // Apply outfit skins
+  if (outfit.skin === "pink") widget.classList.add("outfit-skin-pink");
+  if (outfit.skin === "gold") widget.classList.add("outfit-skin-gold");
+  
+  // Apply accessory tags
+  if (outfit.crown) widget.classList.add("outfit-crown");
+  if (outfit.bowtie) widget.classList.add("outfit-bowtie");
+  if (outfit.wings) widget.classList.add("outfit-wings");
+  if (outfit.sunglasses) widget.classList.add("outfit-sunglasses");
+  if (outfit.partyhat) widget.classList.add("outfit-partyhat");
+  if (outfit.halo) widget.classList.add("outfit-halo");
+  
+  // Update Day Counter Heart decoration dynamically to match the selected skin/acc
   const counterBadge = document.getElementById("love-counter-badge");
   const heartPulse = counterBadge ? counterBadge.querySelector(".heart-pulse") : null;
-  
-  // 10 Days Milestone
-  if (diffDays >= 10) {
-    if (crown) crown.classList.remove("hidden");
-    if (counterBadge) counterBadge.classList.add("neon-glow");
-    if (heartPulse && heartPulse.innerText !== "❤️") heartPulse.innerText = "❤️";
-  } else {
-    if (crown) crown.classList.add("hidden");
-    if (counterBadge) counterBadge.classList.remove("neon-glow");
-    if (heartPulse && heartPulse.innerText !== "💖") heartPulse.innerText = "💖";
-  }
-  
-  // 20 Days Milestone
-  if (diffDays >= 20) {
-    if (bowtie) bowtie.classList.remove("hidden");
-  } else {
-    if (bowtie) bowtie.classList.add("hidden");
-  }
-  
-  // 30 Days Milestone (1 Month Anniversary Event)
-  if (diffDays >= 30) {
-    if (wings) wings.classList.remove("hidden");
-    if (counterBadge) {
-      counterBadge.classList.remove("neon-glow");
-      counterBadge.classList.add("wings-glow");
-    }
-    if (heartPulse && heartPulse.innerText !== "💝") heartPulse.innerText = "💝";
-    
-    // Evolve color: Pink Bear (#fbcfe8)
-    if (head) head.setAttribute("fill", "#fbcfe8");
-    if (earL) earL.setAttribute("fill", "#fbcfe8");
-    if (earR) earR.setAttribute("fill", "#fbcfe8");
-    if (earLInner) earLInner.setAttribute("fill", "#f9a8d4");
-    if (earRInner) earRInner.setAttribute("fill", "#f9a8d4");
-  } else {
-    if (wings) wings.classList.add("hidden");
-    if (counterBadge) counterBadge.classList.remove("wings-glow");
-    
-    // Default yellow color
-    if (head) head.setAttribute("fill", "#fef08a");
-    if (earL) earL.setAttribute("fill", "#fef08a");
-    if (earR) earR.setAttribute("fill", "#fef08a");
-    if (earLInner) earLInner.setAttribute("fill", "#fda4af");
-    if (earRInner) earRInner.setAttribute("fill", "#fda4af");
-  }
-  
-  // 40 Days Milestone
-  if (diffDays >= 40) {
-    if (sunglasses) sunglasses.classList.remove("hidden");
-  } else {
-    if (sunglasses) sunglasses.classList.add("hidden");
-  }
-  
-  // 50 Days Milestone
-  if (diffDays >= 50) {
-    if (partyhat) partyhat.classList.remove("hidden");
-  } else {
-    if (partyhat) partyhat.classList.add("hidden");
-  }
-  
-  // 60 Days Milestone (2 Months Anniversary Event)
-  if (diffDays >= 60) {
-    if (halo) halo.classList.remove("hidden");
-    if (counterBadge) {
-      counterBadge.classList.remove("wings-glow");
+  if (counterBadge) {
+    counterBadge.classList.remove("neon-glow", "wings-glow", "angel-glow");
+    if (outfit.skin === "gold" || outfit.halo) {
       counterBadge.classList.add("angel-glow");
+      if (heartPulse) heartPulse.innerText = "💘";
+    } else if (outfit.skin === "pink" || outfit.wings) {
+      counterBadge.classList.add("wings-glow");
+      if (heartPulse) heartPulse.innerText = "💝";
+    } else if (outfit.crown) {
+      counterBadge.classList.add("neon-glow");
+      if (heartPulse) heartPulse.innerText = "❤️";
+    } else {
+      if (heartPulse) heartPulse.innerText = "💖";
     }
-    if (heartPulse && heartPulse.innerText !== "💘") heartPulse.innerText = "💘";
-    
-    // Celestial color: Golden Yellow (#fcd34d) and Gold Wings
-    if (head) head.setAttribute("fill", "#fcd34d");
-    if (earL) earL.setAttribute("fill", "#fcd34d");
-    if (earR) earR.setAttribute("fill", "#fcd34d");
-    if (earLInner) earLInner.setAttribute("fill", "#fda4af");
-    if (earRInner) earRInner.setAttribute("fill", "#fda4af");
-    
-    const wingPaths = wings ? wings.querySelectorAll("path") : [];
-    wingPaths.forEach(p => {
-      p.setAttribute("fill", "#fde047");
-      p.setAttribute("stroke", "#eab308");
-    });
-  } else {
-    if (halo) halo.classList.add("hidden");
-    if (counterBadge) counterBadge.classList.remove("angel-glow");
-    
-    const wingPaths = wings ? wings.querySelectorAll("path") : [];
-    wingPaths.forEach(p => {
-      p.setAttribute("fill", "#fbcfe8");
-      p.setAttribute("stroke", "#f472b6");
+  }
+}
+
+function initMascotWardrobe(diffDays) {
+  let outfit = JSON.parse(localStorage.getItem("loveMascotOutfit") || "{}");
+  
+  // Default values based on current milestones if no custom saves exist
+  if (Object.keys(outfit).length === 0) {
+    outfit = {
+      skin: (diffDays >= 60 ? "gold" : (diffDays >= 30 ? "pink" : "yellow")),
+      crown: diffDays >= 10,
+      bowtie: diffDays >= 20,
+      wings: diffDays >= 30,
+      sunglasses: diffDays >= 40,
+      partyhat: false,
+      halo: diffDays >= 60
+    };
+    localStorage.setItem("loveMascotOutfit", JSON.stringify(outfit));
+  }
+  
+  // Render styling immediately
+  applyMascotOutfit(outfit);
+  
+  if (isWardrobeInitialized) return;
+  isWardrobeInitialized = true;
+  
+  const btnWardrobe = document.getElementById("btn-mascot-wardrobe");
+  const wardrobeOverlay = document.getElementById("wardrobe-overlay");
+  const closeWardrobe = document.getElementById("close-wardrobe");
+  
+  if (btnWardrobe && wardrobeOverlay) {
+    btnWardrobe.addEventListener("click", (e) => {
+      e.stopPropagation(); // Avoid triggering nuzzle speech bubbles
+      wardrobeOverlay.classList.add("active");
+      renderWardrobeUI(diffDays);
     });
   }
+  
+  if (closeWardrobe && wardrobeOverlay) {
+    closeWardrobe.addEventListener("click", () => {
+      wardrobeOverlay.classList.remove("active");
+    });
+  }
+  
+  if (wardrobeOverlay) {
+    wardrobeOverlay.addEventListener("click", (e) => {
+      if (e.target === wardrobeOverlay) {
+        wardrobeOverlay.classList.remove("active");
+      }
+    });
+  }
+}
+
+function renderWardrobeUI(diffDays) {
+  const skinsContainer = document.getElementById("wardrobe-skins");
+  const accessoriesContainer = document.getElementById("wardrobe-accessories");
+  if (!skinsContainer || !accessoriesContainer) return;
+  
+  const outfit = JSON.parse(localStorage.getItem("loveMascotOutfit") || "{}");
+  
+  // 1. Render skins list
+  skinsContainer.innerHTML = "";
+  const skinsData = [
+    { id: "yellow", name: "Gấu Vàng", icon: "💛", minDays: 0 },
+    { id: "pink", name: "Gấu Hồng", icon: "💖", minDays: 30 },
+    { id: "gold", name: "Gấu Hoàng Kim", icon: "🌟", minDays: 60 }
+  ];
+  
+  skinsData.forEach(skin => {
+    const item = document.createElement("div");
+    const isUnlocked = diffDays >= skin.minDays;
+    item.className = `wardrobe-item ${isUnlocked ? "" : "locked"} ${outfit.skin === skin.id ? "active" : ""}`;
+    
+    if (isUnlocked) {
+      item.innerHTML = `
+        <span class="wardrobe-item-icon">${skin.icon}</span>
+        <span class="wardrobe-item-name">${skin.name}</span>
+      `;
+      item.addEventListener("click", () => {
+        outfit.skin = skin.id;
+        localStorage.setItem("loveMascotOutfit", JSON.stringify(outfit));
+        applyMascotOutfit(outfit);
+        renderWardrobeUI(diffDays);
+      });
+    } else {
+      item.innerHTML = `
+        <span class="wardrobe-item-icon">🔒</span>
+        <span class="wardrobe-item-name">${skin.name}</span>
+        <span class="wardrobe-item-lock-hint">Đạt ${skin.minDays} ngày</span>
+      `;
+    }
+    skinsContainer.appendChild(item);
+  });
+  
+  // 2. Render accessories list
+  accessoriesContainer.innerHTML = "";
+  const accessoriesData = [
+    { id: "crown", name: "Vương Miện", icon: "👑", category: "head", minDays: 10 },
+    { id: "bowtie", name: "Nơ Cổ", icon: "🎀", category: "neck", minDays: 20 },
+    { id: "wings", name: "Cánh Thiên Thần", icon: "👼", category: "back", minDays: 30 },
+    { id: "sunglasses", name: "Kính Râm Ngầu", icon: "😎", category: "eyes", minDays: 40 },
+    { id: "partyhat", name: "Mũ Sinh Nhật", icon: "🥳", category: "head", minDays: 50 },
+    { id: "halo", name: "Hào Quang", icon: "✨", category: "aura", minDays: 60 }
+  ];
+  
+  accessoriesData.forEach(acc => {
+    const item = document.createElement("div");
+    const isUnlocked = diffDays >= acc.minDays;
+    const isActive = outfit[acc.id] === true;
+    item.className = `wardrobe-item ${isUnlocked ? "" : "locked"} ${isActive ? "active" : ""}`;
+    
+    if (isUnlocked) {
+      item.innerHTML = `
+        <span class="wardrobe-item-icon">${acc.icon}</span>
+        <span class="wardrobe-item-name">${acc.name}</span>
+      `;
+      item.addEventListener("click", () => {
+        const newState = !outfit[acc.id];
+        outfit[acc.id] = newState;
+        
+        // Mutually exclusive: Crown & Party Hat (only one head item allowed)
+        if (newState) {
+          if (acc.id === "crown") outfit.partyhat = false;
+          if (acc.id === "partyhat") outfit.crown = false;
+        }
+        
+        localStorage.setItem("loveMascotOutfit", JSON.stringify(outfit));
+        applyMascotOutfit(outfit);
+        renderWardrobeUI(diffDays);
+      });
+    } else {
+      item.innerHTML = `
+        <span class="wardrobe-item-icon">🔒</span>
+        <span class="wardrobe-item-name">${acc.name}</span>
+        <span class="wardrobe-item-lock-hint">Đạt ${acc.minDays} ngày</span>
+      `;
+    }
+    accessoriesContainer.appendChild(item);
+  });
 }
 
 // Check and trigger mascot milestone achievements
@@ -1554,7 +1626,7 @@ function updateLoveCounter() {
   }
 
   // Update Mascot accessories and styling based on milestones
-  updateMascotEvolution(diffDays);
+  initMascotWardrobe(diffDays);
   checkMascotMilestoneUnlocks(diffDays);
 
   // Update birthday countdown

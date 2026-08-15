@@ -19,7 +19,7 @@
     href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="style/style.css?v=5.2" />
+  <link rel="stylesheet" href="style/style.css?v=6.0" />
 </head>
 
 <body>
@@ -348,6 +348,10 @@
     <div class="mascot-mood-badge hidden" id="mascot-mood-badge"></div>
     <!-- Mascot Suggestion Hint -->
     <div class="mascot-hint-bubble hidden" id="mascot-hint-bubble">Giữ để thả cảm xúc 🧸</div>
+    <!-- Mascot Wardrobe Toggle Button -->
+    <button class="mascot-wardrobe-btn" id="btn-mascot-wardrobe" title="Tủ đồ bé gấu">
+      <i class="fa-solid fa-shirt"></i>
+    </button>
     <div class="mascot-avatar">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
         <!-- Mascot Angel Wings (Unlocked at >= 30 days, placed at the back) -->
@@ -553,6 +557,33 @@
     </div>
   </div>
 
+  <!-- Mascot Wardrobe Overlay (Slide-up drawer) -->
+  <div class="overlay" id="wardrobe-overlay" style="z-index: 9500;">
+    <div class="wardrobe-drawer">
+      <button class="close-btn" id="close-wardrobe"><i class="fa-solid fa-xmark"></i></button>
+      <h3>👕 Tủ Đồ Bé Gấu</h3>
+      <p class="wardrobe-subtitle">Mở khóa phụ kiện theo số ngày kỷ niệm tình yêu</p>
+      
+      <div class="wardrobe-sections">
+        <!-- Skins Category -->
+        <div class="wardrobe-section">
+          <span class="category-title">🎨 Màu Lông Gấu</span>
+          <div class="wardrobe-items" id="wardrobe-skins">
+            <!-- Dynamically populated by JavaScript -->
+          </div>
+        </div>
+        
+        <!-- Accessories Category -->
+        <div class="wardrobe-section">
+          <span class="category-title">👑 Phụ Kiện Đeo</span>
+          <div class="wardrobe-items" id="wardrobe-accessories">
+            <!-- Dynamically populated by JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Mascot Mood Menu (Hidden by default, shown on tap-hold, direct body child to prevent parent transformations clipping) -->
   <div class="mascot-mood-menu hidden" id="mascot-mood-menu">
     <button class="mood-btn" data-mood="happy" title="Vui vẻ">😊</button>
@@ -575,7 +606,7 @@
   <audio id="audio-player"></audio>
   <audio id="pop-sound" src="style/pop.mp3"></audio>
 
-  <script src="style/script.js?v=5.2"></script>
+  <script src="style/script.js?v=6.0"></script>
 </body>
 
 </html>

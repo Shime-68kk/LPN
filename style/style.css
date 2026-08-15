@@ -3208,3 +3208,222 @@ body.night-mode .menu-item:active {
   }
 }
 
+/* Mascot Wardrobe Hanger Button */
+.mascot-wardrobe-btn {
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  background: #ffffff;
+  border: 2px solid #e9d5ff;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9333ea;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.15);
+  transition: all 0.2s ease;
+  z-index: 2500;
+}
+
+.mascot-wardrobe-btn:hover {
+  transform: scale(1.1);
+  border-color: #9333ea;
+  background: #fdf4ff;
+}
+
+/* Wardrobe Drawer Slide-up Panel styling */
+.wardrobe-drawer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.98);
+  border-top: 3px solid #f472b6;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  padding: 25px 20px;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.1);
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 80vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.overlay.active .wardrobe-drawer {
+  transform: translateY(0);
+}
+
+.wardrobe-drawer h3 {
+  font-family: "Playfair Display", serif;
+  color: #db2777;
+  font-size: 1.4rem;
+  margin-bottom: 5px;
+  text-align: center;
+}
+
+.wardrobe-subtitle {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.wardrobe-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.wardrobe-section .category-title {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #7c3aed;
+  display: block;
+  margin-bottom: 10px;
+  border-left: 3px solid #7c3aed;
+  padding-left: 8px;
+}
+
+.wardrobe-items {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+/* Wardrobe item styling */
+.wardrobe-item {
+  background: #fdf2f8;
+  border: 2.5px solid #fce7f3;
+  border-radius: 16px;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  text-align: center;
+}
+
+.wardrobe-item:hover:not(.locked) {
+  border-color: #f472b6;
+  background: #fff5f7;
+  transform: translateY(-2px);
+}
+
+.wardrobe-item.active {
+  background: #fbcfe8;
+  border-color: #db2777;
+  box-shadow: 0 0 10px rgba(219, 39, 119, 0.25);
+}
+
+.wardrobe-item.locked {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.wardrobe-item-icon {
+  font-size: 1.6rem;
+}
+
+.wardrobe-item-name {
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #475569;
+}
+
+.wardrobe-item.active .wardrobe-item-name {
+  color: #9d174d;
+}
+
+.wardrobe-item-lock-hint {
+  font-size: 0.65rem;
+  color: #64748b;
+  font-style: italic;
+  line-height: 1.1;
+}
+
+/* Hide accessories by default unless set active via wardrobe classes */
+#mascot-wings, #mascot-crown, #mascot-bowtie, #mascot-sunglasses, #mascot-partyhat, #mascot-halo {
+  display: none;
+}
+
+/* Wardrobe layout classes applied on mascot-widget to display SVG elements */
+#mascot-widget.outfit-crown #mascot-crown {
+  display: block !important;
+}
+
+#mascot-widget.outfit-bowtie #mascot-bowtie {
+  display: block !important;
+}
+
+#mascot-widget.outfit-wings #mascot-wings {
+  display: block !important;
+}
+
+#mascot-widget.outfit-sunglasses #mascot-sunglasses {
+  display: block !important;
+}
+
+#mascot-widget.outfit-partyhat #mascot-partyhat {
+  display: block !important;
+}
+
+#mascot-widget.outfit-halo #mascot-halo {
+  display: block !important;
+}
+
+/* SVG Skin Color Customizations for Bear */
+#mascot-widget.outfit-skin-pink #mascot-head,
+#mascot-widget.outfit-skin-pink #mascot-ear-l,
+#mascot-widget.outfit-skin-pink #mascot-ear-r {
+  fill: #fbcfe8 !important;
+}
+#mascot-widget.outfit-skin-pink #mascot-ear-l-inner,
+#mascot-widget.outfit-skin-pink #mascot-ear-r-inner {
+  fill: #f9a8d4 !important;
+}
+
+#mascot-widget.outfit-skin-gold #mascot-head,
+#mascot-widget.outfit-skin-gold #mascot-ear-l,
+#mascot-widget.outfit-skin-gold #mascot-ear-r {
+  fill: #fcd34d !important;
+}
+#mascot-widget.outfit-skin-gold #mascot-ear-l-inner,
+#mascot-widget.outfit-skin-gold #mascot-ear-r-inner {
+  fill: #fda4af !important;
+}
+#mascot-widget.outfit-skin-gold #mascot-wings path {
+  fill: #fde047 !important;
+  stroke: #eab308 !important;
+}
+
+/* Float crown hover animations */
+@keyframes floatCrown {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-3px) rotate(2deg); }
+}
+#mascot-widget.outfit-crown #mascot-crown {
+  transform-origin: center;
+  animation: floatCrown 2.5s infinite ease-in-out;
+}
+
+/* Wing flapping animation */
+@keyframes flapWings {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.05) rotate(3deg); }
+}
+#mascot-widget.outfit-wings #mascot-wings {
+  transform-origin: center;
+  animation: flapWings 3.5s infinite ease-in-out;
+}
+
+
