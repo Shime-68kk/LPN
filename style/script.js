@@ -2421,16 +2421,8 @@ function checkNightMode() {
   
   if (isNight) {
     document.body.classList.add("night-mode");
-    const sleepingHat = document.getElementById("mascot-sleeping-hat");
-    if (sleepingHat) {
-      sleepingHat.classList.remove("hidden");
-    }
   } else {
     document.body.classList.remove("night-mode");
-    const sleepingHat = document.getElementById("mascot-sleeping-hat");
-    if (sleepingHat) {
-      sleepingHat.classList.add("hidden");
-    }
   }
 }
 
