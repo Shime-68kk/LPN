@@ -1429,7 +1429,6 @@ function applyMascotOutfit(outfit) {
   const counterBadge = document.getElementById("love-counter-badge");
   const heartPulse = counterBadge ? counterBadge.querySelector(".heart-pulse") : null;
   if (counterBadge) {
-    counterBadge.classList.remove("neon-glow", "wings-glow", "angel-glow");
     if (outfit.skin === "gold" || outfit.halo) {
       counterBadge.classList.add("angel-glow");
       if (heartPulse) heartPulse.innerText = "💘";
@@ -1451,15 +1450,15 @@ function applyMascotOutfit(outfit) {
 function initMascotWardrobe(diffDays) {
   let outfit = JSON.parse(localStorage.getItem("loveMascotOutfit") || "{}");
   
-  // Default values: Mặc định chọn màu Tím Mộng Mơ 💜 ban đầu khi mới vào
+  // Default values: Mặc định chọn màu Tím Mộng Mơ 💜 ban đầu khi mới vào, phụ kiện TỰ MẶC (false mặc định)
   if (Object.keys(outfit).length === 0) {
     outfit = {
       skin: "purple", // Mặc định Thần Lửa Tím Mộng Mơ 💜
-      crown: diffDays >= 10,
-      bowtie: diffDays >= 20,
-      sunglasses: diffDays >= 40,
+      crown: false,    // Không tự động mặc - để người dùng tự mở Tủ Đồ mặc
+      bowtie: false,
+      sunglasses: false,
       partyhat: false,
-      halo: diffDays >= 60
+      halo: false
     };
     localStorage.setItem("loveMascotOutfit", JSON.stringify(outfit));
   }
@@ -1622,8 +1621,29 @@ function renderWardrobeUI(diffDays) {
 
     wardrobeSections.appendChild(section);
   });
-}
 
+  // Add Unequip All Accessories button
+  const resetSection = document.createElement("div");
+  resetSection.className = "wardrobe-reset-section";
+  resetSection.style.cssText = "text-align: center; margin-top: 15px; margin-bottom: 5px;";
+  resetSection.innerHTML = `
+    <button class="unequip-all-btn" style="background: rgba(239, 68, 68, 0.1); border: 1.5px solid #ef4444; color: #ef4444; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+      <i class="fa-solid fa-trash-can" style="margin-right: 5px;"></i> Cởi Tất Cả Phụ Kiện
+    </button>
+  `;
+  const unequipBtn = resetSection.querySelector(".unequip-all-btn");
+  unequipBtn.addEventListener("click", () => {
+    outfit.crown = false;
+    outfit.bowtie = false;
+    outfit.sunglasses = false;
+    outfit.partyhat = false;
+    outfit.halo = false;
+    localStorage.setItem("loveMascotOutfit", JSON.stringify(outfit));
+    applyMascotOutfit(outfit);
+    renderWardrobeUI(diffDays);
+  });
+  wardrobeSections.appendChild(resetSection);
+}
 // Check and trigger mascot milestone achievements
 function checkMascotMilestoneUnlocks(diffDays) {
   if (diffDays >= 10) unlockAchievement("milestone-10", "Mốc 10 Ngày: Vương Miện Hoàng Gia");
