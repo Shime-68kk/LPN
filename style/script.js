@@ -1,6 +1,6 @@
 // Cấu hình ngày bắt đầu yêu nhau (định dạng: YYYY-MM-DD hoặc YYYY-MM-DDTHH:MM:SS)
 // Bạn có thể chỉnh sửa ngày này tùy ý nhé!
-const ANNIVERSARY_DATE = "2026-08-06T23:38:58";
+const ANNIVERSARY_DATE = "2026-06-12T12:00:00"; // TEMPORARY for 60-day wardrobe testing (Original: "2026-08-06T23:38:58")
 let audioPlayer = null;
 let isPlaying = false;
 
