@@ -2097,7 +2097,7 @@ if (btnSaveDiary) {
   });
 }
 
-// Render Diary Entries (with Pagination & Lazy Loading to prevent CPU heating/lag)
+// Render Diary Entries (with Pagination, Reactions & Lazy Loading)
 function renderDiaryEntries() {
   if (!diaryEntriesList) return;
   
@@ -2133,18 +2133,90 @@ function renderDiaryEntries() {
     // Add '(đã chỉnh sửa)' indicator if it was edited
     const editedHtml = entry.isEdited ? ` <span class="diary-item-edited">(đã chỉnh sửa)</span>` : "";
     
+    // Reactions Bar setup
+    const entryId = entry.id || `local_${entry.timestamp}`;
+    const myReactionKey = `myDiaryReaction_${entryId}`;
+    const currentMyReaction = localStorage.getItem(myReactionKey);
+    const reactions = entry.reactions || {};
+    
+    let reactionsBadgesHtml = "";
+    Object.entries(reactions).forEach(([emoji, count]) => {
+      if (count > 0) {
+        const isMy = currentMyReaction === emoji ? "my-reaction" : "";
+        reactionsBadgesHtml += `
+          <button class="diary-reaction-badge ${isMy}" data-emoji="${emoji}" title="${isMy ? 'Bỏ thả cảm xúc' : 'Thả cảm xúc này'}">
+            <span>${emoji}</span>
+            <span class="count">${count}</span>
+          </button>
+        `;
+      }
+    });
+
     diaryItem.innerHTML = `
       <div class="diary-item-date">
         <i class="fa-regular fa-clock"></i> ${timeStr} ngày ${dateStr}${editedHtml}
       </div>
       <div class="diary-item-text">${entry.text}</div>
       ${imageHtml}
+      
+      <!-- Reactions Section -->
+      <div class="diary-reaction-section">
+        ${reactionsBadgesHtml}
+        <div class="diary-reaction-picker-wrapper" style="position: relative; display: inline-block;">
+          <button class="diary-add-reaction-btn" title="Thả cảm xúc">
+            <i class="fa-regular fa-face-smile"></i> Thả tim
+          </button>
+          <div class="diary-reaction-picker hidden">
+            <button class="picker-emoji-btn" data-emoji="❤️">❤️</button>
+            <button class="picker-emoji-btn" data-emoji="🥰">🥰</button>
+            <button class="picker-emoji-btn" data-emoji="🥺">🥺</button>
+            <button class="picker-emoji-btn" data-emoji="🫂">🫂</button>
+            <button class="picker-emoji-btn" data-emoji="🌸">🌸</button>
+          </div>
+        </div>
+      </div>
+
       <div class="diary-item-actions">
         <button class="edit-entry-btn" data-id="${entry.id || ''}" data-index="${index}"><i class="fa-solid fa-pencil"></i></button>
         <button class="delete-entry-btn-active" data-id="${entry.id || ''}" data-index="${index}"><i class="fa-solid fa-trash-can"></i></button>
       </div>
     `;
     
+    // Add Reaction Picker Toggle Listener
+    const addReactionBtn = diaryItem.querySelector(".diary-add-reaction-btn");
+    const reactionPicker = diaryItem.querySelector(".diary-reaction-picker");
+    if (addReactionBtn && reactionPicker) {
+      addReactionBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        // Close any other open pickers first
+        document.querySelectorAll(".diary-reaction-picker").forEach(p => {
+          if (p !== reactionPicker) p.classList.add("hidden");
+        });
+        reactionPicker.classList.toggle("hidden");
+      });
+    }
+
+    // Add Picker Emoji Buttons Listeners
+    const pickerEmojiBtns = diaryItem.querySelectorAll(".picker-emoji-btn");
+    pickerEmojiBtns.forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const emoji = btn.getAttribute("data-emoji");
+        toggleDiaryReaction(entry.id, entry.timestamp, emoji);
+        if (reactionPicker) reactionPicker.classList.add("hidden");
+      });
+    });
+
+    // Add Existing Reaction Badges Click Listeners (Toggle on/off)
+    const reactionBadges = diaryItem.querySelectorAll(".diary-reaction-badge");
+    reactionBadges.forEach(badge => {
+      badge.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const emoji = badge.getAttribute("data-emoji");
+        toggleDiaryReaction(entry.id, entry.timestamp, emoji);
+      });
+    });
+
     // Add edit listener
     const editBtn = diaryItem.querySelector(".edit-entry-btn");
     if (editBtn) {
@@ -2203,6 +2275,68 @@ function renderDiaryEntries() {
       renderDiaryEntries();
     });
     diaryEntriesList.appendChild(loadMoreBtn);
+  }
+}
+
+// Global click to close any open reaction picker
+document.addEventListener("click", () => {
+  document.querySelectorAll(".diary-reaction-picker").forEach(p => p.classList.add("hidden"));
+});
+
+// Toggle Diary Reaction Function
+async function toggleDiaryReaction(entryId, entryTimestamp, emoji) {
+  // Pop sound
+  const popSoundEffect = document.getElementById("pop-sound");
+  if (popSoundEffect) {
+    const clone = popSoundEffect.cloneNode();
+    clone.play();
+  }
+
+  const entries = JSON.parse(localStorage.getItem("loveDiaryEntries") || "[]");
+  const targetIndex = entries.findIndex(e => (entryId && e.id === entryId) || (entryTimestamp && e.timestamp === entryTimestamp));
+  if (targetIndex === -1) return;
+
+  const targetEntry = entries[targetIndex];
+  if (!targetEntry.reactions) targetEntry.reactions = {};
+
+  const reactionStorageKey = `myDiaryReaction_${entryId || `local_${entryTimestamp}`}`;
+  const previousReaction = localStorage.getItem(reactionStorageKey);
+
+  if (previousReaction === emoji) {
+    // Untoggle reaction
+    targetEntry.reactions[emoji] = Math.max(0, (targetEntry.reactions[emoji] || 1) - 1);
+    localStorage.removeItem(reactionStorageKey);
+  } else {
+    // If previously reacted with a different emoji, decrement old one
+    if (previousReaction && targetEntry.reactions[previousReaction]) {
+      targetEntry.reactions[previousReaction] = Math.max(0, targetEntry.reactions[previousReaction] - 1);
+    }
+    // Increment new emoji count
+    targetEntry.reactions[emoji] = (targetEntry.reactions[emoji] || 0) + 1;
+    localStorage.setItem(reactionStorageKey, emoji);
+
+    // Discord Notification
+    if (DISCORD_WEBHOOK_URL) {
+      sendDiscordNotification(`💖 **Lệ Thủy vừa thả cảm xúc [${emoji}] vào một trang nhật ký!** 📝`);
+    }
+  }
+
+  // Update local storage and re-render instantly
+  entries[targetIndex] = targetEntry;
+  localStorage.setItem("loveDiaryEntries", JSON.stringify(entries));
+  renderDiaryEntries();
+
+  // Async sync to Firebase
+  if (entryId) {
+    try {
+      await fetch(`${FIREBASE_DB_URL}diary/${entryId}/reactions.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(targetEntry.reactions)
+      });
+    } catch (err) {
+      console.error("Failed to sync reaction to Firebase:", err);
+    }
   }
 }
 
