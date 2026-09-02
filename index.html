@@ -39,6 +39,52 @@
 
 <body>
   <div class="fireflies-bg" id="fireflies-bg"></div>
+
+  <!-- Dynamic Celestial Sky (Day, Sunset, Midnight Galaxy) -->
+  <div class="celestial-sky" id="celestial-sky">
+    <!-- 2D Celestial Orbit Track (Pure 2D Anime Game Style) -->
+    <div class="celestial-orbit-track" id="celestial-orbit-track">
+      <!-- 2D Sun (Follows flawless orbital arc) -->
+      <div class="celestial-sun-2d" id="celestial-sun-2d">
+        <!-- Dynamic Lighting: đi đến đâu tỏa ánh sáng đến đấy -->
+        <div class="sun-ambient-illumination"></div>
+        <!-- 2D Clean Anime Sun Layering -->
+        <div class="sun-ring-glow"></div>
+        <div class="sun-halo-step"></div>
+        <div class="sun-core-2d"></div>
+      </div>
+    </div>
+
+    <!-- 2D Silhouette Horizon & Sunset Glow at Bottom-Right -->
+    <div class="sunset-horizon-2d" id="sunset-horizon-2d">
+      <div class="horizon-ambient-glow"></div>
+      <svg class="horizon-svg-hills" viewBox="0 0 600 120" preserveAspectRatio="none">
+        <path d="M0,120 L0,70 Q150,25 300,75 Q450,15 600,60 L600,120 Z" class="hill-back" />
+        <path d="M0,120 L0,90 Q180,45 350,95 Q480,50 600,80 L600,120 Z" class="hill-front" />
+      </svg>
+    </div>
+
+    <!-- Glowing Crescent Moon (Chỉ xuất hiện ban đêm) -->
+    <div class="crescent-moon" id="crescent-moon" title="Chạm vào mặt trăng để ngắm sao băng ước nguyện ✨">
+      <div class="moon-body"></div>
+      <div class="moon-crater c1"></div>
+      <div class="moon-crater c2"></div>
+      <span class="moon-sparkle s1">✨</span>
+      <span class="moon-sparkle s2">⭐</span>
+    </div>
+
+    <!-- Shooting Stars Layer -->
+    <div class="shooting-stars-container" id="shooting-stars-container"></div>
+  </div>
+
+  <!-- Cosmic Comet Layer (Ưu tiên tuyệt đối trước toàn bộ ứng dụng) -->
+  <div class="comet-container" id="comet-container"></div>
+
+  <!-- Subtle Sky Theme Quick Switcher -->
+  <button class="sky-theme-toggle" id="sky-theme-toggle" title="Chuyển bầu không khí (Sáng • Hoàng Hôn • Đêm Sao)">
+    <span class="sky-icon" id="sky-icon">🌌</span>
+    <span class="sky-text" id="sky-text">Đêm Sao</span>
+  </button>
   <div class="lock-screen" id="lock-screen">
     <div class="lock-content">
       <div class="lock-image">
@@ -479,6 +525,20 @@
           <ellipse cx="64" cy="48" rx="4" ry="4.5" fill="#3b0764" />
         </g>
 
+        <!-- Sparkling Anime Sunset Eyes (Long lanh ngắm hoàng hôn) -->
+        <g id="mascot-eyes-sunset" class="hidden">
+          <ellipse cx="36" cy="45" rx="5.5" ry="6.5" fill="#4a044e" />
+          <ellipse cx="64" cy="45" rx="5.5" ry="6.5" fill="#4a044e" />
+          <ellipse cx="36" cy="47.5" rx="4" ry="3" fill="#f97316" opacity="0.9" />
+          <ellipse cx="64" cy="47.5" rx="4" ry="3" fill="#f97316" opacity="0.9" />
+          <circle cx="34" cy="42" r="2.4" fill="#ffffff" />
+          <circle cx="62" cy="42" r="2.4" fill="#ffffff" />
+          <circle cx="38" cy="47" r="1.3" fill="#fef08a" />
+          <circle cx="66" cy="47" r="1.3" fill="#fef08a" />
+          <polygon points="36,41 36.6,42.5 38.2,43 36.6,43.5 36,45 35.4,43.5 33.8,43 35.4,42.5" fill="#ffffff" />
+          <polygon points="64,41 64.6,42.5 66.2,43 64.6,43.5 64,45 63.4,43.5 61.8,43 63.4,42.5" fill="#ffffff" />
+        </g>
+
         <!-- ACCESSORIES UNLOCKED VIA LOVE MILESTONES -->
         <!-- Mascot Crown (>= 10 days) -->
         <g id="mascot-crown" class="hidden" filter="url(#softShadow)">
@@ -613,6 +673,13 @@
         <!-- Section 2: Interactive Bonding Actions -->
         <div class="achievement-section-header">💞 HÀNH TRÌNH TƯƠNG TÁC & GẮN KẾT</div>
 
+        <div class="achievement-card locked" id="ach-sunset-chaser">
+          <div class="achievement-icon">🌅</div>
+          <div class="achievement-info">
+            <span class="achievement-title">Người Săn Hoàng Hôn</span>
+            <span class="achievement-desc">Cùng anh ngắm cảnh mặt trời lặn lãng mạn buông xuống.</span>
+          </div>
+        </div>
         <div class="achievement-card locked" id="ach-thau-hieu">
           <div class="achievement-icon">🔑</div>
           <div class="achievement-info">
@@ -692,12 +759,31 @@
     </div>
   </div>
 
+  <!-- Shooting Star Wish Message Banner -->
+  <div class="shooting-star-banner hidden" id="shooting-star-banner">
+    <span class="star-icon">🌠</span>
+    <span class="star-msg" id="shooting-star-text">Một ngôi sao băng vừa bay qua mang theo điều ước...</span>
+  </div>
+
+  <!-- Modal Nhận Điều Ước Khi Bắt Trúng Sao Chổi -->
+  <div class="comet-wish-modal hidden" id="comet-wish-modal">
+    <div class="comet-wish-card">
+      <div class="comet-wish-icon">☄️💖</div>
+      <h3 class="comet-wish-title">Chị Lệ Đã Bắt Trúng Sao Chổi!</h3>
+      <p class="comet-wish-subtitle">Điều ước yêu thương từ Anh Quang dành riêng cho em:</p>
+      <div class="comet-wish-content" id="comet-wish-content">
+        "Mong cho công chúa Lệ Thủy của anh luôn luôn mỉm cười rạng rỡ, bình an và hạnh phúc mỗi ngày. Anh sẽ luôn ở cạnh che chở cho em!"
+      </div>
+      <button class="comet-wish-close-btn" id="btn-close-comet-wish">Cảm Ơn Anh Iu 💕</button>
+    </div>
+  </div>
+
   <audio id="audio-player"></audio>
   <audio id="pop-sound" src="style/pop.mp3"></audio>
 
   <!-- EmailJS SDK for Love Letter & Diary Email Notifications -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script src="style/script.js?v=35.0"></script>
+  <script src="style/script.js?v=36.0"></script>
 </body>
 
 </html>

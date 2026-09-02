@@ -17,8 +17,17 @@ const EMAILJS_CONFIG = {
   RECIPIENT_EMAIL: "lethuynong2@gmail.com"
 };
 
+// Kích hoạt gửi email thông báo tự động
+const ENABLE_EMAIL_NOTIFICATIONS = true;
+
 // Gửi email thông báo tự động đến hộp thư của Lệ Thủy
 async function sendEmailToLeThuy({ title, message, author }) {
+  // Tạm dừng gửi mail khi đang test
+  if (!ENABLE_EMAIL_NOTIFICATIONS) {
+    console.log("💌 [TẠM KHÓA GỬI MAIL] Đang trong chế độ kiểm thử hoàng hôn.");
+    return;
+  }
+
   // Chỉ gửi email khi người gửi là Anh Quang (để tránh gửi nhầm khi chính Lệ Thủy thao tác)
   if (author && !author.includes("Quang") && author !== "Anh Quang 👦") {
     return;
@@ -1099,6 +1108,11 @@ function unlock() {
     item.style.opacity = "1";
     item.style.transform = "scale(1)";
   });
+
+  // Trigger celestial sky intro (sunset flight or night moon rising) once per day on unlock!
+  if (typeof triggerSkyIntroOnUnlock === "function") {
+    triggerSkyIntroOnUnlock();
+  }
 }
 function fail() {
   const _0x3da771 = {
@@ -2808,21 +2822,473 @@ function initFireflies() {
 // Start fireflies background on page load
 initFireflies();
 
-// Check and apply Midnight Constellation Mode (Night Mode)
-function checkNightMode() {
-  const hour = new Date().getHours();
-  // Night Mode triggers between 9 PM (21h) and 6 AM (6h)
-  const isNight = (hour >= 21 || hour < 6);
-  
-  if (isNight) {
-    document.body.classList.add("night-mode");
+// Dynamic Celestial Sky (Day: 05:30-17:30, Sunset: 17:30-19:30, Twilight: 19:30-20:00, Night: 20:00-05:30)
+let currentSkyTheme = "auto"; // "auto" | "day" | "sunset" | "twilight" | "night"
+
+// Helper: Lấy chuỗi ngày YYYY-MM-DD để kiểm tra hiển thị đúng 1 lần / ngày
+function getTodayDateKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+}
+
+// Phân định chính xác các mốc thời gian thực tế:
+// 1. 05:30 - 17:30: Ban Ngày (Mặt trời ở góc trái)
+// 2. 17:30 - 19:30: Hoàng Hôn (Mặt trời lặn dần sang góc phải)
+// 3. 19:30 - 20:00: Chạng Vạng (Tối dần, chưa có trăng)
+// 4. 20:00 - 05:30: Đêm Sao (Mặt trời lặn hẳn, ánh trăng đi lên)
+function getRealTimeSkyPhase() {
+  const now = new Date();
+  const totalMinutes = now.getHours() * 60 + now.getMinutes();
+
+  if (totalMinutes >= 330 && totalMinutes < 1050) {
+    return "day";      // 05:30 -> 17:30
+  } else if (totalMinutes >= 1050 && totalMinutes < 1170) {
+    return "sunset";   // 17:30 -> 19:30
+  } else if (totalMinutes >= 1170 && totalMinutes < 1200) {
+    return "twilight"; // 19:30 -> 20:00 (Tối dần, chưa có trăng)
   } else {
-    document.body.classList.remove("night-mode");
+    return "night";    // 20:00 -> 05:30 (Đêm sao & trăng lên)
   }
 }
 
-// Apply night mode check on page load
-checkNightMode();
+let skyAnimTimer = null;
+
+function applySkyTheme(theme, isUserTriggered = false) {
+  const effectiveTheme = theme === "auto" ? getRealTimeSkyPhase() : theme;
+  const todayKey = getTodayDateKey();
+
+  document.body.classList.remove(
+    "theme-day", "theme-sunset", "theme-twilight", "theme-night", "night-mode", "cinematic-sunset"
+  );
+
+  const skyIcon = document.getElementById("sky-icon");
+  const skyText = document.getElementById("sky-text");
+  const mascotEyesNormal = document.getElementById("mascot-eyes-normal");
+  const mascotEyesSunset = document.getElementById("mascot-eyes-sunset");
+  const mascotWidget = document.getElementById("mascot-widget");
+  const moonEl = document.getElementById("crescent-moon");
+
+  if (effectiveTheme === "day") {
+    document.body.classList.add("theme-day");
+    if (skyIcon) skyIcon.innerText = "☀️";
+    if (skyText) skyText.innerText = "Ban Ngày";
+
+    // Restore normal mascot eyes & posture
+    if (mascotEyesNormal) mascotEyesNormal.classList.remove("hidden");
+    if (mascotEyesSunset) mascotEyesSunset.classList.add("hidden");
+    if (mascotWidget) mascotWidget.style.transform = "";
+    if (moonEl) moonEl.classList.remove("moon-rising");
+
+  } else if (effectiveTheme === "sunset") {
+    document.body.classList.add("theme-sunset");
+    if (skyIcon) skyIcon.innerText = "🌇";
+    if (skyText) skyText.innerText = "Hoàng Hôn";
+
+    // Mascot looks towards sunset with anime eyes
+    if (mascotEyesNormal) mascotEyesNormal.classList.add("hidden");
+    if (mascotEyesSunset) mascotEyesSunset.classList.remove("hidden");
+    if (mascotWidget) mascotWidget.style.transform = "scale(1.15) rotate(4deg)";
+    if (moonEl) moonEl.classList.remove("moon-rising");
+
+    // Unlock Sunset Chaser Achievement
+    if (typeof unlockAchievement === "function") {
+      unlockAchievement("sunset-chaser", "Người Săn Hoàng Hôn 🌅");
+    }
+
+    // Check if sunset intro should play (Once per day on browser, or always if user clicks test button)
+    const sunsetStorageKey = `sunset_intro_shown_${todayKey}`;
+    const shouldPlaySunsetIntro = isUserTriggered || (localStorage.getItem(sunsetStorageKey) !== "true");
+
+    if (shouldPlaySunsetIntro) {
+      document.body.classList.add("cinematic-sunset");
+
+      const mascotBubble = document.getElementById("mascot-speech-bubble");
+      const mascotBubbleText = document.getElementById("mascot-bubble-text");
+      if (mascotBubble && mascotBubbleText) {
+        mascotBubbleText.innerText = "Hoàng hôn đẹp quá... Mặt trời đang lặn dần rồi kìa Lệ Thủy ơi! 🌅✨";
+        mascotBubble.classList.remove("hidden");
+        setTimeout(() => mascotBubble.classList.add("hidden"), 6000);
+      }
+
+      if (!isUserTriggered) {
+        localStorage.setItem(sunsetStorageKey, "true");
+      }
+
+      if (skyAnimTimer) clearTimeout(skyAnimTimer);
+      skyAnimTimer = setTimeout(() => {
+        document.body.classList.remove("cinematic-sunset");
+        if (mascotWidget) mascotWidget.style.transform = "";
+      }, 4500);
+    }
+
+  } else if (effectiveTheme === "twilight") {
+    // 19:30 - 20:00: Tối dần dần, chưa có ánh trăng
+    document.body.classList.add("theme-twilight");
+    if (skyIcon) skyIcon.innerText = "🌆";
+    if (skyText) skyText.innerText = "Chạng Vạng";
+
+    if (mascotEyesNormal) mascotEyesNormal.classList.remove("hidden");
+    if (mascotEyesSunset) mascotEyesSunset.classList.add("hidden");
+    if (mascotWidget) mascotWidget.style.transform = "";
+    if (moonEl) moonEl.classList.remove("moon-rising");
+
+  } else {
+    // > 20:00: Đêm sao & Ánh trăng đi lên
+    document.body.classList.add("theme-night", "night-mode");
+    if (skyIcon) skyIcon.innerText = "🌌";
+    if (skyText) skyText.innerText = "Đêm Sao";
+
+    if (mascotEyesNormal) mascotEyesNormal.classList.remove("hidden");
+    if (mascotEyesSunset) mascotEyesSunset.classList.add("hidden");
+    if (mascotWidget) mascotWidget.style.transform = "";
+
+    // Check if night moon rising intro should play (Once per day on browser, or always if user clicks test button)
+    const nightStorageKey = `night_intro_shown_${todayKey}`;
+    const shouldPlayNightIntro = isUserTriggered || (localStorage.getItem(nightStorageKey) !== "true");
+
+    if (shouldPlayNightIntro && moonEl) {
+      moonEl.classList.remove("moon-rising");
+      void moonEl.offsetWidth; // Force reflow
+      moonEl.classList.add("moon-rising");
+
+      const mascotBubble = document.getElementById("mascot-speech-bubble");
+      const mascotBubbleText = document.getElementById("mascot-bubble-text");
+      if (mascotBubble && mascotBubbleText) {
+        mascotBubbleText.innerText = "Màn đêm buông xuống rồi... Ngắm trăng cùng anh nhé Lệ Thủy! 🌙✨";
+        mascotBubble.classList.remove("hidden");
+        setTimeout(() => mascotBubble.classList.add("hidden"), 6000);
+      }
+
+      if (!isUserTriggered) {
+        localStorage.setItem(nightStorageKey, "true");
+      }
+
+      setTimeout(() => {
+        if (moonEl) moonEl.classList.remove("moon-rising");
+      }, 3500);
+    }
+  }
+}
+
+// Trigger once upon passcode unlock screen
+function triggerSkyIntroOnUnlock() {
+  if (currentSkyTheme === "auto") {
+    applySkyTheme("auto", false);
+  }
+}
+
+function initDynamicSky() {
+  // Apply initial theme based on current real-time hour
+  applySkyTheme(currentSkyTheme, false);
+
+  // Toggle button click to cycle: Auto -> Day -> Sunset -> Twilight -> Night -> Auto
+  const toggleBtn = document.getElementById("sky-theme-toggle");
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+      // Sound effect
+      const popSoundEffect = document.getElementById("pop-sound");
+      if (popSoundEffect) {
+        const clone = popSoundEffect.cloneNode();
+        clone.play();
+      }
+
+      if (currentSkyTheme === "auto") currentSkyTheme = "day";
+      else if (currentSkyTheme === "day") currentSkyTheme = "sunset";
+      else if (currentSkyTheme === "sunset") currentSkyTheme = "twilight";
+      else if (currentSkyTheme === "twilight") currentSkyTheme = "night";
+      else currentSkyTheme = "auto";
+
+      applySkyTheme(currentSkyTheme, true);
+    });
+  }
+
+  // Periodic real-time update every 2 minutes if on auto mode
+  setInterval(() => {
+    if (currentSkyTheme === "auto") applySkyTheme("auto", false);
+  }, 120000);
+}
+
+
+// Shooting Stars and Interactive Crescent Moon
+const shootingStarQuotes = [
+  "✨ Ngôi sao băng mang theo điều ước: Mong nụ cười của Lệ Thủy luôn tỏa sáng như ngàn vì sao! 💖",
+  "🌟 Một vì sao vừa rơi xuống: Anh Quang hứa sẽ luôn yêu thương và che chở cho em bé! 🧸",
+  "💫 Vũ trụ gửi gắm: Lệ Thủy là món quà vô giá nhất từng xuất hiện trong cuộc đời anh! 🌹",
+  "🌠 Sao băng chắp cánh: Chúc công chúa Lệ Thủy luôn bình an, may mắn và hạnh phúc mỗi ngày! 👑",
+  "✨ Một vì sao thì thầm: Hôm nay em bé có nhớ anh Quang nhiều không nè? 🥺💕",
+  "⭐ Ước nguyện ngàn năm: Cùng Lệ Thủy đi qua bốn mùa, nắm tay nhau đến già! 💑🌸"
+];
+
+function spawnShootingStar(customTop, customLeft) {
+  const container = document.getElementById("shooting-stars-container");
+  if (!container) return;
+
+  const star = document.createElement("div");
+  star.className = "shooting-star";
+
+  const topPos = customTop !== undefined ? customTop : Math.random() * 45; // top 0% to 45%
+  const leftPos = customLeft !== undefined ? customLeft : Math.random() * 60 + 20; // left 20% to 80%
+
+  star.style.top = `${topPos}%`;
+  star.style.left = `${leftPos}%`;
+
+  container.appendChild(star);
+
+  // Auto clean up after animation completes
+  setTimeout(() => {
+    if (star && star.parentNode) star.parentNode.removeChild(star);
+  }, 1300);
+}
+
+let bannerTimeout = null;
+function showShootingStarBanner(text) {
+  const banner = document.getElementById("shooting-star-banner");
+  const bannerText = document.getElementById("shooting-star-text");
+  if (!banner || !bannerText) return;
+
+  bannerText.innerText = text;
+  banner.classList.remove("hidden");
+
+  if (bannerTimeout) clearTimeout(bannerTimeout);
+  bannerTimeout = setTimeout(() => {
+    banner.classList.add("hidden");
+  }, 4500);
+}
+
+// Danh sách điều ước tình yêu ấm áp từ Anh Quang khi bắt trúng Sao Chổi
+const cometLoveWishes = [
+  "Lệ của anh giỏi lắm, anh muốn em tự tin vào bản thân mình nhiều hơn nhé, anh tin em sẽ làm tốt! 💖✨",
+  "Mong cho công chúa Lệ Thủy của anh luôn luôn mỉm cười rạng rỡ, bình an và hạnh phúc mỗi ngày. Anh sẽ luôn ở cạnh che chở cho em! 🌸",
+  "Điều ước gửi gắm đến vũ trụ: Mong mọi ước mơ và dự định của Lệ Thủy đều thành hiện thực, anh Quang luôn tin tưởng và tự hào về em! 🌟",
+  "Anh ước tình yêu của chúng mình luôn bền chặt, cùng nhau đi qua thật nhiều mùa hoa và năm tháng ngọt ngào bình yên! 💑",
+  "Tặng em một cái ôm thật ấm và nụ hôn ngọt ngào từ anh Quang! Em là điều tuyệt vời và quý giá nhất của cuộc đời anh! 🌹💕"
+];
+
+let isCometEventRunning = false;
+
+// Cosmic Comet Mini-Game (Thông Báo Trước -> Lao Nhanh -> Bấm Trúng / Khích Lệ)
+function triggerCometEvent() {
+  const container = document.getElementById("comet-container");
+  if (!container || isCometEventRunning) return;
+
+  const isNight = document.body.classList.contains("theme-night") || document.body.classList.contains("night-mode");
+  if (!isNight) return;
+
+  isCometEventRunning = true;
+
+  // Giai đoạn 1: Linh vật bất ngờ và thông báo trước 2.4 giây
+  const mascotWidget = document.getElementById("mascot-widget");
+  const mascotBubble = document.getElementById("mascot-speech-bubble");
+  const mascotBubbleText = document.getElementById("mascot-bubble-text");
+
+  if (mascotWidget) mascotWidget.classList.add("mascot-excited");
+  if (mascotBubble && mascotBubbleText) {
+    mascotBubbleText.innerText = "Nhìn kìa chị Lệ ơi, sao chổi đang tới, chị nhớ chạm vào mà nhận điều ước của anh Quang nhé! ☄️✨";
+    mascotBubble.classList.remove("hidden");
+  }
+
+  // Âm thanh cảnh báo nhẹ
+  const popSound = document.getElementById("pop-sound");
+  if (popSound) {
+    const clone = popSound.cloneNode();
+    clone.play().catch(() => {});
+  }
+
+  // Giai đoạn 2: Sau 2.4 giây, Sao Chổi xuất hiện ưu tiên trước cả ứng dụng
+  setTimeout(() => {
+    let isCometCaught = false;
+
+    const cometEl = document.createElement("div");
+    cometEl.className = "cosmic-comet";
+
+    const isMobile = window.innerWidth <= 768;
+    const flightDurationSec = isMobile ? 4.0 : 2.8; // Mobile: 4.0s lướt nhanh hơn 1 tí, thẳng đều êm ái
+    cometEl.style.setProperty("--comet-duration", `${flightDurationSec}s`);
+
+    const topPos = isMobile ? 26 : 10; // Mobile: bắt đầu ở tầm nhìn 26% (không tít trên cao)
+    cometEl.style.top = `${topPos}%`;
+    cometEl.style.left = "100%";
+    cometEl.style.right = "auto";
+
+    cometEl.innerHTML = `
+      <div class="comet-body">
+        <div class="comet-dust"></div>
+        <div class="comet-tail"></div>
+        <div class="comet-head"></div>
+      </div>
+    `;
+
+    // Bắt trúng sao chổi (hỗ trợ cả click chuột và chạm cảm ứng vào đầu hoặc đuôi)
+    const onCatchComet = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (isCometCaught) return;
+      isCometCaught = true;
+
+      // Hiệu ứng bắt trúng
+      cometEl.classList.add("caught");
+      if (popSound) {
+        const clone = popSound.cloneNode();
+        clone.play().catch(() => {});
+      }
+
+      // Pháo hoa trái tim chúc mừng
+      if (typeof triggerHeartConfetti === "function") {
+        triggerHeartConfetti();
+      }
+
+      // Linh vật reo hò chúc mừng
+      if (mascotBubble && mascotBubbleText) {
+        mascotBubbleText.innerText = "Chị Lệ đỉnh quá, đã bắt trọn điều ước của anh Quang rồi nè! 💖🎉";
+        mascotBubble.classList.remove("hidden");
+      }
+
+      // Mở Modal Điều Ước Tình Yêu Của Anh Quang (Chứa ngẫu nhiên câu khích lệ & yêu thương)
+      const wishModal = document.getElementById("comet-wish-modal");
+      const wishContent = document.getElementById("comet-wish-content");
+      if (wishModal && wishContent) {
+        const randomWish = cometLoveWishes[Math.floor(Math.random() * cometLoveWishes.length)];
+        wishContent.innerText = `"${randomWish}"`;
+        setTimeout(() => {
+          wishModal.classList.remove("hidden");
+        }, 350);
+      }
+
+      // Dọn dẹp sao chổi
+      setTimeout(() => {
+        if (cometEl.parentNode) cometEl.parentNode.removeChild(cometEl);
+      }, 500);
+    };
+
+    cometEl.addEventListener("click", onCatchComet);
+    cometEl.addEventListener("touchstart", onCatchComet, { passive: false });
+
+    // Gắn listener trực tiếp lên cả phần đuôi và vệt bụi để chạm đuôi là dính ngay
+    cometEl.querySelectorAll(".comet-tail, .comet-dust, .comet-head").forEach((subEl) => {
+      subEl.addEventListener("click", onCatchComet);
+      subEl.addEventListener("touchstart", onCatchComet, { passive: false });
+    });
+
+    container.appendChild(cometEl);
+
+    // Giai đoạn 3: Kết thúc đường bay
+    setTimeout(() => {
+      if (!isCometCaught && cometEl.parentNode) {
+        cometEl.parentNode.removeChild(cometEl);
+      }
+
+      if (mascotWidget) mascotWidget.classList.remove("mascot-excited");
+
+      // NẾU BẮT HỤT: Linh vật an ủi nhẹ nhàng và hẹn đợt sao chổi tiếp theo
+      if (!isCometCaught) {
+        if (mascotBubble && mascotBubbleText) {
+          mascotBubbleText.innerText = "Ôi tiếc quá, chị đợi một chút nhé, sẽ có sao chổi còn may mắn hơn nữa tới ngay thôi! 🧸✨ Chị chuẩn bị thử lại nhé!";
+          mascotBubble.classList.remove("hidden");
+          setTimeout(() => {
+            mascotBubble.classList.add("hidden");
+          }, 6500);
+        }
+      }
+
+      isCometEventRunning = false;
+    }, Math.round((flightDurationSec + 0.1) * 1000));
+
+  }, 2400);
+}
+
+function initShootingStars() {
+  // Spawn an auto shooting star every 12 - 22 seconds in night/sunset mode
+  setInterval(() => {
+    const isNightOrSunset = document.body.classList.contains("theme-night") || 
+                            document.body.classList.contains("night-mode") || 
+                            document.body.classList.contains("theme-sunset");
+    if (isNightOrSunset) {
+      spawnShootingStar();
+    }
+  }, 16000);
+
+  // Tự động kích hoạt cơ hội săn Sao Chổi mỗi 35 - 50 giây trong đêm
+  setInterval(() => {
+    const isNight = document.body.classList.contains("theme-night") || document.body.classList.contains("night-mode");
+    if (isNight && !isCometEventRunning) {
+      triggerCometEvent();
+    }
+  }, 42000);
+
+  // Đóng Modal Điều Ước Sao Chổi
+  const btnCloseWish = document.getElementById("btn-close-comet-wish");
+  const wishModal = document.getElementById("comet-wish-modal");
+  if (btnCloseWish && wishModal) {
+    btnCloseWish.addEventListener("click", () => {
+      wishModal.classList.add("hidden");
+      const mascotBubble = document.getElementById("mascot-speech-bubble");
+      if (mascotBubble) mascotBubble.classList.add("hidden");
+    });
+  }
+
+  // Chạm vào Mặt Trăng: Ngoài sao băng còn lập tức kích hoạt Sao Chổi săn điều ước!
+  const moon = document.getElementById("crescent-moon");
+  if (moon) {
+    moon.addEventListener("click", () => {
+      const popSoundEffect = document.getElementById("pop-sound");
+      if (popSoundEffect) {
+        const clone = popSoundEffect.cloneNode();
+        clone.play().catch(() => {});
+      }
+
+      // Burst 3 shooting stars in sequence
+      spawnShootingStar(10, 80);
+      setTimeout(() => spawnShootingStar(18, 70), 300);
+      setTimeout(() => spawnShootingStar(25, 85), 600);
+
+      // Kích hoạt ngay sự kiện Sao Chổi để kiểm thử & săn điều ước
+      setTimeout(triggerCometEvent, 800);
+    });
+  }
+}
+
+// Touch Love Trails (Lightweight, throttled particle trail)
+function initTouchTrails() {
+  const particles = ["✨", "💖", "🌸", "⭐", "💜", "💕"];
+  let lastSpawnTime = 0;
+  const throttleMs = 55; // 55ms throttle = ~18 particles/s max, 0% CPU impact
+
+  function spawnParticle(x, y) {
+    const now = Date.now();
+    if (now - lastSpawnTime < throttleMs) return;
+    lastSpawnTime = now;
+
+    const el = document.createElement("div");
+    el.className = "touch-trail-particle";
+    el.innerText = particles[Math.floor(Math.random() * particles.length)];
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    el.style.fontSize = `${Math.random() * 8 + 14}px`;
+
+    document.body.appendChild(el);
+
+    setTimeout(() => {
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    }, 750);
+  }
+
+  // Pointer / Mouse move
+  window.addEventListener("pointermove", (e) => {
+    spawnParticle(e.clientX, e.clientY);
+  }, { passive: true });
+
+  // Touch move for mobile iOS / Android
+  window.addEventListener("touchmove", (e) => {
+    if (e.touches && e.touches[0]) {
+      spawnParticle(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  }, { passive: true });
+}
+
+// Start Celestial Sky, Shooting Stars, and Touch Trails modules
+initDynamicSky();
+initShootingStars();
+initTouchTrails();
 
 // Wish Card Implementation
 const btnWishToggle = document.getElementById("btn-wish-toggle");
@@ -3176,6 +3642,7 @@ function updateAchievementsModalUI() {
     { id: "doc-ky" },
     { id: "cung-nung" },
     { id: "lang-nghe" },
+    { id: "sunset-chaser" },
     { id: "milestone-10" },
     { id: "milestone-20" },
     { id: "milestone-30" },
