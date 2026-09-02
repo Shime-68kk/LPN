@@ -2496,15 +2496,21 @@ async function addDiaryComment(entryId, entryTimestamp, author, text) {
   localStorage.setItem("loveDiaryEntries", JSON.stringify(entries));
   renderDiaryEntries();
 
+  // Generate note snippet for context
+  const noteSnippet = targetEntry.text 
+    ? (targetEntry.text.length > 35 ? targetEntry.text.substring(0, 35) + "..." : targetEntry.text)
+    : (targetEntry.image ? "[Hình ảnh kỉ niệm]" : "trang nhật ký");
+
   // Send Discord & Email Notification
   if (DISCORD_WEBHOOK_URL) {
-    sendDiscordNotification(`💬 **${newComment.author} vừa để lại bình luận vào nhật ký:**\n"${newComment.text}" 💕`);
+    sendDiscordNotification(`💬 **${newComment.author} vừa bình luận về note "${noteSnippet}":**\n"${newComment.text}" 💕`);
   }
   if (author && author.includes("Quang")) {
+    const emailMessage = `💬 Lời bình luận: "${newComment.text}"\n📝 Về dòng nhật ký: "${noteSnippet}"`;
     sendEmailToLeThuy({
-      title: "Anh Quang vừa gửi bình luận mới cho em nè!",
-      message: newComment.text,
-      author: "Anh Quang"
+      title: `Anh Quang vừa bình luận về note "${noteSnippet}"`,
+      message: emailMessage,
+      author: "Anh Quang 👦"
     });
   }
 
