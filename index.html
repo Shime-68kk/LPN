@@ -3,6 +3,22 @@
 
 <head>
   <meta charset="UTF-8" />
+  
+  <!-- 🚀 Chuyển hướng tự động & tức thì (0s) sang Cloudflare Pages / Domain mới -->
+  <script>
+    // 👉 THAY LINK ĐÍCH CỦA BẠN VÀO ĐÂY (Ví dụ: "https://yeu-le-thuy.pages.dev")
+    const TARGET_URL = "https://your-new-domain.pages.dev";
+    
+    // Tự động chuyển hướng tức thì (0s), giữ lại query params & hash, không lưu vết history
+    if (TARGET_URL && TARGET_URL !== "https://your-new-domain.pages.dev") {
+      if (!window.location.href.startsWith(TARGET_URL)) {
+        window.location.replace(TARGET_URL + window.location.search + window.location.hash);
+      }
+    }
+  </script>
+  <!-- Fallback chuyển hướng cho trình duyệt tắt JS (Thay URL đích vào thuộc tính content bên dưới khi bạn deploy) -->
+  <meta http-equiv="refresh" content="0;url=https://your-new-domain.pages.dev" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Only for you, Le Thuy.</title>
   
@@ -19,7 +35,7 @@
     href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="style/style.css?v=28.0" />
+  <link rel="stylesheet" href="style/style.css?v=29.0" />
 </head>
 
 <body>
@@ -680,7 +696,7 @@
   <audio id="audio-player"></audio>
   <audio id="pop-sound" src="style/pop.mp3"></audio>
 
-  <script src="style/script.js?v=28.0"></script>
+  <script src="style/script.js?v=30.0"></script>
 </body>
 
 </html>
