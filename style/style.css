@@ -3251,41 +3251,9 @@ body.cinematic-sunset #mascot-widget {
   }
 }
 
-/* Sky Theme Quick Toggle Button */
+/* Sky Theme Quick Toggle Button (Đã khóa, hoàn toàn tự động theo giờ thực tế) */
 .sky-theme-toggle {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1.5px solid rgba(255, 255, 255, 0.8);
-  border-radius: 30px;
-  padding: 6px 14px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #7e22ce;
-  cursor: pointer;
-  z-index: 2500;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 15px rgba(147, 51, 234, 0.15);
-  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  user-select: none;
-}
-
-.sky-theme-toggle:hover {
-  transform: scale(1.08);
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 6px 20px rgba(147, 51, 234, 0.25);
-}
-
-body.theme-night .sky-theme-toggle, body.night-mode .sky-theme-toggle {
-  background: rgba(15, 23, 42, 0.8);
-  border-color: rgba(192, 132, 252, 0.4);
-  color: #f3e8ff;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  display: none !important;
 }
 
 /* Shooting Star Wish Message Banner */
