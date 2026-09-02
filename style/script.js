@@ -9,15 +9,15 @@ const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/153435862404091097
 // Cấu hình Firebase Database URL để đồng bộ nhật ký giữa các thiết bị
 const FIREBASE_DB_URL = "https://yeult-diary-default-rtdb.asia-southeast1.firebasedatabase.app/"; // Hãy thay thế bằng link database Firebase của bạn
 
-// Cấu hình gửi Email thông báo tự động cho Lệ Thủy qua EmailJS
+// Cấu hình gửi Email thông báo tự động cho Lệ Thủy qua EmailJS (lethuynong2@gmail.com)
 const EMAILJS_CONFIG = {
   SERVICE_ID: "service_wfekquk",
   TEMPLATE_ID: "template_fz6sdr8",
   PUBLIC_KEY: "eiEumZGjJAjTNCJw2",
-  RECIPIENT_EMAILS: ["lethuynong2@gmail.com", "luongquang060804@gmail.com"]
+  RECIPIENT_EMAIL: "lethuynong2@gmail.com"
 };
 
-// Gửi email thông báo tự động đến hộp thư của Lệ Thủy & Anh Quang (để cùng nhận và test)
+// Gửi email thông báo tự động đến hộp thư của Lệ Thủy
 async function sendEmailToLeThuy({ title, message, author }) {
   // Chỉ gửi email khi người gửi là Anh Quang (để tránh gửi nhầm khi chính Lệ Thủy thao tác)
   if (author && !author.includes("Quang") && author !== "Anh Quang 👦") {
@@ -29,46 +29,44 @@ async function sendEmailToLeThuy({ title, message, author }) {
       const now = new Date();
       const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} ngày ${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
       
-      for (const targetEmail of EMAILJS_CONFIG.RECIPIENT_EMAILS) {
-        const templateParams = {
-          to_email: targetEmail,
-          recipient: targetEmail,
-          email: targetEmail,
-          title: title || "💌 Lời nhắn yêu thương từ Anh Quang",
-          message: message || "",
-          author: author || "Anh Quang 👦",
-          name: author || "Anh Quang 👦",
-          time: timeStr,
-          web_link: "https://lpn.luongquang060804.workers.dev/"
-        };
-        
-        // Sử dụng trực tiếp EmailJS REST API
-        const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            service_id: EMAILJS_CONFIG.SERVICE_ID,
-            template_id: EMAILJS_CONFIG.TEMPLATE_ID,
-            user_id: EMAILJS_CONFIG.PUBLIC_KEY,
-            template_params: templateParams
-          })
-        });
-        
-        if (res.ok) {
-          console.log("💌 Đã gửi email thông báo thành công đến:", targetEmail);
-        } else {
-          const errText = await res.text();
-          console.warn("⚠️ Gửi qua REST API lỗi, thử qua SDK cho:", targetEmail, errText);
-          if (typeof emailjs !== "undefined") {
-            await emailjs.send(
-              EMAILJS_CONFIG.SERVICE_ID,
-              EMAILJS_CONFIG.TEMPLATE_ID,
-              templateParams,
-              EMAILJS_CONFIG.PUBLIC_KEY
-            );
-          }
+      const templateParams = {
+        to_email: EMAILJS_CONFIG.RECIPIENT_EMAIL,
+        recipient: EMAILJS_CONFIG.RECIPIENT_EMAIL,
+        email: EMAILJS_CONFIG.RECIPIENT_EMAIL,
+        title: title || "💌 Lời nhắn yêu thương từ Anh Quang",
+        message: message || "",
+        author: author || "Anh Quang 👦",
+        name: author || "Anh Quang 👦",
+        time: timeStr,
+        web_link: "https://lpn.luongquang060804.workers.dev/"
+      };
+      
+      // Sử dụng trực tiếp EmailJS REST API (Bảo đảm 100% gửi thành công trên mọi thiết bị)
+      const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          service_id: EMAILJS_CONFIG.SERVICE_ID,
+          template_id: EMAILJS_CONFIG.TEMPLATE_ID,
+          user_id: EMAILJS_CONFIG.PUBLIC_KEY,
+          template_params: templateParams
+        })
+      });
+      
+      if (res.ok) {
+        console.log("💌 Đã gửi email thông báo thành công đến Lệ Thủy:", EMAILJS_CONFIG.RECIPIENT_EMAIL);
+      } else {
+        const errText = await res.text();
+        console.warn("⚠️ Gửi qua REST API lỗi, thử qua SDK:", errText);
+        if (typeof emailjs !== "undefined") {
+          await emailjs.send(
+            EMAILJS_CONFIG.SERVICE_ID,
+            EMAILJS_CONFIG.TEMPLATE_ID,
+            templateParams,
+            EMAILJS_CONFIG.PUBLIC_KEY
+          );
         }
       }
     } catch (err) {
