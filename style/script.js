@@ -9,6 +9,46 @@ const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/153435862404091097
 // Cấu hình Firebase Database URL để đồng bộ nhật ký giữa các thiết bị
 const FIREBASE_DB_URL = "https://yeult-diary-default-rtdb.asia-southeast1.firebasedatabase.app/"; // Hãy thay thế bằng link database Firebase của bạn
 
+// Cấu hình gửi Email thông báo tự động cho Lệ Thủy qua EmailJS (lethuynong2@gmail.com)
+const EMAILJS_CONFIG = {
+  SERVICE_ID: "service_wfekquk",
+  TEMPLATE_ID: "template_fz6sdr8",
+  PUBLIC_KEY: "", // Thay bằng Public Key EmailJS của bạn
+  RECIPIENT_EMAIL: "lethuynong2@gmail.com"
+};
+
+// Gửi email thông báo tự động đến hộp thư của Lệ Thủy
+async function sendEmailToLeThuy({ title, message, author }) {
+  // Chỉ gửi email khi người gửi là Anh Quang (để tránh gửi nhầm khi chính Lệ Thủy thao tác)
+  if (author && !author.includes("Quang") && author !== "Anh Quang 👦") {
+    return;
+  }
+  
+  if (typeof emailjs !== "undefined" && EMAILJS_CONFIG.SERVICE_ID && EMAILJS_CONFIG.TEMPLATE_ID && EMAILJS_CONFIG.PUBLIC_KEY) {
+    try {
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} ngày ${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+      
+      await emailjs.send(
+        EMAILJS_CONFIG.SERVICE_ID,
+        EMAILJS_CONFIG.TEMPLATE_ID,
+        {
+          to_email: EMAILJS_CONFIG.RECIPIENT_EMAIL,
+          title: title || "💌 Lời nhắn yêu thương từ Anh Quang",
+          message: message || "",
+          author: author || "Anh Quang 👦",
+          time: timeStr,
+          web_link: "https://lpn.luongquang060804.workers.dev/"
+        },
+        EMAILJS_CONFIG.PUBLIC_KEY
+      );
+      console.log("💌 Đã gửi email thông báo thành công đến:", EMAILJS_CONFIG.RECIPIENT_EMAIL);
+    } catch (err) {
+      console.error("Gửi email thất bại:", err);
+    }
+  }
+}
+
 function sendDiscordNotification(timeString) {
   if (DISCORD_WEBHOOK_URL) {
     fetch(DISCORD_WEBHOOK_URL, {
@@ -2020,8 +2060,13 @@ async function saveDiaryEntryToFirebase(newEntry) {
       renderDiaryEntries();
     }
     
-    // Send Discord message
+    // Send Discord & Email notification to Le Thuy
     sendDiscordNotificationForDiary(newEntry);
+    sendEmailToLeThuy({
+      title: "Nhật ký tình yêu vừa có trang mới!",
+      message: newEntry.text || "(Có đính kèm hình ảnh kỉ niệm)",
+      author: "Anh Quang"
+    });
   } catch (err) {
     console.error("Failed to save to Firebase:", err);
   }
@@ -2451,9 +2496,16 @@ async function addDiaryComment(entryId, entryTimestamp, author, text) {
   localStorage.setItem("loveDiaryEntries", JSON.stringify(entries));
   renderDiaryEntries();
 
-  // Send Discord Notification
+  // Send Discord & Email Notification
   if (DISCORD_WEBHOOK_URL) {
     sendDiscordNotification(`💬 **${newComment.author} vừa để lại bình luận vào nhật ký:**\n"${newComment.text}" 💕`);
+  }
+  if (author && author.includes("Quang")) {
+    sendEmailToLeThuy({
+      title: "Anh Quang vừa gửi bình luận mới cho em nè!",
+      message: newComment.text,
+      author: "Anh Quang"
+    });
   }
 
   // Async sync to Firebase
