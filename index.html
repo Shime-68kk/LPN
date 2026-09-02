@@ -4,12 +4,16 @@
 <head>
   <meta charset="UTF-8" />
   
-  <!-- 🚀 Chuyển hướng tự động & tức thì (0s) sang Cloudflare / Domain mới -->
+  <!-- 🚀 Chuyển hướng tự động & tức thì (0s) sang Cloudflare / Domain mới (Chỉ áp dụng khi chạy trên GitHub Pages, bỏ qua khi test local) -->
   <script>
     const TARGET_URL = "https://lpn.luongquang060804.workers.dev";
+    const isLocal = window.location.hostname === "localhost" || 
+                    window.location.hostname === "127.0.0.1" || 
+                    window.location.hostname === "0.0.0.0" || 
+                    window.location.protocol === "file:";
     
-    // Tự động chuyển hướng tức thì (0s), giữ lại query params & hash, không lưu vết history (tránh kẹt nút Back)
-    if (TARGET_URL && !window.location.href.startsWith(TARGET_URL)) {
+    // Tự động chuyển hướng tức thì (0s), giữ lại query params & hash, không lưu vết history
+    if (!isLocal && TARGET_URL && !window.location.href.startsWith(TARGET_URL)) {
       window.location.replace(TARGET_URL + window.location.search + window.location.hash);
     }
   </script>

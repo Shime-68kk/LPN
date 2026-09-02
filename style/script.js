@@ -2133,11 +2133,13 @@ function renderDiaryEntries() {
     // Add '(đã chỉnh sửa)' indicator if it was edited
     const editedHtml = entry.isEdited ? ` <span class="diary-item-edited">(đã chỉnh sửa)</span>` : "";
     
-    // Reactions Bar setup
+    // Reactions & Comments Bar setup
     const entryId = entry.id || `local_${entry.timestamp}`;
     const myReactionKey = `myDiaryReaction_${entryId}`;
     const currentMyReaction = localStorage.getItem(myReactionKey);
     const reactions = entry.reactions || {};
+    const comments = entry.comments || [];
+    const commentsCount = comments.length;
     
     let reactionsBadgesHtml = "";
     Object.entries(reactions).forEach(([emoji, count]) => {
@@ -2152,6 +2154,29 @@ function renderDiaryEntries() {
       }
     });
 
+    // Render comments HTML list
+    let commentsListHtml = "";
+    if (commentsCount === 0) {
+      commentsListHtml = `<div style="text-align: center; color: #a78bfa; font-size: 0.78rem; font-style: italic; padding: 4px;">Chưa có bình luận nào... Hãy là người đầu tiên để lại lời nhắn nhé! 💕</div>`;
+    } else {
+      comments.forEach(comment => {
+        const cDate = new Date(comment.timestamp || Date.now());
+        const cTimeStr = `${cDate.getHours().toString().padStart(2, '0')}:${cDate.getMinutes().toString().padStart(2, '0')} ${cDate.getDate()}/${cDate.getMonth() + 1}`;
+        commentsListHtml += `
+          <div class="diary-comment-bubble" data-comment-id="${comment.id}">
+            <div class="diary-comment-header">
+              <span class="diary-comment-author">${comment.author || '👑 Lệ Thủy'}</span>
+              <div>
+                <span class="diary-comment-time">${cTimeStr}</span>
+                <button class="diary-comment-delete" data-comment-id="${comment.id}" title="Xóa bình luận"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+            </div>
+            <div class="diary-comment-text">${comment.text}</div>
+          </div>
+        `;
+      });
+    }
+
     diaryItem.innerHTML = `
       <div class="diary-item-date">
         <i class="fa-regular fa-clock"></i> ${timeStr} ngày ${dateStr}${editedHtml}
@@ -2159,7 +2184,7 @@ function renderDiaryEntries() {
       <div class="diary-item-text">${entry.text}</div>
       ${imageHtml}
       
-      <!-- Reactions Section -->
+      <!-- Reactions & Comment Toggle Bar -->
       <div class="diary-reaction-section">
         ${reactionsBadgesHtml}
         <div class="diary-reaction-picker-wrapper" style="position: relative; display: inline-block;">
@@ -2174,6 +2199,25 @@ function renderDiaryEntries() {
             <button class="picker-emoji-btn" data-emoji="🌸">🌸</button>
           </div>
         </div>
+
+        <button class="diary-comment-toggle-btn" title="Xem & viết bình luận">
+          <i class="fa-regular fa-comment-dots"></i> <span>${commentsCount > 0 ? `${commentsCount} bình luận` : 'Bình luận'}</span>
+        </button>
+      </div>
+
+      <!-- Collapsible Comments Container (Hidden by default) -->
+      <div class="diary-comments-container hidden">
+        <div class="diary-comments-list">
+          ${commentsListHtml}
+        </div>
+        <form class="diary-comment-form">
+          <select class="diary-author-select">
+            <option value="👑 Lệ Thủy">👑 Lệ Thủy</option>
+            <option value="🧸 Anh Quang">🧸 Anh Quang</option>
+          </select>
+          <input type="text" class="diary-comment-input" placeholder="Viết phản hồi ngọt ngào..." maxlength="200" required />
+          <button type="submit" class="diary-send-comment-btn" title="Gửi"><i class="fa-solid fa-paper-plane"></i></button>
+        </form>
       </div>
 
       <div class="diary-item-actions">
@@ -2214,6 +2258,45 @@ function renderDiaryEntries() {
         e.stopPropagation();
         const emoji = badge.getAttribute("data-emoji");
         toggleDiaryReaction(entry.id, entry.timestamp, emoji);
+      });
+    });
+
+    // Add Comments Container Toggle Listener
+    const commentToggleBtn = diaryItem.querySelector(".diary-comment-toggle-btn");
+    const commentsContainer = diaryItem.querySelector(".diary-comments-container");
+    if (commentToggleBtn && commentsContainer) {
+      commentToggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        commentsContainer.classList.toggle("hidden");
+      });
+    }
+
+    // Add Comment Form Submit Listener
+    const commentForm = diaryItem.querySelector(".diary-comment-form");
+    if (commentForm) {
+      commentForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const authorSelect = commentForm.querySelector(".diary-author-select");
+        const commentInput = commentForm.querySelector(".diary-comment-input");
+        const author = authorSelect ? authorSelect.value : "👑 Lệ Thủy";
+        const text = commentInput ? commentInput.value.trim() : "";
+        
+        if (text) {
+          addDiaryComment(entry.id, entry.timestamp, author, text);
+          if (commentInput) commentInput.value = "";
+        }
+      });
+    }
+
+    // Add Comment Delete Listeners
+    const commentDeleteBtns = diaryItem.querySelectorAll(".diary-comment-delete");
+    commentDeleteBtns.forEach(cDelBtn => {
+      cDelBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const commentId = cDelBtn.getAttribute("data-comment-id");
+        if (confirm("Em có muốn xóa bình luận này không? 💕")) {
+          deleteDiaryComment(entry.id, entry.timestamp, commentId);
+        }
       });
     });
 
@@ -2336,6 +2419,81 @@ async function toggleDiaryReaction(entryId, entryTimestamp, emoji) {
       });
     } catch (err) {
       console.error("Failed to sync reaction to Firebase:", err);
+    }
+  }
+}
+
+// Add Comment to Diary Entry
+async function addDiaryComment(entryId, entryTimestamp, author, text) {
+  // Pop sound
+  const popSoundEffect = document.getElementById("pop-sound");
+  if (popSoundEffect) {
+    const clone = popSoundEffect.cloneNode();
+    clone.play();
+  }
+
+  const entries = JSON.parse(localStorage.getItem("loveDiaryEntries") || "[]");
+  const targetIndex = entries.findIndex(e => (entryId && e.id === entryId) || (entryTimestamp && e.timestamp === entryTimestamp));
+  if (targetIndex === -1) return;
+
+  const targetEntry = entries[targetIndex];
+  if (!targetEntry.comments) targetEntry.comments = [];
+
+  const newComment = {
+    id: `c_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+    author: author || "👑 Lệ Thủy",
+    text: text.trim(),
+    timestamp: Date.now()
+  };
+
+  targetEntry.comments.push(newComment);
+  entries[targetIndex] = targetEntry;
+  localStorage.setItem("loveDiaryEntries", JSON.stringify(entries));
+  renderDiaryEntries();
+
+  // Send Discord Notification
+  if (DISCORD_WEBHOOK_URL) {
+    sendDiscordNotification(`💬 **${newComment.author} vừa để lại bình luận vào nhật ký:**\n"${newComment.text}" 💕`);
+  }
+
+  // Async sync to Firebase
+  if (entryId) {
+    try {
+      await fetch(`${FIREBASE_DB_URL}diary/${entryId}/comments.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(targetEntry.comments)
+      });
+    } catch (err) {
+      console.error("Failed to sync comment to Firebase:", err);
+    }
+  }
+}
+
+// Delete Comment from Diary Entry
+async function deleteDiaryComment(entryId, entryTimestamp, commentId) {
+  const entries = JSON.parse(localStorage.getItem("loveDiaryEntries") || "[]");
+  const targetIndex = entries.findIndex(e => (entryId && e.id === entryId) || (entryTimestamp && e.timestamp === entryTimestamp));
+  if (targetIndex === -1) return;
+
+  const targetEntry = entries[targetIndex];
+  if (!targetEntry.comments) return;
+
+  targetEntry.comments = targetEntry.comments.filter(c => c.id !== commentId);
+  entries[targetIndex] = targetEntry;
+  localStorage.setItem("loveDiaryEntries", JSON.stringify(entries));
+  renderDiaryEntries();
+
+  // Async sync to Firebase
+  if (entryId) {
+    try {
+      await fetch(`${FIREBASE_DB_URL}diary/${entryId}/comments.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(targetEntry.comments)
+      });
+    } catch (err) {
+      console.error("Failed to delete comment from Firebase:", err);
     }
   }
 }
