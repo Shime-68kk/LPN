@@ -13,7 +13,7 @@ const FIREBASE_DB_URL = "https://yeult-diary-default-rtdb.asia-southeast1.fireba
 const EMAILJS_CONFIG = {
   SERVICE_ID: "service_wfekquk",
   TEMPLATE_ID: "template_fz6sdr8",
-  PUBLIC_KEY: "", // Thay bằng Public Key EmailJS của bạn
+  PUBLIC_KEY: "eiEumZGjJAjTNCJw2",
   RECIPIENT_EMAIL: "lethuynong2@gmail.com"
 };
 
