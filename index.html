@@ -6,18 +6,14 @@
   
   <!-- 🚀 Chuyển hướng tự động & tức thì (0s) sang Cloudflare Pages / Domain mới -->
   <script>
-    // 👉 THAY LINK ĐÍCH CỦA BẠN VÀO ĐÂY (Ví dụ: "https://yeu-le-thuy.pages.dev")
-    const TARGET_URL = "https://your-new-domain.pages.dev";
+    // 👉 KHI NÀO CÓ LINK CLOUDFLARE THẬT: Bạn chỉ cần dán link vào biến TARGET_URL bên dưới (VD: "https://lpn.pages.dev")
+    const TARGET_URL = "";
     
-    // Tự động chuyển hướng tức thì (0s), giữ lại query params & hash, không lưu vết history
-    if (TARGET_URL && TARGET_URL !== "https://your-new-domain.pages.dev") {
-      if (!window.location.href.startsWith(TARGET_URL)) {
-        window.location.replace(TARGET_URL + window.location.search + window.location.hash);
-      }
+    // Tự động chuyển hướng tức thì (0s) khi TARGET_URL được điền link thật
+    if (TARGET_URL && TARGET_URL.startsWith("http") && !window.location.href.startsWith(TARGET_URL)) {
+      window.location.replace(TARGET_URL + window.location.search + window.location.hash);
     }
   </script>
-  <!-- Fallback chuyển hướng cho trình duyệt tắt JS (Thay URL đích vào thuộc tính content bên dưới khi bạn deploy) -->
-  <meta http-equiv="refresh" content="0;url=https://your-new-domain.pages.dev" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Only for you, Le Thuy.</title>
