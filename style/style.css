@@ -3251,9 +3251,52 @@ body.cinematic-sunset #mascot-widget {
   }
 }
 
-/* Sky Theme Quick Toggle Button (Đã khóa, hoàn toàn tự động theo giờ thực tế) */
-.sky-theme-toggle {
-  display: none !important;
+/* Sky Theme Real-Time Status Badge (Hiển thị thời gian thực tế - Đã khóa hiển thị thông tin) */
+.sky-theme-toggle,
+.sky-theme-badge {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  border-radius: 30px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #7e22ce;
+  z-index: 6000;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 15px rgba(147, 51, 234, 0.12);
+  user-select: none;
+  cursor: default;
+  pointer-events: auto;
+  transition: all 0.3s ease;
+}
+
+body.theme-sunset .sky-theme-badge {
+  background: rgba(255, 247, 237, 0.9);
+  border-color: rgba(251, 146, 60, 0.5);
+  color: #c2410c;
+  box-shadow: 0 4px 15px rgba(234, 88, 12, 0.15);
+}
+
+body.theme-twilight .sky-theme-badge {
+  background: rgba(243, 232, 255, 0.9);
+  border-color: rgba(192, 132, 252, 0.5);
+  color: #6b21a8;
+  box-shadow: 0 4px 15px rgba(107, 33, 168, 0.2);
+}
+
+body.theme-night .sky-theme-badge,
+body.night-mode .sky-theme-badge {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(192, 132, 252, 0.4);
+  color: #f3e8ff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
 }
 
 /* Shooting Star Wish Message Banner */

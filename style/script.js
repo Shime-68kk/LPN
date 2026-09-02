@@ -2871,7 +2871,7 @@ function applySkyTheme(theme, isUserTriggered = false) {
   if (effectiveTheme === "day") {
     document.body.classList.add("theme-day");
     if (skyIcon) skyIcon.innerText = "☀️";
-    if (skyText) skyText.innerText = "Ban Ngày";
+    if (skyText) skyText.innerText = "Ban Ngày (05:30 - 17:30)";
 
     // Restore normal mascot eyes & posture
     if (mascotEyesNormal) mascotEyesNormal.classList.remove("hidden");
@@ -2882,7 +2882,7 @@ function applySkyTheme(theme, isUserTriggered = false) {
   } else if (effectiveTheme === "sunset") {
     document.body.classList.add("theme-sunset");
     if (skyIcon) skyIcon.innerText = "🌇";
-    if (skyText) skyText.innerText = "Hoàng Hôn";
+    if (skyText) skyText.innerText = "Hoàng Hôn (17:30 - 19:30)";
 
     // Mascot looks towards sunset with anime eyes
     if (mascotEyesNormal) mascotEyesNormal.classList.add("hidden");
@@ -2925,7 +2925,7 @@ function applySkyTheme(theme, isUserTriggered = false) {
     // 19:30 - 20:00: Tối dần dần, chưa có ánh trăng
     document.body.classList.add("theme-twilight");
     if (skyIcon) skyIcon.innerText = "🌆";
-    if (skyText) skyText.innerText = "Chạng Vạng";
+    if (skyText) skyText.innerText = "Chạng Vạng (19:30 - 20:00)";
 
     if (mascotEyesNormal) mascotEyesNormal.classList.remove("hidden");
     if (mascotEyesSunset) mascotEyesSunset.classList.add("hidden");
@@ -2936,7 +2936,7 @@ function applySkyTheme(theme, isUserTriggered = false) {
     // > 20:00: Đêm sao & Ánh trăng đi lên
     document.body.classList.add("theme-night", "night-mode");
     if (skyIcon) skyIcon.innerText = "🌌";
-    if (skyText) skyText.innerText = "Đêm Sao";
+    if (skyText) skyText.innerText = "Đêm Sao (> 20:00)";
 
     if (mascotEyesNormal) mascotEyesNormal.classList.remove("hidden");
     if (mascotEyesSunset) mascotEyesSunset.classList.add("hidden");
@@ -2977,36 +2977,54 @@ function triggerSkyIntroOnUnlock() {
   }
 }
 
+// Khởi tạo bầu trời tự động theo thời gian thực
 function initDynamicSky() {
-  // Apply initial theme based on current real-time hour
-  applySkyTheme(currentSkyTheme, false);
+  // Luôn áp dụng theme chuẩn thời gian thực
+  applySkyTheme("auto", false);
 
-  // Toggle button click to cycle: Auto -> Day -> Sunset -> Twilight -> Night -> Auto
-  const toggleBtn = document.getElementById("sky-theme-toggle");
-  if (toggleBtn) {
-    toggleBtn.addEventListener("click", () => {
-      // Sound effect
-      const popSoundEffect = document.getElementById("pop-sound");
-      if (popSoundEffect) {
-        const clone = popSoundEffect.cloneNode();
-        clone.play();
-      }
+  const badgeEl = document.getElementById("sky-theme-toggle");
+  if (badgeEl) {
+    // Kiểm tra chế độ kiểm thử (localhost hoặc có ?test trong URL)
+    const isTestMode = window.location.hostname === "localhost" ||
+                       window.location.hostname === "127.0.0.1" ||
+                       window.location.search.includes("test");
 
-      if (currentSkyTheme === "auto") currentSkyTheme = "day";
-      else if (currentSkyTheme === "day") currentSkyTheme = "sunset";
-      else if (currentSkyTheme === "sunset") currentSkyTheme = "twilight";
-      else if (currentSkyTheme === "twilight") currentSkyTheme = "night";
-      else currentSkyTheme = "auto";
+    if (isTestMode) {
+      // Khi test: Cho phép click chuyển đổi để kiểm tra hoạt ảnh
+      badgeEl.style.cursor = "pointer";
+      badgeEl.title = "Chế độ kiểm thử: Bấm để test các mốc bầu trời";
 
-      applySkyTheme(currentSkyTheme, true);
-    });
+      badgeEl.addEventListener("click", () => {
+        const popSoundEffect = document.getElementById("pop-sound");
+        if (popSoundEffect) {
+          const clone = popSoundEffect.cloneNode();
+          clone.play().catch(() => {});
+        }
+
+        if (currentSkyTheme === "auto") currentSkyTheme = "day";
+        else if (currentSkyTheme === "day") currentSkyTheme = "sunset";
+        else if (currentSkyTheme === "sunset") currentSkyTheme = "twilight";
+        else if (currentSkyTheme === "twilight") currentSkyTheme = "night";
+        else currentSkyTheme = "auto";
+
+        applySkyTheme(currentSkyTheme, true);
+      });
+    } else {
+      // Khi push lên Git: Khóa cố định, chỉ hiển thị chú thích thời gian thực
+      badgeEl.style.cursor = "default";
+      badgeEl.title = "Bầu trời tự động cập nhật theo thời gian thực";
+    }
   }
 
-  // Periodic real-time update every 2 minutes if on auto mode
+  // Cập nhật tự động theo đồng hồ thực tế mỗi phút
   setInterval(() => {
     if (currentSkyTheme === "auto") applySkyTheme("auto", false);
-  }, 120000);
+  }, 60000);
 }
+
+// Expose ra window để có thể gọi test mọi lúc
+window.applySkyTheme = applySkyTheme;
+window.triggerCometEvent = triggerCometEvent;
 
 
 // Shooting Stars and Interactive Crescent Moon
