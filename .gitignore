@@ -1,4 +1,7 @@
 .wrangler
 .wrangler/**
-.git
+dist
+dist/**
+node_modules
+node_modules/**
 .gemini

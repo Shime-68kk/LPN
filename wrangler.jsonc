@@ -5,14 +5,10 @@
   "observability": {
     "enabled": true
   },
+  "build": {
+    "command": "npm run build"
+  },
   "assets": {
-    "directory": ".",
-    "exclude": [
-      ".git",
-      ".git/**",
-      ".gemini",
-      ".gemini/**",
-      "README.md"
-    ]
+    "directory": "./dist"
   }
 }
