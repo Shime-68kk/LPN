@@ -2196,6 +2196,21 @@ if (btnSaveDiary) {
   });
 }
 
+// Hàm mã hóa HTML an toàn (Phòng chống tấn công XSS & lỗi vỡ layout)
+function escapeHtml(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function formatSafeUserText(str) {
+  return escapeHtml(str).replace(/\n/g, "<br>");
+}
+
 // Render Diary Entries (with Pagination, Reactions & Lazy Loading)
 function renderDiaryEntries() {
   if (!diaryEntriesList) return;
@@ -2264,13 +2279,13 @@ function renderDiaryEntries() {
         commentsListHtml += `
           <div class="diary-comment-bubble" data-comment-id="${comment.id}">
             <div class="diary-comment-header">
-              <span class="diary-comment-author">${comment.author || '👑 Lệ Thủy'}</span>
+              <span class="diary-comment-author">${escapeHtml(comment.author || '👑 Lệ Thủy')}</span>
               <div>
                 <span class="diary-comment-time">${cTimeStr}</span>
                 <button class="diary-comment-delete" data-comment-id="${comment.id}" title="Xóa bình luận"><i class="fa-solid fa-xmark"></i></button>
               </div>
             </div>
-            <div class="diary-comment-text">${comment.text}</div>
+            <div class="diary-comment-text">${formatSafeUserText(comment.text)}</div>
           </div>
         `;
       });
@@ -2280,7 +2295,7 @@ function renderDiaryEntries() {
       <div class="diary-item-date">
         <i class="fa-regular fa-clock"></i> ${timeStr} ngày ${dateStr}${editedHtml}
       </div>
-      <div class="diary-item-text">${entry.text}</div>
+      <div class="diary-item-text">${formatSafeUserText(entry.text)}</div>
       ${imageHtml}
       
       <!-- Reactions & Comment Toggle Bar -->
@@ -3344,7 +3359,9 @@ if (btnCloseWishPanel && wishFormPanel) {
 
 // Send Wish to Discord Webhook
 if (btnSendWish) {
+  let isSendingWish = false;
   btnSendWish.addEventListener("click", () => {
+    if (isSendingWish) return;
     const wishText = wishTextarea ? wishTextarea.value.trim() : "";
     if (!wishText) {
       alert("Em hãy ghi điều ước vào đây nhé! ✨💕");
@@ -3352,13 +3369,18 @@ if (btnSendWish) {
     }
 
     if (DISCORD_WEBHOOK_URL) {
+      isSendingWish = true;
+      const originalText = btnSendWish.innerText;
+      btnSendWish.innerText = "Đang gửi điều ước... ✨";
+      btnSendWish.disabled = true;
+
       fetch(DISCORD_WEBHOOK_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          content: `🌟 **ĐIỀU ƯỚC CỦA LỆ THỦY:**\n> "${wishText}"\n👉 Hãy thực hiện cho cô ấy nhé!`
+          content: `🌟 **ĐIỀU ƯỚC CỦA LỆ THỦY:**\n> "${wishText.replace(/"/g, "'")}"\n👉 Hãy thực hiện cho cô ấy nhé!`
         })
       })
       .then(() => {
@@ -3369,6 +3391,11 @@ if (btnSendWish) {
       .catch((err) => {
         console.error("Failed to send wish:", err);
         alert("Gửi điều ước thất bại, em kiểm tra kết nối mạng nhé! 🥺");
+      })
+      .finally(() => {
+        isSendingWish = false;
+        btnSendWish.innerText = originalText;
+        btnSendWish.disabled = false;
       });
     } else {
       alert("Chức năng gửi điều ước đang bận, em báo lại anh nhé! 💕");

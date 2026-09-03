@@ -1,2 +1,0 @@
-"object"!=typeof globalThis&&(globalThis=window),(this.webpackJsonp=this.webpackJsonp||[]).push([[50],{"8gff":function(t,e,o){"use strict";o.r(e),o.d(e,"getTimePlatform",(function(){return n}));var i=o("bUXd");function n(){return i.default.getTimeNow()}}}]);
-//# sourceMappingURL=../sourcemaps/lazy/50.b0d8bf8be2b134130cd5.js.map

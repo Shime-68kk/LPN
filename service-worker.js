@@ -1,5 +1,5 @@
 // Service Worker for Yêu Lệ Thủy (LPN) PWA
-const CACHE_NAME = 'lpn-cache-v39.0';
+const CACHE_NAME = 'lpn-cache-v40.0';
 
 const PRECACHE_ASSETS = [
   './',
@@ -66,7 +66,7 @@ self.addEventListener('fetch', (event) => {
   const isMedia = /\.(png|jpg|jpeg|gif|webp|svg|mp3|wav|woff2?|ttf)$/i.test(requestUrl.pathname);
   if (isMedia) {
     event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
+      caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
         if (cachedResponse) return cachedResponse;
         return fetch(event.request).then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
@@ -91,11 +91,11 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       })
       .catch(() => {
-        return caches.match(event.request).then((cachedResponse) => {
+        return caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
           if (cachedResponse) return cachedResponse;
           // Fallback to index.html for navigation requests
           if (event.request.mode === 'navigate') {
-            return caches.match('./index.html');
+            return caches.match('./index.html', { ignoreSearch: true });
           }
         });
       })

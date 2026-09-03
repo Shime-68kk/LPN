@@ -2,6 +2,6 @@
   "name": "lpn",
   "version": "1.0.0",
   "scripts": {
-    "build": "mkdir -p dist && cp -r index.html style nhenlove.jpeg dist/"
+    "build": "mkdir -p dist && cp -r index.html manifest.json service-worker.js style nhenlove.jpeg dist/"
   }
 }
