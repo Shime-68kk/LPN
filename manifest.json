@@ -1,0 +1,31 @@
+{
+  "name": "Yêu Lệ Thủy 💜",
+  "short_name": "LPN",
+  "description": "Trang web tình yêu riêng tư dành cho Lệ Thủy - Anh Quang",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#7e22ce",
+  "icons": [
+    {
+      "src": "style/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "style/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "style/img/logoweb.jpeg",
+      "sizes": "959x1639",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}

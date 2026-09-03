@@ -1,3 +1,17 @@
+// Đăng ký PWA Service Worker (Hỗ trợ chạy Offline & Cài đặt App trên điện thoại)
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("./service-worker.js")
+      .then((reg) => {
+        console.log("✅ PWA Service Worker đã đăng ký thành công:", reg.scope);
+      })
+      .catch((err) => {
+        console.warn("⚠️ Không thể đăng ký Service Worker:", err);
+      });
+  });
+}
+
 // Cấu hình ngày bắt đầu yêu nhau (định dạng: YYYY-MM-DD hoặc YYYY-MM-DDTHH:MM:SS)
 const ANNIVERSARY_DATE = "2026-08-06T23:38:58";
 let audioPlayer = null;

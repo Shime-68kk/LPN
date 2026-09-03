@@ -18,23 +18,33 @@
     }
   </script>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Only for you, Le Thuy.</title>
   
-  <!-- Apple Web App Standalone Mode Support (PWA iOS) -->
+  <!-- PWA Web App Manifest (Hỗ trợ cài đặt thành App trên iPhone & Android) -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#7e22ce" />
+  <meta name="mobile-web-app-capable" content="yes" />
+
+  <!-- Apple iOS Web App Standalone Mode Support -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Yêu Lệ Thủy" />
-  <link rel="apple-touch-icon" href="style/img/logoweb.jpeg?v=1" />
+  <link rel="apple-touch-icon" href="style/img/apple-touch-icon.png" />
 
-  <link rel="icon" type="image/jpeg" href="style/img/logoweb.jpeg?v=1" />
+  <!-- Critical Resource Preloading & Fast Caching Hints -->
+  <link rel="icon" type="image/png" href="style/img/icon-192.png" />
+  <link rel="preload" as="image" href="style/img/logoweb.jpeg?v=1" />
+  <link rel="preload" as="image" href="style/img/Anhnen.JPG" />
+  <link rel="prefetch" href="style/pop.mp3" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="style/style.css?v=31.0" />
+  <link rel="stylesheet" href="style/style.css?v=39.0" />
 </head>
 
 <body>
@@ -266,9 +276,74 @@
 
   <div class="overlay" id="gift-overlay">
     <div class="gift-modal" id="gift-modal-element">
-      <button class="close-btn" id="close-gift"><i class="fa-solid fa-xmark"></i></button>
-      <button class="fullscreen-btn" id="fullscreen-gift"><i class="fa-solid fa-expand"></i></button>
-      <iframe src="about:blank" frameborder="0" class="gift-iframe"></iframe>
+      <!-- Gift Header: Tabs + Window Controls -->
+      <div class="gift-top-header">
+        <div class="gift-tab-bar" id="gift-tab-bar">
+          <button class="gift-tab-btn active" data-tab="flowers"><i class="fa-solid fa-seedling"></i> Hoa 8/3</button>
+          <button class="gift-tab-btn" data-tab="wheel"><i class="fa-solid fa-dharmachakra"></i> Vòng Quay 🎡</button>
+          <button class="gift-tab-btn" data-tab="memory"><i class="fa-solid fa-puzzle-piece"></i> Lật Thẻ 🎴</button>
+        </div>
+
+        <div class="gift-top-controls">
+          <button class="fullscreen-btn" id="fullscreen-gift" title="Toàn màn hình"><i class="fa-solid fa-expand"></i></button>
+          <button class="close-btn" id="close-gift" title="Đóng"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <!-- Tab 1: Vườn Hoa 8/3 -->
+      <div class="gift-tab-content active" id="tab-flowers">
+        <iframe src="about:blank" frameborder="0" class="gift-iframe"></iframe>
+      </div>
+
+      <!-- Tab 2: Vòng Quay Điều Ước -->
+      <div class="gift-tab-content" id="tab-wheel">
+        <div class="wheel-game-wrapper">
+          <div class="wheel-header">
+            <h3>🎡 Vòng Quay May Mắn Của Lệ Thủy 💖</h3>
+            <p>Mỗi lượt quay là một món quà hoặc điều ước ngọt ngào từ Anh Quang!</p>
+          </div>
+          <div class="wheel-canvas-container">
+            <div class="wheel-pointer">🔻</div>
+            <canvas id="love-wheel-canvas" width="340" height="340"></canvas>
+            <button class="wheel-spin-center-btn" id="btn-spin-wheel">QUAY 💖</button>
+          </div>
+          <div class="wheel-result-box hidden" id="wheel-result-box">
+            <div class="wheel-result-icon">🎉</div>
+            <div class="wheel-result-text" id="wheel-result-text"></div>
+            <div class="wheel-result-actions">
+              <button class="btn-claim-wish" id="btn-claim-wish">Nhắn cho Anh Quang nè 💌</button>
+              <button class="btn-spin-again" id="btn-spin-again">Quay Lại 🔄</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Lật Thẻ Trí Nhớ -->
+      <div class="gift-tab-content" id="tab-memory">
+        <div class="memory-game-wrapper">
+          <div class="memory-header">
+            <h3>🎴 Thử Thách Trí Nhớ Cùng Anh 💖</h3>
+            <p>Lật mở các cặp biểu tượng tình yêu xem Lệ Thủy nhớ anh Quang nhiều chừng nào nhé!</p>
+          </div>
+          <div class="memory-stats-bar">
+            <div class="stat-item"><i class="fa-solid fa-bolt"></i> Lượt mở: <span id="memory-moves-count">0</span></div>
+            <div class="stat-item"><i class="fa-solid fa-clock"></i> Thời gian: <span id="memory-timer">00:00</span></div>
+            <div class="stat-item"><i class="fa-solid fa-heart"></i> Cặp đôi: <span id="memory-pairs-count">0/8</span></div>
+            <button class="btn-restart-memory" id="btn-restart-memory" title="Chơi lại"><i class="fa-solid fa-rotate-right"></i></button>
+          </div>
+          <div class="memory-cards-grid" id="memory-cards-grid"></div>
+        </div>
+
+        <!-- Popup Chiến Thắng Lật Thẻ -->
+        <div class="memory-win-modal hidden" id="memory-win-modal">
+          <div class="memory-win-card">
+            <div class="memory-win-icon">🏆✨</div>
+            <h3>Chiến Thắng Tuyệt Đỉnh!</h3>
+            <p id="memory-win-message"></p>
+            <button class="btn-memory-play-again" id="btn-memory-play-again">Chơi Lại Ván Mới 🔄</button>
+          </div>
+        </div>
+      </div>
       
       <!-- Floating Wish Card Button -->
       <button class="wish-toggle-btn" id="btn-wish-toggle">
@@ -784,7 +859,9 @@
 
   <!-- EmailJS SDK for Love Letter & Diary Email Notifications -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script src="style/script.js?v=38.0"></script>
+  <!-- Mini-Games Collection (Vòng Quay Điều Ước & Lật Thẻ Kỷ Niệm) -->
+  <script src="style/gift/games.js?v=39.0"></script>
+  <script src="style/script.js?v=39.0"></script>
 </body>
 
 </html>

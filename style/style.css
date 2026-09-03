@@ -4431,5 +4431,559 @@ body.night-mode .menu-item:active {
   animation: flapWings 3.5s infinite ease-in-out;
 }
 
+/* ==========================================================================
+   MINI-GAMES COLLECTION IN HỘP QUÀ (GIFT MODAL TABS & GAMES)
+   ========================================================================== */
+
+/* Gift Modal Header & Tabs Layout */
+.gift-top-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  position: relative;
+  z-index: 60;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.gift-tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+  flex: 1;
+}
+.gift-tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.gift-top-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.gift-top-controls .fullscreen-btn,
+.gift-top-controls .close-btn {
+  position: static !important;
+  width: 36px !important;
+  height: 36px !important;
+  font-size: 16px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 3px 8px rgba(147, 51, 234, 0.2) !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.gift-top-controls .fullscreen-btn {
+  background: #9333ea !important;
+  color: white !important;
+  border: none !important;
+}
+.gift-top-controls .fullscreen-btn:hover {
+  transform: scale(1.08) !important;
+  background: #7e22ce !important;
+}
+
+.gift-top-controls .close-btn {
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #6b21a8 !important;
+  border: 1px solid rgba(147, 51, 234, 0.2) !important;
+}
+.gift-top-controls .close-btn:hover {
+  transform: scale(1.08) !important;
+  background: #fee2e2 !important;
+  color: #ef4444 !important;
+}
+
+.gift-tab-btn {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(147, 51, 234, 0.2);
+  border-radius: 20px;
+  padding: 7px 15px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #6b21a8;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  user-select: none;
+}
+
+.gift-tab-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.15);
+}
+
+.gift-tab-btn.active {
+  background: linear-gradient(135deg, #ec4899, #9333ea);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.35);
+  transform: scale(1.03);
+}
+
+/* Tab Contents */
+.gift-tab-content {
+  display: none;
+  width: 100%;
+  height: calc(100% - 56px);
+  position: relative;
+  overflow-y: auto;
+  padding-bottom: 75px; /* Để không bị che bởi nút Gửi Điều Ước */
+  box-sizing: border-box;
+}
+
+.gift-tab-content.active {
+  display: block;
+  animation: tabFadeIn 0.35s ease-out forwards;
+}
+
+@keyframes tabFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ----------------------------------------------------
+   1. VÒNG QUAY ĐIỀU ƯỚC (WHEEL OF LOVE)
+   ---------------------------------------------------- */
+.wheel-game-wrapper {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.wheel-header h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  color: #7e22ce;
+  margin: 0 0 6px 0;
+  text-shadow: 0 2px 10px rgba(147, 51, 234, 0.15);
+}
+
+.wheel-header p {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 0 0 16px 0;
+}
+
+.wheel-canvas-container {
+  position: relative;
+  width: 340px;
+  height: 340px;
+  margin: 0 auto 15px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#love-wheel-canvas {
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  box-shadow: 0 10px 30px rgba(147, 51, 234, 0.25);
+  touch-action: none;
+}
+
+.wheel-pointer {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 30px;
+  z-index: 10;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
+  pointer-events: none;
+  animation: pointerHover 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes pointerHover {
+  from { transform: translateX(-50%) translateY(0); }
+  to { transform: translateX(-50%) translateY(3px); }
+}
+
+.wheel-spin-center-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f43f5e 0%, #a855f7 100%);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  border: 4px solid #ffffff;
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  z-index: 12;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.wheel-spin-center-btn:hover {
+  transform: translate(-50%, -50%) scale(1.08);
+  box-shadow: 0 8px 25px rgba(236, 72, 153, 0.65), inset 0 2px 6px rgba(255, 255, 255, 0.6);
+}
+
+.wheel-spin-center-btn:active {
+  transform: translate(-50%, -50%) scale(0.95);
+}
+
+/* Result Box */
+.wheel-result-box {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 2px solid #f472b6;
+  border-radius: 20px;
+  padding: 16px 24px;
+  max-width: 380px;
+  width: 90%;
+  margin-top: 10px;
+  box-shadow: 0 10px 25px rgba(236, 72, 153, 0.25);
+  animation: resultPopUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes resultPopUp {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.wheel-result-icon {
+  font-size: 32px;
+  margin-bottom: 4px;
+}
+
+.wheel-result-text {
+  font-size: 1.05rem;
+  color: #1e293b;
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.wheel-result-text strong {
+  color: #9333ea;
+  font-size: 1.15rem;
+}
+
+.wheel-result-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-claim-wish, .btn-spin-again {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-claim-wish {
+  background: linear-gradient(135deg, #ec4899, #8b5cf6);
+  color: white;
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+}
+.btn-claim-wish:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(236, 72, 153, 0.45);
+}
+
+.btn-spin-again {
+  background: #f1f5f9;
+  color: #475569;
+}
+.btn-spin-again:hover {
+  background: #e2e8f0;
+}
+
+/* ----------------------------------------------------
+   2. LẬT THẺ TRÍ NHỚ (MEMORY MATCH GAME)
+   ---------------------------------------------------- */
+.memory-game-wrapper {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.memory-header h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.35rem;
+  color: #7e22ce;
+  margin: 0 0 4px 0;
+}
+
+.memory-header p {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 12px 0;
+  text-align: center;
+}
+
+.memory-stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 360px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 15px rgba(147, 51, 234, 0.1);
+  border: 1px solid rgba(147, 51, 234, 0.15);
+  box-sizing: border-box;
+}
+
+.memory-stats-bar .stat-item {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #6b21a8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.btn-restart-memory {
+  background: transparent;
+  border: none;
+  color: #9333ea;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+.btn-restart-memory:hover {
+  transform: rotate(90deg);
+}
+
+.memory-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.memory-card {
+  aspect-ratio: 1;
+  perspective: 1000px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.memory-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  border-radius: 14px;
+}
+
+.memory-card.flipped .memory-card-inner,
+.memory-card.matched .memory-card-inner {
+  transform: rotateY(180deg);
+}
+
+.memory-card-front,
+.memory-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.memory-card-front {
+  background: linear-gradient(135deg, #c084fc 0%, #9333ea 100%);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.memory-card-front .card-q {
+  font-size: 22px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  animation: pulseCardHeart 2s infinite ease-in-out;
+}
+
+@keyframes pulseCardHeart {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.memory-card-back {
+  background: #ffffff;
+  border: 2.5px solid #ec4899;
+  transform: rotateY(180deg);
+  font-size: 28px;
+}
+
+.memory-card.matched .memory-card-back {
+  background: #fdf2f8;
+  border-color: #10b981;
+  animation: cardMatchedGlow 0.5s ease;
+}
+
+@keyframes cardMatchedGlow {
+  0% { transform: rotateY(180deg) scale(0.9); }
+  50% { transform: rotateY(180deg) scale(1.15); }
+  100% { transform: rotateY(180deg) scale(1); }
+}
+
+/* Win Modal for Memory Game */
+.memory-win-modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.memory-win-modal.hidden {
+  display: none !important;
+}
+
+.memory-win-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 24px 20px;
+  max-width: 360px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  animation: modalPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalPopIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.memory-win-icon {
+  font-size: 42px;
+  margin-bottom: 8px;
+}
+
+.memory-win-card h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  color: #9333ea;
+  margin: 0 0 8px 0;
+}
+
+.memory-win-card p {
+  font-size: 0.95rem;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0 0 16px 0;
+}
+
+.btn-memory-play-again {
+  background: linear-gradient(135deg, #ec4899, #8b5cf6);
+  color: #ffffff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 25px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(236, 72, 153, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-memory-play-again:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(236, 72, 153, 0.5);
+}
+
+/* Mobile responsive fixes for mini games */
+@media (max-width: 480px) {
+  .gift-top-header {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .gift-tab-btn {
+    padding: 5px 8px;
+    font-size: 0.76rem;
+    gap: 3px;
+  }
+  .gift-top-controls {
+    gap: 5px;
+  }
+  .gift-top-controls .fullscreen-btn,
+  .gift-top-controls .close-btn {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 13px !important;
+  }
+  .wheel-canvas-container {
+    width: 290px;
+    height: 290px;
+  }
+  #love-wheel-canvas {
+    width: 290px;
+    height: 290px;
+  }
+  .wheel-spin-center-btn {
+    width: 62px;
+    height: 62px;
+    font-size: 13px;
+  }
+  .memory-cards-grid {
+    gap: 8px;
+    max-width: 310px;
+  }
+  .memory-card-back {
+    font-size: 24px;
+  }
+}
+
 
 
