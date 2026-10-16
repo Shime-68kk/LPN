@@ -91,6 +91,32 @@ button:focus-visible, a:focus-visible, input:focus-visible + span { outline: 2px
 .progress span { display: block; height: 100%; width: 0; border-radius: 6px; background: var(--violet); transform-origin: left; }
 body.night .progress { background: rgba(246, 238, 223, 0.18); }
 body.night .progress span { background: #CDB8F0; }
+.progress-wrap { position: relative; width: 100%; height: 24px; display: flex; align-items: center; }
+.pstars { position: absolute; inset: 0; }
+.pstars svg {
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+  fill: #E9DFF7;
+  stroke: #FFFFFF;
+  stroke-width: 1.6;
+}
+body.night .pstars svg { fill: #3A3166; stroke: #1D1832; }
+.pstars svg.on, body.night .pstars svg.on { fill: #FFC24B; stroke: #E8962A; animation: star-pop .5s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes star-pop { from { transform: translate(-50%, -50%) scale(.2); } }
+.hud-row { display: flex; align-items: center; gap: 8px; }
+.speed {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--pink);
+  color: #2B2140;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.speed.bump { animation: bump .35s ease-out; }
 .hearts { display: flex; gap: 4px; }
 .hearts svg { width: 20px; height: 20px; fill: #FF6F8E; stroke: #C23A5C; stroke-width: 1.2; transition: transform .2s; }
 .hearts svg.lost { fill: none; stroke: rgba(43, 33, 64, 0.35); transform: scale(.85); }

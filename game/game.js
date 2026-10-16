@@ -69,7 +69,7 @@
   // ================= Âm thanh (Web Audio) =================
   const Sound = {
     ctx: null, master: null, music: null, sfx: null, noiseBuf: null,
-    cache: new Map(), src: null, srcGain: null, root: 0,
+    cache: new Map(), voices: [], root: 0,
 
     ensure() {
       if (this.ctx) return this.ctx;
@@ -148,41 +148,46 @@
       return audio;
     },
 
-    playMusic(buffer, offset, duration) {
-      this.stopMusic();
+    // Phát một vòng của đoạn nhạc tại thời điểm `when` (đồng hồ audio), có thể tăng tốc.
+    playSection(buffer, offset, duration, when, rate, fadeIn) {
       const ctx = this.ctx;
       const src = ctx.createBufferSource();
       src.buffer = buffer;
+      src.playbackRate.value = rate;
       const g = ctx.createGain();
       src.connect(g);
       g.connect(this.music);
-      const when = ctx.currentTime + 0.1;
+      const wall = duration / rate;
       g.gain.setValueAtTime(0, when);
-      g.gain.linearRampToValueAtTime(1, when + 1.2);
-      g.gain.setValueAtTime(1, when + Math.max(1.3, duration - 3));
-      g.gain.linearRampToValueAtTime(0, when + duration);
-      src.start(when, offset, duration);
-      this.src = src;
-      this.srcGain = g;
-      return when;
+      g.gain.linearRampToValueAtTime(1, when + fadeIn);
+      g.gain.setValueAtTime(1, when + Math.max(fadeIn + 0.05, wall - 1.4));
+      g.gain.linearRampToValueAtTime(0, when + wall);
+      src.start(when, offset);
+      src.stop(when + wall + 0.05);
+      const now = ctx.currentTime;
+      this.voices = this.voices.filter((v) => v.end > now);
+      this.voices.push({ src, g, end: when + wall + 0.05 });
     },
 
+    // Safari cũ ném lỗi khi gọi stop() lần hai, nên tắt tiếng bằng gain rồi ngắt kết nối.
     fadeOutMusic(sec) {
-      if (!this.srcGain) return;
       const t = this.ctx.currentTime;
-      const gp = this.srcGain.gain;
-      gp.cancelScheduledValues(t);
-      gp.setValueAtTime(gp.value, t);
-      gp.linearRampToValueAtTime(0, t + sec);
-      try { this.src.stop(t + sec + 0.05); } catch (e) { /* đã dừng */ }
-      this.src = null;
-      this.srcGain = null;
+      for (const v of this.voices) {
+        const gp = v.g.gain;
+        gp.cancelScheduledValues(t);
+        gp.setValueAtTime(gp.value, t);
+        gp.linearRampToValueAtTime(0, t + sec);
+        setTimeout(() => v.g.disconnect(), sec * 1000 + 100);
+      }
+      this.voices = [];
     },
 
     stopMusic() {
-      if (this.src) { try { this.src.stop(); } catch (e) { /* đã dừng */ } }
-      this.src = null;
-      this.srcGain = null;
+      for (const v of this.voices) {
+        v.g.disconnect();
+        try { v.src.stop(); } catch (e) { /* đã hẹn giờ dừng */ }
+      }
+      this.voices = [];
     },
 
     // Thời điểm âm thanh đang thực sự phát ra loa (đã trừ độ trễ).
@@ -262,6 +267,15 @@
     heart() { this.arp([7, 9, 10, 12], 0.06, 'sine', 0.18, 0.3); },
     butterfly() { this.arp([5, 6, 7, 8, 9, 10, 12], 0.085, 'sine', 0.2, 0.6); },
     lose() { this.arp([9, 7, 6, 5], 0.16, 'triangle', 0.16, 0.4); },
+    starTing() { this.tone(this.freq(12), 0.25, 'sine', 0.14); },
+    star() {
+      this.arp([9, 11, 12, 14], 0.06, 'triangle', 0.2, 0.35);
+      this.tone(this.freq(15), 0.6, 'sine', 0.12, null, 0.24);
+    },
+    speedUp() {
+      this.tone(320, 0.35, 'triangle', 0.14, 960);
+      this.arp([5, 7, 9, 12], 0.05, 'square', 0.05, 0.15);
+    },
     click() { this.tone(1100, 0.04, 'sine', 0.12, 760); },
   };
 
@@ -379,6 +393,28 @@
       x.beginPath(); x.arc(40, 48, 10, 0, Math.PI * 2); x.arc(102, 48, 10, 0, Math.PI * 2); x.fill();
     });
     SPR.cloud = [cloud(1), cloud(0.7)];
+
+    SPR.starSize = 46 * S;
+    SPR.star = makeSprite(SPR.starSize, SPR.starSize, (x) => {
+      x.translate(SPR.starSize / 2, SPR.starSize / 2 + 1.5 * S);
+      x.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const a = -Math.PI / 2 + (i * Math.PI) / 5;
+        const rr = i % 2 ? 9 * S : 20 * S;
+        x.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+      }
+      x.closePath();
+      x.fillStyle = '#FFC24B';
+      x.fill();
+      x.lineJoin = 'round';
+      x.lineWidth = 2.2 * S;
+      x.strokeStyle = '#E8962A';
+      x.stroke();
+      x.fillStyle = '#5A3A1A';
+      x.beginPath(); x.arc(-4 * S, 0, 1.7 * S, 0, Math.PI * 2); x.arc(4 * S, 0, 1.7 * S, 0, Math.PI * 2); x.fill();
+      x.fillStyle = 'rgba(255,111,142,0.6)';
+      x.beginPath(); x.arc(-7 * S, 3.5 * S, 2 * S, 0, Math.PI * 2); x.arc(7 * S, 3.5 * S, 2 * S, 0, Math.PI * 2); x.fill();
+    });
   }
 
   // ================= Khung cảnh nền =================
@@ -784,13 +820,20 @@
   // ================= Màn chơi =================
   const EARLY = 0.07, LATE = 0.09;
   const MILESTONES = { 10: 'Măm măm!', 25: 'Giỏi ghê!', 50: 'Siêu sâu!', 75: 'Không ai cản nổi!', 100: 'Đỉnh của chóp!' };
+  // Tốc độ mỗi vòng sau khi đủ 3 sao (giống Like a Dino), và độ chồng nhạc giữa hai vòng.
+  const RATES = [1, 1.2, 1.5, 1.8, 2, 2.2, 2.4, 2.6];
+  const XFADE = 0.8;
+  const STAR_FLY = 0.75;
+  const fmtRate = (r) => 'x' + r.toFixed(1).replace('.', ',');
 
   const Game = {
     state: 'menu', song: null, map: null, buffer: null, diff: Store.data.diff || 1,
     notes: [], beats: [], beatIdx: 0, noteHead: 0, drawStart: 0, holds: [],
-    songT: 0, startCtx: 0, resync: true, lastEnd: 0, firstT: 0,
+    songT: 0, resync: true, lastEnd: 0, firstT: 0,
+    loop: 0, rate: 1, maxRate: 1, loopStartCtx: 0, nextQueued: false, nextStart: 0, nextRate: 1,
+    stars: 0, starFx: [], botOn: BOT,
     score: 0, combo: 0, maxCombo: 0, hearts: 3, perfect: 0, good: 0, miss: 0,
-    endT: 0, speed: 460, lead: 1.3, shake: 0, hintT: 0, resultShown: false,
+    endT: 0, speed: 460, lead: 1.3, shake: 0, hintT: 0, resultShown: false, pulse: 0,
 
     setup() {
       const lvl = this.diff;
@@ -798,12 +841,11 @@
         .filter((n) => n[3] <= lvl)
         .map((n) => ({ t: n[0], x: n[1], dur: n[2], state: 0, held: 0, eaten: [], cur: null, grow: 0, crunch: 0 }));
       this.beats = this.map.beats;
-      this.beatIdx = 0;
-      this.noteHead = 0;
-      this.drawStart = 0;
-      this.holds = [];
+      this.resetNotes();
       this.score = 0; this.combo = 0; this.maxCombo = 0; this.hearts = 3;
       this.perfect = 0; this.good = 0; this.miss = 0;
+      this.loop = 0; this.rate = 1; this.maxRate = 1; this.nextQueued = false;
+      this.stars = 0; this.starFx = [];
       this.lastEnd = this.notes.reduce((m, n) => Math.max(m, n.t + n.dur), 0);
       this.firstT = this.notes.length ? this.notes[0].t : this.map.start;
       this.lead = lvl === 1 ? 1.35 : 1.12;
@@ -816,21 +858,90 @@
       Sau.sad = 0;
       Sound.root = this.map.key || 0;
       UI.hud(this);
+      UI.resetStars();
+      UI.speed(1);
+    },
+
+    // Đưa toàn bộ lá về trạng thái chưa ăn (đầu mỗi vòng).
+    resetNotes() {
+      for (const n of this.notes) {
+        n.state = 0; n.held = 0; n.eaten = []; n.cur = null; n.grow = 0; n.crunch = 0;
+      }
+      this.holds = [];
+      this.beatIdx = 0;
+      this.noteHead = 0;
+      this.drawStart = 0;
     },
 
     begin() {
       this.setup();
+      Sound.stopMusic();
       // ?debug=1&skip=80: bỏ qua 80 giây đầu để thử nhanh đoạn cuối.
       const skip = DEBUG ? Number(params.get('skip')) || 0 : 0;
       if (skip) for (const n of this.notes) if (n.t < this.map.start + skip + 1) n.state = 1;
-      this.startCtx = Sound.playMusic(this.buffer, this.map.start + skip, this.map.end - this.map.start - skip) - skip;
+      const when = Sound.ctx.currentTime + 0.1;
+      Sound.playSection(this.buffer, this.map.start + skip, this.map.end - this.map.start - skip, when, 1, 1.2);
+      this.loopStartCtx = when - skip;
       this.state = 'play';
       this.hintT = Store.data.hintSeen ? 0 : 3.2;
       UI.showHint(this.hintT > 0);
     },
 
+    // Hẹn trước vòng nhạc kế tiếp (nhanh hơn) và chuyển sang nó đúng lúc.
+    loopTick() {
+      const len = this.map.end - this.map.start;
+      const switchAt = this.loopStartCtx + len / this.rate - XFADE;
+      if (!this.nextQueued && Sound.ctx.currentTime > switchAt - 1.5) {
+        this.nextRate = RATES[Math.min(this.loop + 1, RATES.length - 1)];
+        Sound.playSection(this.buffer, this.map.start, len, switchAt, this.nextRate, 0.9);
+        this.nextQueued = true;
+        this.nextStart = switchAt;
+      }
+      if (this.nextQueued && Sound.now() >= this.nextStart) {
+        if (this.stars < 3) this.awardStar(3);
+        this.loop++;
+        this.rate = this.nextRate;
+        this.maxRate = Math.max(this.maxRate, this.rate);
+        this.loopStartCtx = this.nextStart;
+        this.nextQueued = false;
+        this.resetNotes();
+        this.resync = true;
+        UI.speed(this.rate);
+        UI.toast('Tăng tốc ' + fmtRate(this.rate));
+        Sound.speedUp();
+      }
+    },
+
+    awardStar(k) {
+      while (this.stars < k) {
+        this.stars++;
+        const p = UI.starOn(this.stars);
+        this.starFx.push({ age: 0, x0: p.x, y0: p.y, done: false });
+      }
+      Sound.starTing();
+      if (this.stars === 3) UI.toast('Đủ 3 sao rồi!');
+    },
+
+    updateStars(dt) {
+      for (let i = this.starFx.length - 1; i >= 0; i--) {
+        const f = this.starFx[i];
+        f.age += dt;
+        if (f.age > STAR_FLY * 0.45) Sau.mouthOpen = Math.max(Sau.mouthOpen, clamp((f.age - STAR_FLY * 0.45) / (STAR_FLY * 0.4), 0, 1));
+        if (f.age >= STAR_FLY && !f.done) {
+          f.done = true;
+          Sau.chew = 0.32;
+          Sau.happy = 0.6;
+          Sau.gulp();
+          burstSparks(Sau.headX, Sau.headY - HEAD_R * 0.4, 16, '#FFC24B');
+          ring(Sau.headX, Sau.headY, '#FFC24B');
+          Sound.star();
+          this.starFx.splice(i, 1);
+        }
+      }
+    },
+
     time(dt) {
-      const raw = Sound.now() - this.startCtx + this.map.start + (this.song.offset || 0);
+      const raw = this.map.start + (Sound.now() - this.loopStartCtx) * this.rate + (this.song.offset || 0);
       if (this.resync) { this.songT = raw; this.resync = false; return; }
       const pred = this.songT + dt;
       const err = raw - pred;
@@ -885,7 +996,11 @@
       Sound.miss();
       buzz(30);
       UI.hud(this);
-      if (this.hearts <= 0) this.gameOver();
+      // Đã đủ 3 sao thì hết tim vẫn là thắng: sâu hoá bướm.
+      if (this.hearts <= 0) {
+        if (this.stars >= 3) this.finish();
+        else this.gameOver();
+      }
     },
 
     update(dt) {
@@ -904,10 +1019,20 @@
         }
         const grow = easeInOut(clamp((Sau.segs - 4) / 60, 0, 1));
         Sau.headY = lerp(Sau.headY, H * (0.74 - 0.16 * grow), 1 - Math.exp(-dt * 3));
-        if (BOT) this.bot();
+        if (this.botOn) this.bot();
         this.judge(t, dt);
-        if (t > this.lastEnd + 0.6 && !this.holds.length) this.finish();
-        UI.progress(clamp((t - this.firstT) / (this.lastEnd - this.firstT), 0, 1));
+        if (this.state === 'play') {
+          const prog = clamp((t - this.firstT) / (this.lastEnd - this.firstT), 0, 1);
+          UI.progress(prog);
+          // Sao tính theo quãng đường đã đi được trong vòng đầu, không cần chính xác.
+          if (this.loop === 0) {
+            if (this.stars < 1 && prog >= 1 / 3) this.awardStar(1);
+            if (this.stars < 2 && prog >= 2 / 3) this.awardStar(2);
+            if (this.stars < 3 && prog >= 1 && !this.holds.length) this.awardStar(3);
+          }
+          this.updateStars(dt);
+          this.loopTick();
+        }
       } else if (this.state === 'menu') {
         Sau.target = PX0 + PW * (0.5 + 0.26 * Math.sin(clock * 0.9));
         Sau.headY = lerp(Sau.headY || H * 0.28, H * 0.27, 1 - Math.exp(-dt * 3));
@@ -935,15 +1060,17 @@
 
     judge(t, dt) {
       const notes = this.notes;
+      // Mức Dễ: vùng đớp rộng hơn một chút.
+      const R = CATCH_R * (this.diff === 1 ? 1.12 : 1);
       let anticip = 0;
       for (let i = this.noteHead; i < notes.length; i++) {
         const n = notes[i];
         if (n.t - t > 0.4) break;
         if (n.state !== 0) continue;
         const d = Math.abs(Sau.headX - (PX0 + n.x * PW));
-        if (n.t - t > 0 && d < CATCH_R * 1.8) anticip = Math.max(anticip, 1 - (n.t - t) / 0.4);
+        if (n.t - t > 0 && d < R * 1.8) anticip = Math.max(anticip, 1 - (n.t - t) / 0.4);
         if (n.t - t > EARLY) continue;
-        if (d <= CATCH_R) this.eat(n, d <= PERFECT_R);
+        if (d <= R) this.eat(n, d <= PERFECT_R);
         else if (t - n.t > LATE) this.lose(n);
         if (this.state !== 'play') return;
       }
@@ -955,7 +1082,7 @@
       for (let i = this.holds.length - 1; i >= 0; i--) {
         const n = this.holds[i];
         const end = n.t + n.dur;
-        const inside = Math.abs(Sau.headX - (PX0 + n.x * PW)) <= CATCH_R * 0.95;
+        const inside = Math.abs(Sau.headX - (PX0 + n.x * PW)) <= R * 0.95;
         const now = Math.min(t, end);
         if (inside) {
           if (!n.cur) { n.cur = [now, now]; n.eaten.push(n.cur); }
@@ -1005,8 +1132,10 @@
       this.state = 'ending';
       this.endT = 0;
       this.burst = false;
+      this.starFx = [];
       Sound.fadeOutMusic(3.2);
       UI.hide('hud');
+      UI.hide('pause');
       UI.showHint(false);
     },
 
@@ -1016,12 +1145,6 @@
       Sound.lose();
       UI.showHint(false);
       setTimeout(() => { if (this.state === 'over') UI.result(false, this); }, 900);
-    },
-
-    stats() {
-      const total = this.notes.length || 1;
-      const acc = (this.perfect + this.good * 0.75) / total;
-      return { acc, total };
     },
   };
 
@@ -1092,19 +1215,40 @@
     g.globalAlpha = 1;
   }
 
+  // Ngôi sao bay từ thanh tiến trình xuống miệng bé sâu.
+  function drawStarFx() {
+    const s = SPR.starSize;
+    for (const f of Game.starFx) {
+      const u = easeInOut(clamp(f.age / STAR_FLY, 0, 1));
+      const hx = Sau.headX, hy = Sau.headY - HEAD_R * 0.2;
+      const cx = (f.x0 + hx) / 2 + (f.x0 < hx ? -1 : 1) * 80 * S;
+      const cy = f.y0 + 40 * S;
+      const x = (1 - u) * (1 - u) * f.x0 + 2 * (1 - u) * u * cx + u * u * hx;
+      const y = (1 - u) * (1 - u) * f.y0 + 2 * (1 - u) * u * cy + u * u * hy;
+      const sc = 1.25 - 0.7 * u;
+      g.save();
+      g.translate(x, y);
+      g.rotate(f.age * 7);
+      g.drawImage(SPR.star, (-s * sc) / 2, (-s * sc) / 2, s * sc, s * sc);
+      g.restore();
+    }
+  }
+
   function render(dt) {
     const sh = Game.shake > 0 ? Game.shake * 22 * S : 0;
     const ox = sh ? (Math.random() - 0.5) * sh : 0;
     const oy = sh ? (Math.random() - 0.5) * sh : 0;
     g.setTransform(DPR, 0, 0, DPR, ox * DPR, oy * DPR);
     const playing = Game.state === 'play' || Game.state === 'paused' || Game.state === 'over';
-    drawBackground(Game.state === 'paused' ? 0 : dt, Game.speed, Game.pulse || 0);
+    // Tốc độ thật trên màn hình (px/giây) tăng theo vòng nhanh.
+    const wallSpeed = Game.speed * Game.rate;
+    drawBackground(Game.state === 'paused' ? 0 : dt, wallSpeed, Game.pulse || 0);
     if (playing) drawNotes();
     if (Game.state === 'ending') {
       const e = Game.endT;
       const collapse = easeInOut(clamp(e / 1.1, 0, 1));
       if (e < 2.3) {
-        if (collapse < 1) drawSau(Game.speed, 0, collapse);
+        if (collapse < 1) drawSau(wallSpeed, 0, collapse);
         const sc = easeOutBack(clamp((e - 0.5) / 0.7, 0, 1));
         const wob = e > 1.1 ? Math.sin(e * 34) * 0.12 * clamp((e - 1.1) / 1.2, 0, 1) : 0;
         if (sc > 0) drawCocoon(Sau.headX, Sau.headY, sc, wob, clamp((e - 1.1) / 1.2, 0, 1));
@@ -1114,7 +1258,8 @@
         drawButterfly(W / 2 + Math.sin(e * 1.3) * 14 * S, y, 1.6 * k, e);
       }
     } else {
-      drawSau(Game.speed, Game.pulse || 0, 0);
+      drawSau(wallSpeed, Game.pulse || 0, 0);
+      drawStarFx();
     }
     drawParticles();
     drawPopups(Game.state === 'paused' ? 0 : dt);
@@ -1136,7 +1281,7 @@
     els: {
       hud: $('hud'), menu: $('menu'), pause: $('pause'), result: $('result'), hint: $('hint'), toast: $('toast'),
       score: $('score'), length: $('length'), hearts: $('hearts'), combo: $('combo'), comboNum: $('combo-num'),
-      progress: $('progress-fill'), songs: $('songs'),
+      progress: $('progress-fill'), songs: $('songs'), pstars: $('pstars'), speed: $('speed'),
     },
     last: {},
     show(name) { this.els[name].hidden = false; },
@@ -1169,6 +1314,32 @@
       el.classList.add('show');
     },
     showHint(on) { this.els.hint.hidden = !on; },
+
+    resetStars() {
+      const box = this.els.pstars;
+      box.replaceChildren();
+      [33.3, 66.6, 97].forEach((left) => {
+        const s = svgIcon(PATH_STAR);
+        s.style.left = left + '%';
+        box.appendChild(s);
+      });
+    },
+    // Thắp sao thứ i trên thanh tiến trình, trả về vị trí để ngôi sao bay xuống.
+    starOn(i) {
+      const el = this.els.pstars.children[i - 1];
+      if (!el) return { x: W / 2, y: 40 };
+      el.setAttribute('class', 'on');
+      const r = el.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    },
+    speed(rate) {
+      const el = this.els.speed;
+      el.hidden = rate <= 1;
+      el.textContent = fmtRate(rate);
+      el.classList.remove('bump');
+      void el.offsetWidth;
+      el.classList.add('bump');
+    },
 
     renderSongs(songs) {
       const list = this.els.songs;
@@ -1208,21 +1379,25 @@
     },
 
     result(win, gm) {
-      const { acc } = gm.stats();
-      const stars = !win ? 0 : acc >= 0.92 && gm.miss === 0 ? 3 : acc >= 0.75 ? 2 : 1;
-      $('res-title').textContent = win ? 'Hoá bướm rồi!' : 'Bé sâu còn đói…';
-      $('res-message').textContent = win ? gm.song.message : 'Lá rơi nhanh quá, mình thử lại nha?';
+      const stars = gm.stars;
+      $('res-title').textContent = win ? 'Hoá bướm rồi!' : stars ? 'Được ' + stars + ' sao rồi!' : 'Bé sâu còn đói…';
+      $('res-message').textContent = win
+        ? gm.song.message
+        : stars ? 'Thêm chút nữa là đủ 3 sao, thử lại nha?' : 'Lá rơi nhanh quá, mình thử lại nha?';
       $('res-score').textContent = gm.score.toLocaleString('vi-VN');
       $('res-combo').textContent = gm.maxCombo;
       $('res-length').textContent = Sau.segs + ' đốt';
-      $('res-acc').textContent = Math.round(acc * 100) + '%';
+      $('res-speed').textContent = fmtRate(gm.maxRate);
       const st = $('res-stars');
       st.replaceChildren();
       for (let i = 0; i < 3; i++) st.appendChild(svgIcon(PATH_STAR, i < stars ? 'on' : ''));
       const key = gm.song.id + ':' + gm.diff;
-      const prev = Store.data.best[key];
-      const isBest = win && (!prev || gm.score > prev.score);
-      if (isBest) { Store.data.best[key] = { score: gm.score, stars }; Store.save(); }
+      const prev = Store.data.best[key] || { score: 0, stars: 0 };
+      const isBest = gm.score > prev.score;
+      if (isBest || stars > prev.stars) {
+        Store.data.best[key] = { score: Math.max(gm.score, prev.score), stars: Math.max(stars, prev.stars) };
+        Store.save();
+      }
       $('res-best').hidden = !isBest;
       this.hide('hud');
       this.show('result');
@@ -1330,7 +1505,14 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden) Game.pause(); });
   window.addEventListener('resize', () => resize());
 
-  $('btn-pause').addEventListener('click', () => { Sound.click(); Game.pause(); });
+  $('btn-pause').addEventListener('click', () => {
+    Sound.click();
+    Game.pause();
+    $('btn-finish').hidden = Game.stars < 3;
+  });
+  $('btn-finish').addEventListener('click', () => {
+    Sound.ctx.resume().then(() => { Sound.click(); Game.finish(); });
+  });
   $('btn-resume').addEventListener('click', () => { Sound.click(); Game.resume(); });
   $('btn-restart').addEventListener('click', () => { Sound.click(); restart(); });
   $('btn-menu').addEventListener('click', () => { Sound.click(); toMenu(); });

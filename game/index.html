@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" />
-  <link rel="stylesheet" href="game.css?v=1" />
+  <link rel="stylesheet" href="game.css?v=2" />
 </head>
 <body>
   <canvas id="stage" aria-label="Màn chơi Sâu Tím"></canvas>
@@ -22,8 +22,14 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12" /></svg>
       </button>
       <div class="hud-mid">
-        <div class="progress"><span id="progress-fill"></span></div>
-        <div class="hearts" id="hearts" aria-label="Số tim còn lại"></div>
+        <div class="progress-wrap">
+          <div class="progress"><span id="progress-fill"></span></div>
+          <div class="pstars" id="pstars" aria-label="Sao đã đạt"></div>
+        </div>
+        <div class="hud-row">
+          <div class="hearts" id="hearts" aria-label="Số tim còn lại"></div>
+          <span class="speed" id="speed" hidden>x1,0</span>
+        </div>
       </div>
       <div class="score">
         <span id="score">0</span>
@@ -66,6 +72,7 @@
     <div class="card">
       <h2>Tạm dừng</h2>
       <button type="button" class="btn primary" id="btn-resume">Chơi tiếp</button>
+      <button type="button" class="btn" id="btn-finish" hidden>Kết thúc &amp; hoá bướm</button>
       <button type="button" class="btn" id="btn-restart">Chơi lại từ đầu</button>
       <button type="button" class="btn" id="btn-menu">Chọn bài khác</button>
     </div>
@@ -81,7 +88,7 @@
         <div><dt>Điểm</dt><dd id="res-score">0</dd></div>
         <div><dt>Combo cao nhất</dt><dd id="res-combo">0</dd></div>
         <div><dt>Sâu dài</dt><dd id="res-length">0</dd></div>
-        <div><dt>Chính xác</dt><dd id="res-acc">0%</dd></div>
+        <div><dt>Tốc độ</dt><dd id="res-speed">x1,0</dd></div>
       </dl>
       <p class="best" id="res-best" hidden>Kỷ lục mới!</p>
       <button type="button" class="btn primary" id="btn-again">Chơi lại</button>
@@ -89,6 +96,6 @@
     </div>
   </section>
 
-  <script src="game.js?v=2"></script>
+  <script src="game.js?v=3"></script>
 </body>
 </html>
