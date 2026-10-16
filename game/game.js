@@ -585,25 +585,58 @@
     g.globalAlpha = 1;
   }
 
+  const GOLD = () => (T.night ? '#FFC24B' : '#D9831A');
+  const PINK = () => (T.night ? '#FFB0C0' : '#C23A5C');
+  const POP_LIFE = 0.8;
   const popups = [];
-  for (let i = 0; i < 10; i++) popups.push({ on: false, text: '', x: 0, y: 0, life: 0, color: '' });
-  function popup(text, x, y, color) {
-    const p = popups.find((q) => !q.on) || popups[0];
-    p.on = true; p.text = text; p.x = x; p.y = y; p.life = 0.7; p.color = color;
+  for (let i = 0; i < 28; i++) popups.push({ on: false, text: '', x: 0, y: 0, vx: 0, life: 0, color: '', size: 15 });
+  let popCursor = 0;
+  // Chữ điểm nổi lên: phóng to rồi nảy về cỡ thường, bay lên và mờ dần.
+  function popup(text, x, y, color, size, vx) {
+    const p = popups[popCursor];
+    popCursor = (popCursor + 1) % popups.length;
+    p.on = true; p.text = text; p.x = clamp(x, PX0 + 34 * S, PX0 + PW - 34 * S); p.y = y; p.vx = vx || 0;
+    p.life = POP_LIFE; p.color = color; p.size = size || 15;
+  }
+  function popScale(age) {
+    if (age < 0.12) return lerp(0.3, 1.3, age / 0.12);
+    if (age < 0.26) return lerp(1.3, 1, (age - 0.12) / 0.14);
+    return 1;
+  }
+  function drawPopText(text, x, y, size, scale, color) {
+    g.save();
+    g.translate(x, y);
+    g.scale(scale, scale);
+    g.font = `800 ${Math.round(size * S)}px "Be Vietnam Pro", system-ui, sans-serif`;
+    g.lineJoin = 'round';
+    g.lineWidth = 4 * S;
+    g.strokeStyle = T.night ? 'rgba(29,24,50,0.85)' : 'rgba(255,255,255,0.9)';
+    g.strokeText(text, 0, 0);
+    g.fillStyle = color;
+    g.fillText(text, 0, 0);
+    g.restore();
   }
   function drawPopups(dt) {
     g.textAlign = 'center';
-    g.font = `700 ${Math.round(15 * S)}px "Be Vietnam Pro", system-ui, sans-serif`;
+    g.textBaseline = 'middle';
     for (const p of popups) {
       if (!p.on) continue;
       p.life -= dt;
       if (p.life <= 0) { p.on = false; continue; }
-      p.y -= 50 * S * dt;
-      g.globalAlpha = Math.min(1, p.life * 3);
-      g.fillStyle = p.color;
-      g.fillText(p.text, p.x, p.y);
+      const age = POP_LIFE - p.life;
+      p.y -= 70 * S * dt;
+      p.x += p.vx * dt;
+      g.globalAlpha = Math.min(1, p.life * 3.5);
+      drawPopText(p.text, p.x, p.y, p.size, popScale(age), p.color);
     }
     g.globalAlpha = 1;
+    // Bong bóng tổng điểm khi đang ăn cành lá dài.
+    const h = Game.holds[0];
+    if (h && h.total) {
+      const bx = clamp(Sau.headX, PX0 + 48 * S, PX0 + PW - 48 * S);
+      drawPopText('+' + h.total.toLocaleString('vi-VN'), bx, Sau.headY - HEAD_R * 4, 22, 1 + 0.35 * (h.bounce || 0), GOLD());
+    }
+    g.textBaseline = 'alphabetic';
   }
 
   // ================= Bé sâu =================
@@ -866,6 +899,7 @@
     resetNotes() {
       for (const n of this.notes) {
         n.state = 0; n.held = 0; n.eaten = []; n.cur = null; n.grow = 0; n.crunch = 0;
+        n.total = 0; n.bounce = 0; n.ticks = 0;
       }
       this.holds = [];
       this.beatIdx = 0;
@@ -905,7 +939,10 @@
         this.loopStartCtx = this.nextStart;
         this.nextQueued = false;
         this.resetNotes();
+        // Cập nhật thời gian ngay, nếu không khung hình kế tiếp vẫn vẽ theo giờ của vòng cũ
+        // và bỏ qua toàn bộ lá của vòng mới.
         this.resync = true;
+        this.time(0);
         UI.speed(this.rate);
         UI.toast('Tăng tốc ' + fmtRate(this.rate));
         Sound.speedUp();
@@ -1091,21 +1128,34 @@
           n.grow += dt;
           n.crunch += dt;
           Sau.chew = Math.max(Sau.chew, 0.1);
-          if (n.grow >= beatLen) { n.grow -= beatLen; Sau.segs++; Sau.gulp(); this.score += 100; UI.hud(this); }
+          if (n.grow >= beatLen) { n.grow -= beatLen; Sau.segs++; Sau.gulp(); }
           if (n.crunch >= 0.12) {
+            // Mỗi miếng cắn trên cành dài: điểm nhỏ nảy lên, cộng dồn vào bong bóng tổng.
             n.crunch = 0;
+            const pts = Math.round(25 * (1 + Math.min(4, Math.floor(this.combo / 10)) * 0.5));
+            n.total = (n.total || 0) + pts;
+            n.bounce = 1;
+            this.score += pts;
+            popup('+' + pts, Sau.headX + (Math.random() - 0.5) * 50 * S, Sau.headY - HEAD_R * 1.6,
+              (n.ticks = (n.ticks || 0) + 1) % 2 ? GOLD() : PINK(), 14, (Math.random() - 0.5) * 70 * S);
             Sound.crunch();
             burstCrumbs(Sau.headX, Sau.headY - HEAD_R * 0.6, 2);
+            UI.hud(this);
           }
         } else {
           n.cur = null;
         }
+        if (n.bounce) n.bounce = Math.max(0, n.bounce - dt * 6);
         if (t >= end) {
           const ratio = clamp(n.held / Math.max(0.01, n.dur), 0, 1);
-          this.score += Math.round(ratio * 400);
+          const bonus = Math.round(ratio * 400);
+          this.score += bonus;
+          const total = (n.total || 0) + bonus;
+          if (total > 0) popup('+' + total.toLocaleString('vi-VN'), Sau.headX, Sau.headY - HEAD_R * 4, GOLD(), 26);
           if (ratio > 0.8) {
-            popup('Ngon!', Sau.headX, Sau.headY - HEAD_R * 2.6, T.night ? '#FFB0C0' : '#C23A5C');
-            burstHearts(Sau.headX, Sau.headY - HEAD_R, 3);
+            popup('Ngon!', Sau.headX, Sau.headY - HEAD_R * 5.4, PINK(), 20);
+            burstHearts(Sau.headX, Sau.headY - HEAD_R, 4);
+            burstSparks(Sau.headX, Sau.headY - HEAD_R * 2.5, 10, '#FFC24B');
             Sau.happy = 0.4;
           }
           this.holds.splice(i, 1);
