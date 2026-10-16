@@ -278,7 +278,7 @@ def main():
             "id": sid,
             "title": title,
             "src": f"../style/sound/{fname}",
-            "cover": f"../style/sound/{cover}",
+            "cover": f"../style/thumbs/cover-{cover.strip('Anh ().jpg')}.webp",
             "map": f"beatmaps/{sid}.json",
             "bpm": data["bpm"],
             "preview": data.get("preview", data["start"]),

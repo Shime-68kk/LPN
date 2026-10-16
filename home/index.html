@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#BFE4FF" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Yêu Lệ Thủy" />
+  <link rel="apple-touch-icon" href="../style/img/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="../style/img/icon-192.png" />
+  <title>Yêu Lệ Thủy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
+  <link rel="stylesheet" href="home.css?v=1" />
+</head>
+<body data-weather="nang">
+  <!-- Cảnh trời: màu và các lớp đổi theo data-weather trên body -->
+  <div class="scene" aria-hidden="true">
+    <svg viewBox="0 0 390 360" preserveAspectRatio="xMidYMax slice">
+      <rect class="sky" x="0" y="0" width="390" height="360" />
+      <g class="l-stars">
+        <circle cx="40" cy="40" r="1.6" /><circle cx="90" cy="70" r="1.2" /><circle cx="140" cy="30" r="1.8" />
+        <circle cx="190" cy="92" r="1.2" /><circle cx="232" cy="42" r="1.4" /><circle cx="356" cy="36" r="1.6" />
+        <circle cx="372" cy="120" r="1.2" /><circle cx="28" cy="132" r="1.2" /><circle cx="120" cy="140" r="1.6" />
+        <circle cx="262" cy="150" r="1.2" /><circle cx="200" cy="168" r="1.4" /><circle cx="334" cy="172" r="1.2" />
+      </g>
+      <g class="l-sun">
+        <circle class="sun-halo" cx="300" cy="86" r="54" />
+        <circle class="sun" cx="300" cy="86" r="34" />
+      </g>
+      <g class="l-moon">
+        <circle class="moon-glow" cx="300" cy="80" r="44" />
+        <circle class="moon" cx="300" cy="80" r="26" />
+        <circle class="sky" cx="312" cy="72" r="22" />
+      </g>
+      <g class="l-cloud3 drift-b">
+        <circle cx="140" cy="68" r="18" /><circle cx="165" cy="56" r="24" /><circle cx="192" cy="68" r="18" />
+        <rect x="140" y="68" width="52" height="18" />
+      </g>
+      <g class="l-clouds drift-a">
+        <circle cx="55" cy="88" r="16" /><circle cx="76" cy="78" r="22" /><circle cx="98" cy="88" r="16" />
+        <rect x="55" y="88" width="43" height="16" />
+        <circle cx="238" cy="126" r="12" /><circle cx="254" cy="118" r="16" /><circle cx="270" cy="126" r="12" />
+        <rect x="238" y="126" width="32" height="12" />
+      </g>
+      <g class="l-rain">
+        <path d="M30 40l-5 12M80 90l-5 12M130 30l-5 12M170 120l-5 12M220 60l-5 12M260 140l-5 12M310 40l-5 12M350 110l-5 12M20 170l-5 12M110 190l-5 12M200 180l-5 12M290 200l-5 12M370 180l-5 12M60 240l-5 12M150 250l-5 12M240 230l-5 12M330 250l-5 12M14 100l-5 12M190 10l-5 12M280 100l-5 12M60 140l-5 12M380 60l-5 12" />
+      </g>
+      <path class="far" d="M0 250 Q 90 205 190 235 T 390 220 L390 360 L0 360 Z" />
+      <rect class="trunk" x="66" y="214" width="7" height="34" rx="3" />
+      <circle class="tree" cx="69" cy="206" r="22" /><circle class="tree" cx="53" cy="216" r="14" /><circle class="tree" cx="86" cy="216" r="14" />
+      <g class="bean bean-a">
+        <rect x="194" y="250" width="26" height="40" rx="13" />
+        <circle class="eye" cx="203" cy="263" r="1.8" /><circle class="eye" cx="211" cy="263" r="1.8" />
+        <ellipse class="blush" cx="200" cy="269" rx="3" ry="1.8" /><ellipse class="blush" cx="214" cy="269" rx="3" ry="1.8" />
+      </g>
+      <g class="bean bean-b">
+        <rect x="226" y="255" width="24" height="35" rx="12" />
+        <circle class="eye" cx="234" cy="267" r="1.8" /><circle class="eye" cx="242" cy="267" r="1.8" />
+        <ellipse class="blush" cx="231" cy="272" rx="3" ry="1.8" /><ellipse class="blush" cx="245" cy="272" rx="3" ry="1.8" />
+      </g>
+      <path class="l-heart" d="M222 244c-2.5-3.5-8-2-6.5 2.2c1 2.6 6.5 6 6.5 6s5.5-3.4 6.5-6c1.5-4.2-4-5.7-6.5-2.2z" />
+      <g class="l-umb">
+        <path class="umb-stick" d="M222 226L222 262" />
+        <path class="umb" d="M186 248Q222 200 258 248Q249 241 240 248Q231 241 222 248Q213 241 204 248Q195 241 186 248Z" />
+      </g>
+      <path class="near" d="M0 300 Q 110 258 210 282 T 390 276 L390 360 L0 360 Z" />
+      <g class="l-fly">
+        <circle cx="120" cy="304" r="2" /><circle cx="300" cy="312" r="2" /><circle cx="344" cy="292" r="1.6" />
+        <circle cx="58" cy="322" r="1.6" /><circle cx="170" cy="330" r="1.4" />
+      </g>
+    </svg>
+  </div>
+
+  <header class="topbar">
+    <button class="chip" id="btn-weather" type="button" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path id="weather-icon" d="" /></svg>
+      <span id="weather-text">Đang xem trời…</span>
+    </button>
+  </header>
+
+  <main class="sheet-main">
+    <div class="intro">
+      <div class="intro-row">
+        <span class="date" id="today"></span>
+        <span class="days" id="days">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg>
+          <span id="days-text"></span>
+        </span>
+      </div>
+      <h1 id="greet">Chào em</h1>
+      <p class="lede" id="lede"></p>
+    </div>
+
+    <a class="game-card" href="../game/">
+      <span class="game-thumb" aria-hidden="true">
+        <svg viewBox="0 0 48 48"><circle cx="16" cy="34" r="7" /><circle cx="24" cy="28" r="7.5" /><circle cx="32" cy="20" r="9" /><circle class="g-eye" cx="29" cy="19" r="1.4" /><circle class="g-eye" cx="35" cy="19" r="1.4" /><path class="g-ant" d="M29 12l-2-6M35 12l2-6" /></svg>
+      </span>
+      <span class="game-meta">
+        <span class="eyebrow">Trò chơi · Sâu Tím</span>
+        <span class="game-title">Ăn lá theo nhạc</span>
+        <span class="game-stars" id="game-stars"></span>
+      </span>
+      <span class="go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span>
+    </a>
+
+    <div class="song-row">
+      <img class="song-cover" id="sugg-cover" src="../style/thumbs/cover-3.webp" alt="" width="48" height="48" />
+      <span class="song-meta">
+        <span class="eyebrow" id="sugg-note">Nhạc gợi ý</span>
+        <span class="song-title" id="sugg-title"></span>
+      </span>
+      <button class="round-btn" id="sugg-play" type="button" aria-label="Phát bài gợi ý">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="ic-play" d="M8 5v14l11-7z" /><path class="ic-pause" d="M8 5v14M16 5v14" /></svg>
+      </button>
+    </div>
+
+    <nav class="tiles" aria-label="Các mục">
+      <button class="tile t-music" type="button" data-open="music">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13M6 15a3 3 0 1 0 0 6a3 3 0 1 0 0-6M17 13a3 3 0 1 0 0 6a3 3 0 1 0 0-6" /></svg>
+        <span>Âm nhạc</span>
+      </button>
+      <button class="tile t-letter" type="button" data-open="letter">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM3 7l9 6 9-6" /></svg>
+        <span>Thư tình</span>
+      </button>
+      <button class="tile t-album" type="button" data-open="album">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM9 8a2 2 0 1 0 0 4a2 2 0 1 0 0-4M3 17l5-5 4 4 3-3 6 6" /></svg>
+        <span>Album</span>
+      </button>
+      <a class="tile t-gift" href="../style/gift/gift.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16v4H4zM5 12v8h14v-8M12 8v12M12 8C10.5 5 7 4.5 7 6.5S10 8 12 8c2 0 5-.5 5-1.5S13.5 5 12 8" /></svg>
+        <span>Hộp quà</span>
+      </a>
+      <a class="tile t-game" href="../game/">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18a3 3 0 1 0 0-.01M11 15a3 3 0 1 0 0-.01M16 11a3.5 3.5 0 1 0 0-.01M15 6l-1-3M18 6l1-3" /></svg>
+        <span>Sâu Tím</span>
+      </a>
+      <a class="tile t-old" href="../index.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h11a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2V4a1 1 0 0 1 1-1zM5 18a2 2 0 0 1 2-2h12M9 7h6M9 10h4" /></svg>
+        <span>Nhật ký</span>
+      </a>
+    </nav>
+  </main>
+
+  <!-- Bảng trượt từ dưới lên -->
+  <div class="backdrop" id="backdrop" hidden></div>
+
+  <section class="panel" id="panel-weather" role="dialog" aria-modal="true" aria-labelledby="pw-title" hidden>
+    <header class="panel-head">
+      <h2 id="pw-title">Thời tiết</h2>
+      <button class="close" type="button" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
+    </header>
+    <div class="wx-now">
+      <span class="wx-temp" id="wx-temp">--°</span>
+      <span class="wx-desc">
+        <b id="wx-label">—</b>
+        <span id="wx-sun"></span>
+      </span>
+    </div>
+    <p class="wx-place" id="wx-place"></p>
+    <button class="btn" id="btn-locate" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21zM12 7a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5" /></svg>
+      Dùng vị trí hiện tại
+    </button>
+    <p class="wx-sub">Xem thử các kiểu trời</p>
+    <div class="wx-try" id="wx-try"></div>
+  </section>
+
+  <section class="panel" id="panel-music" role="dialog" aria-modal="true" aria-labelledby="pm-title" hidden>
+    <header class="panel-head">
+      <h2 id="pm-title">Âm nhạc</h2>
+      <button class="close" type="button" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
+    </header>
+    <ul class="playlist" id="playlist"></ul>
+  </section>
+
+  <section class="panel panel-tall" id="panel-letter" role="dialog" aria-modal="true" aria-labelledby="pl-title" hidden>
+    <header class="panel-head">
+      <h2 id="pl-title">Thư tình</h2>
+      <button class="close" type="button" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
+    </header>
+    <article class="letter" id="letter"></article>
+  </section>
+
+  <section class="panel panel-tall" id="panel-album" role="dialog" aria-modal="true" aria-labelledby="pa-title" hidden>
+    <header class="panel-head">
+      <h2 id="pa-title">Album</h2>
+      <button class="close" type="button" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
+    </header>
+    <div class="album" id="album"></div>
+  </section>
+
+  <!-- Xem ảnh lớn -->
+  <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Xem ảnh" hidden>
+    <img id="viewer-img" alt="" />
+    <button class="v-btn v-close" type="button" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
+    <button class="v-btn v-prev" type="button" aria-label="Ảnh trước"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6" /></svg></button>
+    <button class="v-btn v-next" type="button" aria-label="Ảnh sau"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg></button>
+    <span class="v-count" id="viewer-count"></span>
+  </div>
+
+  <script src="home.js?v=1"></script>
+</body>
+</html>

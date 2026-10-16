@@ -55,6 +55,11 @@
   function pickWeather() {
     const q = params.get('weather');
     if (THEMES[q]) return q;
+    // Trang chủ lưu kiểu trời thật (Open-Meteo); dùng nếu còn mới trong 1 giờ.
+    try {
+      const s = JSON.parse(localStorage.getItem('lpn:sky'));
+      if (s && THEMES[s.sky] && Date.now() - s.at < 3600e3) return s.sky;
+    } catch (e) { /* bỏ qua */ }
     const d = new Date();
     const h = d.getHours() + d.getMinutes() / 60;
     if (h >= 18.5 || h < 5.5) return 'dem';
