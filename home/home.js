@@ -4,8 +4,10 @@
   // ================= Cấu hình =================
   const NAME = 'Thủy';
   const ANNIVERSARY = '2026-08-06T23:38:58';
-  // Dùng khi chưa cho phép lấy vị trí. Đổi sang thành phố của hai bạn nếu cần.
-  const DEFAULT_LOC = { lat: 21.0285, lon: 105.8542, name: 'Hà Nội' };
+  // Em ở Thái Nguyên: dùng khi máy chưa cho phép lấy vị trí.
+  const DEFAULT_LOC = { lat: 21.5942, lon: 105.8482, name: 'Thái Nguyên' };
+  // Anh ở Hà Nội: hiện thêm trong bảng thời tiết.
+  const PARTNER_LOC = { lat: 21.0285, lon: 105.8542, name: 'Hà Nội' };
   const WEATHER_TTL = 20 * 60 * 1000;
   const SONG_FOR = { nang: 'noi-nay-co-anh', may: 'ai-ngoai-anh', mua: 'missing-you', hoanghon: 'in-love', dem: 'anh-la-ai' };
   const SKY_COLOR = { nang: '#BFE4FF', may: '#D5DBE9', mua: '#8D9AB5', hoanghon: '#FFB996', dem: '#29224E' };
@@ -87,9 +89,22 @@
       '&current=temperature_2m,weather_code,cloud_cover,is_day&daily=sunrise,sunset&timezone=auto&forecast_days=1';
     const res = await fetch(url);
     if (!res.ok) throw new Error('Open-Meteo ' + res.status);
-    const data = await res.json();
-    store.set('lpn:weather', { at: Date.now(), lat: loc.lat, lon: loc.lon, data });
-    return data;
+    return res.json();
+  }
+
+  // Lưu tạm theo từng vị trí 20 phút; lỗi mạng thì dùng bản cũ.
+  async function weatherFor(loc, force) {
+    const key = 'lpn:wx:' + loc.lat.toFixed(2) + ',' + loc.lon.toFixed(2);
+    const cached = store.get(key);
+    if (cached && !force && Date.now() - cached.at < WEATHER_TTL) return classify(cached.data);
+    try {
+      const data = await fetchWeather(loc);
+      store.set(key, { at: Date.now(), data });
+      return classify(data);
+    } catch (err) {
+      console.warn(err);
+      return cached ? classify(cached.data) : null;
+    }
   }
 
   const Weather = {
@@ -97,19 +112,13 @@
     preview: null,
     loc() { return store.get('lpn:loc') || DEFAULT_LOC; },
 
+    partner: null,
+
     async refresh(force) {
-      const loc = this.loc();
-      const cached = store.get('lpn:weather');
-      let data = null;
-      if (cached && !force && Date.now() - cached.at < WEATHER_TTL && cached.lat === loc.lat && cached.lon === loc.lon) data = cached.data;
-      try {
-        if (!data) data = await fetchWeather(loc);
-        this.current = classify(data);
-      } catch (err) {
-        console.warn(err);
-        this.current = cached ? classify(cached.data) : guessByClock();
-      }
+      this.current = (await weatherFor(this.loc(), force)) || guessByClock();
       this.apply();
+      this.partner = await weatherFor(PARTNER_LOC, force);
+      this.renderPanel();
     },
 
     apply() {
@@ -133,10 +142,13 @@
       $('wx-temp').textContent = w.temp !== null ? w.temp + '°' : '--°';
       $('wx-label').textContent = w.label;
       $('wx-sun').textContent = w.rise ? 'Mặt trời mọc ' + hm(w.rise) + ' · lặn ' + hm(w.set) : 'Chưa lấy được thời tiết';
-      const loc = this.loc();
-      $('wx-place').textContent = loc === DEFAULT_LOC || loc.name === DEFAULT_LOC.name
-        ? 'Đang dùng ' + DEFAULT_LOC.name + ' (mặc định)'
-        : 'Theo vị trí của em';
+      $('wx-place').textContent = store.get('lpn:loc') ? 'Theo vị trí hiện tại' : 'Chỗ em · ' + DEFAULT_LOC.name;
+      const p = this.partner;
+      $('wx-partner').hidden = !p;
+      if (p) {
+        $('wx-partner-icon').setAttribute('d', ICON[p.sky]);
+        $('wx-partner-text').textContent = PARTNER_LOC.name + ' · ' + p.label + ' · ' + p.temp + '°';
+      }
       const box = $('wx-try');
       box.replaceChildren();
       for (const id of Object.keys(ICON)) {
