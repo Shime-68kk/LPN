@@ -513,3 +513,137 @@ html.need-lock body { overflow: hidden; }
 }
 .pad button:active { background: var(--t-music); transform: scale(.94); }
 .pad svg { width: 26px; height: 26px; }
+
+/* ===== Nhật ký ===== */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.d-scroll { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 8px; }
+.d-compose { padding: 12px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+.d-compose textarea {
+  width: 100%;
+  min-height: 84px;
+  resize: vertical;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font: 16px/1.5 'Be Vietnam Pro', system-ui, sans-serif;
+}
+.d-compose textarea::placeholder { color: var(--muted); }
+.d-compose-row { display: flex; align-items: center; gap: 8px; }
+.d-photo {
+  position: relative;
+  min-height: 44px;
+  padding: 0 14px;
+  margin-right: auto;
+  border-radius: 999px;
+  background: var(--t-album);
+  color: var(--t-album-ink);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.d-photo input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.d-photo:focus-within { outline: 2px solid var(--pink); outline-offset: 2px; }
+.d-photo svg { width: 18px; height: 18px; }
+.btn.primary { min-height: 44px; padding: 0 20px; background: var(--card); border-color: var(--card); color: var(--card-ink); }
+.btn.ghost { min-height: 44px; padding: 0 16px; }
+.d-preview { position: relative; width: 120px; }
+.d-preview img { width: 120px; height: 120px; border-radius: 14px; object-fit: cover; display: block; }
+.d-preview button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(29, 24, 50, 0.7);
+  color: #FFF8EF;
+  display: grid;
+  place-items: center;
+}
+.d-preview svg { width: 16px; height: 16px; }
+.d-status { margin: 0; padding: 10px 14px; border-radius: 14px; background: var(--t-music); color: var(--t-music-ink); font-size: 13px; line-height: 1.5; }
+.d-status.error { background: var(--t-letter); color: var(--t-letter-ink); }
+.d-list { display: flex; flex-direction: column; gap: 10px; }
+.d-empty { margin: 16px 0; text-align: center; color: var(--muted); font-size: 14px; }
+.d-empty.small { margin: 4px 0; font-size: 13px; }
+.d-card { padding: 14px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+.d-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.d-date { font-size: 12px; font-weight: 500; color: var(--muted); }
+.d-actions { display: flex; gap: 2px; }
+.d-icon {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+}
+.d-icon svg { width: 18px; height: 18px; }
+.d-icon.small { width: 32px; height: 32px; margin: -6px -6px -6px auto; }
+.d-icon.small svg { width: 14px; height: 14px; }
+.d-text { margin: 0; font-size: 15px; line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; }
+.d-img { width: 100%; max-height: 360px; object-fit: cover; border-radius: 14px; }
+.d-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.d-badge, .d-chip {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.d-badge.mine { border-color: #FF8FA3; background: var(--t-letter); color: var(--t-letter-ink); }
+.d-chip { color: var(--muted); }
+.d-chip svg { width: 16px; height: 16px; }
+.d-react { position: relative; }
+.d-picker {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 2;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 6px 18px rgba(29, 24, 50, 0.16);
+  display: flex;
+  gap: 2px;
+  animation: pop-in .18s ease-out;
+}
+@keyframes pop-in { from { transform: scale(.8); opacity: 0; } }
+.d-picker button { width: 40px; height: 40px; border: 0; border-radius: 999px; background: transparent; font-size: 22px; }
+.d-picker button:active { transform: scale(1.2); }
+.d-comments { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; border-top: 1px solid var(--line); }
+.d-comment { padding: 8px 12px; border-radius: 14px; background: var(--bg); }
+.d-comment-top { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.d-comment-time { font-size: 11px; color: var(--muted); }
+.d-comment p { margin: 2px 0 0; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.d-form { display: flex; align-items: center; gap: 6px; }
+.d-who { display: flex; padding: 3px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); }
+.d-who button { min-height: 36px; padding: 0 10px; border: 0; border-radius: 999px; background: transparent; font-size: 13px; font-weight: 600; color: var(--muted); }
+.d-who button[aria-checked="true"] { background: var(--card); color: var(--card-ink); }
+.d-form input {
+  flex: 1;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px 'Be Vietnam Pro', system-ui, sans-serif;
+}
+.d-send { width: 42px; height: 42px; flex: none; border: 0; border-radius: 999px; background: var(--pink); color: #2B2140; display: grid; place-items: center; }
+.d-send svg { width: 18px; height: 18px; }
+.d-more { width: 100%; }

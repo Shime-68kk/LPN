@@ -326,6 +326,7 @@
       if (name === 'letter') loadLetter();
       if (name === 'album') renderAlbum();
       if (name === 'music') renderPlaylist();
+      if (name === 'diary' && window.Diary) window.Diary.open();
       $('backdrop').hidden = false;
       el.hidden = false;
       document.body.classList.add('locked');

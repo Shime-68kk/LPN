@@ -15,6 +15,9 @@
     // Tự động chuyển hướng tức thì (0s), giữ lại query params & hash, không lưu vết history
     if (!isLocal && TARGET_URL && !window.location.href.startsWith(TARGET_URL)) {
       window.location.replace(TARGET_URL + window.location.search + window.location.hash);
+    } else if (!/[?&]cu=1/.test(window.location.search)) {
+      // Giao diện mới nằm ở /home/. Muốn mở giao diện cũ thì thêm ?cu=1 vào link.
+      window.location.replace("home/" + window.location.hash);
     }
   </script>
 

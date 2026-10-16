@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="home.css?v=3" />
+  <link rel="stylesheet" href="home.css?v=4" />
 </head>
 <body data-weather="nang">
   <!-- Cảnh trời: màu và các lớp đổi theo data-weather trên body -->
@@ -148,10 +148,10 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18a3 3 0 1 0 0-.01M11 15a3 3 0 1 0 0-.01M16 11a3.5 3.5 0 1 0 0-.01M15 6l-1-3M18 6l1-3" /></svg>
         <span>Sâu Tím</span>
       </a>
-      <a class="tile t-old" href="../index.html">
+      <button class="tile t-old" type="button" data-open="diary">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h11a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2V4a1 1 0 0 1 1-1zM5 18a2 2 0 0 1 2-2h12M9 7h6M9 10h4" /></svg>
         <span>Nhật ký</span>
-      </a>
+      </button>
     </nav>
   </main>
 
@@ -208,6 +208,34 @@
     <div class="album" id="album"></div>
   </section>
 
+  <section class="panel panel-tall" id="panel-diary" role="dialog" aria-modal="true" aria-labelledby="pd-title" hidden>
+    <header class="panel-head">
+      <h2 id="pd-title">Nhật ký</h2>
+      <button class="close" type="button" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
+    </header>
+    <div class="d-scroll">
+      <div class="d-compose">
+        <label class="sr-only" for="diary-text">Viết nhật ký</label>
+        <textarea id="diary-text" rows="3" placeholder="Hôm nay của tụi mình thế nào…"></textarea>
+        <div class="d-preview" id="diary-preview" hidden>
+          <img id="diary-preview-img" alt="Ảnh sắp đăng" />
+          <button type="button" id="diary-photo-remove" aria-label="Bỏ ảnh"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
+        </div>
+        <div class="d-compose-row">
+          <label class="d-photo">
+            <input type="file" id="diary-photo" accept="image/*" />
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM9 8a2 2 0 1 0 0 4a2 2 0 1 0 0-4M3 17l5-5 4 4 3-3 6 6" /></svg>
+            <span>Thêm ảnh</span>
+          </label>
+          <button type="button" class="btn ghost" id="diary-cancel" hidden>Huỷ</button>
+          <button type="button" class="btn primary" id="diary-save">Ghi sổ</button>
+        </div>
+      </div>
+      <p class="d-status" id="diary-status" role="status" hidden></p>
+      <div class="d-list" id="diary-list"></div>
+    </div>
+  </section>
+
   <!-- Xem ảnh lớn -->
   <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Xem ảnh" hidden>
     <img id="viewer-img" alt="" />
@@ -234,6 +262,7 @@
     </div>
   </div>
 
-  <script src="home.js?v=3"></script>
+  <script src="diary.js?v=1"></script>
+  <script src="home.js?v=4"></script>
 </body>
 </html>
