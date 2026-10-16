@@ -462,3 +462,54 @@ h1 {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ===== Màn khoá ===== */
+.chip-icon { width: 44px; padding: 0; justify-content: center; }
+.lock {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: none;
+  place-items: center;
+  padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 16px);
+  background: var(--sky);
+  overflow-y: auto;
+}
+html.need-lock .lock { display: grid; }
+html.need-lock body { overflow: hidden; }
+.lock-card {
+  width: 100%;
+  max-width: 340px;
+  padding: 24px 20px;
+  border-radius: 28px;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.lock-photo { width: 112px; height: 112px; border-radius: 28px; object-fit: cover; border: 4px solid var(--surface); }
+.lock-card h2 { margin: 0; font-family: 'Fraunces', serif; font-weight: 600; font-size: 24px; }
+.dots { display: flex; gap: 14px; height: 16px; align-items: center; }
+.dots i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #8C6BC8; transition: background-color .15s, transform .15s; }
+.dots i.on { background: #8C6BC8; transform: scale(1.1); }
+.dots.shake { animation: shake .4s; }
+.dots.ok i { background: #62BC7C; border-color: #62BC7C; }
+@keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+.lock-msg { margin: 0; min-height: 20px; font-size: 14px; color: var(--accent-ink); }
+.pad { display: grid; grid-template-columns: repeat(3, 72px); gap: 12px; }
+.pad button {
+  width: 72px;
+  height: 72px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 26px;
+  font-weight: 600;
+  display: grid;
+  place-items: center;
+  font-variant-numeric: tabular-nums;
+}
+.pad button:active { background: var(--t-music); transform: scale(.94); }
+.pad svg { width: 26px; height: 26px; }

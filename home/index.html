@@ -11,11 +11,16 @@
   <link rel="apple-touch-icon" href="../style/img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="../style/img/icon-192.png" />
   <title>Yêu Lệ Thủy</title>
+  <script>
+    // Chưa mở khoá trên máy này thì hiện màn khoá ngay, tránh lộ nội dung.
+    try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df') document.documentElement.classList.add('need-lock'); }
+    catch (e) { document.documentElement.classList.add('need-lock'); }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="home.css?v=2" />
+  <link rel="stylesheet" href="home.css?v=3" />
 </head>
 <body data-weather="nang">
   <!-- Cảnh trời: màu và các lớp đổi theo data-weather trên body -->
@@ -80,6 +85,9 @@
     <button class="chip" id="btn-weather" type="button" aria-haspopup="dialog">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path id="weather-icon" d="" /></svg>
       <span id="weather-text">Đang xem trời…</span>
+    </button>
+    <button class="chip chip-icon" id="btn-lock" type="button" aria-label="Khoá lại">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2zM8 11V8a4 4 0 0 1 8 0v3" /></svg>
     </button>
   </header>
 
@@ -209,6 +217,23 @@
     <span class="v-count" id="viewer-count"></span>
   </div>
 
-  <script src="home.js?v=2"></script>
+  <!-- Màn khoá: cùng mật khẩu với trang cũ -->
+  <div class="lock" id="lock" role="dialog" aria-modal="true" aria-labelledby="lock-title">
+    <div class="lock-card">
+      <img class="lock-photo" src="../style/img/Anhnen.JPG" alt="" width="112" height="112" />
+      <h2 id="lock-title">Nhập mật khẩu nha</h2>
+      <div class="dots" id="lock-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <p class="lock-msg" id="lock-msg" aria-live="polite"></p>
+      <div class="pad" id="lock-pad">
+        <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+        <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+        <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+        <span></span><button type="button" data-k="0">0</button>
+        <button type="button" data-k="del" aria-label="Xoá"><svg viewBox="0 0 24 24"><path d="M9 6h11a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-6-6zM12 10l4 4M16 10l-4 4" /></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="home.js?v=3"></script>
 </body>
 </html>

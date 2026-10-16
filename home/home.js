@@ -432,6 +432,60 @@
     });
   })();
 
+  // ================= Màn khoá =================
+  // Lưu mã băm của mật khẩu (giống trang cũ: 4680) thay vì ghi thẳng số ra.
+  const LOCK_HASH = 'a9ed65df';
+  const fnv = (str) => {
+    let h = 0x811c9dc5;
+    for (const ch of str) { h ^= ch.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0; }
+    return h.toString(16);
+  };
+  const Lock = {
+    pin: '',
+    show() {
+      this.pin = '';
+      this.draw();
+      $('lock-msg').textContent = '';
+      document.documentElement.classList.add('need-lock');
+      try { localStorage.removeItem('lpn:unlock'); } catch (e) { /* bỏ qua */ }
+      Player.audio.pause();
+    },
+    press(k) {
+      if (k === 'del') this.pin = this.pin.slice(0, -1);
+      else if (this.pin.length < 4) this.pin += k;
+      this.draw();
+      if (this.pin.length === 4) this.check();
+    },
+    draw() {
+      [...$('lock-dots').children].forEach((d, i) => d.classList.toggle('on', i < this.pin.length));
+    },
+    check() {
+      const dots = $('lock-dots');
+      if (fnv('lpn:' + this.pin) === LOCK_HASH) {
+        dots.classList.add('ok');
+        try { localStorage.setItem('lpn:unlock', LOCK_HASH); } catch (e) { /* bỏ qua */ }
+        $('lock-msg').textContent = '';
+        setTimeout(() => {
+          document.documentElement.classList.remove('need-lock');
+          dots.classList.remove('ok');
+          this.pin = '';
+          this.draw();
+        }, 280);
+      } else {
+        $('lock-msg').textContent = 'Sai rồi, thử lại nha';
+        dots.classList.remove('shake');
+        void dots.offsetWidth;
+        dots.classList.add('shake');
+        setTimeout(() => { this.pin = ''; this.draw(); }, 400);
+      }
+    },
+  };
+  $('lock-pad').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (b) Lock.press(b.dataset.k);
+  });
+  $('btn-lock').addEventListener('click', () => Lock.show());
+
   // ================= Sự kiện =================
   document.querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => Panels.show(b.dataset.open)));
   document.querySelectorAll('.panel .close').forEach((b) => b.addEventListener('click', () => Panels.hide()));
@@ -440,6 +494,11 @@
   $('btn-locate').addEventListener('click', () => Weather.locate());
   $('sugg-play').addEventListener('click', (e) => Player.toggle(e.currentTarget.dataset.id));
   window.addEventListener('keydown', (e) => {
+    if (document.documentElement.classList.contains('need-lock')) {
+      if (/^[0-9]$/.test(e.key)) Lock.press(e.key);
+      else if (e.key === 'Backspace') Lock.press('del');
+      return;
+    }
     if (Viewer.open) {
       if (e.key === 'Escape') Viewer.hide();
       else if (e.key === 'ArrowRight') Viewer.step(1);
