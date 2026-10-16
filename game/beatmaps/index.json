@@ -1,0 +1,64 @@
+{
+  "songs": [
+    {
+      "id": "ai-ngoai-anh",
+      "title": "Ai Ngoài Anh",
+      "src": "../style/sound/Ai Ngoài Anh.mp3",
+      "cover": "../style/sound/Anh (1).jpg",
+      "map": "beatmaps/ai-ngoai-anh.json",
+      "bpm": 99.76,
+      "message": "Ngoài anh ra, đừng để ai làm em buồn nha.",
+      "offset": 0
+    },
+    {
+      "id": "in-love",
+      "title": "In Love x Có Đôi Điều",
+      "src": "../style/sound/In Love x Có Đôi Điều.mp3",
+      "cover": "../style/sound/Anh (2).jpg",
+      "map": "beatmaps/in-love.json",
+      "bpm": 89.72,
+      "message": "Có đôi điều anh chưa nói: anh thương em nhiều lắm.",
+      "offset": 0
+    },
+    {
+      "id": "noi-nay-co-anh",
+      "title": "Nơi Này Có Anh",
+      "src": "../style/sound/Track 06 x Nơi Này Có Anh.mp3",
+      "cover": "../style/sound/Anh (3).jpg",
+      "map": "beatmaps/noi-nay-co-anh.json",
+      "bpm": 95.24,
+      "message": "Dù em ở đâu, nơi này vẫn luôn có anh.",
+      "offset": 0
+    },
+    {
+      "id": "lo-say-bye",
+      "title": "Lỡ Say Bye Là Bye",
+      "src": "../style/sound/Lỡ Say Bye Là Bye.mp3",
+      "cover": "../style/sound/Anh (4).jpg",
+      "map": "beatmaps/lo-say-bye.json",
+      "bpm": 96.36,
+      "message": "Mình sẽ không bao giờ say bye đâu nhé.",
+      "offset": 0
+    },
+    {
+      "id": "missing-you",
+      "title": "MISSING YOU",
+      "src": "../style/sound/MISSING YOU.mp3",
+      "cover": "../style/sound/Anh (5).jpg",
+      "map": "beatmaps/missing-you.json",
+      "bpm": 104.88,
+      "message": "Mỗi ngày không gặp là một ngày anh nhớ em.",
+      "offset": 0
+    },
+    {
+      "id": "anh-la-ai",
+      "title": "Anh Là Ai?",
+      "src": "../style/sound/Anh là ai.mp3",
+      "cover": "../style/sound/Anh (6).jpg",
+      "map": "beatmaps/anh-la-ai.json",
+      "bpm": 95.1,
+      "message": "Anh là người sẽ thương em thật lâu.",
+      "offset": 0
+    }
+  ]
+}
