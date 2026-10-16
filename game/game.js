@@ -190,10 +190,13 @@
       const ctx = this.ctx;
       if (ctx.getOutputTimestamp) {
         const ts = ctx.getOutputTimestamp();
-        if (ts.contextTime > 0 && ts.performanceTime > 0) {
-          return ts.contextTime + (performance.now() - ts.performanceTime) / 1000;
+        if (ts && ts.contextTime > 0 && ts.performanceTime > 0) {
+          const est = ts.contextTime + (performance.now() - ts.performanceTime) / 1000;
+          // Safari cũ (iOS 16) trả performanceTime sai mốc: chỉ tin khi gần currentTime.
+          if (Math.abs(est - ctx.currentTime) < 0.5) { this.clockSrc = 'output'; return est; }
         }
       }
+      this.clockSrc = 'current';
       return ctx.currentTime - (ctx.outputLatency || 0) - (ctx.baseLatency || 0);
     },
 
@@ -1121,6 +1124,10 @@
       g.font = '12px monospace';
       g.textAlign = 'left';
       g.fillText(`${fps.toFixed(0)} fps · dpr ${DPR} · t ${Game.songT.toFixed(2)}`, 8, H - 10);
+      if (Sound.ctx) {
+        const c = Sound.ctx;
+        g.fillText(`audio ${c.state} ${c.currentTime.toFixed(2)} · ${Sound.clockSrc || '-'} · lat ${(((c.outputLatency || 0) + (c.baseLatency || 0)) * 1000).toFixed(0)}ms`, 8, H - 26);
+      }
     }
   }
 
