@@ -203,17 +203,30 @@ h1 {
 .lede { margin: 0; font-size: 15px; line-height: 1.45; color: var(--muted); }
 .eyebrow { font-size: 12px; font-weight: 500; }
 
-.game-card {
+.game-card, .story-card {
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 16px;
   border-radius: 20px;
-  background: var(--card);
-  color: var(--card-ink);
   text-decoration: none;
 }
-.game-card:active { transform: scale(.985); }
+.story-card { background: var(--card); color: var(--card-ink); }
+.game-card { background: var(--surface); color: var(--ink); border: 1px solid var(--line); padding: 12px 14px 12px 12px; }
+.game-card:active, .story-card:active { transform: scale(.985); }
+.story-thumb {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 16px;
+  background: #FF8FA3;
+  color: #2B2140;
+  display: grid;
+  place-items: center;
+}
+.story-thumb svg { width: 26px; height: 26px; }
+.story-bar { display: block; height: 4px; margin-top: 4px; border-radius: 4px; background: rgba(255, 248, 239, 0.22); overflow: hidden; }
+.story-bar span { display: block; height: 100%; width: 0; border-radius: 4px; background: #FF8FA3; transition: width .6s; }
 .game-thumb {
   width: 56px;
   height: 56px;
@@ -227,9 +240,13 @@ h1 {
 .game-thumb .g-eye { fill: #2A1E3D; }
 .game-thumb .g-ant { fill: none; stroke: #6B4FA0; stroke-width: 2; }
 .game-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.game-meta .eyebrow { color: var(--card-muted); }
+.story-card .eyebrow { color: var(--card-muted); }
+.game-card .eyebrow { color: var(--muted); }
+.game-card .game-thumb { width: 48px; height: 48px; border-radius: 14px; }
+.game-card .game-thumb svg { width: 38px; height: 38px; }
+.game-card .game-title { font-size: 17px; }
 .game-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 19px; }
-.game-stars { display: flex; align-items: center; gap: 3px; font-size: 12px; color: var(--card-muted); }
+.game-stars { display: flex; align-items: center; gap: 3px; font-size: 12px; color: var(--muted); }
 .game-stars svg { width: 14px; height: 14px; fill: #FFC24B; stroke: none; }
 .go {
   width: 40px;
@@ -240,6 +257,10 @@ h1 {
   color: var(--card);
   display: grid;
   place-items: center;
+}
+.game-card .go {
+  background: var(--card);
+  color: var(--card-ink);
 }
 .go svg { width: 18px; height: 18px; }
 

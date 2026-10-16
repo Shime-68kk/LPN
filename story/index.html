@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#FFF8EF" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Cốt truyện</title>
+  <script>
+    // Chưa mở khoá trên máy này thì quay về trang chủ để nhập mật khẩu.
+    try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df') location.replace('../home/'); }
+    catch (e) { location.replace('../home/'); }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
+  <link rel="stylesheet" href="../home/home.css?v=6" />
+  <link rel="stylesheet" href="story.css?v=2" />
+</head>
+<body data-weather="nang">
+  <!-- Bản đồ các chương -->
+  <main class="map" id="map">
+    <header class="map-head">
+      <a class="close" href="../home/" aria-label="Về trang chủ"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6" /></svg></a>
+      <span class="map-count" id="map-count"></span>
+    </header>
+    <div class="map-title">
+      <span class="eyebrow">Cốt truyện</span>
+      <h1>Hành trình của tụi mình</h1>
+      <p id="map-sub">Mỗi chương mở theo số ngày bên nhau.</p>
+    </div>
+    <div class="path" id="path">
+      <svg class="trail" id="trail" aria-hidden="true"><path id="trail-all" /><path id="trail-done" /></svg>
+    </div>
+  </main>
+
+  <!-- Màn chơi -->
+  <section class="play" id="play" hidden>
+  <div class="scene" id="scene" aria-hidden="true">
+    <svg viewBox="0 0 390 360" preserveAspectRatio="xMidYMax slice">
+      <rect class="sky" x="0" y="0" width="390" height="360" />
+      <g class="l-stars">
+        <circle cx="40" cy="40" r="1.6" /><circle cx="90" cy="70" r="1.2" /><circle cx="140" cy="30" r="1.8" />
+        <circle cx="190" cy="92" r="1.2" /><circle cx="232" cy="42" r="1.4" /><circle cx="356" cy="36" r="1.6" />
+        <circle cx="372" cy="120" r="1.2" /><circle cx="28" cy="132" r="1.2" /><circle cx="120" cy="140" r="1.6" />
+        <circle cx="262" cy="150" r="1.2" /><circle cx="200" cy="168" r="1.4" /><circle cx="334" cy="172" r="1.2" />
+      </g>
+      <g class="l-sun">
+        <circle class="sun-halo" cx="300" cy="86" r="54" />
+        <circle class="sun" cx="300" cy="86" r="34" />
+      </g>
+      <g class="l-moon">
+        <circle class="moon-glow" cx="300" cy="80" r="44" />
+        <circle class="moon" cx="300" cy="80" r="26" />
+        <circle class="sky" cx="312" cy="72" r="22" />
+      </g>
+      <g class="l-cloud3 drift-b">
+        <circle cx="140" cy="68" r="18" /><circle cx="165" cy="56" r="24" /><circle cx="192" cy="68" r="18" />
+        <rect x="140" y="68" width="52" height="18" />
+      </g>
+      <g class="l-clouds drift-a">
+        <circle cx="55" cy="88" r="16" /><circle cx="76" cy="78" r="22" /><circle cx="98" cy="88" r="16" />
+        <rect x="55" y="88" width="43" height="16" />
+        <circle cx="238" cy="126" r="12" /><circle cx="254" cy="118" r="16" /><circle cx="270" cy="126" r="12" />
+        <rect x="238" y="126" width="32" height="12" />
+      </g>
+      <g class="l-rain">
+        <path d="M30 40l-5 12M80 90l-5 12M130 30l-5 12M170 120l-5 12M220 60l-5 12M260 140l-5 12M310 40l-5 12M350 110l-5 12M20 170l-5 12M110 190l-5 12M200 180l-5 12M290 200l-5 12M370 180l-5 12M60 240l-5 12M150 250l-5 12M240 230l-5 12M330 250l-5 12M14 100l-5 12M190 10l-5 12M280 100l-5 12M60 140l-5 12M380 60l-5 12" />
+      </g>
+      <path class="far" d="M0 250 Q 90 205 190 235 T 390 220 L390 360 L0 360 Z" />
+      <rect class="trunk" x="66" y="214" width="7" height="34" rx="3" />
+      <circle class="tree" cx="69" cy="206" r="22" /><circle class="tree" cx="53" cy="216" r="14" /><circle class="tree" cx="86" cy="216" r="14" />
+      <g class="bean bean-a">
+        <rect x="194" y="250" width="26" height="40" rx="13" />
+        <circle class="eye" cx="203" cy="263" r="1.8" /><circle class="eye" cx="211" cy="263" r="1.8" />
+        <ellipse class="blush" cx="200" cy="269" rx="3" ry="1.8" /><ellipse class="blush" cx="214" cy="269" rx="3" ry="1.8" />
+      </g>
+      <g class="bean bean-b">
+        <rect x="226" y="255" width="24" height="35" rx="12" />
+        <circle class="eye" cx="234" cy="267" r="1.8" /><circle class="eye" cx="242" cy="267" r="1.8" />
+        <ellipse class="blush" cx="231" cy="272" rx="3" ry="1.8" /><ellipse class="blush" cx="245" cy="272" rx="3" ry="1.8" />
+      </g>
+      <path class="l-heart" d="M222 244c-2.5-3.5-8-2-6.5 2.2c1 2.6 6.5 6 6.5 6s5.5-3.4 6.5-6c1.5-4.2-4-5.7-6.5-2.2z" />
+      <g class="l-umb">
+        <path class="umb-stick" d="M222 226L222 262" />
+        <path class="umb" d="M186 248Q222 200 258 248Q249 241 240 248Q231 241 222 248Q213 241 204 248Q195 241 186 248Z" />
+      </g>
+      <path class="near" d="M0 300 Q 110 258 210 282 T 390 276 L390 360 L0 360 Z" />
+      <g class="l-fly">
+        <circle cx="120" cy="304" r="2" /><circle cx="300" cy="312" r="2" /><circle cx="344" cy="292" r="1.6" />
+        <circle cx="58" cy="322" r="1.6" /><circle cx="170" cy="330" r="1.4" />
+      </g>
+    </svg>
+  </div>
+
+    <div class="play-top">
+      <button class="chip chip-icon" id="btn-back" type="button" aria-label="Về bản đồ"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6" /></svg></button>
+      <span class="play-title" id="play-title"></span>
+      <button class="chip chip-icon" id="btn-skip" type="button" aria-label="Hiện hết câu"><svg viewBox="0 0 24 24"><path d="M4 6l7 6-7 6zM13 6l7 6-7 6z" /></svg></button>
+    </div>
+    <div class="talk" id="talk">
+      <div class="talk-head">
+        <span class="who" id="who"></span>
+        <span class="step" id="step"></span>
+      </div>
+      <p class="line" id="line" aria-live="polite"></p>
+      <div class="choices" id="choices" hidden></div>
+      <button class="next" id="btn-next" type="button">Chạm để tiếp <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
+    </div>
+  </section>
+
+  <!-- Hết chương -->
+  <div class="end" id="end" role="dialog" aria-modal="true" aria-labelledby="end-title" hidden>
+    <div class="end-card">
+      <svg class="end-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg>
+      <h2 id="end-title">Hết chương</h2>
+      <p id="end-text"></p>
+      <button class="btn primary" id="btn-end-next" type="button">Chương tiếp theo</button>
+      <button class="btn" id="btn-end-map" type="button">Về bản đồ</button>
+    </div>
+  </div>
+
+  <script src="story.js?v=2"></script>
+</body>
+</html>

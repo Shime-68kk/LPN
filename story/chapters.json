@@ -1,0 +1,82 @@
+{
+  "note": "Lời thoại mẫu: sửa thoải mái bằng kỷ niệm thật. who: quang | thuy | ke (người kể). unlockDay: số ngày bên nhau để mở chương. scene: nang | may | mua | hoanghon | dem (bỏ trống = theo thời tiết thật). choice: các lựa chọn, mỗi lựa chọn có reply (lời đáp) và flag (ghi nhớ để dùng ở if). ifWeather: chỉ hiện khi trời thật đang như vậy.",
+  "chapters": [
+    {
+      "id": "c1",
+      "title": "Đêm 6 tháng 8",
+      "unlockDay": 1,
+      "scene": "dem",
+      "lines": [
+        { "who": "ke", "text": "Hà Nội, gần nửa đêm. Có một người cứ cầm điện thoại lên rồi lại đặt xuống." },
+        { "who": "quang", "text": "Gõ rồi xoá, xoá rồi gõ… lần thứ mười mấy rồi đó." },
+        { "who": "quang", "text": "Thôi, gửi luôn. Thủy ơi, làm người yêu anh nha?" },
+        { "who": "ke", "text": "23 giờ 38 phút. Tin nhắn đã gửi." },
+        {
+          "choice": [
+            { "text": "Đồng ý luôn!", "flag": "nhanh", "reply": [{ "who": "quang", "text": "Thật hả? Anh tưởng phải đợi lâu lắm cơ." }] },
+            { "text": "Để em suy nghĩ… đùa thôi, đồng ý.", "flag": "treu", "reply": [{ "who": "quang", "text": "Trêu anh đứng tim luôn á." }] }
+          ]
+        },
+        { "who": "thuy", "text": "Từ giờ có người để nhắn chúc ngủ ngon rồi ha." },
+        { "who": "quang", "text": "Từ giờ ngày nào cũng có, không thiếu ngày nào." }
+      ]
+    },
+    {
+      "id": "c2",
+      "title": "Tám mươi cây số",
+      "unlockDay": 14,
+      "scene": "may",
+      "lines": [
+        { "who": "ke", "text": "Một người ở Hà Nội, một người ở Thái Nguyên. Ở giữa là tám mươi cây số đường." },
+        { "who": "thuy", "text": "Xa thế này thì cuối tuần ai đi gặp ai đây?" },
+        {
+          "choice": [
+            { "text": "Anh lên với em đi.", "flag": "anhlen", "reply": [{ "who": "quang", "text": "Anh đặt xe luôn. Em chỉ cần chọn quán thôi." }] },
+            { "text": "Lần này em xuống.", "flag": "emxuong", "reply": [{ "who": "quang", "text": "Vậy anh ra bến đón, mang theo trà sữa." }] }
+          ]
+        },
+        { "who": "quang", "text": "Xa một chút cũng được, miễn cuối đường là em." }
+      ]
+    },
+    {
+      "id": "c3",
+      "title": "Cơn mưa đầu tiên",
+      "unlockDay": 30,
+      "scene": "mua",
+      "lines": [
+        { "ifWeather": "mua", "then": [{ "who": "ke", "text": "Ngoài trời đang mưa thật kìa. Giống hệt hôm đó." }] },
+        { "who": "ke", "text": "Hai đứa đang đi dạo thì trời đổ mưa." },
+        { "who": "quang", "text": "Mưa to quá… mà anh chỉ mang theo đúng một cái ô thôi." },
+        {
+          "choice": [
+            { "text": "Thì che chung, đứng sát vào em.", "flag": "chechung", "reply": [{ "who": "quang", "text": "Ướt vai anh cũng được, miễn em không ướt là được rồi." }] },
+            { "text": "Chạy một mạch về luôn đi anh!", "flag": "chay", "reply": [{ "who": "quang", "text": "Ba, hai, một… chạy! Ai về sau phải mua trà sữa nha." }] }
+          ]
+        },
+        { "if": "chechung", "then": [{ "who": "thuy", "text": "Đi chậm thôi, mưa thế này mới đẹp." }], "else": [{ "who": "thuy", "text": "Ướt hết rồi mà sao vẫn vui thế không biết." }] },
+        { "who": "ke", "text": "Từ hôm đó, trời mưa lại thấy nhớ nhau hơn một chút." }
+      ]
+    },
+    {
+      "id": "c4",
+      "title": "Ngày thứ một trăm",
+      "unlockDay": 100,
+      "scene": "hoanghon",
+      "lines": [
+        { "who": "ke", "text": "Một trăm ngày. Trời chiều nay đẹp như được ai tô màu." },
+        { "who": "quang", "text": "Một trăm ngày rồi đó em. Anh vẫn thấy như mới hôm qua." },
+        { "who": "thuy", "text": "Còn nhiều trăm ngày nữa cơ." },
+        { "who": "quang", "text": "Ừ, anh đếm cùng em." }
+      ]
+    },
+    {
+      "id": "c5",
+      "title": "Một điều bất ngờ",
+      "unlockDay": 365,
+      "lines": [
+        { "who": "ke", "text": "Tròn một năm. Có một điều anh giữ kín đến hôm nay." },
+        { "who": "quang", "text": "[Viết điều bất ngờ của anh ở đây]" }
+      ]
+    }
+  ]
+}

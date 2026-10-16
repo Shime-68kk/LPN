@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="home.css?v=4" />
+  <link rel="stylesheet" href="home.css?v=6" />
 </head>
 <body data-weather="nang">
   <!-- Cảnh trời: màu và các lớp đổi theo data-weather trên body -->
@@ -103,6 +103,18 @@
       <h1 id="greet">Chào em</h1>
       <p class="lede" id="lede"></p>
     </div>
+
+    <a class="story-card" href="../story/">
+      <span class="story-thumb" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M6 21a2 2 0 1 0 0-4a2 2 0 1 0 0 4M18 7a2 2 0 1 0 0-4a2 2 0 1 0 0 4M8 19h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7" /></svg>
+      </span>
+      <span class="game-meta">
+        <span class="eyebrow" id="story-eyebrow">Cốt truyện</span>
+        <span class="game-title" id="story-title">Hành trình của tụi mình</span>
+        <span class="story-bar"><span id="story-fill"></span></span>
+      </span>
+      <span class="go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span>
+    </a>
 
     <a class="game-card" href="../game/">
       <span class="game-thumb" aria-hidden="true">
@@ -263,6 +275,6 @@
   </div>
 
   <script src="diary.js?v=1"></script>
-  <script src="home.js?v=4"></script>
+  <script src="home.js?v=5"></script>
 </body>
 </html>

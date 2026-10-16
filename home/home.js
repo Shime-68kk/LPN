@@ -216,6 +216,30 @@
       Player.sync();
     },
 
+    // Thẻ cốt truyện: chương đang chờ và tiến độ (đọc tiến độ lưu trên máy).
+    story() {
+      fetch('../story/chapters.json')
+        .then((r) => r.json())
+        .then((d) => {
+          const list = d.chapters || [];
+          const done = (store.get('lpn:story') || {}).done || {};
+          const n = list.filter((c) => done[c.id]).length;
+          const nextI = list.findIndex((c) => !done[c.id]);
+          const days = Math.floor((Date.now() - new Date(ANNIVERSARY)) / 864e5) + 1;
+          $('story-fill').style.width = (list.length ? (n / list.length) * 100 : 0) + '%';
+          if (nextI < 0) {
+            $('story-eyebrow').textContent = 'Cốt truyện · ' + n + '/' + list.length + ' chương';
+            $('story-title').textContent = 'Đã đi hết hành trình';
+            return;
+          }
+          const ch = list[nextI];
+          const left = ch.unlockDay - days;
+          $('story-eyebrow').textContent = 'Cốt truyện · Chương ' + (nextI + 1) + '/' + list.length + (left > 0 ? ' · mở sau ' + left + ' ngày' : '');
+          $('story-title').textContent = left > 0 && nextI === list.length - 1 ? 'Một điều bí mật' : ch.title;
+        })
+        .catch(() => {});
+    },
+
     gameStars() {
       const best = (store.get('sautim:v1') || {}).best || {};
       const per = {};
@@ -507,7 +531,7 @@
     } else if (e.key === 'Escape') Panels.hide();
   });
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) { Home.gameStars(); Weather.refresh(false); }
+    if (!document.hidden) { Home.gameStars(); Home.story(); Weather.refresh(false); }
   });
 
   // ================= Khởi động =================
@@ -518,6 +542,7 @@
     .then((d) => {
       SONGS = d.songs.map((s) => ({ id: s.id, title: s.title, cover: s.cover, src: s.src }));
       Home.gameStars();
+      Home.story();
       Weather.apply();
     })
     .catch((err) => console.warn(err));
