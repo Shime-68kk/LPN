@@ -69,7 +69,7 @@
   // ================= Âm thanh (Web Audio) =================
   const Sound = {
     ctx: null, master: null, music: null, sfx: null, noiseBuf: null,
-    cache: new Map(), voices: [], root: 0,
+    cache: new Map(), voices: [], preview: null, root: 0,
 
     ensure() {
       if (this.ctx) return this.ctx;
@@ -188,6 +188,38 @@
         try { v.src.stop(); } catch (e) { /* đã hẹn giờ dừng */ }
       }
       this.voices = [];
+      this.stopPreview(0);
+    },
+
+    // Nghe thử ở menu: vào/ra nhỏ dần cho êm.
+    playPreview(buffer, offset, duration) {
+      this.stopPreview(0.1);
+      const ctx = this.ctx;
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+      const g = ctx.createGain();
+      src.connect(g);
+      g.connect(this.music);
+      const t = ctx.currentTime + 0.05;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(1, t + 0.5);
+      g.gain.setValueAtTime(1, t + Math.max(0.6, duration - 1.2));
+      g.gain.linearRampToValueAtTime(0, t + duration);
+      src.start(t, offset);
+      src.stop(t + duration + 0.05);
+      this.preview = { src, g };
+    },
+
+    stopPreview(sec) {
+      const p = this.preview;
+      if (!p) return;
+      this.preview = null;
+      if (!sec) { p.g.disconnect(); return; }
+      const t = this.ctx.currentTime;
+      p.g.gain.cancelScheduledValues(t);
+      p.g.gain.setValueAtTime(p.g.gain.value, t);
+      p.g.gain.linearRampToValueAtTime(0, t + sec);
+      setTimeout(() => p.g.disconnect(), sec * 1000 + 100);
     },
 
     // Thời điểm âm thanh đang thực sự phát ra loa (đã trừ độ trễ).
@@ -1391,20 +1423,29 @@
       el.classList.add('bump');
     },
 
+    // Mỗi bài: chạm vào dòng để nghe thử đoạn hay nhất, nút hồng để vào chơi.
     renderSongs(songs) {
+      Preview.stop(true);
       const list = this.els.songs;
       list.replaceChildren();
       for (const s of songs) {
         const li = document.createElement('li');
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'song';
-        btn.dataset.id = s.id;
+        li.className = 'song';
+        const main = document.createElement('button');
+        main.type = 'button';
+        main.className = 'song-main';
+        main.setAttribute('aria-label', 'Nghe thử ' + s.title);
+        const cover = document.createElement('span');
+        cover.className = 'cover';
         const img = document.createElement('img');
         img.src = s.cover;
         img.alt = '';
         img.loading = 'lazy';
         img.decoding = 'async';
+        const eq = document.createElement('span');
+        eq.className = 'eq';
+        eq.append(document.createElement('i'), document.createElement('i'), document.createElement('i'));
+        cover.append(img, eq);
         const meta = document.createElement('span');
         meta.className = 'meta';
         const title = document.createElement('span');
@@ -1413,17 +1454,23 @@
         const sub = document.createElement('span');
         sub.className = 'sub';
         const best = Store.data.best[s.id + ':' + Game.diff];
-        sub.textContent = best ? 'Kỷ lục ' + best.score.toLocaleString('vi-VN') : Math.round(s.bpm) + ' nhịp/phút';
+        sub.textContent = best && best.score ? 'Kỷ lục ' + best.score.toLocaleString('vi-VN') : 'Chạm để nghe thử';
+        sub.dataset.idle = sub.textContent;
         meta.append(title, sub);
         const stars = document.createElement('span');
         stars.className = 'mini-stars';
         for (let i = 0; i < 3; i++) stars.appendChild(svgIcon(PATH_STAR, best && best.stars > i ? 'on' : ''));
-        const play = document.createElement('span');
+        main.append(cover, meta, stars);
+        const play = document.createElement('button');
+        play.type = 'button';
         play.className = 'play';
+        play.setAttribute('aria-label', 'Chơi ' + s.title);
         play.appendChild(svgIcon(PATH_PLAY));
-        btn.append(img, meta, stars, play);
-        btn.addEventListener('click', () => startSong(s, btn));
-        li.appendChild(btn);
+        const bar = document.createElement('span');
+        bar.className = 'bar';
+        li.append(main, play, bar);
+        main.addEventListener('click', () => Preview.toggle(s, li));
+        play.addEventListener('click', () => startSong(s, li));
         list.appendChild(li);
       }
     },
@@ -1455,12 +1502,65 @@
     },
   };
 
+  // ================= Nghe thử ở menu =================
+  const PREVIEW_LEN = 15;
+  const Preview = {
+    id: null, row: null, token: 0, timer: 0,
+
+    async toggle(song, row) {
+      Sound.unlock();
+      if (this.id === song.id) { this.stop(); return; }
+      this.stop(true);
+      const token = ++this.token;
+      this.id = song.id;
+      this.row = row;
+      row.classList.add('preview-loading');
+      this.setSub('Đang tải nhạc…');
+      try {
+        const buf = await Sound.load(new URL(song.src, location.href).href, (p) => {
+          if (token === this.token && p < 1) this.setSub('Đang tải nhạc ' + Math.round(p * 100) + '%');
+        });
+        if (token !== this.token) return;
+        const start = clamp(song.preview || 0, 0, Math.max(0, buf.duration - 5));
+        const dur = Math.min(PREVIEW_LEN, buf.duration - start);
+        Sound.playPreview(buf, start, dur);
+        row.classList.remove('preview-loading');
+        row.style.setProperty('--dur', dur + 's');
+        row.classList.add('previewing');
+        this.setSub('Đang nghe thử…');
+        this.timer = setTimeout(() => { if (token === this.token) this.stop(); }, dur * 1000);
+      } catch (err) {
+        console.error(err);
+        if (token === this.token) { this.stop(true); UI.toast('Không tải được nhạc'); }
+      }
+    },
+
+    stop(fast) {
+      this.token++;
+      clearTimeout(this.timer);
+      if (Sound.ctx) Sound.stopPreview(fast ? 0.12 : 0.45);
+      if (this.row) {
+        this.row.classList.remove('previewing', 'preview-loading');
+        const sub = this.row.querySelector('.sub');
+        if (sub) sub.textContent = sub.dataset.idle;
+      }
+      this.id = null;
+      this.row = null;
+    },
+
+    setSub(text) {
+      const sub = this.row && this.row.querySelector('.sub');
+      if (sub) sub.textContent = text;
+    },
+  };
+
   // ================= Luồng chơi =================
   let SONGS = [];
   let loadingBtn = null;
 
   async function startSong(song, btn) {
     if (loadingBtn) return;
+    Preview.stop(true);
     Sound.unlock();
     Sound.click();
     loadingBtn = btn || null;
@@ -1552,7 +1652,11 @@
   document.addEventListener('gesturestart', (e) => e.preventDefault());
   document.addEventListener('dblclick', (e) => e.preventDefault());
 
-  document.addEventListener('visibilitychange', () => { if (document.hidden) Game.pause(); });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) return;
+    Game.pause();
+    Preview.stop(true);
+  });
   window.addEventListener('resize', () => resize());
 
   $('btn-pause').addEventListener('click', () => {

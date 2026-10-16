@@ -22,6 +22,7 @@ NFFT = 2048
 FPS = SR / HOP
 SECTION_LEN = 96.0   # độ dài một màn chơi (giây)
 LEAD = 2.4           # khoảng trống trước nốt đầu tiên
+PREVIEW_LEN = 15.0   # độ dài đoạn nghe thử ở menu
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "game" / "beatmaps"
@@ -146,6 +147,15 @@ def build(song):
     beats = frame_time(beat_frames)
     beat_len = 60.0 / bpm
 
+    # Đoạn nghe thử: 15 giây to/sôi động nhất, bắt đầu đúng một phách.
+    preview, best_pv = 0.0, -1.0
+    for b in beats:
+        if b + PREVIEW_LEN > duration - 1:
+            break
+        val = rms_s[int(b * FPS):int((b + PREVIEW_LEN) * FPS)].mean()
+        if val > best_pv:
+            preview, best_pv = float(b), val
+
     # Chọn đoạn sôi động nhất (thường là điệp khúc) dài SECTION_LEN giây.
     length = min(SECTION_LEN, duration - 6)
     best_i, best_val = 0, -1.0
@@ -237,6 +247,7 @@ def build(song):
         "bpm": round(bpm, 2),
         "key": key,
         "start": round(float(start), 3),
+        "preview": round(max(0.0, preview - 0.15), 3),
         "end": round(float(end), 3),
         "beats": [round(float(b), 3) for b in beats[(beats >= start) & (beats <= end)]],
         "notes": out,
@@ -270,6 +281,7 @@ def main():
             "cover": f"../style/sound/{cover}",
             "map": f"beatmaps/{sid}.json",
             "bpm": data["bpm"],
+            "preview": data.get("preview", data["start"]),
             "message": prev.get("message", message),
             "offset": prev.get("offset", 0),
         })

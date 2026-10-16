@@ -7,6 +7,7 @@
       "cover": "../style/sound/Anh (1).jpg",
       "map": "beatmaps/ai-ngoai-anh.json",
       "bpm": 99.76,
+      "preview": 175.091,
       "message": "Ngoài anh ra, đừng để ai làm em buồn nha.",
       "offset": 0
     },
@@ -17,6 +18,7 @@
       "cover": "../style/sound/Anh (2).jpg",
       "map": "beatmaps/in-love.json",
       "bpm": 89.72,
+      "preview": 55.322,
       "message": "Có đôi điều anh chưa nói: anh thương em nhiều lắm.",
       "offset": 0
     },
@@ -27,6 +29,7 @@
       "cover": "../style/sound/Anh (3).jpg",
       "map": "beatmaps/noi-nay-co-anh.json",
       "bpm": 95.24,
+      "preview": 54.579,
       "message": "Dù em ở đâu, nơi này vẫn luôn có anh.",
       "offset": 0
     },
@@ -37,6 +40,7 @@
       "cover": "../style/sound/Anh (4).jpg",
       "map": "beatmaps/lo-say-bye.json",
       "bpm": 96.36,
+      "preview": 171.051,
       "message": "Mình sẽ không bao giờ say bye đâu nhé.",
       "offset": 0
     },
@@ -47,6 +51,7 @@
       "cover": "../style/sound/Anh (5).jpg",
       "map": "beatmaps/missing-you.json",
       "bpm": 104.88,
+      "preview": 199.449,
       "message": "Mỗi ngày không gặp là một ngày anh nhớ em.",
       "offset": 0
     },
@@ -57,6 +62,7 @@
       "cover": "../style/sound/Anh (6).jpg",
       "map": "beatmaps/anh-la-ai.json",
       "bpm": 95.1,
+      "preview": 201.748,
       "message": "Anh là người sẽ thương em thật lâu.",
       "offset": 0
     }
