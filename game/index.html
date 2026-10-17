@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" />
-  <link rel="stylesheet" href="game.css?v=4" />
+  <link rel="stylesheet" href="game.css?v=5" />
 </head>
 <body>
   <canvas id="stage" aria-label="Màn chơi Sâu Tím"></canvas>
@@ -54,6 +54,7 @@
       <div>
         <h1>Sâu Tím</h1>
         <p>Ăn lá theo nhịp nhạc, lớn lên thành bướm.</p>
+        <a class="menu-wallet" href="../story/" id="menu-wallet"></a>
       </div>
     </header>
     <div class="segmented" role="radiogroup" aria-label="Độ khó">
@@ -96,11 +97,14 @@
         <div><dt>Tốc độ</dt><dd id="res-speed">x1,0</dd></div>
       </dl>
       <p class="best" id="res-best" hidden>Kỷ lục mới!</p>
+      <p class="wallet" id="res-wallet"></p>
+      <a class="wallet-link" href="../story/">Đổi đốt cây, mở cốt truyện</a>
       <button type="button" class="btn primary" id="btn-again">Chơi lại</button>
       <button type="button" class="btn" id="btn-songs">Chọn bài khác</button>
     </div>
   </section>
 
-  <script src="game.js?v=11"></script>
+  <script src="../home/wallet.js?v=1"></script>
+  <script src="game.js?v=12"></script>
 </body>
 </html>

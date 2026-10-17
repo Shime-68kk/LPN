@@ -222,10 +222,11 @@
         .then((r) => r.json())
         .then((d) => {
           const list = d.chapters || [];
-          const done = (store.get('lpn:story') || {}).done || {};
+          const saved = store.get('lpn:story') || {};
+          const done = saved.done || {};
+          const open = saved.open || {};
           const n = list.filter((c) => done[c.id]).length;
           const nextI = list.findIndex((c) => !done[c.id]);
-          const days = Math.floor((Date.now() - new Date(ANNIVERSARY)) / 864e5) + 1;
           $('story-fill').style.width = (list.length ? (n / list.length) * 100 : 0) + '%';
           if (nextI < 0) {
             $('story-eyebrow').textContent = 'Cốt truyện · ' + n + '/' + list.length + ' chương';
@@ -233,9 +234,9 @@
             return;
           }
           const ch = list[nextI];
-          const left = ch.unlockDay - days;
-          $('story-eyebrow').textContent = 'Cốt truyện · Chương ' + (nextI + 1) + '/' + list.length + (left > 0 ? ' · mở sau ' + left + ' ngày' : '');
-          $('story-title').textContent = left > 0 && nextI === list.length - 1 ? 'Một điều bí mật' : ch.title;
+          const locked = ch.cost && !open[ch.id];
+          $('story-eyebrow').textContent = 'Cốt truyện · Chương ' + (nextI + 1) + '/' + list.length + (locked ? ' · cần ' + ch.cost + ' đốt cây' : '');
+          $('story-title').textContent = locked && nextI === list.length - 1 ? 'Một điều bí mật' : ch.title;
         })
         .catch(() => {});
     },

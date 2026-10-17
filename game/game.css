@@ -430,6 +430,12 @@ body.night .stars svg { fill: #3A3166; }
 .stats dt { font-size: 12px; color: var(--muted); }
 .stats dd { margin: 2px 0 0; font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; }
 .best { margin: 0; font-weight: 600; color: var(--pink-ink); }
+.wallet { margin: 0; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.wallet-link, .menu-wallet { font-size: 14px; font-weight: 600; color: var(--violet); text-decoration: underline; text-underline-offset: 3px; }
+.wallet-link { display: grid; place-items: center; min-height: 44px; margin-top: -6px; }
+.menu-wallet { display: inline-flex; align-items: center; min-height: 32px; }
+.menu-wallet:empty { display: none; }
+body.night .wallet-link, body.night .menu-wallet { color: #B79CF0; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

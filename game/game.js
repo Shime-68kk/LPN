@@ -924,7 +924,7 @@
         .map((n) => ({ t: n[0], x: n[1], dur: n[2], state: 0, held: 0, eaten: [], cur: null, grow: 0, crunch: 0 }));
       this.beats = this.map.beats;
       this.resetNotes();
-      this.score = 0; this.combo = 0; this.maxCombo = 0; this.hearts = 3;
+      this.score = 0; this.combo = 0; this.maxCombo = 0; this.hearts = 3; this.banked = 0;
       this.perfect = 0; this.good = 0; this.miss = 0;
       this.loop = 0; this.rate = 1; this.maxRate = 1; this.nextQueued = false;
       this.stars = 0; this.starFx = [];
@@ -1443,6 +1443,7 @@
     // Mỗi bài: chạm vào dòng để nghe thử đoạn hay nhất, nút hồng để vào chơi.
     renderSongs(songs) {
       Preview.stop(true);
+      $('menu-wallet').textContent = walletText();
       const list = this.els.songs;
       list.replaceChildren();
       for (const s of songs) {
@@ -1513,11 +1514,30 @@
         Store.save();
       }
       $('res-best').hidden = !isBest;
+      bank();
+      const can = window.Wallet ? Wallet.canExchange() : 0;
+      $('res-wallet').textContent = '+' + fmtNum(gm.score) + ' điểm vào ví. ' + walletText()
+        + (can ? ', đổi thêm được ' + can + ' đốt.' : '.');
       this.hide('hud');
       this.show('result');
       $('btn-again').focus({ preventScroll: true });
     },
   };
+
+  // Cất điểm vào ví chung (đổi ra đốt cây ở Cốt truyện). Chỉ cộng phần chưa cất.
+  function bank() {
+    const add = Game.score - (Game.banked || 0);
+    if (add <= 0 || !window.Wallet) return 0;
+    Game.banked = Game.score;
+    Wallet.addPoints(add);
+    return add;
+  }
+  const fmtNum = (n) => n.toLocaleString('vi-VN');
+  function walletText() {
+    if (!window.Wallet) return '';
+    const w = Wallet.get();
+    return 'Ví: ' + fmtNum(w.points) + ' điểm · ' + w.dot + ' đốt cây';
+  }
 
   // ================= Nghe thử ở menu =================
   const PREVIEW_LEN = 15;
@@ -1604,6 +1624,7 @@
   }
 
   function restart() {
+    bank();
     UI.hide('pause');
     UI.hide('result');
     Sound.unlock();
@@ -1614,6 +1635,7 @@
   }
 
   function toMenu() {
+    bank();
     Sound.stopMusic();
     if (Sound.ctx && Sound.ctx.state !== 'running') Sound.ctx.resume();
     Game.state = 'menu';
@@ -1672,6 +1694,8 @@
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) return;
     Game.pause();
+    // Lỡ tắt app giữa chừng thì điểm đã ăn vẫn vào ví.
+    if (Game.state === 'paused') bank();
     Preview.stop(true);
   });
   window.addEventListener('resize', () => resize());

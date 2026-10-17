@@ -1,10 +1,10 @@
 {
-  "note": "Lời thoại mẫu: sửa thoải mái bằng kỷ niệm thật. who: quang | thuy | ke (người kể). unlockDay: số ngày bên nhau để mở chương. scene: nang | may | mua | hoanghon | dem (bỏ trống = theo thời tiết thật). choice: các lựa chọn, mỗi lựa chọn có reply (lời đáp) và flag (ghi nhớ để dùng ở if). ifWeather: chỉ hiện khi trời thật đang như vậy.",
+  "note": "Lời thoại mẫu: sửa thoải mái bằng kỷ niệm thật. who: quang | thuy | ke (người kể). cost: số đốt cây cần để mở chương (0 = mở sẵn); chương mở lần lượt, xong chương trước mới mở được chương sau. scene: nang | may | mua | hoanghon | dem (bỏ trống = theo thời tiết thật). choice: các lựa chọn, mỗi lựa chọn có reply (lời đáp) và flag (ghi nhớ để dùng ở if). ifWeather: chỉ hiện khi trời thật đang như vậy.",
   "chapters": [
     {
       "id": "c1",
       "title": "Đêm 6 tháng 8",
-      "unlockDay": 1,
+      "cost": 0,
       "scene": "dem",
       "lines": [
         { "who": "ke", "text": "Hà Nội, gần nửa đêm. Có một người cứ cầm điện thoại lên rồi lại đặt xuống." },
@@ -24,7 +24,7 @@
     {
       "id": "c2",
       "title": "Tám mươi cây số",
-      "unlockDay": 14,
+      "cost": 30,
       "scene": "may",
       "lines": [
         { "who": "ke", "text": "Một người ở Hà Nội, một người ở Thái Nguyên. Ở giữa là tám mươi cây số đường." },
@@ -41,7 +41,7 @@
     {
       "id": "c3",
       "title": "Cơn mưa đầu tiên",
-      "unlockDay": 30,
+      "cost": 30,
       "scene": "mua",
       "lines": [
         { "ifWeather": "mua", "then": [{ "who": "ke", "text": "Ngoài trời đang mưa thật kìa. Giống hệt hôm đó." }] },
@@ -60,7 +60,7 @@
     {
       "id": "c4",
       "title": "Ngày thứ một trăm",
-      "unlockDay": 100,
+      "cost": 30,
       "scene": "hoanghon",
       "lines": [
         { "who": "ke", "text": "Một trăm ngày. Trời chiều nay đẹp như được ai tô màu." },
@@ -72,7 +72,7 @@
     {
       "id": "c5",
       "title": "Một điều bất ngờ",
-      "unlockDay": 365,
+      "cost": 30,
       "lines": [
         { "who": "ke", "text": "Tròn một năm. Có một điều anh giữ kín đến hôm nay." },
         { "who": "quang", "text": "[Viết điều bất ngờ của anh ở đây]" }

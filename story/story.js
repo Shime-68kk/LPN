@@ -1,7 +1,6 @@
-// Cốt truyện: bản đồ chương mở theo số ngày bên nhau + cảnh hội thoại có lựa chọn.
+// Cốt truyện: bản đồ chương mở bằng đốt cây (đổi từ điểm Sâu Tím) + cảnh hội thoại có lựa chọn.
 'use strict';
 (() => {
-  const ANNIVERSARY = '2026-08-06T23:38:58';
   const NAMES = { quang: 'Quang', thuy: 'Thủy', ke: 'Lời kể' };
   const SAVE_KEY = 'lpn:story';
   const SPACING = 128;
@@ -11,10 +10,10 @@
     done: 'M5 12.5l4.5 4.5L19 7.5',
     play: 'M8 5v14l11-7z',
     lock: 'M7 11h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2zM8 11V8a4 4 0 0 1 8 0v3',
+    stalk: 'M8 3h6v18H8zM8 9h6M8 15h6M14 12c1.5-3 4-4.5 7-4.5c-.5 3-3 5-7 4.5',
   };
 
   const $ = (id) => document.getElementById(id);
-  const daysTogether = () => Math.floor((Date.now() - new Date(ANNIVERSARY)) / 864e5) + 1;
   const svg = (d) => {
     const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     s.setAttribute('viewBox', '0 0 24 24');
@@ -27,7 +26,9 @@
   const save = (() => {
     let v = null;
     try { v = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { /* bỏ qua */ }
-    return v && v.done ? v : { done: {}, flags: {} };
+    v = v && v.done ? v : { done: {}, flags: {} };
+    v.open = v.open || {};
+    return v;
   })();
   const persist = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* bỏ qua */ } };
 
@@ -49,13 +50,80 @@
   let CHAPTERS = [];
 
   // ================= Bản đồ =================
+  const isOpen = (i) => !CHAPTERS[i].cost || !!save.open[CHAPTERS[i].id];
+  // Chương mở lần lượt: xong chương trước mới được dùng đốt cây mở chương sau.
   function status(i) {
     const ch = CHAPTERS[i];
     if (save.done[ch.id]) return { state: 'done', note: 'Đã xong' };
-    const left = ch.unlockDay - daysTogether();
-    if (left > 0) return { state: 'locked', note: 'Mở sau ' + left + ' ngày' };
-    if (i > 0 && !save.done[CHAPTERS[i - 1].id]) return { state: 'locked', note: 'Chờ chương trước' };
+    const ready = i === 0 || save.done[CHAPTERS[i - 1].id];
+    if (!isOpen(i)) return { state: ready ? 'buy' : 'locked', note: 'Cần ' + ch.cost + ' đốt cây' };
+    if (!ready) return { state: 'locked', note: 'Chờ chương trước' };
     return { state: 'current', note: 'Đang chờ em' };
+  }
+
+  // ================= Ví đốt cây =================
+  const fmt = (n) => n.toLocaleString('vi-VN');
+  function renderWallet() {
+    const w = Wallet.get();
+    $('w-dot').textContent = w.dot;
+    $('w-points').textContent = fmt(w.points) + ' điểm';
+  }
+
+  // Một hộp thoại dùng chung: đổi điểm, mở chương, thiếu đốt.
+  let dialogOk = null;
+  function dialog(title, text, okLabel, onOk) {
+    $('shop-title').textContent = title;
+    $('shop-text').textContent = text;
+    $('shop-ok').textContent = okLabel;
+    dialogOk = onOk;
+    $('shop').hidden = false;
+    $('shop-ok').focus({ preventScroll: true });
+  }
+  const closeDialog = () => { $('shop').hidden = true; dialogOk = null; };
+  const goPlay = () => { location.href = '../game/'; };
+  const rateText = fmt(Wallet.PACK_POINTS * 10) + ' điểm = ' + Wallet.PACK_DOT * 10 + ' đốt cây';
+
+  function openExchange() {
+    const w = Wallet.get();
+    const can = Wallet.canExchange(w);
+    if (can) {
+      dialog('Đổi điểm lấy đốt cây', rateText + '. Ví đang có ' + fmt(w.points) + ' điểm, đổi được ' + can + ' đốt cây.',
+        'Đổi lấy ' + can + ' đốt', () => { Wallet.exchangeAll(); closeDialog(); renderMap(); });
+    } else {
+      const need = Wallet.PACK_POINTS - w.points;
+      dialog('Chưa đủ điểm để đổi', rateText + '. Chơi Sâu Tím thêm ' + fmt(need) + ' điểm nữa là đổi được ' + Wallet.PACK_DOT + ' đốt.',
+        'Chơi Sâu Tím', goPlay);
+    }
+  }
+
+  function unlock(i) {
+    save.open[CHAPTERS[i].id] = true;
+    persist();
+    closeDialog();
+    renderMap();
+    play(i);
+  }
+
+  function openBuy(i) {
+    const ch = CHAPTERS[i];
+    const w = Wallet.get();
+    const title = 'Mở chương ' + (i + 1) + '?';
+    if (w.dot >= ch.cost) {
+      dialog(title, 'Dùng ' + ch.cost + ' đốt cây để mở chương này. Em đang có ' + w.dot + ' đốt.',
+        'Mở bằng ' + ch.cost + ' đốt', () => { if (Wallet.spend(ch.cost)) unlock(i); });
+      return;
+    }
+    const short = ch.cost - w.dot;
+    const can = Wallet.canExchange(w);
+    if (can >= short) {
+      dialog(title, 'Em có ' + w.dot + ' đốt, còn thiếu ' + short + '. Ví có ' + fmt(w.points) + ' điểm, đổi ra được ' + can + ' đốt.',
+        'Đổi điểm rồi mở', () => { Wallet.exchangeAll(); if (Wallet.spend(ch.cost)) unlock(i); });
+      return;
+    }
+    const packs = Math.ceil(short / Wallet.PACK_DOT);
+    const morePts = packs * Wallet.PACK_POINTS - w.points;
+    dialog('Chưa đủ đốt cây', 'Chương này cần ' + ch.cost + ' đốt, em có ' + w.dot + '. Chơi Sâu Tím thêm khoảng '
+      + fmt(morePts) + ' điểm nữa là đủ nha (' + rateText + ').', 'Chơi Sâu Tím', goPlay);
   }
 
   function renderMap() {
@@ -65,7 +133,7 @@
     path.style.height = CHAPTERS.length * SPACING + 'px';
     const done = CHAPTERS.filter((c) => save.done[c.id]).length;
     $('map-count').textContent = done + '/' + CHAPTERS.length + ' chương';
-    $('map-sub').textContent = 'Hôm nay là ngày thứ ' + daysTogether() + ' bên nhau. Mỗi chương mở theo số ngày.';
+    renderWallet();
 
     CHAPTERS.forEach((ch, i) => {
       const st = status(i);
@@ -76,17 +144,18 @@
       stop.disabled = st.state === 'locked';
       const node = document.createElement('span');
       node.className = 'node';
-      node.appendChild(svg(st.state === 'done' ? ICON.done : st.state === 'current' ? ICON.play : ICON.lock));
+      node.appendChild(svg(st.state === 'done' ? ICON.done : st.state === 'current' ? ICON.play : st.state === 'buy' ? ICON.stalk : ICON.lock));
       const label = document.createElement('span');
       label.className = 'label';
       const small = document.createElement('small');
       small.textContent = 'Chương ' + (i + 1) + ' · ' + st.note;
       const b = document.createElement('b');
-      b.textContent = st.state === 'locked' && ch.unlockDay - daysTogether() > 0 && i === CHAPTERS.length - 1 ? 'Bí mật' : ch.title;
+      b.textContent = !isOpen(i) && i === CHAPTERS.length - 1 ? 'Bí mật' : ch.title;
       label.append(small, b);
       stop.append(node, label);
       stop.setAttribute('aria-label', 'Chương ' + (i + 1) + ': ' + b.textContent + '. ' + st.note);
-      if (st.state !== 'locked') stop.addEventListener('click', () => play(i));
+      if (st.state === 'buy') stop.addEventListener('click', () => openBuy(i));
+      else if (st.state !== 'locked') stop.addEventListener('click', () => play(i));
       path.appendChild(stop);
     });
     drawTrail(done);
@@ -205,12 +274,14 @@
     if (nextI >= CHAPTERS.length) {
       $('end-text').textContent = 'Em đã đi hết hành trình hiện tại. Anh sẽ viết thêm chương mới nha.';
       nb.hidden = true;
+    } else if (isOpen(nextI)) {
+      nb.hidden = false;
+      nb.textContent = 'Chương tiếp theo';
+      $('end-text').textContent = 'Chương tiếp theo: ' + CHAPTERS[nextI].title + '.';
     } else {
-      const left = CHAPTERS[nextI].unlockDay - daysTogether();
-      nb.hidden = left > 0;
-      $('end-text').textContent = left > 0
-        ? 'Chương sau sẽ mở sau ' + left + ' ngày nữa. Đợi anh nha.'
-        : 'Chương tiếp theo: ' + CHAPTERS[nextI].title + '.';
+      nb.hidden = false;
+      nb.textContent = 'Mở bằng ' + CHAPTERS[nextI].cost + ' đốt cây';
+      $('end-text').textContent = 'Chương sau cần ' + CHAPTERS[nextI].cost + ' đốt cây. Em đang có ' + Wallet.get().dot + ' đốt.';
     }
     $('end').hidden = false;
     (nb.hidden ? $('btn-end-map') : nb).focus({ preventScroll: true });
@@ -230,7 +301,18 @@
   $('btn-skip').addEventListener('click', () => { if (P.typing) finishTyping(); });
   $('btn-back').addEventListener('click', () => history.back());
   $('btn-end-map').addEventListener('click', () => history.back());
-  $('btn-end-next').addEventListener('click', () => play(P.ch + 1));
+  $('btn-end-next').addEventListener('click', () => {
+    const i = P.ch + 1;
+    if (isOpen(i)) { play(i); return; }
+    $('end').hidden = true;
+    openBuy(i);
+  });
+  $('btn-exchange').addEventListener('click', openExchange);
+  $('shop-ok').addEventListener('click', () => { if (dialogOk) dialogOk(); });
+  $('shop-cancel').addEventListener('click', () => {
+    closeDialog();
+    if (!$('play').hidden) history.back();
+  });
   window.addEventListener('popstate', () => { if (!$('play').hidden) toMap(); });
   window.addEventListener('keydown', (e) => {
     if ($('play').hidden || !$('end').hidden) return;

@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
   <link rel="stylesheet" href="../home/home.css?v=6" />
-  <link rel="stylesheet" href="story.css?v=2" />
+  <link rel="stylesheet" href="story.css?v=3" />
 </head>
 <body data-weather="nang">
   <!-- Bản đồ các chương -->
@@ -29,7 +29,15 @@
     <div class="map-title">
       <span class="eyebrow">Cốt truyện</span>
       <h1>Hành trình của tụi mình</h1>
-      <p id="map-sub">Mỗi chương mở theo số ngày bên nhau.</p>
+      <p id="map-sub">Chơi Sâu Tím lấy điểm, đổi ra đốt cây để mở từng chương.</p>
+    </div>
+    <div class="wallet-bar">
+      <span class="w-dot" aria-label="Số đốt cây">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h6v18H8zM8 9h6M8 15h6M14 12c1.5-3 4-4.5 7-4.5c-.5 3-3 5-7 4.5" /></svg>
+        <b id="w-dot">0</b> đốt cây
+      </span>
+      <span class="w-points" id="w-points">0 điểm</span>
+      <button class="btn ghost" id="btn-exchange" type="button">Đổi điểm</button>
     </div>
     <div class="path" id="path">
       <svg class="trail" id="trail" aria-hidden="true"><path id="trail-all" /><path id="trail-done" /></svg>
@@ -122,6 +130,18 @@
     </div>
   </div>
 
-  <script src="story.js?v=2"></script>
+  <!-- Đổi điểm / mở chương -->
+  <div class="end" id="shop" role="dialog" aria-modal="true" aria-labelledby="shop-title" hidden>
+    <div class="end-card">
+      <svg class="shop-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h6v18H8zM8 9h6M8 15h6M14 12c1.5-3 4-4.5 7-4.5c-.5 3-3 5-7 4.5" /></svg>
+      <h2 id="shop-title"></h2>
+      <p id="shop-text"></p>
+      <button class="btn primary" id="shop-ok" type="button"></button>
+      <button class="btn" id="shop-cancel" type="button">Để sau</button>
+    </div>
+  </div>
+
+  <script src="../home/wallet.js?v=1"></script>
+  <script src="story.js?v=3"></script>
 </body>
 </html>
