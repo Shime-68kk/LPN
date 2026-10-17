@@ -288,12 +288,20 @@
 
     eat(step, perfect) {
       const f = this.freq(5 + (step % 8));
-      this.tone(f, 0.12, 'sine', 0.8, f * 0.7);
-      this.tone(f * 1.5, 0.05, 'triangle', 0.16);
-      this.noise(0.05, 1900, 0.9, 0.26);
-      if (perfect) this.tone(f * 2, 0.18, 'sine', 0.2, null, 0.035);
+      this.tone(f, 0.12, 'sine', 1.05, f * 0.7);
+      this.tone(f * 1.5, 0.05, 'triangle', 0.22);
+      this.noise(0.05, 1900, 0.9, 0.34);
+      if (perfect) this.tone(f * 2, 0.18, 'sine', 0.26, null, 0.035);
     },
-    crunch() { this.noise(0.045, 1300 + Math.random() * 900, 1.4, 0.32); },
+
+    // Mỗi miếng cắn trên cành dài: tiếng ăn lá bình thường, cao dần theo đoạn đã ăn.
+    bite(progress) {
+      const step = 5 + Math.round(clamp(progress, 0, 1) * 7);
+      const f = this.freq(step);
+      this.tone(f, 0.09, 'sine', 0.85, f * 0.8);
+      this.tone(f * 2, 0.04, 'triangle', 0.14);
+      this.noise(0.035, 1700 + Math.random() * 600, 1.2, 0.26);
+    },
     miss() {
       this.tone(200, 0.26, 'triangle', 0.32, 105);
       this.noise(0.09, 420, 0.8, 0.16);
@@ -1170,7 +1178,7 @@
             this.score += pts;
             popup('+' + pts, Sau.headX + (Math.random() - 0.5) * 50 * S, Sau.headY - HEAD_R * 1.6,
               (n.ticks = (n.ticks || 0) + 1) % 2 ? GOLD() : PINK(), 14, (Math.random() - 0.5) * 70 * S);
-            Sound.crunch();
+            Sound.bite((now - n.t) / Math.max(0.01, n.dur));
             burstCrumbs(Sau.headX, Sau.headY - HEAD_R * 0.6, 2);
             UI.hud(this);
           }
