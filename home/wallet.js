@@ -10,12 +10,31 @@
   const read = () => {
     let v = null;
     try { v = JSON.parse(localStorage.getItem(KEY)); } catch (e) { /* bỏ qua */ }
-    return { points: Math.max(0, Math.floor((v && v.points) || 0)), dot: Math.max(0, Math.floor((v && v.dot) || 0)) };
+    return {
+      points: Math.max(0, Math.floor((v && v.points) || 0)),
+      dot: Math.max(0, Math.floor((v && v.dot) || 0)),
+      migrated: !!(v && v.migrated),
+    };
   };
   const write = (w) => {
     try { localStorage.setItem(KEY, JSON.stringify(w)); } catch (e) { /* bỏ qua */ }
     return w;
   };
+
+  // Một lần duy nhất: cộng điểm đã chơi trước khi có ví. Game chỉ lưu kỷ lục
+  // của từng bài ở mỗi độ khó, nên đó là phần điểm cũ còn lấy lại được.
+  (() => {
+    const w = read();
+    if (w.migrated) return;
+    let old = 0;
+    try {
+      const best = (JSON.parse(localStorage.getItem('sautim:v1')) || {}).best || {};
+      for (const b of Object.values(best)) old += Math.max(0, Math.floor((b && b.score) || 0));
+    } catch (e) { /* bỏ qua */ }
+    w.points += old;
+    w.migrated = true;
+    write(w);
+  })();
 
   window.Wallet = {
     PACK_POINTS,
