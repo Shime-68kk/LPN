@@ -1,11 +1,12 @@
 {
-  "note": "Lời thoại mẫu: sửa thoải mái bằng kỷ niệm thật. who: quang | thuy | ke (người kể). cost: số đốt cây cần để mở chương (0 = mở sẵn); chương mở lần lượt, xong chương trước mới mở được chương sau. scene: nang | may | mua | hoanghon | dem (bỏ trống = theo thời tiết thật). choice: các lựa chọn, mỗi lựa chọn có reply (lời đáp) và flag (ghi nhớ để dùng ở if). ifWeather: chỉ hiện khi trời thật đang như vậy.",
+  "note": "Lời thoại mẫu: sửa thoải mái bằng kỷ niệm thật. who: quang | thuy | ke (người kể). cost: số đốt cây cần để mở chương (0 = mở sẵn); chương mở lần lượt, xong chương trước mới mở được chương sau. scene: nang | may | mua | hoanghon | dem (bỏ trống = theo thời tiết thật). cast: ai có mặt trong cảnh, vd [\"quang\"] khi Thủy chưa xuất hiện (bỏ trống = cả hai); giữa chương thêm dòng { \"cast\": [\"quang\", \"thuy\"] } để Thủy hiện ra. choice: các lựa chọn, mỗi lựa chọn có reply (lời đáp) và flag (ghi nhớ để dùng ở if). ifWeather: chỉ hiện khi trời thật đang như vậy.",
   "chapters": [
     {
       "id": "c1",
       "title": "Gương mặt lạ, nỗi buồn quen",
       "cost": 0,
       "scene": "dem",
+      "cast": ["quang"],
       "lines": [
         { "who": "ke", "text": "Có những nơi không chừa chỗ dừng chân cho người bỏ cuộc. Ai đã bước vào thì chỉ còn một cách: đi tiếp." },
         { "who": "ke", "text": "Cuối một con ngõ nhỏ ở Hà Nội có một căn phòng chưa bao giờ tắt đèn. Bên trong, một chàng trai ngồi trước màn hình, ngày cũng như đêm." },

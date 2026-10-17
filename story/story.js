@@ -180,14 +180,29 @@
   }
 
   // ================= Chơi một chương =================
-  const P = { ch: -1, queue: [], typing: null, full: '', waiting: false };
+  // log: các câu đã hiện, để bấm "Trước" xem lại; pos: câu đang xem trong log.
+  const P = { ch: -1, queue: [], typing: null, full: '', waiting: null, log: [], pos: -1, sky: '', cast: null };
+  const ALL_CAST = ['quang', 'thuy'];
+
+  // Ai đang có mặt trong cảnh (chương mà Thủy chưa xuất hiện thì chỉ có bé tím).
+  function setCast(list) {
+    P.cast = list || ALL_CAST;
+    const scene = $('scene');
+    scene.classList.toggle('no-thuy', !P.cast.includes('thuy'));
+    scene.classList.toggle('no-quang', !P.cast.includes('quang'));
+  }
 
   function play(i) {
+    const ch = CHAPTERS[i];
     P.ch = i;
-    P.queue = CHAPTERS[i].lines.slice();
-    P.waiting = false;
-    setSky(CHAPTERS[i].scene || liveSky, false);
-    $('play-title').textContent = 'Chương ' + (i + 1) + ' · ' + CHAPTERS[i].title;
+    P.queue = ch.lines.slice();
+    P.waiting = null;
+    P.log = [];
+    P.pos = -1;
+    P.sky = ch.scene || liveSky;
+    setSky(P.sky, false);
+    setCast(ch.cast);
+    $('play-title').textContent = 'Chương ' + (i + 1) + ' · ' + ch.title;
     $('map').hidden = true;
     $('play').hidden = false;
     $('end').hidden = true;
@@ -197,33 +212,51 @@
 
   function next() {
     if (P.typing) { finishTyping(); return; }
+    // Đang xem lại thì đi tới câu kế trong log trước.
+    if (P.pos < P.log.length - 1) { show(P.pos + 1); return; }
     if (P.waiting) return;
     while (P.queue.length) {
       const item = P.queue.shift();
       if (item.ifWeather) { P.queue.unshift(...((liveSky === item.ifWeather ? item.then : item.else) || [])); continue; }
       if (item.if) { P.queue.unshift(...((save.flags[item.if] ? item.then : item.else) || [])); continue; }
-      if (item.scene && !item.text) { setSky(item.scene, false); continue; }
+      if (item.scene && !item.text) { P.sky = item.scene; setSky(P.sky, false); continue; }
+      if (item.cast && !item.text) { setCast(item.cast); continue; }
       if (item.choice) { ask(item.choice); return; }
-      say(item);
+      P.log.push({ who: NAMES[item.who] ? item.who : 'ke', text: String(item.text || ''), sky: P.sky, cast: P.cast });
+      show(P.log.length - 1, true);
       return;
     }
     finish();
   }
 
-  function say(item) {
-    const who = NAMES[item.who] ? item.who : 'ke';
+  function prev() {
+    if (P.typing) finishTyping();
+    if (P.pos > 0) show(P.pos - 1);
+  }
+
+  // Hiện một câu trong log; câu mới thì gõ từng chữ, câu xem lại thì hiện ngay.
+  function show(idx, typing) {
+    P.pos = idx;
+    const item = P.log[idx];
+    const last = idx === P.log.length - 1;
+    if (!typing) { setSky(item.sky, false); setCast(item.cast); }
+    $('btn-prev').hidden = idx === 0;
+    $('step').textContent = last ? '' : 'Xem lại ' + (idx + 1) + '/' + P.log.length;
+    const who = item.who;
     const tag = $('who');
     tag.textContent = NAMES[who];
     tag.className = 'who ' + who;
     const line = $('line');
     line.className = 'line ' + (who === 'ke' ? 'ke' : '');
-    $('choices').hidden = true;
-    $('btn-next').hidden = false;
+    const waitChoice = last && P.waiting;
+    $('choices').hidden = !waitChoice;
+    $('btn-next').hidden = !!waitChoice;
     const scene = $('scene');
     scene.classList.remove('speak-quang', 'speak-thuy');
     void scene.offsetWidth;
     if (who !== 'ke') scene.classList.add('speak-' + who);
-    P.full = String(item.text || '');
+    P.full = item.text;
+    if (!typing) { line.textContent = P.full; return; }
     const chars = [...P.full];
     let shown = 0;
     const t0 = performance.now();
@@ -244,7 +277,7 @@
   }
 
   function ask(options) {
-    P.waiting = true;
+    P.waiting = options;
     $('btn-next').hidden = true;
     const box = $('choices');
     box.replaceChildren();
@@ -255,7 +288,8 @@
       b.addEventListener('click', (e) => {
         e.stopPropagation();
         if (opt.flag) { save.flags[opt.flag] = true; persist(); }
-        P.waiting = false;
+        P.waiting = null;
+        box.hidden = true;
         P.queue.unshift({ who: 'thuy', text: opt.text }, ...(opt.reply || []));
         next();
       });
@@ -298,6 +332,7 @@
   // ================= Sự kiện =================
   $('talk').addEventListener('click', () => next());
   $('btn-next').addEventListener('click', (e) => { e.stopPropagation(); next(); });
+  $('btn-prev').addEventListener('click', (e) => { e.stopPropagation(); prev(); });
   $('btn-skip').addEventListener('click', () => { if (P.typing) finishTyping(); });
   $('btn-back').addEventListener('click', () => history.back());
   $('btn-end-map').addEventListener('click', () => history.back());
@@ -317,6 +352,8 @@
   window.addEventListener('keydown', (e) => {
     if ($('play').hidden || !$('end').hidden) return;
     if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowRight') next();
+    else if (e.key === 'ArrowLeft') prev();
   });
   window.addEventListener('resize', () => { if (!$('map').hidden) drawTrail(CHAPTERS.filter((c) => save.done[c.id]).length); });
 

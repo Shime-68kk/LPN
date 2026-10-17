@@ -165,9 +165,8 @@ body.night .stop.buy .label small { color: #9FE0B2; }
 .choices button:nth-child(2) { animation-delay: .08s; }
 .choices button:active { border-color: #FF8FA3; transform: scale(.98); }
 @keyframes rise-in { from { opacity: 0; transform: translateY(8px); } }
-.next {
-  align-self: flex-end;
-  margin-top: auto;
+.talk-nav { display: flex; align-items: center; margin-top: auto; }
+.prev, .next {
   min-height: 44px;
   padding: 0 6px 0 14px;
   border: 0;
@@ -180,8 +179,16 @@ body.night .stop.buy .label small { color: #9FE0B2; }
   font-size: 13px;
   font-weight: 600;
 }
+.next { margin-left: auto; }
+.prev { padding: 0 14px 0 6px; }
+.prev svg { width: 18px; height: 18px; }
 .next svg { width: 18px; height: 18px; animation: nudge 1.2s ease-in-out infinite; }
 @keyframes nudge { 50% { transform: translateX(3px); } }
+
+/* Ai chưa xuất hiện trong chương thì ẩn đi (cả trái tim giữa hai đứa) */
+.scene .bean, .scene .l-heart { transition: opacity .6s; }
+.scene.no-thuy .bean-b, .scene.no-thuy .l-heart,
+.scene.no-quang .bean-a, .scene.no-quang .l-heart { opacity: 0; }
 
 /* Nhân vật đang nói thì nhún nhẹ */
 .speak-quang .bean-a { animation: hop .45s ease-out; }
