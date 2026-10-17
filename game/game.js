@@ -288,12 +288,12 @@
 
     eat(step, perfect) {
       const f = this.freq(5 + (step % 8));
-      this.tone(f, 0.12, 'sine', 0.5, f * 0.7);
-      this.tone(f * 1.5, 0.05, 'triangle', 0.1);
-      this.noise(0.05, 1900, 0.9, 0.16);
-      if (perfect) this.tone(f * 2, 0.18, 'sine', 0.13, null, 0.035);
+      this.tone(f, 0.12, 'sine', 0.8, f * 0.7);
+      this.tone(f * 1.5, 0.05, 'triangle', 0.16);
+      this.noise(0.05, 1900, 0.9, 0.26);
+      if (perfect) this.tone(f * 2, 0.18, 'sine', 0.2, null, 0.035);
     },
-    crunch() { this.noise(0.045, 1300 + Math.random() * 900, 1.4, 0.2); },
+    crunch() { this.noise(0.045, 1300 + Math.random() * 900, 1.4, 0.32); },
     miss() {
       this.tone(200, 0.26, 'triangle', 0.32, 105);
       this.noise(0.09, 420, 0.8, 0.16);
