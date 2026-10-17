@@ -335,8 +335,8 @@
     HEAD_R = 21 * S;
     SEG_R = 16.5 * S;
     SEG_GAP = 23 * S;
-    LEAF_H = 22 * S;
-    CATCH_R = 44 * S;
+    LEAF_H = 28 * S;
+    CATCH_R = 46 * S;
     PERFECT_R = 17 * S;
     buildSprites();
     Sau.headX = clamp(Sau.headX || W / 2, PX0 + 20 * S, PX0 + PW - 20 * S);
