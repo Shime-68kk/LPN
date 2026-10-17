@@ -10,6 +10,7 @@
   const params = new URLSearchParams(location.search);
   const BOT = params.get('bot') === '1';
   const DEBUG = params.get('debug') === '1';
+  const REDUCED_MOTION = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   const SVG_NS = 'http://www.w3.org/2000/svg';
   const PATH_STAR = 'M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5l-5.3 2.9 1.2-6-4.5-4.1 6-.7z';
   const PATH_HEART = 'M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z';
@@ -539,12 +540,6 @@
       }
       g.stroke();
     }
-    if (pulse > 0.02) {
-      g.fillStyle = T.night ? 'rgba(205,184,240,1)' : 'rgba(255,255,255,1)';
-      g.globalAlpha = 0.06 * pulse;
-      g.fillRect(0, 0, W, H);
-      g.globalAlpha = 1;
-    }
   }
 
   // ================= Hạt hiệu ứng =================
@@ -615,7 +610,7 @@
         g.beginPath(); g.arc(p.x, p.y, p.size * (0.4 + 0.6 * k), 0, Math.PI * 2); g.fill();
       } else {
         g.strokeStyle = p.color;
-        g.lineWidth = 3 * S * k;
+        g.lineWidth = 2 * S * k;
         g.beginPath(); g.arc(p.x, p.y, p.size + (1 - k) * 34 * S, 0, Math.PI * 2); g.stroke();
       }
     }
@@ -1046,7 +1041,7 @@
       if (perfect) Sau.happy = 0.35;
       const px = PX0 + n.x * PW;
       burstCrumbs(px, Sau.headY - HEAD_R * 0.6, perfect ? 9 : 6);
-      if (perfect) { ring(Sau.headX, Sau.headY, T.night ? '#FFF1C9' : '#FFFFFF'); }
+      if (perfect) ring(Sau.headX, Sau.headY, T.night ? '#8C6BC8' : '#D9C9F2');
       popup('+' + Math.round((perfect ? 300 : 200) * mult), Sau.headX, Sau.headY - HEAD_R * 2.2, T.night ? '#FFF1C9' : '#3B2A4A');
       Sound.eat(this.combo, perfect);
       buzz(8);
@@ -1065,7 +1060,7 @@
       this.miss++;
       this.combo = 0;
       this.hearts--;
-      this.shake = 0.3;
+      this.shake = REDUCED_MOTION ? 0 : 0.25;
       Sau.sad = 0.7;
       Sound.miss();
       buzz(30);
@@ -1322,7 +1317,7 @@
   }
 
   function render(dt) {
-    const sh = Game.shake > 0 ? Game.shake * 22 * S : 0;
+    const sh = Game.shake > 0 ? Game.shake * 12 * S : 0;
     const ox = sh ? (Math.random() - 0.5) * sh : 0;
     const oy = sh ? (Math.random() - 0.5) * sh : 0;
     g.setTransform(DPR, 0, 0, DPR, ox * DPR, oy * DPR);
