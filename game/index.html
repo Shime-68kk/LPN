@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" />
-  <link rel="stylesheet" href="game.css?v=3" />
+  <link rel="stylesheet" href="game.css?v=4" />
 </head>
 <body>
   <canvas id="stage" aria-label="Màn chơi Sâu Tím"></canvas>
@@ -61,9 +61,14 @@
       <button type="button" role="radio" data-diff="2" aria-checked="false">Vừa</button>
     </div>
     <ul class="songs" id="songs"></ul>
+    <div class="vol">
+      <label for="opt-eat">Tiếng ăn lá</label>
+      <input type="range" id="opt-eat" min="0" max="100" step="5" value="70" />
+      <output id="opt-eat-val" for="opt-eat">70%</output>
+    </div>
     <label class="toggle">
       <input type="checkbox" id="opt-sfx" checked />
-      <span>Âm thanh khi ăn lá</span>
+      <span>Bật âm thanh hiệu ứng</span>
     </label>
   </section>
 
@@ -96,6 +101,6 @@
     </div>
   </section>
 
-  <script src="game.js?v=10"></script>
+  <script src="game.js?v=11"></script>
 </body>
 </html>

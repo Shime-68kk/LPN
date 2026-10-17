@@ -343,6 +343,37 @@ body.night .song .mini-stars svg.on { fill: #FFC24B; }
 .toggle { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); min-height: 44px; }
 .toggle input { width: 20px; height: 20px; accent-color: #5B3E8F; }
 
+.vol { display: flex; align-items: center; gap: 12px; min-height: 44px; font-size: 14px; color: var(--muted); }
+.vol label { flex: none; }
+.vol output { flex: none; width: 40px; text-align: right; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.vol input {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  margin: 0;
+  background: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.vol input::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--violet) var(--fill, 70%), var(--line) var(--fill, 70%));
+}
+.vol input::-moz-range-track { height: 6px; border-radius: 999px; background: var(--line); }
+.vol input::-moz-range-progress { height: 6px; border-radius: 999px; background: var(--violet); }
+.vol input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px;
+  height: 24px;
+  margin-top: -9px;
+  border-radius: 50%;
+  border: 3px solid var(--violet);
+  background: var(--surface);
+}
+.vol input::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--violet); background: var(--surface); }
+body.night .vol input { --violet: #B79CF0; }
+
 /* ---------- Overlays ---------- */
 .overlay {
   position: fixed;

@@ -32,7 +32,7 @@
 
   // ================= Lưu trữ =================
   const Store = {
-    data: { best: {}, sfx: true, hintSeen: false, diff: 1 },
+    data: { best: {}, sfx: true, hintSeen: false, diff: 1, eatVol: 70 },
     load() {
       try {
         const raw = localStorage.getItem('sautim:v1');
@@ -95,6 +95,10 @@
       this.sfx = ctx.createGain();
       this.sfx.gain.value = Store.data.sfx ? 0.5 : 0;
       this.sfx.connect(this.master);
+      // Riêng tiếng ăn lá có nút chỉnh to nhỏ; 70% là mức mặc định.
+      this.eatBus = ctx.createGain();
+      this.eatBus.gain.value = Store.data.eatVol / 70;
+      this.eatBus.connect(this.sfx);
       const nb = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.5), ctx.sampleRate);
       const ch = nb.getChannelData(0);
       for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
@@ -119,6 +123,9 @@
 
     setSfx(on) {
       if (this.sfx) this.sfx.gain.value = on ? 0.5 : 0;
+    },
+    setEatVol(v) {
+      if (this.eatBus) this.eatBus.gain.value = v / 70;
     },
 
     async load(url, onProgress) {
@@ -249,7 +256,7 @@
       return 261.63 * Math.pow(2, (r + Math.floor(step / 5) * 12 + P[step % 5]) / 12);
     },
 
-    tone(f, dur, type, vol, slide, delay) {
+    tone(f, dur, type, vol, slide, delay, bus) {
       const ctx = this.ctx;
       if (!ctx || !Store.data.sfx) return;
       const t = ctx.currentTime + (delay || 0);
@@ -262,12 +269,12 @@
       g.gain.exponentialRampToValueAtTime(vol, t + 0.006);
       g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
       o.connect(g);
-      g.connect(this.sfx);
+      g.connect(bus || this.sfx);
       o.start(t);
       o.stop(t + dur + 0.02);
     },
 
-    noise(dur, f, q, vol, delay) {
+    noise(dur, f, q, vol, delay, bus) {
       const ctx = this.ctx;
       if (!ctx || !Store.data.sfx) return;
       const t = ctx.currentTime + (delay || 0);
@@ -282,25 +289,27 @@
       g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
       s.connect(bp);
       bp.connect(g);
-      g.connect(this.sfx);
+      g.connect(bus || this.sfx);
       s.start(t, Math.random() * 0.4, dur + 0.02);
     },
 
     eat(step, perfect) {
       const f = this.freq(5 + (step % 8));
-      this.tone(f, 0.12, 'sine', 1.05, f * 0.7);
-      this.tone(f * 1.5, 0.05, 'triangle', 0.22);
-      this.noise(0.05, 1900, 0.9, 0.34);
-      if (perfect) this.tone(f * 2, 0.18, 'sine', 0.26, null, 0.035);
+      const bus = this.eatBus;
+      this.tone(f, 0.12, 'sine', 1.05, f * 0.7, 0, bus);
+      this.tone(f * 1.5, 0.05, 'triangle', 0.22, null, 0, bus);
+      this.noise(0.05, 1900, 0.9, 0.34, 0, bus);
+      if (perfect) this.tone(f * 2, 0.18, 'sine', 0.26, null, 0.035, bus);
     },
 
     // Mỗi miếng cắn trên cành dài: tiếng ăn lá bình thường, cao dần theo đoạn đã ăn.
     bite(progress) {
       const step = 5 + Math.round(clamp(progress, 0, 1) * 7);
       const f = this.freq(step);
-      this.tone(f, 0.09, 'sine', 0.85, f * 0.8);
-      this.tone(f * 2, 0.04, 'triangle', 0.14);
-      this.noise(0.035, 1700 + Math.random() * 600, 1.2, 0.26);
+      const bus = this.eatBus;
+      this.tone(f, 0.09, 'sine', 0.85, f * 0.8, 0, bus);
+      this.tone(f * 2, 0.04, 'triangle', 0.14, null, 0, bus);
+      this.noise(0.035, 1700 + Math.random() * 600, 1.2, 0.26, 0, bus);
     },
     miss() {
       this.tone(200, 0.26, 'triangle', 0.32, 105);
@@ -1697,6 +1706,26 @@
     Store.data.sfx = sfxToggle.checked;
     Store.save();
     Sound.setSfx(sfxToggle.checked);
+  });
+
+  const eatVol = $('opt-eat');
+  const eatVal = $('opt-eat-val');
+  const showEatVol = () => {
+    eatVal.textContent = eatVol.value + '%';
+    eatVol.style.setProperty('--fill', eatVol.value + '%');
+  };
+  eatVol.value = Store.data.eatVol;
+  showEatVol();
+  eatVol.addEventListener('input', () => {
+    Store.data.eatVol = Number(eatVol.value);
+    Sound.setEatVol(Store.data.eatVol);
+    showEatVol();
+  });
+  // Thả tay ra thì kêu thử một tiếng để nghe mức mới.
+  eatVol.addEventListener('change', () => {
+    Store.save();
+    Sound.unlock();
+    Sound.eat(Math.floor(Math.random() * 8), false);
   });
 
   // ================= Vòng lặp =================
