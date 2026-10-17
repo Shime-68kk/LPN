@@ -3,22 +3,37 @@
   "chapters": [
     {
       "id": "c1",
-      "title": "Đêm 6 tháng 8",
+      "title": "Gương mặt lạ, nỗi buồn quen",
       "cost": 0,
       "scene": "dem",
       "lines": [
-        { "who": "ke", "text": "Hà Nội, gần nửa đêm. Có một người cứ cầm điện thoại lên rồi lại đặt xuống." },
-        { "who": "quang", "text": "Gõ rồi xoá, xoá rồi gõ… lần thứ mười mấy rồi đó." },
-        { "who": "quang", "text": "Thôi, gửi luôn. Thủy ơi, làm người yêu anh nha?" },
-        { "who": "ke", "text": "23 giờ 38 phút. Tin nhắn đã gửi." },
-        {
-          "choice": [
-            { "text": "Đồng ý luôn!", "flag": "nhanh", "reply": [{ "who": "quang", "text": "Thật hả? Anh tưởng phải đợi lâu lắm cơ." }] },
-            { "text": "Để em suy nghĩ… đùa thôi, đồng ý.", "flag": "treu", "reply": [{ "who": "quang", "text": "Trêu anh đứng tim luôn á." }] }
-          ]
-        },
-        { "who": "thuy", "text": "Từ giờ có người để nhắn chúc ngủ ngon rồi ha." },
-        { "who": "quang", "text": "Từ giờ ngày nào cũng có, không thiếu ngày nào." }
+        { "who": "ke", "text": "Có những nơi không chừa chỗ dừng chân cho người bỏ cuộc. Ai đã bước vào thì chỉ còn một cách: đi tiếp." },
+        { "who": "ke", "text": "Cuối một con ngõ nhỏ ở Hà Nội có một căn phòng chưa bao giờ tắt đèn. Bên trong, một chàng trai ngồi trước màn hình, ngày cũng như đêm." },
+        { "who": "ke", "text": "Cậu làm việc say sưa đến mức quên mất rằng cuộc đời mình vốn còn nhiều thứ hơn thế." },
+        { "who": "ke", "text": "Tình yêu ư? Không. Đó chưa bao giờ là điều cậu nghĩ tới." },
+        { "who": "quang", "text": "Phải nhanh hơn nữa. Phải đi xa hơn nữa." },
+        { "who": "ke", "text": "Hay có lẽ… cậu chỉ đang chạy trốn?" },
+        { "who": "ke", "text": "Trốn khỏi sự thật rằng sức khoẻ đang cạn dần từng ngày, đổi lấy một tương lai đầy hoài bão mà chính cậu cũng chẳng biết sẽ dẫn về đâu." },
+        { "who": "ke", "text": "Cậu với tay lấy chiếc điện thoại. Màn hình tối đen, sập nguồn từ lúc nào chẳng hay." },
+        { "who": "ke", "text": "Cắm sạc. Đợi một lúc. Màn hình sáng lên, và con số đầu tiên đập vào mắt cậu là giờ." },
+        { "scene": "hoanghon" },
+        { "who": "ke", "text": "5 giờ 30 sáng." },
+        { "who": "quang", "text": "Vậy là… bốn mươi tiếng rồi mình chưa chợp mắt." },
+        { "who": "ke", "text": "Cậu buông mình xuống giường. Lưng vừa chạm nệm, cả cơ thể rã rời như vừa được tháo ra từng khớp." },
+        { "who": "quang", "text": "Lướt một chút thôi. Một chút rồi ngủ." },
+        { "who": "ke", "text": "Ngón tay trượt qua hàng chục khung hình chẳng đọng lại gì. Rồi bất chợt, nó dừng lại." },
+        { "who": "ke", "text": "Một buổi livestream. Một cô gái." },
+        { "who": "ke", "text": "Không phải vẻ đẹp rực rỡ như một vì sao khiến người ta phải nheo mắt. Mà là thứ vẻ đẹp cậu vẫn luôn tìm kiếm: chân thật, gần gũi, như thể đưa tay ra là chạm được." },
+        { "who": "ke", "text": "Cô cười nói hồn nhiên, yêu đời. Trong nụ cười ấy, cậu thấy lại chính mình của ngày xưa, cái thời cậu cũng từng vui như thế." },
+        { "who": "ke", "text": "Nhưng rồi cậu nhìn vào đôi mắt ấy." },
+        { "who": "quang", "text": "Sao lại buồn thế nhỉ?" },
+        { "who": "ke", "text": "Ánh mắt đượm buồn, như thể cuộc sống chưa từng dịu dàng được như cô mong đợi. Buồn như một người đã quen ở một mình." },
+        { "who": "ke", "text": "Như chính cậu." },
+        { "who": "ke", "text": "Một gương mặt hoàn toàn xa lạ, vậy mà cậu lại thấy mình trong đó, như đang soi vào một tấm gương." },
+        { "who": "quang", "text": "Thôi thì… chậm lại một chút cũng được." },
+        { "who": "ke", "text": "Cậu nằm yên, ngắm cô gái ấy. Giọng cô nhỏ nhẹ, đều đều, như một bài hát ru không lời." },
+        { "who": "ke", "text": "Và chẳng biết từ lúc nào, sau bốn mươi tiếng thức trắng, cậu đã chìm vào một giấc ngủ thật sâu." },
+        { "who": "ke", "text": "Cậu chưa biết tên cô gái ấy. Cậu cũng chưa biết, buổi sáng hôm đó, cuộc đời mình đã bắt đầu rẽ sang một hướng khác." }
       ]
     },
     {
