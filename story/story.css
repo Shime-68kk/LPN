@@ -192,6 +192,9 @@ body.night .stop.buy .label small { color: #9FE0B2; }
 .scene.no-quang .bean-a, .scene.no-quang .l-heart { opacity: 0; }
 /* Một mình dưới mưa thì không có ô (ô là của hai đứa) */
 .scene.no-thuy .l-umb { opacity: 0 !important; }
+/* Còn xa nhau: mỗi bé một mép, chưa có tim, chưa che chung ô */
+.pos-a, .pos-b { transition: transform .8s cubic-bezier(.3, .8, .3, 1); }
+.scene.apart .l-heart, .scene.apart .l-umb { opacity: 0 !important; }
 
 /* Nhân vật đang nói thì nhún nhẹ */
 .speak-quang .bean-a { animation: hop .45s ease-out; }

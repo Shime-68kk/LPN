@@ -1,5 +1,5 @@
 {
-  "note": "Lời thoại mẫu: sửa thoải mái bằng kỷ niệm thật. who: quang | thuy | ke (người kể) | none (chỉ hiện chữ, không nhãn). cost: số đốt cây cần để mở chương (0 = mở sẵn); chương mở lần lượt, xong chương trước mới mở được chương sau. scene: nang | may | mua | hoanghon | dem (bỏ trống = theo thời tiết thật). cast: ai có mặt trong cảnh, vd [\"quang\"] khi Thủy chưa xuất hiện (bỏ trống = cả hai); giữa chương thêm dòng { \"cast\": [\"quang\", \"thuy\"] } để Thủy hiện ra. choice: các lựa chọn, mỗi lựa chọn có reply (lời đáp) và flag (ghi nhớ để dùng ở if). ifWeather: chỉ hiện khi trời thật đang như vậy.",
+  "note": "Lời thoại mẫu: sửa thoải mái bằng kỷ niệm thật. who: quang | thuy | ke (người kể) | none (chỉ hiện chữ, không nhãn). cost: số đốt cây cần để mở chương (0 = mở sẵn); chương mở lần lượt, xong chương trước mới mở được chương sau. scene: nang | may | mua | hoanghon | dem (bỏ trống = theo thời tiết thật). cast: ai có mặt trong cảnh, vd [\"quang\"] khi Thủy chưa xuất hiện (bỏ trống = cả hai); giữa chương thêm dòng { \"cast\": [\"quang\", \"thuy\"] } để Thủy hiện ra. apart: true (ở chương hoặc dòng cast) để hai bé đứng hai mép màn hình, chưa có tim. choice: các lựa chọn, mỗi lựa chọn có reply (lời đáp) và flag (ghi nhớ để dùng ở if). ifWeather: chỉ hiện khi trời thật đang như vậy.",
   "chapters": [
     {
       "id": "c1",
@@ -88,6 +88,7 @@
       "cost": 30,
       "scene": "dem",
       "cast": ["thuy"],
+      "apart": true,
       "lines": [
         { "who": "ke", "text": "Ở một góc nhỏ của Thái Nguyên." },
         { "who": "none", "text": "Tinh!" },
@@ -98,7 +99,7 @@
         { "who": "ke", "text": "Mà còn là duyên." },
         { "who": "ke", "text": "Đúng vậy. Bằng cách nào đó, Quang đã một lần nữa tìm được Thủy." },
         { "who": "ke", "text": "Cô gái ấy khi đó đâu biết rằng, đây sẽ là khởi đầu cho những điều làm thay đổi cuộc sống của cô về sau." },
-        { "cast": ["quang", "thuy"] },
+        { "cast": ["quang", "thuy"], "apart": true },
         { "who": "none", "text": "Chào em!" },
         { "who": "ke", "text": "Đúng rồi, chuẩn mô-típ: mở đầu bằng một lời chào để lấy thiện cảm. Và đương nhiên, Quang đã KHÔNG làm như thế." },
         { "who": "quang", "text": "Ôi em ngủ trông cute thế, lim dim thế này ngủ đến trưa." },
@@ -120,14 +121,37 @@
     },
     {
       "id": "c4",
-      "title": "Ngày thứ một trăm",
+      "title": "Chưa kịp yêu, đã biết thương",
       "cost": 30,
       "scene": "hoanghon",
+      "cast": [],
       "lines": [
-        { "who": "ke", "text": "Một trăm ngày. Trời chiều nay đẹp như được ai tô màu." },
-        { "who": "quang", "text": "Một trăm ngày rồi đó em. Anh vẫn thấy như mới hôm qua." },
-        { "who": "thuy", "text": "Còn nhiều trăm ngày nữa cơ." },
-        { "who": "quang", "text": "Ừ, anh đếm cùng em." }
+        { "who": "ke", "text": "Kể từ hôm đó, Quang có một thứ thôi thúc mình mỗi ngày." },
+        { "who": "ke", "text": "Cậu xem cô thường xuyên hơn. Càng xem, lại càng muốn hiểu sâu hơn." },
+        { "who": "ke", "text": "Người ta thường yêu trước, rồi mới thương. Với cậu, có lẽ không phải vậy." },
+        { "who": "ke", "text": "Chữ “thương” ấy, như thể đã được dành riêng cho cô gái này." },
+        { "who": "ke", "text": "Một cô gái tích cực tham gia hoạt động, lúc nào cũng tràn đầy năng lượng. Cô cũng có những khoảng trống của riêng mình, cũng biết mệt, biết mỏi. Nhưng trong mắt người khác, cô luôn rạng rỡ." },
+        { "who": "ke", "text": "Cô đang cháy hết mình giữa tuổi thanh xuân." },
+        { "who": "ke", "text": "Và trong cô, cậu thấy lại hình bóng của chính mình năm nhất đại học, cũng từng cháy hết mình như thế." },
+        { "who": "ke", "text": "Khi con người ta thương, là thương cả những mệt mỏi mà người kia đã trải qua." },
+        { "who": "ke", "text": "Thương cả việc cô luôn phải tự gồng mình lên, bảo vệ bản thân trước những ánh mắt soi mói và phán xét của người đời." },
+        { "who": "ke", "text": "Đến lúc này, chữ thương mới thật giống câu “thương người như thể thương thân”. Thương, là xuất phát từ tâm." },
+        { "who": "ke", "text": "Yêu một người xa lạ thì dễ lắm. Gặp mặt, hẹn hò, vui vẻ, có lẽ vậy là đủ." },
+        { "who": "ke", "text": "Còn chữ thương thì sao? Viết dài hơn chữ yêu, và cũng khó cảm nhận hơn nhiều." },
+        { "who": "ke", "text": "Thương một người xa lạ ư? Nghe vô lý, đúng không?" },
+        { "who": "ke", "text": "Phải. Cậu còn chưa biết hết mọi thứ về em. Cậu chỉ mong em bớt vất vả đi một chút." },
+        { "cast": ["quang", "thuy"], "apart": true },
+        { "who": "quang", "text": "Em ơi em nhớ lo cho sức khỏe mình nhé, mệt nghỉ ngơi nhé, anh thấy em năng nổ quá, si via đại học sư phạm nhiều năng lượng quá, có được tí điểm rèn luyện nào không:))" },
+        { "who": "thuy", "text": "Em không có đâu, em đang tập văn nghệ cho 15/05 ạ." },
+        { "who": "quang", "text": "Thế hôm đó anh lên với em nhé" },
+        { "who": "thuy", "text": "Anh cứ lên nếu anh muốn, em có thể ra gặp tí rồi em cũng bận." },
+        { "who": "ke", "text": "Thật ra, cậu đã biết trước. Nếu vậy, đó sẽ chỉ là một cuộc gặp thoáng qua." },
+        { "who": "ke", "text": "Nếu được gặp em hôm ấy, Quang chỉ muốn nói với em một điều: em đừng cố quá. Thức ngày thức đêm như thế, chẳng tốt chút nào." },
+        { "who": "ke", "text": "Nói thì nói vậy, chứ chính cậu cũng là người bệnh tật chẳng kém ai." },
+        { "who": "ke", "text": "Có một chữ cậu giữ lại cho riêng mình: “xót”. Một chữ không nên nói ra, khi giữa hai người còn chưa có danh phận gì." },
+        { "who": "quang", "text": "Haizz…" },
+        { "who": "ke", "text": "Cậu thở dài, rồi chỉ gửi đi một câu:" },
+        { "who": "quang", "text": "Chúc em thật nhiều sức khỏe!" }
       ]
     },
     {
