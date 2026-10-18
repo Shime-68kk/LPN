@@ -40,19 +40,46 @@
     },
     {
       "id": "c2",
-      "title": "Tám mươi cây số",
+      "title": "Quên gương mặt, nhớ giọng nói",
       "cost": 30,
       "scene": "may",
+      "cast": ["quang"],
       "lines": [
-        { "who": "ke", "text": "Một người ở Hà Nội, một người ở Thái Nguyên. Ở giữa là tám mươi cây số đường." },
-        { "who": "thuy", "text": "Xa thế này thì cuối tuần ai đi gặp ai đây?" },
-        {
-          "choice": [
-            { "text": "Anh lên với em đi.", "flag": "anhlen", "reply": [{ "who": "quang", "text": "Anh đặt xe luôn. Em chỉ cần chọn quán thôi." }] },
-            { "text": "Lần này em xuống.", "flag": "emxuong", "reply": [{ "who": "quang", "text": "Vậy anh ra bến đón, mang theo trà sữa." }] }
-          ]
-        },
-        { "who": "quang", "text": "Xa một chút cũng được, miễn cuối đường là em." }
+        { "who": "ke", "text": "Cậu tỉnh dậy khi trời đã sáng hẳn. Mưa tạnh từ lúc nào, chỉ còn vài giọt nước đọng lại trên bậu cửa." },
+        { "who": "ke", "text": "Một giấc ngủ dài, dài đến mức cơ thể như được trả lại tất cả những gì nó đã mất suốt bốn mươi tiếng qua." },
+        { "who": "ke", "text": "Thứ còn đọng lại lúc ấy không phải một giấc mơ." },
+        { "who": "ke", "text": "Mà là một câu hỏi." },
+        { "who": "quang", "text": "Cô gái hôm qua… là ai nhỉ?" },
+        { "who": "ke", "text": "Cậu cố nhớ. Nhưng gương mặt ấy cứ nhoè đi, như hơi nước đọng trên mặt kính." },
+        { "who": "ke", "text": "Cậu mở lại ứng dụng, lục tìm trong lịch sử. Không có gì cả. Cậu chưa từng xem một video nào của cô, chỉ là vô tình lướt ngang một buổi live." },
+        { "who": "ke", "text": "Thất vọng." },
+        { "who": "ke", "text": "Cảm giác như vừa đánh rơi một thứ gì đó rất lớn, mà đến cả hình dạng của nó, cậu cũng chưa kịp nhìn cho rõ." },
+        { "who": "quang", "text": "Mình muốn tìm lại cô ấy. Một lần nữa thôi cũng được." },
+        { "scene": "hoanghon" },
+        { "who": "ke", "text": "Từ hôm đó, cứ đến đúng khung giờ ấy, cậu lại mở TikTok." },
+        { "who": "ke", "text": "Bấm vào từng buổi live một. Lướt qua. Rồi lại bấm vào buổi khác." },
+        { "who": "ke", "text": "Một ngày. Hai ngày. Rồi nhiều ngày nữa." },
+        { "scene": "dem" },
+        { "who": "ke", "text": "Kết quả vẫn vậy. Không phải cô ấy. Vẫn không phải cô ấy." },
+        { "who": "ke", "text": "Người ta nói, thứ gì càng dang dở thì càng khiến người ta muốn đi đến cùng." },
+        { "who": "ke", "text": "Cậu cũng vậy. Càng không tìm thấy, lại càng không buông được." },
+        { "who": "ke", "text": "Rồi đến một ngày." },
+        { "who": "ke", "text": "Một giọng nói quen thuộc vang lên." },
+        { "who": "ke", "text": "“Xin chào tất cả mọi người…”" },
+        { "who": "ke", "text": "Rồi giọng ấy nhỏ hẳn đi, thì thầm như sợ người bên cạnh nghe thấy: “Em đang ở quán cà phê, nên hôm nay không hát được đâu…”" },
+        { "who": "ke", "text": "Cậu khựng lại." },
+        { "who": "ke", "text": "Một gương mặt cậu chưa từng kịp nhìn cho kỹ. Vậy mà cậu nhận ra ngay." },
+        { "who": "ke", "text": "Giọng nói ấy. Đôi mắt sâu và đẹp ấy. Thứ đã ru cậu vào giấc ngủ sau bốn mươi tiếng thức trắng. Trên đời này, chỉ có một người như vậy." },
+        { "who": "ke", "text": "Là cô ấy." },
+        { "who": "ke", "text": "Thật buồn cười. Chính cái thuật toán đề xuất mà cậu ghét nhất lại là thứ cho cậu thêm một cơ hội, được nhìn thấy cô gái ấy thêm một lần nữa." },
+        { "who": "ke", "text": "Tình cờ ư? Hay là định mệnh?" },
+        { "who": "quang", "text": "Trông cứ khờ khờ ý nhở." },
+        { "who": "ke", "text": "Miệng thì nói vậy, nhưng tay cậu đã kịp lưu lại tên cô từ lúc nào." },
+        { "scene": "nang" },
+        { "who": "ke", "text": "Kể từ hôm đó, ngày nào cậu cũng ghé xem cô." },
+        { "who": "ke", "text": "Thích ư? Có lẽ chữ ấy vẫn chưa đủ." },
+        { "who": "ke", "text": "Cậu mê. Mê cách cô cư xử khéo léo với từng người. Mê cái năng lượng tươi sáng cô mang đến, như nắng sau mấy ngày mưa dài." },
+        { "who": "ke", "text": "Và lần đầu tiên sau rất lâu, cậu thấy mình mong chờ một ngày mới." }
       ]
     },
     {
