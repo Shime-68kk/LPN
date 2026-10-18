@@ -50,11 +50,14 @@
   let CHAPTERS = [];
 
   // ================= Bản đồ =================
-  const isOpen = (i) => !CHAPTERS[i].cost || !!save.open[CHAPTERS[i].id];
+  // TẠM THỜI mở hết chương để đọc thử. Nhớ đổi lại false trước khi đưa lên GitHub.
+  const OPEN_ALL = true;
+  const isOpen = (i) => OPEN_ALL || !CHAPTERS[i].cost || !!save.open[CHAPTERS[i].id];
   // Chương mở lần lượt: xong chương trước mới được dùng đốt cây mở chương sau.
   function status(i) {
     const ch = CHAPTERS[i];
     if (save.done[ch.id]) return { state: 'done', note: 'Đã xong' };
+    if (OPEN_ALL) return { state: 'current', note: 'Đọc thử' };
     const ready = i === 0 || save.done[CHAPTERS[i - 1].id];
     if (!isOpen(i)) return { state: ready ? 'buy' : 'locked', note: 'Cần ' + ch.cost + ' đốt cây' };
     if (!ready) return { state: 'locked', note: 'Chờ chương trước' };
