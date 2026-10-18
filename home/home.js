@@ -9,24 +9,26 @@
   // Anh ở Hà Nội: hiện thêm trong bảng thời tiết.
   const PARTNER_LOC = { lat: 21.0285, lon: 105.8542, name: 'Hà Nội' };
   const WEATHER_TTL = 20 * 60 * 1000;
-  const SONG_FOR = { nang: 'noi-nay-co-anh', may: 'ai-ngoai-anh', mua: 'missing-you', hoanghon: 'in-love', dem: 'anh-la-ai' };
-  const SKY_COLOR = { nang: '#BFE4FF', may: '#D5DBE9', mua: '#8D9AB5', hoanghon: '#FFB996', dem: '#29224E' };
+  const SONG_FOR = { binhminh: 'lo-say-bye', nang: 'noi-nay-co-anh', may: 'ai-ngoai-anh', mua: 'missing-you', hoanghon: 'in-love', dem: 'anh-la-ai' };
+  const SKY_COLOR = { binhminh: '#FFE3D3', nang: '#BFE4FF', may: '#D5DBE9', mua: '#8D9AB5', hoanghon: '#FFB996', dem: '#29224E' };
   const ICON = {
+    binhminh: 'M3 19h18M7 19a5 5 0 0 1 10 0M12 5v4M4.9 11.9l1.4 1.4M19.1 11.9l-1.4 1.4M9.5 7.5L12 5l2.5 2.5',
     nang: 'M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
     may: 'M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 11.1A3.5 3.5 0 0 0 7 18z',
     mua: 'M7 15h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 8.1A3.5 3.5 0 0 0 7 15zM8 18l-1 3M12 18l-1 3M16 18l-1 3',
-    hoanghon: 'M3 19h18M7 19a5 5 0 0 1 10 0M12 5v4M4.9 11.9l1.4 1.4M19.1 11.9l-1.4 1.4M9.5 7.5L12 5l2.5 2.5',
+    hoanghon: 'M3 19h18M7 19a5 5 0 0 1 10 0M12 4v5M4.9 11.9l1.4 1.4M19.1 11.9l-1.4 1.4M9.5 6.5L12 9l2.5-2.5',
     dem: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z',
   };
-  const SKY_NAME = { nang: 'Nắng', may: 'Mây', mua: 'Mưa', hoanghon: 'Hoàng hôn', dem: 'Đêm' };
+  const SKY_NAME = { binhminh: 'Bình minh', nang: 'Nắng', may: 'Mây', mua: 'Mưa', hoanghon: 'Hoàng hôn', dem: 'Đêm' };
   const LEDE = {
+    binhminh: ['Dậy sớm thế, trời đang hửng nắng kìa.', 'Chào ngày mới, hôm nay cũng cố lên nha.'],
     nang: ['Trời trong veo, hợp đi uống trà sữa đó.', 'Nắng đẹp như em vậy á.'],
     may: ['Mây nhiều thì để anh làm mặt trời cho.', 'Trời hơi âm u, nhớ ăn uống đủ nha.'],
     mua: ['Mưa rồi, nhớ mang ô nha.', 'Ở nhà nghe nhạc với anh không?'],
     hoanghon: ['Ra ban công ngắm trời cùng anh nè.', 'Chiều nay trời đẹp ghê.'],
     dem: ['Hôm nay em đã giỏi lắm rồi.', 'Ngủ sớm nha, mai gặp anh.'],
   };
-  const SONG_NOTE = { nang: 'Nhạc cho ngày nắng', may: 'Nhạc cho trời mây', mua: 'Nhạc nghe khi mưa', hoanghon: 'Nhạc lúc hoàng hôn', dem: 'Nhạc trước khi ngủ' };
+  const SONG_NOTE = { binhminh: 'Nhạc cho buổi sớm', nang: 'Nhạc cho ngày nắng', may: 'Nhạc cho trời mây', mua: 'Nhạc nghe khi mưa', hoanghon: 'Nhạc lúc hoàng hôn', dem: 'Nhạc trước khi ngủ' };
 
   const $ = (id) => document.getElementById(id);
   const store = {
@@ -68,11 +70,12 @@
     let sky;
     if (RAIN.has(c.weather_code)) sky = 'mua';
     else if (night) sky = 'dem';
-    else if (Math.abs(now - set) <= 40 * 60e3 || Math.abs(now - rise) <= 30 * 60e3) sky = 'hoanghon';
+    else if (Math.abs(now - rise) <= 45 * 60e3) sky = 'binhminh';
+    else if (Math.abs(now - set) <= 40 * 60e3) sky = 'hoanghon';
     else if (c.cloud_cover >= 70 || c.weather_code === 3 || c.weather_code === 45 || c.weather_code === 48) sky = 'may';
     else sky = 'nang';
     let label = codeLabel(c.weather_code, night);
-    if (sky === 'hoanghon') label = now < rise + 60 * 60e3 ? 'Bình minh' : 'Hoàng hôn';
+    if (sky === 'binhminh' || sky === 'hoanghon') label = SKY_NAME[sky];
     return { sky, night, label, temp: Math.round(c.temperature_2m), rise, set };
   }
 
@@ -80,7 +83,7 @@
   function guessByClock() {
     const h = new Date().getHours() + new Date().getMinutes() / 60;
     const night = h >= 18.5 || h < 5.5;
-    const sky = night ? 'dem' : h >= 17 ? 'hoanghon' : 'nang';
+    const sky = night ? 'dem' : h < 6.5 ? 'binhminh' : h >= 17 ? 'hoanghon' : 'nang';
     return { sky, night, label: night ? 'Buổi tối' : 'Hôm nay', temp: null, rise: null, set: null };
   }
 

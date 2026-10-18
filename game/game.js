@@ -47,6 +47,7 @@
 
   // ================= Bầu trời theo thời tiết =================
   const THEMES = {
+    binhminh: { sky: '#FFE3D3', sun: '#FFC46B', cloud: '#FFFFFF', mote: ['#FFFFFF', '#FFE3B3'], leaf: '#62BC7C', leafLight: '#8FD6A0', leafDark: '#3D8A57', stem: '#4E8F5E' },
     nang: { sky: '#BFE4FF', sun: '#FFE48A', cloud: '#FFFFFF', mote: ['#FFFFFF', '#FFD3DC'], leaf: '#62BC7C', leafLight: '#8FD6A0', leafDark: '#3D8A57', stem: '#4E8F5E' },
     may: { sky: '#D5DBE9', sun: null, cloud: '#F6F7FB', mote: ['#FFFFFF', '#E6E9F2'], leaf: '#62B07A', leafLight: '#8CCB9C', leafDark: '#3D7F55', stem: '#4E855C' },
     mua: { sky: '#8D9AB5', sun: null, cloud: '#76829E', mote: null, rain: true, leaf: '#5DAF78', leafLight: '#86CC9A', leafDark: '#3A7A52', stem: '#467A57' },
@@ -64,6 +65,7 @@
     const d = new Date();
     const h = d.getHours() + d.getMinutes() / 60;
     if (h >= 18.5 || h < 5.5) return 'dem';
+    if (h < 6.5) return 'binhminh';
     if (h >= 17) return 'hoanghon';
     return 'nang';
   }

@@ -5,7 +5,7 @@
   const SAVE_KEY = 'lpn:story';
   const SPACING = 128;
   const CPS = 42; // số chữ hiện mỗi giây
-  const SKY_COLOR = { nang: '#BFE4FF', may: '#D5DBE9', mua: '#8D9AB5', hoanghon: '#FFB996', dem: '#29224E' };
+  const SKY_COLOR = { binhminh: '#FFE3D3', nang: '#BFE4FF', may: '#D5DBE9', mua: '#8D9AB5', hoanghon: '#FFB996', dem: '#29224E' };
   const ICON = {
     done: 'M5 12.5l4.5 4.5L19 7.5',
     play: 'M8 5v14l11-7z',
@@ -39,7 +39,7 @@
       if (s && SKY_COLOR[s.sky] && Date.now() - s.at < 6 * 3600e3) return s.sky;
     } catch (e) { /* bỏ qua */ }
     const h = new Date().getHours();
-    return h >= 18 || h < 6 ? 'dem' : h >= 17 ? 'hoanghon' : 'nang';
+    return h >= 18 || h < 5 ? 'dem' : h < 7 ? 'binhminh' : h >= 17 ? 'hoanghon' : 'nang';
   })();
   function setSky(sky, page) {
     document.body.dataset.weather = sky;

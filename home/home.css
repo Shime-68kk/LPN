@@ -56,6 +56,10 @@ body[data-weather="mua"] {
   --sky: #8D9AB5; --cloud: #737F9B; --cloud2: #5F6A86;
   --far: #708D7E; --near: #5A7B69; --tree: #4D6E5C; --trunk: #5F4E45;
 }
+body[data-weather="binhminh"] {
+  --sky: #FFE3D3; --sun: #FFC46B; --cloud: #FFFFFF; --cloud2: #F9D3D8;
+  --far: #B9D6B0; --near: #93C49B; --tree: #6FA982; --trunk: #8B6B57; --sun-y: 96px;
+}
 body[data-weather="hoanghon"] {
   --sky: #FFB996; --sun: #FF7E6B; --cloud: #FFD8C4; --cloud2: #F6B4A8;
   --far: #C08DA6; --near: #926B90; --tree: #7A5680; --trunk: #5D4560; --sun-y: 128px;
@@ -100,6 +104,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .scene .sun { fill: var(--sun); transition: fill 1.2s; }
 .scene .sun-halo { fill: #FFFFFF; opacity: .4; }
 body[data-weather="hoanghon"] .scene .sun-halo { fill: #FFE1C8; }
+body[data-weather="binhminh"] .scene .sun-halo { fill: #FFF3D6; }
 .scene .moon { fill: #FFF1C9; }
 .scene .moon-glow { fill: #FFF1C9; opacity: .12; }
 .scene .l-stars { fill: #FFF4D6; }
@@ -119,6 +124,7 @@ body[data-weather="hoanghon"] .scene .sun-halo { fill: #FFE1C8; }
 .l-sun, .l-moon, .l-stars, .l-cloud3, .l-rain, .l-umb, .l-fly { opacity: 0; transition: opacity 1s; }
 .l-sun { transform: translateY(var(--sun-y)); transition: opacity 1s, transform 1.2s; }
 body[data-weather="nang"] .l-sun,
+body[data-weather="binhminh"] .l-sun,
 body[data-weather="hoanghon"] .l-sun { opacity: 1; }
 body[data-weather="may"] .l-cloud3,
 body[data-weather="mua"] .l-cloud3,
