@@ -239,7 +239,7 @@
           const ch = list[nextI];
           const locked = ch.cost && !open[ch.id];
           $('story-eyebrow').textContent = 'Cốt truyện · Chương ' + (nextI + 1) + '/' + list.length + (locked ? ' · cần ' + ch.cost + ' đốt cây' : '');
-          $('story-title').textContent = locked && nextI === list.length - 1 ? 'Một điều bí mật' : ch.title;
+          $('story-title').textContent = locked ? 'Một chương bí mật' : ch.title;
         })
         .catch(() => {});
     },

@@ -153,7 +153,8 @@
       const small = document.createElement('small');
       small.textContent = 'Chương ' + (i + 1) + ' · ' + st.note;
       const b = document.createElement('b');
-      b.textContent = !isOpen(i) && i === CHAPTERS.length - 1 ? 'Bí mật' : ch.title;
+      // Chưa mở thì giấu tên chương, mở rồi mới biết.
+      b.textContent = isOpen(i) ? ch.title : 'Bí mật';
       label.append(small, b);
       stop.append(node, label);
       stop.setAttribute('aria-label', 'Chương ' + (i + 1) + ': ' + b.textContent + '. ' + st.note);
@@ -225,7 +226,8 @@
       if (item.scene && !item.text) { P.sky = item.scene; setSky(P.sky, false); continue; }
       if (item.cast && !item.text) { setCast(item.cast); continue; }
       if (item.choice) { ask(item.choice); return; }
-      P.log.push({ who: NAMES[item.who] ? item.who : 'ke', text: String(item.text || ''), sky: P.sky, cast: P.cast });
+      // who "none": chỉ hiện chữ, không có nhãn người nói (tiếng động, tin nhắn…).
+      P.log.push({ who: NAMES[item.who] || item.who === 'none' ? item.who : 'ke', text: String(item.text || ''), sky: P.sky, cast: P.cast });
       show(P.log.length - 1, true);
       return;
     }
@@ -247,17 +249,18 @@
     $('step').textContent = last ? '' : 'Xem lại ' + (idx + 1) + '/' + P.log.length;
     const who = item.who;
     const tag = $('who');
-    tag.textContent = NAMES[who];
+    tag.textContent = NAMES[who] || '';
     tag.className = 'who ' + who;
+    tag.hidden = who === 'none';
     const line = $('line');
-    line.className = 'line ' + (who === 'ke' ? 'ke' : '');
+    line.className = 'line ' + (who === 'ke' || who === 'none' ? who : '');
     const waitChoice = last && P.waiting;
     $('choices').hidden = !waitChoice;
     $('btn-next').hidden = !!waitChoice;
     const scene = $('scene');
     scene.classList.remove('speak-quang', 'speak-thuy');
     void scene.offsetWidth;
-    if (who !== 'ke') scene.classList.add('speak-' + who);
+    if (NAMES[who] && who !== 'ke') scene.classList.add('speak-' + who);
     P.full = item.text;
     if (!typing) { line.textContent = P.full; return; }
     const chars = [...P.full];
