@@ -135,6 +135,12 @@ body.night .hearts svg.lost { stroke: rgba(246, 238, 223, 0.4); }
 }
 .score span { font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; }
 .score small { font-size: 11px; color: var(--muted); }
+/* Vượt kỷ lục giữa ván: điểm chuyển vàng, có nhãn nhỏ */
+.score.record { box-shadow: inset 0 0 0 2px #FFC24B; }
+.score.record #score { color: #D98A00; }
+body.night .score.record #score { color: #FFC24B; }
+.score.record::before { content: 'Kỷ lục mới'; position: absolute; top: -9px; right: 8px; padding: 1px 6px; border-radius: 999px; background: #FFC24B; color: #3B2A4A; font-size: 10px; font-weight: 700; }
+.score { position: relative; }
 
 .combo {
   margin: 14px auto 0;

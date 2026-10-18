@@ -321,6 +321,7 @@
       steps.forEach((s, i) => this.tone(this.freq(s), dur || 0.3, type || 'triangle', vol || 0.18, null, i * gap));
     },
     milestone() { this.arp([5, 7, 9], 0.07, 'triangle', 0.16, 0.25); },
+    record() { this.arp([5, 7, 9, 10, 12], 0.06, 'triangle', 0.2, 0.3); },
     heart() { this.arp([7, 9, 10, 12], 0.06, 'sine', 0.18, 0.3); },
     butterfly() { this.arp([5, 6, 7, 8, 9, 10, 12], 0.085, 'sine', 0.2, 0.6); },
     lose() { this.arp([9, 7, 6, 5], 0.16, 'triangle', 0.16, 0.4); },
@@ -927,6 +928,10 @@
       this.beats = this.map.beats;
       this.resetNotes();
       this.score = 0; this.combo = 0; this.maxCombo = 0; this.hearts = 3; this.banked = 0;
+      // Kỷ lục cũ của bài này ở độ khó này; vượt qua giữa ván thì báo ngay.
+      this.prevBest = ((Store.data.best[this.song.id + ':' + this.diff] || {}).score) || 0;
+      this.recordHit = false;
+      UI.els.scoreBox.classList.remove('record');
       this.perfect = 0; this.good = 0; this.miss = 0;
       this.loop = 0; this.rate = 1; this.maxRate = 1; this.nextQueued = false;
       this.stars = 0; this.starFx = [];
@@ -1093,6 +1098,15 @@
 
     update(dt) {
       if (this.state === 'play') this.time(dt);
+      if (this.state === 'play' && !this.recordHit && this.prevBest > 0 && this.score > this.prevBest) {
+        this.recordHit = true;
+        UI.toast('Kỷ lục mới!');
+        Sound.record();
+        buzz(20);
+        burstSparks(Sau.headX, Sau.headY - HEAD_R * 2, 16, '#FFC24B');
+        burstHearts(Sau.headX, Sau.headY - HEAD_R, 4);
+        UI.els.scoreBox.classList.add('record');
+      }
       const t = this.songT;
       // Nhịp
       const b = this.beats;
@@ -1381,7 +1395,7 @@
   const UI = {
     els: {
       hud: $('hud'), menu: $('menu'), pause: $('pause'), result: $('result'), hint: $('hint'), toast: $('toast'),
-      score: $('score'), length: $('length'), hearts: $('hearts'), combo: $('combo'), comboNum: $('combo-num'),
+      score: $('score'), scoreBox: $('score').parentElement, length: $('length'), hearts: $('hearts'), combo: $('combo'), comboNum: $('combo-num'),
       progress: $('progress-fill'), songs: $('songs'), pstars: $('pstars'), speed: $('speed'),
     },
     last: {},
