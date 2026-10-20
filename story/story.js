@@ -185,21 +185,27 @@
 
   // ================= Chơi một chương =================
   // log: các câu đã hiện, để bấm "Trước" xem lại; pos: câu đang xem trong log.
-  const P = { ch: -1, queue: [], typing: null, full: '', waiting: null, log: [], pos: -1, sky: '', cast: null, apart: false, heart: true };
+  const P = { ch: -1, queue: [], typing: null, full: '', waiting: null, log: [], pos: -1, sky: '', cast: null,
+    near: 1, heart: true, range: null, talkN: 0, talkK: 0, nearLock: false };
   const ALL_CAST = ['quang', 'thuy'];
 
   // Ai đang có mặt trong cảnh (chương mà Thủy chưa xuất hiện thì chỉ có bé tím).
-  // apart: hai bé đứng hai mép màn hình (chưa ở gần nhau), không có tim.
-  // heart: false = đứng cạnh nhau nhưng chưa hiện tim (chưa yêu).
-  function setCast(list, apart, heart) {
+  function setCast(list) {
     P.cast = list || ALL_CAST;
-    P.apart = !!apart;
-    P.heart = heart !== false;
     const scene = $('scene');
-    scene.classList.toggle('no-heart', !P.heart);
     scene.classList.toggle('no-thuy', !P.cast.includes('thuy'));
     scene.classList.toggle('no-quang', !P.cast.includes('quang'));
-    scene.classList.toggle('apart', P.apart);
+  }
+
+  // near: 0 = mỗi bé một mép màn hình, 1 = đứng sát nhau. Chương có "near": [đầu, cuối]
+  // thì hai bé nhích lại gần theo từng câu thoại của Quang và Thủy.
+  // Tim chỉ hiện khi đã sát nhau (near = 1) và chưa bị tắt bằng heart: false.
+  function setNear(v, heart) {
+    P.near = Math.max(0, Math.min(1, v));
+    if (heart !== undefined) P.heart = heart;
+    const scene = $('scene');
+    scene.classList.toggle('apart', P.near < 1);
+    scene.classList.toggle('no-heart', !(P.heart && P.near >= 1));
     placeBeans();
   }
 
@@ -218,7 +224,7 @@
   function placeBeans() {
     const a = document.querySelector('.pos-a');
     const b = document.querySelector('.pos-b');
-    if (!P.apart) { a.style.transform = ''; b.style.transform = ''; return; }
+    if (P.near >= 1) { a.style.transform = ''; b.style.transform = ''; return; }
     const svgEl = $('scene').querySelector('svg');
     const ctm = svgEl.getScreenCTM();
     if (!ctm) return;
@@ -227,14 +233,18 @@
     const toSvg = (x) => { const pt = svgEl.createSVGPoint(); pt.x = x; pt.y = box.top; return pt.matrixTransform(inv).x; };
     const left = Math.max(0, toSvg(Math.max(box.left, 0))) + 10;
     const right = Math.min(390, toSvg(Math.min(box.right, window.innerWidth))) - 10;
-    const near = $('scene').querySelector('.near');
+    const hill = $('scene').querySelector('.near');
     // Bé tím rộng 26 (x 194–220), bé hồng rộng 24 (x 226–250), đáy đều ở y 290.
-    const ax = left - 194, bx = right - 250;
-    const ay = groundY(near, left + 13) + 8 - 290;
-    const by = groundY(near, right - 12) + 8 - 290;
+    // Đứng sát nhau là vị trí gốc (dịch 0); xa nhau thì nội suy dần ra hai mép.
+    const k = 1 - P.near;
+    const ax = (left - 194) * k, bx = (right - 250) * k;
+    const ay = (groundY(hill, 207 + ax) + 8 - 290) * k;
+    const by = (groundY(hill, 238 + bx) + 8 - 290) * k;
     a.style.transform = 'translate(' + ax + 'px,' + ay + 'px)';
     b.style.transform = 'translate(' + bx + 'px,' + by + 'px)';
   }
+
+  const isTalk = (item) => item && !!item.text && (item.who === 'quang' || item.who === 'thuy');
 
   function play(i) {
     const ch = CHAPTERS[i];
@@ -245,7 +255,13 @@
     P.pos = -1;
     P.sky = ch.scene || liveSky;
     setSky(P.sky, false);
-    setCast(ch.cast, ch.apart, ch.heart);
+    setCast(ch.cast);
+    P.range = ch.near || (ch.apart ? [0, 0] : null);
+    P.talkN = ch.lines.filter(isTalk).length;
+    P.talkK = 0;
+    P.nearLock = false;
+    // Chương còn xa nhau thì mặc định chưa có tim.
+    setNear(P.range ? P.range[0] : 1, ch.heart !== undefined ? ch.heart !== false : !P.range);
     $('play-title').textContent = 'Chương ' + (i + 1) + ' · ' + ch.title;
     $('map').hidden = true;
     $('play').hidden = false;
@@ -265,11 +281,22 @@
       if (item.ifWeather) { P.queue.unshift(...((liveSky === item.ifWeather ? item.then : item.else) || [])); continue; }
       if (item.if) { P.queue.unshift(...((save.flags[item.if] ? item.then : item.else) || [])); continue; }
       if (item.scene && !item.text) { P.sky = item.scene; setSky(P.sky, false); continue; }
-      if (item.cast && !item.text) { setCast(item.cast, item.apart, item.heart); continue; }
+      // Dòng điều khiển: { "cast": [...] }, { "near": 1, "heart": true }…
+      if (!item.text && !item.choice && (item.cast || item.near !== undefined || item.heart !== undefined)) {
+        if (item.cast) setCast(item.cast);
+        if (item.near !== undefined) P.nearLock = true;
+        setNear(item.near !== undefined ? item.near : P.near, item.heart !== undefined ? item.heart !== false : undefined);
+        continue;
+      }
       if (item.choice) { ask(item.choice); return; }
+      if (isTalk(item) && P.range && !P.nearLock) {
+        P.talkK++;
+        const [a, b] = P.range;
+        setNear(a + (b - a) * Math.min(1, P.talkK / Math.max(1, P.talkN)));
+      }
       // who "none": chỉ hiện chữ, không có nhãn người nói (tiếng động, tin nhắn…).
       P.log.push({ who: NAMES[item.who] || item.who === 'none' ? item.who : 'ke', text: String(item.text || ''), sky: P.sky,
-        cast: P.cast, apart: P.apart, heart: P.heart, emote: item.emote || '', emoteWho: item.emoteWho || item.who });
+        cast: P.cast, near: P.near, heart: P.heart, emote: item.emote || '', emoteWho: item.emoteWho || item.who });
       show(P.log.length - 1, true);
       return;
     }
@@ -297,7 +324,7 @@
     P.pos = idx;
     const item = P.log[idx];
     const last = idx === P.log.length - 1;
-    if (!typing) { setSky(item.sky, false); setCast(item.cast, item.apart, item.heart); }
+    if (!typing) { setSky(item.sky, false); setCast(item.cast); setNear(item.near, item.heart); }
     showEmote(item.emote, item.emoteWho);
     $('btn-prev').hidden = idx === 0;
     $('step').textContent = last ? '' : 'Xem lại ' + (idx + 1) + '/' + P.log.length;
