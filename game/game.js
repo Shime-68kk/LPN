@@ -1396,7 +1396,7 @@
     els: {
       hud: $('hud'), menu: $('menu'), pause: $('pause'), result: $('result'), hint: $('hint'), toast: $('toast'),
       score: $('score'), scoreBox: $('score').parentElement, length: $('length'), hearts: $('hearts'), combo: $('combo'), comboNum: $('combo-num'),
-      progress: $('progress-fill'), songs: $('songs'), pstars: $('pstars'), speed: $('speed'),
+      progress: $('progress-fill'), songs: $('songs'), pstars: $('pstars'), speed: $('speed'), wallet: $('wallet'),
     },
     last: {},
     show(name) { this.els[name].hidden = false; },
@@ -1459,7 +1459,9 @@
     // Mỗi bài: chạm vào dòng để nghe thử đoạn hay nhất, nút hồng để vào chơi.
     renderSongs(songs) {
       Preview.stop(true);
-      $('menu-wallet').textContent = walletText();
+      const mw = $('menu-wallet');
+      mw.textContent = walletText();
+      mw.hidden = !mw.textContent;
       const list = this.els.songs;
       list.replaceChildren();
       for (const s of songs) {
@@ -1726,6 +1728,29 @@
     Sound.ctx.resume().then(() => { Sound.click(); Game.finish(); });
   });
   $('btn-resume').addEventListener('click', () => { Sound.click(); Game.resume(); });
+
+  // Ví đốt cây trong game: xem số đốt, điểm còn dư tới 3 đốt tiếp theo, đổi nếu đủ.
+  function showWallet() {
+    const w = Wallet.get();
+    const can = Wallet.canExchange(w);
+    $('w-dot').textContent = fmtNum(w.dot);
+    $('w-fill').style.width = Math.min(100, (w.points / Wallet.PACK_POINTS) * 100) + '%';
+    $('w-note').textContent = fmtNum(Wallet.PACK_POINTS * 10) + ' điểm = ' + Wallet.PACK_DOT * 10 + ' đốt cây. Điểm tự đổi sau mỗi ván; đang dư '
+      + fmtNum(w.points) + ' điểm, thêm ' + fmtNum(Wallet.PACK_POINTS - w.points) + ' điểm nữa là được +' + Wallet.PACK_DOT + ' đốt.';
+    const ex = $('btn-w-exchange');
+    ex.hidden = !can;
+    ex.textContent = 'Đổi ' + fmtNum(w.points) + ' điểm ra ' + can + ' đốt';
+    UI.show('wallet');
+  }
+  $('menu-wallet').addEventListener('click', () => { Sound.unlock(); Sound.click(); showWallet(); });
+  $('btn-w-exchange').addEventListener('click', () => {
+    const got = Wallet.exchangeAll();
+    if (got) { Sound.milestone(); UI.toast('+' + got + ' đốt cây'); }
+    showWallet();
+    $('menu-wallet').textContent = walletText();
+  });
+  $('btn-w-close').addEventListener('click', () => { Sound.click(); UI.hide('wallet'); });
+  $('wallet').addEventListener('click', (e) => { if (e.target.id === 'wallet') UI.hide('wallet'); });
   $('btn-restart').addEventListener('click', () => { Sound.click(); restart(); });
   $('btn-menu').addEventListener('click', () => { Sound.click(); toMenu(); });
   $('btn-again').addEventListener('click', () => { Sound.click(); restart(); });

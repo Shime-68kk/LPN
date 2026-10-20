@@ -61,6 +61,14 @@
       write(w);
       return got;
     },
+    // Số đốt đổi được ngay (thường là 0 vì đã tự đổi; còn để nút Đổi trong game dùng).
+    canExchange(w) { return Math.floor((w || read()).points / PACK_POINTS) * PACK_DOT; },
+    exchangeAll() {
+      const w = read();
+      const got = convert(w);
+      write(w);
+      return got;
+    },
     // Quà chưa báo cho người dùng thì báo một lần.
     takeGiftNotice() {
       const w = read();

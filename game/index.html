@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" />
-  <link rel="stylesheet" href="game.css?v=6" />
+  <link rel="stylesheet" href="game.css?v=7" />
 </head>
 <body>
   <canvas id="stage" aria-label="Màn chơi Sâu Tím"></canvas>
@@ -54,7 +54,7 @@
       <div>
         <h1>Sâu Tím</h1>
         <p>Ăn lá theo nhịp nhạc, lớn lên thành bướm.</p>
-        <a class="menu-wallet" href="../story/" id="menu-wallet"></a>
+        <button type="button" class="menu-wallet" id="menu-wallet" hidden></button>
       </div>
     </header>
     <div class="segmented" role="radiogroup" aria-label="Độ khó">
@@ -71,6 +71,20 @@
       <input type="checkbox" id="opt-sfx" checked />
       <span>Bật âm thanh hiệu ứng</span>
     </label>
+  </section>
+
+  <!-- Ví đốt cây -->
+  <section id="wallet" class="overlay" hidden>
+    <div class="card">
+      <svg class="w-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h6v18H8zM8 9h6M8 15h6M14 12c1.5-3 4-4.5 7-4.5c-.5 3-3 5-7 4.5" /></svg>
+      <h2>Ví đốt cây</h2>
+      <p class="w-big"><b id="w-dot">0</b> đốt cây</p>
+      <div class="w-bar" aria-hidden="true"><span id="w-fill"></span></div>
+      <p class="w-note" id="w-note"></p>
+      <button type="button" class="btn primary" id="btn-w-exchange">Đổi điểm ra đốt</button>
+      <a class="btn w-story" href="../story/">Mở cốt truyện</a>
+      <button type="button" class="btn" id="btn-w-close">Đóng</button>
+    </div>
   </section>
 
   <!-- Tạm dừng -->
@@ -104,7 +118,7 @@
     </div>
   </section>
 
-  <script src="../home/wallet.js?v=3"></script>
-  <script src="game.js?v=15"></script>
+  <script src="../home/wallet.js?v=4"></script>
+  <script src="game.js?v=16"></script>
 </body>
 </html>
