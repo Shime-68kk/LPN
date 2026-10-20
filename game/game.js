@@ -1834,7 +1834,10 @@
   fetch('beatmaps/index.json')
     .then((r) => r.json())
     .then((data) => {
-      SONGS = data.songs;
+      // Bài "locked" chỉ hiện khi đã mở khoá trong cốt truyện (lpn:songs).
+      let opened = {};
+      try { opened = JSON.parse(localStorage.getItem('lpn:songs')) || {}; } catch (e) { /* bỏ qua */ }
+      SONGS = data.songs.filter((s) => !s.locked || opened[s.id]);
       UI.renderSongs(SONGS);
       const auto = params.get('song');
       if (auto) {

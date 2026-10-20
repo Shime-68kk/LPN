@@ -1,5 +1,5 @@
 {
-  "note": "Lời thoại mẫu: sửa thoải mái bằng kỷ niệm thật. who: quang | thuy | ke (người kể) | none (chỉ hiện chữ, không nhãn). cost: số đốt cây cần để mở chương (0 = mở sẵn); chương mở lần lượt, xong chương trước mới mở được chương sau. scene: nang | may | mua | hoanghon | dem (bỏ trống = theo thời tiết thật). cast: ai có mặt trong cảnh, vd [\"quang\"] khi Thủy chưa xuất hiện (bỏ trống = cả hai); giữa chương thêm dòng { \"cast\": [\"quang\", \"thuy\"] } để Thủy hiện ra. near: [đầu, cuối] (0 = hai mép màn hình, 1 = sát nhau): hai bé nhích lại gần theo từng câu thoại, chưa có tim; dòng { \"near\": 1, \"heart\": true } cho sát nhau và hiện tim. emote: biểu cảm nhỏ trên đầu bé (emoteWho: quang | thuy). choice: các lựa chọn, mỗi lựa chọn có reply (lời đáp) và flag (ghi nhớ để dùng ở if). ifWeather: chỉ hiện khi trời thật đang như vậy.",
+  "note": "Lời thoại mẫu: sửa thoải mái bằng kỷ niệm thật. who: quang | thuy | ke (người kể) | none (chỉ hiện chữ, không nhãn). cost: số đốt cây cần để mở chương (0 = mở sẵn); chương mở lần lượt, xong chương trước mới mở được chương sau. scene: nang | may | mua | hoanghon | dem (bỏ trống = theo thời tiết thật). cast: ai có mặt trong cảnh, vd [\"quang\"] khi Thủy chưa xuất hiện (bỏ trống = cả hai); giữa chương thêm dòng { \"cast\": [\"quang\", \"thuy\"] } để Thủy hiện ra. near: [đầu, cuối] (0 = hai mép màn hình, 1 = sát nhau): hai bé nhích lại gần theo từng câu thoại, chưa có tim; dòng { \"near\": 1, \"heart\": true } cho sát nhau và hiện tim. emote: biểu cảm nhỏ trên đầu bé (emoteWho: quang | thuy). no: số chương hiển thị (để chừa chỗ chương viết sau). anyOrder: đọc được không cần xong chương trước. openAt: giờ mở chương (đếm ngược). Dòng { \"song\": id, \"start\": giây, \"dur\": giây }: mở khoá bài hát trong Sâu Tím và phát một đoạn. choice: các lựa chọn, mỗi lựa chọn có reply (lời đáp) và flag (ghi nhớ để dùng ở if). ifWeather: chỉ hiện khi trời thật đang như vậy.",
   "chapters": [
     {
       "id": "c1",
@@ -349,6 +349,40 @@
         { "who": "ke", "text": "Giờ nó tên là “Từ điển tiếng em”. Và trang nào cũng có em." },
         { "who": "quang", "text": "Anh yêu em. Yêu một cách tôn trọng, quan tâm, và đồng hành cùng em." },
         { "who": "ke", "text": "Câu chuyện của hai đứa, vẫn còn đang viết tiếp…" }
+      ]
+    },
+    {
+      "id": "c12",
+      "no": 12,
+      "title": "Chờ chút…",
+      "cost": 0,
+      "anyOrder": true,
+      "openAt": "2026-10-20T19:30:00+07:00",
+      "scene": "may",
+      "cast": ["quang", "thuy"],
+      "lines": [
+        { "who": "none", "text": "20/10 · Sa Pa" },
+        { "who": "ke", "text": "Sa Pa đón hai đứa bằng mây và gió lạnh." },
+        { "who": "thuy", "text": "Lạnh quá anh ơi!", "emote": "🥶" },
+        { "who": "quang", "text": "Lại đây anh ôm cho đỡ lạnh.", "emote": "🫶" },
+        { "who": "ke", "text": "Mây trôi ngang tầm mắt. Núi đồi trải dài đến tận đâu không biết. Còn cậu, chỉ mải nhìn mỗi em." },
+        { "who": "ke", "text": "Hôm nay là 20 tháng 10. Ngày của em." },
+        { "who": "ke", "text": "Trong túi áo cậu có một món quà nhỏ xíu, nằm gọn trong lòng bàn tay. Cậu đã giấu nó suốt cả chặng đường.", "emote": "🤫", "emoteWho": "quang" },
+        { "who": "thuy", "text": "Anh cứ sờ túi áo mãi thế, giấu gì đấy?", "emote": "🤨" },
+        { "who": "quang", "text": "Chờ chút…" },
+        { "who": "ke", "text": "Cậu chọn nó lâu lắm. Không phải thứ đắt nhất, mà là thứ hợp với em nhất. Thứ mà ngày nào em cũng có thể mang theo bên mình." },
+        { "scene": "hoanghon" },
+        { "who": "ke", "text": "Chiều buông xuống. Mây nhuộm hồng cả một góc trời." },
+        { "who": "none", "text": "Tặng em." },
+        { "who": "thuy", "text": "Ơ…", "emote": "😳" },
+        { "who": "ke", "text": "Em mở ra. Rồi em cười. Nụ cười mà cậu đã đi cả chặng đường dài để được nhìn thấy." },
+        { "who": "quang", "text": "Chúc em 20/10 thật xinh, thật vui. Và ngày nào cũng được cười như thế này nhé." },
+        { "who": "thuy", "text": "Em thích lắm. Cảm ơn anh!", "emote": "🥰" },
+        { "scene": "dem" },
+        { "song": "cho-chut", "start": 40, "dur": 20 },
+        { "who": "ke", "text": "Có những bài hát, nghe một lần là nhớ cả một ngày." },
+        { "who": "ke", "text": "Ở nơi mây chạm xuống mặt đất, có một người vừa được nhận quà. Và một người khác, còn vui hơn cả người nhận." },
+        { "who": "quang", "text": "Chờ anh chút nữa thôi. Rồi mình còn đi thật nhiều nơi nữa." }
       ]
     }
   ]

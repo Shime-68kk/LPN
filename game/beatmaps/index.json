@@ -65,6 +65,18 @@
       "preview": 201.748,
       "message": "Anh là người sẽ thương em thật lâu.",
       "offset": 0
+    },
+    {
+      "id": "cho-chut",
+      "title": "chờ chút...",
+      "src": "../style/sound/Chờ Chút.mp3",
+      "cover": "../style/thumbs/cover-7.webp",
+      "map": "beatmaps/cho-chut.json",
+      "bpm": 84.88,
+      "preview": 170.377,
+      "message": "Chờ anh chút nữa thôi, rồi mình còn đi thật nhiều nơi.",
+      "offset": 0,
+      "locked": true
     }
   ]
 }

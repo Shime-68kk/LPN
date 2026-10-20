@@ -545,7 +545,8 @@
   fetch('../game/beatmaps/index.json')
     .then((r) => r.json())
     .then((d) => {
-      SONGS = d.songs.map((s) => ({ id: s.id, title: s.title, cover: s.cover, src: s.src }));
+      const opened = store.get('lpn:songs') || {};
+      SONGS = d.songs.filter((s) => !s.locked || opened[s.id]).map((s) => ({ id: s.id, title: s.title, cover: s.cover, src: s.src }));
       Home.gameStars();
       Home.story();
       Weather.apply();

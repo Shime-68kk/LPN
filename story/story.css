@@ -234,3 +234,32 @@ body.night .stop.buy .label small { color: #9FE0B2; }
 @keyframes beat { 15% { transform: scale(1.18); } 30% { transform: scale(1); } }
 .end-card h2 { margin: 0; font-family: 'Fraunces', serif; font-weight: 600; font-size: 24px; }
 .end-card p { margin: 0 0 6px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+
+/* ===== Thẻ mở khoá bài hát ===== */
+.song-card {
+  position: absolute;
+  top: calc(var(--safe-top) + 72px);
+  left: 16px;
+  right: 16px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px 10px 10px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 30px rgba(29, 24, 50, .18);
+}
+.song-card.on { animation: song-in .5s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes song-in { from { opacity: 0; transform: translateY(-14px) scale(.96); } }
+.song-card img { width: 56px; height: 56px; flex: none; border-radius: 14px; object-fit: cover; }
+.song-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.song-meta small { font-size: 12px; font-weight: 600; color: #C23A5C; }
+body.night .song-meta small { color: #FF9FB2; }
+.song-meta b { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; }
+.song-meta span { font-size: 12px; color: var(--muted); }
+.song-bar { display: block; height: 4px; margin-top: 4px; border-radius: 999px; background: var(--line); overflow: hidden; font-style: normal; }
+.song-bar i { display: block; height: 100%; width: 0; background: #FF8FA3; }
+.song-card.on .song-bar i { animation: song-play var(--dur, 20s) linear forwards; }
+@keyframes song-play { to { width: 100%; } }

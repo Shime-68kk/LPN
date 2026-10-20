@@ -40,6 +40,9 @@ SONGS = [
      "Mỗi ngày không gặp là một ngày anh nhớ em."),
     ("anh-la-ai", "Anh Là Ai?", "Anh là ai.mp3", "Anh (6).jpg",
      "Anh là người sẽ thương em thật lâu."),
+    # Bài mở khoá trong cốt truyện (chương "Chờ chút…"): ẩn khỏi game cho tới khi mở.
+    ("cho-chut", "chờ chút...", "Chờ Chút.mp3", "Anh (7).jpg",
+     "Chờ anh chút nữa thôi, rồi mình còn đi thật nhiều nơi.", True),
 ]
 
 
@@ -129,7 +132,7 @@ def chroma(mag):
 
 
 def build(song):
-    sid, title, fname, cover, _ = song
+    sid, title, fname, cover = song[:4]
     path = ROOT / "style" / "sound" / fname
     y = load_audio(path)
     duration = len(y) / SR
@@ -268,13 +271,14 @@ def main():
     only = set(sys.argv[1:])
     songs = []
     for song in SONGS:
-        sid, title, fname, cover, message = song
+        sid, title, fname, cover, message = song[:5]
+        locked = len(song) > 5 and song[5]
         if not only or sid in only:
             data = build(song)
         else:
             data = json.loads((OUT / f"{sid}.json").read_text())
         prev = old.get(sid, {})
-        songs.append({
+        entry = {
             "id": sid,
             "title": title,
             "src": f"../style/sound/{fname}",
@@ -284,7 +288,10 @@ def main():
             "preview": data.get("preview", data["start"]),
             "message": prev.get("message", message),
             "offset": prev.get("offset", 0),
-        })
+        }
+        if locked:
+            entry["locked"] = True
+        songs.append(entry)
     index_path.write_text(json.dumps({"songs": songs}, ensure_ascii=False, indent=2) + "\n")
 
 

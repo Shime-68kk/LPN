@@ -59,10 +59,46 @@
     const ch = CHAPTERS[i];
     if (save.done[ch.id]) return { state: 'done', note: 'Đã xong' };
     if (OPEN_ALL) return { state: 'current', note: 'Đọc thử' };
-    const ready = i === 0 || save.done[CHAPTERS[i - 1].id];
+    // anyOrder: chương đặc biệt (vd. chương hôm nay) đọc được không cần xong chương trước.
+    const ready = i === 0 || ch.anyOrder || save.done[CHAPTERS[i - 1].id];
     if (!isOpen(i)) return { state: ready ? 'buy' : 'locked', note: 'Cần ' + ch.cost + ' đốt cây' };
     if (!ready) return { state: 'locked', note: 'Chờ chương trước' };
+    // Chương có giờ mở: bấm vào lần đầu mới biết là đang đếm ngược.
+    if (waitLeft(i) > 0 && save.peek && save.peek[ch.id]) return { state: 'current', note: 'Mở sau ' + clock(waitLeft(i)), wait: true };
     return { state: 'current', note: 'Đang chờ em' };
+  }
+
+  const chNo = (i) => CHAPTERS[i].no || i + 1;
+  // Số giây còn lại tới giờ mở chương (openAt), 0 nếu đã mở.
+  const waitLeft = (i) => {
+    const at = CHAPTERS[i] && CHAPTERS[i].openAt ? Date.parse(CHAPTERS[i].openAt) : 0;
+    return at ? Math.max(0, Math.ceil((at - Date.now()) / 1000)) : 0;
+  };
+  const clock = (sec) => {
+    const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(s).padStart(2, '0');
+  };
+  const openTime = (i) => new Date(CHAPTERS[i].openAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+
+  let waitTimer = 0;
+  function openWait(i) {
+    save.peek = save.peek || {};
+    save.peek[CHAPTERS[i].id] = true;
+    persist();
+    const tick = () => {
+      const left = waitLeft(i);
+      if (!left) { clearInterval(waitTimer); closeDialog(); renderMap(); return; }
+      $('shop-text').textContent = 'Chương này mở lúc ' + openTime(i) + ' tối nay. Còn ' + clock(left) + ' nữa thôi, chờ anh chút nhé.';
+    };
+    dialog('Chờ chút…', '', 'Em đợi được', () => {
+      clearInterval(waitTimer);
+      closeDialog();
+      renderMap();
+      if (!$('play').hidden) history.back();
+    }, true);
+    tick();
+    clearInterval(waitTimer);
+    waitTimer = setInterval(tick, 1000);
   }
 
   // ================= Ví đốt cây =================
@@ -106,7 +142,7 @@
   function openBuy(i) {
     const ch = CHAPTERS[i];
     const w = Wallet.get();
-    const title = 'Mở chương ' + (i + 1) + '?';
+    const title = 'Mở chương ' + chNo(i) + '?';
     if (w.dot >= ch.cost) {
       dialog(title, 'Dùng ' + ch.cost + ' đốt cây để mở chương này. Em đang có ' + w.dot + ' đốt.',
         'Mở bằng ' + ch.cost + ' đốt', () => { if (Wallet.spend(ch.cost)) unlock(i); });
@@ -119,6 +155,17 @@
       + fmt(morePts) + ' điểm nữa là đủ nha (' + rateText + ').', 'Chơi Sâu Tím', goPlay);
   }
 
+  // Đồng hồ đếm ngược trên bản đồ cho chương có giờ mở.
+  let ticking = [];
+  setInterval(() => {
+    if ($('map').hidden || !ticking.length) return;
+    for (const t of ticking) {
+      if (!waitLeft(t.i)) { renderMap(); return; }
+      const st = status(t.i);
+      t.small.textContent = 'Chương ' + chNo(t.i) + ' · ' + st.note;
+    }
+  }, 1000);
+
   function renderMap() {
     setSky(liveSky, true);
     const path = $('path');
@@ -127,6 +174,7 @@
     const done = CHAPTERS.filter((c) => save.done[c.id]).length;
     $('map-count').textContent = done + '/' + CHAPTERS.length + ' chương';
     renderWallet();
+    ticking = [];
 
     CHAPTERS.forEach((ch, i) => {
       const st = status(i);
@@ -141,13 +189,14 @@
       const label = document.createElement('span');
       label.className = 'label';
       const small = document.createElement('small');
-      small.textContent = 'Chương ' + (i + 1) + ' · ' + st.note;
+      small.textContent = 'Chương ' + chNo(i) + ' · ' + st.note;
+      if (waitLeft(i) > 0) ticking.push({ i, small });
       const b = document.createElement('b');
       // Chưa mở thì giấu tên chương, mở rồi mới biết.
       b.textContent = isOpen(i) ? ch.title : 'Bí mật';
       label.append(small, b);
       stop.append(node, label);
-      stop.setAttribute('aria-label', 'Chương ' + (i + 1) + ': ' + b.textContent + '. ' + st.note);
+      stop.setAttribute('aria-label', 'Chương ' + chNo(i) + ': ' + b.textContent + '. ' + st.note);
       if (st.state === 'buy') stop.addEventListener('click', () => openBuy(i));
       else if (st.state !== 'locked') stop.addEventListener('click', () => play(i));
       path.appendChild(stop);
@@ -237,7 +286,9 @@
   const isTalk = (item) => item && !!item.text && (item.who === 'quang' || item.who === 'thuy');
 
   function play(i) {
+    if (waitLeft(i) > 0) { openWait(i); return; }
     const ch = CHAPTERS[i];
+    if (ch.lines.some((l) => l.song)) Music.prepare(ch.lines.find((l) => l.song));
     P.ch = i;
     P.queue = ch.lines.slice();
     P.waiting = null;
@@ -252,7 +303,7 @@
     P.nearLock = false;
     // Chương còn xa nhau thì mặc định chưa có tim.
     setNear(P.range ? P.range[0] : 1, ch.heart !== undefined ? ch.heart !== false : !P.range);
-    $('play-title').textContent = 'Chương ' + (i + 1) + ' · ' + ch.title;
+    $('play-title').textContent = 'Chương ' + chNo(i) + ' · ' + ch.title;
     $('map').hidden = true;
     $('play').hidden = false;
     $('end').hidden = true;
@@ -279,6 +330,7 @@
         continue;
       }
       if (item.choice) { ask(item.choice); return; }
+      if (item.song) { Music.unlock(item); continue; }
       if (isTalk(item) && P.range && !P.nearLock) {
         P.talkK++;
         const [a, b] = P.range;
@@ -400,11 +452,87 @@
 
   function toMap() {
     if (P.typing) finishTyping();
+    Music.stop();
     $('play').hidden = true;
     $('end').hidden = true;
     $('map').hidden = false;
     renderMap();
   }
+
+  // ================= Bài hát mở khoá trong truyện =================
+  // Dòng { "song": "cho-chut", "start": 40, "dur": 20 }: mở bài trong Sâu Tím và phát một đoạn.
+  // Âm thanh tải sẵn lúc vào chương (lúc đó có cú chạm nên iOS cho phép phát).
+  const Music = {
+    ctx: null, buf: null, info: null, src: null, el: null, timer: 0, loading: null,
+    prepare(item) {
+      try {
+        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (this.ctx.state !== 'running') this.ctx.resume();
+      } catch (e) { this.ctx = null; }
+      if (this.loading) return;
+      this.loading = fetch('../game/beatmaps/index.json')
+        .then((r) => r.json())
+        .then((d) => {
+          this.info = d.songs.find((s) => s.id === item.song);
+          if (!this.info || !this.ctx) return;
+          return fetch(this.info.src).then((r) => r.arrayBuffer())
+            .then((ab) => new Promise((ok, bad) => this.ctx.decodeAudioData(ab, ok, bad)))
+            .then((buf) => { this.buf = buf; });
+        })
+        .catch(() => {});
+    },
+    unlock(item) {
+      let opened = {};
+      try { opened = JSON.parse(localStorage.getItem('lpn:songs')) || {}; } catch (e) { /* bỏ qua */ }
+      opened[item.song] = true;
+      try { localStorage.setItem('lpn:songs', JSON.stringify(opened)); } catch (e) { /* bỏ qua */ }
+      const start = item.start || 0, dur = item.dur || 20;
+      const card = $('song-card');
+      if (this.info) {
+        $('song-cover').src = this.info.cover;
+        $('song-title').textContent = this.info.title;
+      }
+      card.style.setProperty('--dur', dur + 's');
+      card.hidden = false;
+      card.classList.remove('on');
+      void card.offsetWidth;
+      card.classList.add('on');
+      this.stop(true);
+      if (this.ctx && this.buf) {
+        const ctx = this.ctx, t = ctx.currentTime;
+        if (ctx.state !== 'running') ctx.resume();
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(1, t + 1.2);
+        g.gain.setValueAtTime(1, t + dur - 2.5);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        g.connect(ctx.destination);
+        const s = ctx.createBufferSource();
+        s.buffer = this.buf;
+        s.connect(g);
+        s.start(t, start, dur + 0.05);
+        this.src = { s, g };
+      } else if (this.info) {
+        // Chưa giải mã kịp thì phát bằng thẻ audio (không có nhỏ dần trên iOS).
+        const el = new Audio(this.info.src + '#t=' + start);
+        el.play().catch(() => {});
+        this.el = el;
+      }
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => { this.stop(); card.hidden = true; }, dur * 1000);
+    },
+    stop(keepCard) {
+      clearTimeout(this.timer);
+      if (this.src) {
+        const { s, g } = this.src;
+        try { g.gain.cancelScheduledValues(0); g.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.15); } catch (e) { /* bỏ qua */ }
+        setTimeout(() => { try { s.stop(); } catch (e) { /* đã dừng */ } g.disconnect(); }, 600);
+        this.src = null;
+      }
+      if (this.el) { this.el.pause(); this.el = null; }
+      if (!keepCard) $('song-card').hidden = true;
+    },
+  };
 
   // ================= Sự kiện =================
   $('talk').addEventListener('click', () => next());
@@ -415,6 +543,7 @@
   $('btn-end-map').addEventListener('click', () => history.back());
   $('btn-end-next').addEventListener('click', () => {
     const i = P.ch + 1;
+    if (isOpen(i) && waitLeft(i) > 0) { $('end').hidden = true; openWait(i); return; }
     if (isOpen(i)) { play(i); return; }
     $('end').hidden = true;
     openBuy(i);
