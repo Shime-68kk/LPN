@@ -66,7 +66,7 @@
       pal: { body: '#3D3670', body2: '#4A4285', head: '#3D3670', feet: '#1E1A3A', ant: '#8C7FD6', antTip: '#FFE27A', mark: '#FFE27A', eye: '#FFF4D6', mouth: '#FFF4D6', shine: 'rgba(255,255,255,0.18)', cocoon: '#5A5294', cocoonLine: '#8C7FD6' }, acc: 'moon', mark: 'star', glow: '#FFE27A' },
     { id: 'be-hong', slot: 'skin', name: 'Bé Hồng', rarity: 'huyenthoai', price: 1500, ch: 8,
       memory: 'Từ mép bên kia màn hình, từng câu nói một, rồi đứng sát bên bé tím.',
-      pal: { body: '#FFB0C0', body2: '#FF9DB2', head: '#FFB0C0', feet: '#D9577A', ant: '#D9577A', antTip: '#FFFFFF', blush: 'rgba(255,90,130,0.6)', mark: '#FFFFFF', cocoon: '#FFD6E0', cocoonLine: '#FF9DB2' }, acc: 'bow', eyes: 'lash', shape: 'bean', mark: 'heart', glow: '#FFFFFF' },
+      pal: { body: '#FFB0C0', body2: '#FF9DB2', head: '#FFB0C0', feet: '#D9577A', ant: '#D9577A', antTip: '#FF4F7B', blush: 'rgba(255,90,130,0.6)', mark: '#FFFFFF', cocoon: '#FFD6E0', cocoonLine: '#FF9DB2' }, acc: 'bow', eyes: 'lash', shape: 'bean', mark: 'heart', glow: '#FFFFFF' },
 
     // ---------- Hiệu ứng khi ăn lá ----------
     { id: 'la', slot: 'fx', name: 'Vụn lá', rarity: 'thuong', price: 0, free: true, memory: 'Măm măm, lá xanh giòn tan.', fx: { kind: 'leaf' } },

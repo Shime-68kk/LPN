@@ -217,8 +217,11 @@
     el.textContent = r.name;
     el.style.setProperty('--r', r.color);
   }
-  const sortItems = (list) => list.slice().sort((a, b) =>
-    (b.free ? 1 : 0) - (a.free ? 1 : 0) || RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || a.price - b.price);
+  // Đang dùng lên đầu, rồi đến đồ đã có, cuối cùng là đồ chưa có (rẻ trước, hiếm sau).
+  const rank = (item, w) => (w.equip[item.slot] === item.id ? 0 : Wallet.owns(item.slot, item.id, w) ? 1 : 2);
+  const sortItems = (list, w) => list.slice().sort((a, b) =>
+    rank(a, w) - rank(b, w) || (b.free ? 1 : 0) - (a.free ? 1 : 0)
+    || RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || a.price - b.price);
 
   function stateOf(item, w) {
     const owned = Wallet.owns(item.slot, item.id, w);
@@ -231,8 +234,20 @@
     const grid = $('grid');
     grid.replaceChildren();
     $('items-hint').textContent = HINT[slot];
-    for (const item of sortItems(ITEMS.filter((i) => i.slot === slot))) {
+    const list = sortItems(ITEMS.filter((i) => i.slot === slot), w);
+    let group = -1;
+    for (const item of list) {
       const st = stateOf(item, w);
+      // Tiêu đề nhóm: "Đã có" (gồm món đang dùng) và "Chưa có".
+      const g = st.owned ? 0 : 1;
+      if (g !== group) {
+        group = g;
+        const h = document.createElement('p');
+        h.className = 'grid-head';
+        const n = list.filter((i) => Wallet.owns(i.slot, i.id, w) === !g).length;
+        h.textContent = (g ? 'Chưa có' : 'Đã có') + ' · ' + n;
+        grid.appendChild(h);
+      }
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'item' + (st.owned ? ' owned' : '') + (st.on ? ' equipped' : '');

@@ -154,6 +154,8 @@ body.night .stage { background: linear-gradient(#29224E, #3A3166 70%, #2D2655); 
 /* ===== Lưới món đồ ===== */
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 @media (min-width: 520px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.grid-head { grid-column: 1 / -1; margin: 6px 4px -2px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.grid-head:first-child { margin-top: 0; }
 .item {
   position: relative;
   padding: 8px 8px 12px;
