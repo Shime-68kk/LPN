@@ -24,6 +24,9 @@ SECTION_LEN = 96.0   # độ dài một màn chơi (giây)
 LEAD = 2.4           # khoảng trống trước nốt đầu tiên
 PREVIEW_LEN = 15.0   # độ dài đoạn nghe thử ở menu
 
+# Chỉnh tay điểm bắt đầu đoạn nghe thử (giây), thay cho đoạn tự tìm.
+PREVIEW_AT = {"cho-chut": 44.0}
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "game" / "beatmaps"
 
@@ -285,7 +288,7 @@ def main():
             "cover": f"../style/thumbs/cover-{cover.strip('Anh ().jpg')}.webp",
             "map": f"beatmaps/{sid}.json",
             "bpm": data["bpm"],
-            "preview": data.get("preview", data["start"]),
+            "preview": PREVIEW_AT.get(sid, data.get("preview", data["start"])),
             "message": prev.get("message", message),
             "offset": prev.get("offset", 0),
         }
