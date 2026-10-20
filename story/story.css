@@ -195,6 +195,12 @@ body.night .stop.buy .label small { color: #9FE0B2; }
 /* Còn xa nhau: mỗi bé một mép, chưa có tim, chưa che chung ô */
 .pos-a, .pos-b { transition: transform .8s cubic-bezier(.3, .8, .3, 1); }
 .scene.apart .l-heart, .scene.apart .l-umb { opacity: 0 !important; }
+.scene.no-heart .l-heart { opacity: 0 !important; }
+
+/* Biểu cảm nhỏ nảy lên trên đầu bé */
+.emote { fill: #2A1E3D; stroke: none; font-size: 15px; opacity: 0; transform-box: fill-box; transform-origin: 50% 100%; }
+.emote.on { opacity: 1; animation: emote-pop .45s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes emote-pop { from { opacity: 0; transform: translateY(6px) scale(.3); } }
 
 /* Nhân vật đang nói thì nhún nhẹ */
 .speak-quang .bean-a { animation: hop .45s ease-out; }

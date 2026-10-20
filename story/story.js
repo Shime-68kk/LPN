@@ -185,15 +185,18 @@
 
   // ================= Chơi một chương =================
   // log: các câu đã hiện, để bấm "Trước" xem lại; pos: câu đang xem trong log.
-  const P = { ch: -1, queue: [], typing: null, full: '', waiting: null, log: [], pos: -1, sky: '', cast: null, apart: false };
+  const P = { ch: -1, queue: [], typing: null, full: '', waiting: null, log: [], pos: -1, sky: '', cast: null, apart: false, heart: true };
   const ALL_CAST = ['quang', 'thuy'];
 
   // Ai đang có mặt trong cảnh (chương mà Thủy chưa xuất hiện thì chỉ có bé tím).
   // apart: hai bé đứng hai mép màn hình (chưa ở gần nhau), không có tim.
-  function setCast(list, apart) {
+  // heart: false = đứng cạnh nhau nhưng chưa hiện tim (chưa yêu).
+  function setCast(list, apart, heart) {
     P.cast = list || ALL_CAST;
     P.apart = !!apart;
+    P.heart = heart !== false;
     const scene = $('scene');
+    scene.classList.toggle('no-heart', !P.heart);
     scene.classList.toggle('no-thuy', !P.cast.includes('thuy'));
     scene.classList.toggle('no-quang', !P.cast.includes('quang'));
     scene.classList.toggle('apart', P.apart);
@@ -242,7 +245,7 @@
     P.pos = -1;
     P.sky = ch.scene || liveSky;
     setSky(P.sky, false);
-    setCast(ch.cast, ch.apart);
+    setCast(ch.cast, ch.apart, ch.heart);
     $('play-title').textContent = 'Chương ' + (i + 1) + ' · ' + ch.title;
     $('map').hidden = true;
     $('play').hidden = false;
@@ -262,14 +265,26 @@
       if (item.ifWeather) { P.queue.unshift(...((liveSky === item.ifWeather ? item.then : item.else) || [])); continue; }
       if (item.if) { P.queue.unshift(...((save.flags[item.if] ? item.then : item.else) || [])); continue; }
       if (item.scene && !item.text) { P.sky = item.scene; setSky(P.sky, false); continue; }
-      if (item.cast && !item.text) { setCast(item.cast, item.apart); continue; }
+      if (item.cast && !item.text) { setCast(item.cast, item.apart, item.heart); continue; }
       if (item.choice) { ask(item.choice); return; }
       // who "none": chỉ hiện chữ, không có nhãn người nói (tiếng động, tin nhắn…).
-      P.log.push({ who: NAMES[item.who] || item.who === 'none' ? item.who : 'ke', text: String(item.text || ''), sky: P.sky, cast: P.cast, apart: P.apart });
+      P.log.push({ who: NAMES[item.who] || item.who === 'none' ? item.who : 'ke', text: String(item.text || ''), sky: P.sky,
+        cast: P.cast, apart: P.apart, heart: P.heart, emote: item.emote || '', emoteWho: item.emoteWho || item.who });
       show(P.log.length - 1, true);
       return;
     }
     finish();
+  }
+
+  // Biểu cảm nhỏ trên đầu bé (💦, 💡, 🍜…), hiện trong lúc câu đó còn trên màn hình.
+  function showEmote(emoji, who) {
+    const a = $('emote-a'), b = $('emote-b');
+    for (const el of [a, b]) { el.classList.remove('on'); el.textContent = ''; }
+    if (!emoji) return;
+    const el = who === 'thuy' ? b : a;
+    el.textContent = emoji;
+    void el.getBBox();
+    el.classList.add('on');
   }
 
   function prev() {
@@ -282,7 +297,8 @@
     P.pos = idx;
     const item = P.log[idx];
     const last = idx === P.log.length - 1;
-    if (!typing) { setSky(item.sky, false); setCast(item.cast, item.apart); }
+    if (!typing) { setSky(item.sky, false); setCast(item.cast, item.apart, item.heart); }
+    showEmote(item.emote, item.emoteWho);
     $('btn-prev').hidden = idx === 0;
     $('step').textContent = last ? '' : 'Xem lại ' + (idx + 1) + '/' + P.log.length;
     const who = item.who;
