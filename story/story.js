@@ -26,7 +26,8 @@
   const save = (() => {
     let v = null;
     try { v = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { /* bỏ qua */ }
-    v = v && v.done ? v : { done: {}, flags: {} };
+    // ver 2: truyện thật thay cho chương mẫu, nên tiến độ đọc cũ (của chương mẫu) bỏ đi một lần.
+    v = v && v.done && v.ver === 2 ? v : { done: {}, flags: {}, ver: 2 };
     v.open = v.open || {};
     return v;
   })();
@@ -51,7 +52,7 @@
 
   // ================= Bản đồ =================
   // TẠM THỜI mở hết chương để đọc thử. Nhớ đổi lại false trước khi đưa lên GitHub.
-  const OPEN_ALL = true;
+  const OPEN_ALL = false;
   const isOpen = (i) => OPEN_ALL || !CHAPTERS[i].cost || !!save.open[CHAPTERS[i].id];
   // Chương mở lần lượt: xong chương trước mới được dùng đốt cây mở chương sau.
   function status(i) {

@@ -225,7 +225,8 @@
         .then((r) => r.json())
         .then((d) => {
           const list = d.chapters || [];
-          const saved = store.get('lpn:story') || {};
+          let saved = store.get('lpn:story') || {};
+          if (saved.ver !== 2) saved = {};
           const done = saved.done || {};
           const open = saved.open || {};
           const n = list.filter((c) => done[c.id]).length;
