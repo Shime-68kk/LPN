@@ -459,3 +459,19 @@ body.night .wallet-link, body.night .menu-wallet { color: #B79CF0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Nhãn bài mới */
+.new-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #FF6F8E;
+  color: #FFF8EF;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  vertical-align: 2px;
+  animation: new-pulse 1.6s ease-in-out infinite;
+}
+@keyframes new-pulse { 50% { transform: scale(1.08); } }

@@ -1,6 +1,18 @@
 {
   "songs": [
     {
+      "id": "cho-chut",
+      "title": "chờ chút...",
+      "src": "../style/sound/Chờ Chút.mp3",
+      "cover": "../style/thumbs/cover-7.webp",
+      "map": "beatmaps/cho-chut.json",
+      "bpm": 84.88,
+      "preview": 44.0,
+      "message": "Chờ anh chút nữa thôi, rồi mình còn đi thật nhiều nơi.",
+      "offset": 0,
+      "isNew": true
+    },
+    {
       "id": "ai-ngoai-anh",
       "title": "Ai Ngoài Anh",
       "src": "../style/sound/Ai Ngoài Anh.mp3",
@@ -64,17 +76,6 @@
       "bpm": 95.1,
       "preview": 201.748,
       "message": "Anh là người sẽ thương em thật lâu.",
-      "offset": 0
-    },
-    {
-      "id": "cho-chut",
-      "title": "chờ chút...",
-      "src": "../style/sound/Chờ Chút.mp3",
-      "cover": "../style/thumbs/cover-7.webp",
-      "map": "beatmaps/cho-chut.json",
-      "bpm": 84.88,
-      "preview": 44.0,
-      "message": "Chờ anh chút nữa thôi, rồi mình còn đi thật nhiều nơi.",
       "offset": 0
     }
   ]

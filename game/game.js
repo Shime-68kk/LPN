@@ -1487,6 +1487,12 @@
         const title = document.createElement('span');
         title.className = 'title';
         title.textContent = s.title;
+        if (s.isNew) {
+          const nb = document.createElement('span');
+          nb.className = 'new-badge';
+          nb.textContent = 'NEW';
+          title.appendChild(nb);
+        }
         const sub = document.createElement('span');
         sub.className = 'sub';
         const best = Store.data.best[s.id + ':' + Game.diff];

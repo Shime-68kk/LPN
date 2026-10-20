@@ -46,6 +46,9 @@ SONGS = [
     ("cho-chut", "chờ chút...", "Chờ Chút.mp3", "Anh (7).jpg",
      "Chờ anh chút nữa thôi, rồi mình còn đi thật nhiều nơi."),
 ]
+# Bài chơi cả bài (không cắt đoạn 96 giây) và bài gắn nhãn NEW, đứng đầu danh sách.
+FULL_SONG = {"cho-chut"}
+NEW_SONGS = ["cho-chut"]
 
 
 def load_audio(path):
@@ -163,6 +166,8 @@ def build(song):
 
     # Chọn đoạn sôi động nhất (thường là điệp khúc) dài SECTION_LEN giây.
     length = min(SECTION_LEN, duration - 6)
+    if sid in FULL_SONG:
+        length = duration - max(0.0, beats[0] - LEAD) - 0.5
     best_i, best_val = 0, -1.0
     for i in range(0, len(beats), 4):
         s0 = beats[i] - LEAD
@@ -175,6 +180,8 @@ def build(song):
         if val > best_val:
             best_i, best_val = i, val
     start = max(0.0, beats[best_i] - LEAD)
+    if sid in FULL_SONG:
+        start = max(0.0, beats[0] - LEAD)
     end = min(duration, start + length)
     last_note = end - 3.2
 
@@ -293,7 +300,10 @@ def main():
         }
         if locked:
             entry["locked"] = True
+        if sid in NEW_SONGS:
+            entry["isNew"] = True
         songs.append(entry)
+    songs.sort(key=lambda e: 0 if e["id"] in NEW_SONGS else 1)
     index_path.write_text(json.dumps({"songs": songs}, ensure_ascii=False, indent=2) + "\n")
 
 
