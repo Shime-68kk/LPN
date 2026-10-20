@@ -43,9 +43,8 @@ SONGS = [
      "Mỗi ngày không gặp là một ngày anh nhớ em."),
     ("anh-la-ai", "Anh Là Ai?", "Anh là ai.mp3", "Anh (6).jpg",
      "Anh là người sẽ thương em thật lâu."),
-    # Bài mở khoá trong cốt truyện (chương "Chờ chút…"): ẩn khỏi game cho tới khi mở.
     ("cho-chut", "chờ chút...", "Chờ Chút.mp3", "Anh (7).jpg",
-     "Chờ anh chút nữa thôi, rồi mình còn đi thật nhiều nơi.", True),
+     "Chờ anh chút nữa thôi, rồi mình còn đi thật nhiều nơi."),
 ]
 
 
