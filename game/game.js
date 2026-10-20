@@ -1534,8 +1534,9 @@
       $('res-best').hidden = !isBest;
       bank();
       const left = window.Wallet ? Wallet.get().points : 0;
-      $('res-wallet').textContent = '+' + fmtNum(gm.score) + ' điểm'
-        + (gm.dotGot ? ' = +' + gm.dotGot + ' đốt cây' : '') + '. ' + walletText()
+      $('res-wallet').textContent = (gm.score
+        ? '+' + fmtNum(gm.score) + ' điểm' + (gm.dotGot ? ' = +' + gm.dotGot + ' đốt cây' : '') + '. '
+        : 'Ván này chưa có điểm. ') + walletText()
         + (left ? ' (dư ' + fmtNum(left) + ' điểm để dành ván sau).' : '.');
       this.hide('hud');
       this.show('result');
@@ -1705,7 +1706,7 @@
 
   // Chặn cuộn/zoom của trình duyệt khi đang chơi.
   document.addEventListener('touchmove', (e) => {
-    if (!e.target.closest || !e.target.closest('.songs')) e.preventDefault();
+    if (!e.target.closest || !e.target.closest('.songs, .vol')) e.preventDefault();
   }, { passive: false });
   document.addEventListener('gesturestart', (e) => e.preventDefault());
   document.addEventListener('dblclick', (e) => e.preventDefault());
@@ -1782,11 +1783,34 @@
   };
   eatVol.value = Store.data.eatVol;
   showEatVol();
-  eatVol.addEventListener('input', () => {
+  const applyEatVol = () => {
     Store.data.eatVol = Number(eatVol.value);
     Sound.setEatVol(Store.data.eatVol);
     showEatVol();
+  };
+  eatVol.addEventListener('input', applyEatVol);
+  // Tự kéo bằng ngón tay: trang chặn cuộn/zoom nên thanh trượt gốc trên iPhone không kéo được.
+  let volDrag = null;
+  const volFromX = (x) => {
+    const r = eatVol.getBoundingClientRect();
+    const p = clamp((x - r.left) / r.width, 0, 1);
+    eatVol.value = Math.round((p * 100) / 5) * 5;
+    applyEatVol();
+  };
+  eatVol.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    volDrag = e.pointerId;
+    try { eatVol.setPointerCapture(e.pointerId); } catch (err) { /* bỏ qua */ }
+    volFromX(e.clientX);
   });
+  eatVol.addEventListener('pointermove', (e) => { if (volDrag === e.pointerId) volFromX(e.clientX); });
+  const volEnd = (e) => {
+    if (volDrag !== e.pointerId) return;
+    volDrag = null;
+    eatVol.dispatchEvent(new Event('change'));
+  };
+  eatVol.addEventListener('pointerup', volEnd);
+  eatVol.addEventListener('pointercancel', volEnd);
   // Thả tay ra thì kêu thử một tiếng để nghe mức mới.
   eatVol.addEventListener('change', () => {
     Store.save();

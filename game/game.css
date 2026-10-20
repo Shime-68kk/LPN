@@ -353,6 +353,8 @@ body.night .song .mini-stars svg.on { fill: #FFC24B; }
 .vol label { flex: none; }
 .vol output { flex: none; width: 40px; text-align: right; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
 .vol input {
+  touch-action: none;
+  cursor: pointer;
   flex: 1;
   min-width: 0;
   height: 28px;

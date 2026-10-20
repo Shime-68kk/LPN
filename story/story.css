@@ -98,7 +98,13 @@ body.night .stop.buy .label small { color: #9FE0B2; }
 .stop.locked { cursor: default; }
 
 /* ===== Màn chơi ===== */
-.play { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--bg); }
+/* Khoá khung: không phóng to khi chạm nhanh, không kéo nảy trang, không bôi đen chữ. */
+html, body { touch-action: manipulation; }
+.play {
+  position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--bg);
+  touch-action: manipulation; overscroll-behavior: none;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+}
 .play .scene { height: auto; flex: 1; min-height: 240px; }
 .play-top {
   position: absolute;

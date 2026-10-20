@@ -71,6 +71,7 @@
   const chNo = (i) => CHAPTERS[i].no || i + 1;
   // Số giây còn lại tới giờ mở chương (openAt), 0 nếu đã mở.
   const waitLeft = (i) => {
+    if (OPEN_ALL) return 0;
     const at = CHAPTERS[i] && CHAPTERS[i].openAt ? Date.parse(CHAPTERS[i].openAt) : 0;
     return at ? Math.max(0, Math.ceil((at - Date.now()) / 1000)) : 0;
   };
@@ -547,6 +548,9 @@
   };
 
   // ================= Sự kiện =================
+  // Bấm "tiếp" liên tục trên điện thoại không bị hiểu là chạm đúp để phóng to.
+  document.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false });
+  document.addEventListener('gesturestart', (e) => e.preventDefault());
   $('talk').addEventListener('click', () => next());
   $('btn-next').addEventListener('click', (e) => { e.stopPropagation(); next(); });
   $('btn-prev').addEventListener('click', (e) => { e.stopPropagation(); prev(); });
