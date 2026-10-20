@@ -1,5 +1,5 @@
-// Ví chung cho game và cốt truyện: điểm chơi Sâu Tím tự đổi ra đốt cây để mở chương.
-// Lưu trên máy (localStorage), mỗi điện thoại một ví riêng.
+// Ví chung cho game, cốt truyện và Tiệm Sâu: đốt cây, điểm lẻ, đồ đã có và đồ đang mặc.
+// Lưu trên máy (localStorage); sync.js sao lưu lên Firebase nếu đã chọn "máy của ai".
 'use strict';
 (() => {
   const KEY = 'lpn:wallet';
@@ -8,20 +8,32 @@
   const PACK_DOT = 3;
   // Quà tặng một lần cho mỗi máy mở link.
   const GIFT_DOT = 1200;
+  const DEFAULT_EQUIP = { skin: 'tim', fx: 'la', wing: 'canh-tim' };
 
   const read = () => {
     let v = null;
     try { v = JSON.parse(localStorage.getItem(KEY)); } catch (e) { /* bỏ qua */ }
+    v = v || {};
     return {
-      points: Math.max(0, Math.floor((v && v.points) || 0)),
-      dot: Math.max(0, Math.floor((v && v.dot) || 0)),
-      migrated: !!(v && v.migrated),
-      gift: !!(v && v.gift),
-      giftSeen: !!(v && v.giftSeen),
+      points: Math.max(0, Math.floor(v.points || 0)),
+      dot: Math.max(0, Math.floor(v.dot || 0)),
+      migrated: !!v.migrated,
+      gift: !!v.gift,
+      giftSeen: !!v.giftSeen,
+      // Đồ đã có: { "skin:sa-pa": thời điểm có }. Đồ mặc định luôn có, không cần ghi.
+      owned: v.owned && typeof v.owned === 'object' ? v.owned : {},
+      equip: Object.assign({}, DEFAULT_EQUIP, v.equip || {}),
+      // Hộp quà: số hộp đã mở và số hộp liên tiếp chưa ra Sử thi / Huyền thoại (để bảo đảm).
+      boxes: Math.max(0, Math.floor(v.boxes || 0)),
+      pityEpic: Math.max(0, Math.floor(v.pityEpic || 0)),
+      pityLegend: Math.max(0, Math.floor(v.pityLegend || 0)),
+      updatedAt: v.updatedAt || 0,
     };
   };
   const write = (w) => {
+    w.updatedAt = Date.now();
     try { localStorage.setItem(KEY, JSON.stringify(w)); } catch (e) { /* bỏ qua */ }
+    if (window.Sync) window.Sync.dirty();
     return w;
   };
   // Đủ gói nào thì đổi luôn gói đó, không cần bấm đổi tay.
@@ -34,6 +46,7 @@
 
   (() => {
     const w = read();
+    const before = JSON.stringify(w);
     // Một lần duy nhất: cộng điểm đã chơi trước khi có ví. Game chỉ lưu kỷ lục
     // của từng bài ở mỗi độ khó, nên đó là phần điểm cũ còn lấy lại được.
     if (!w.migrated) {
@@ -45,14 +58,21 @@
     }
     if (!w.gift) { w.dot += GIFT_DOT; w.gift = true; }
     convert(w);
-    write(w);
+    if (JSON.stringify(w) !== before) write(w);
   })();
 
   window.Wallet = {
     PACK_POINTS,
     PACK_DOT,
     GIFT_DOT,
+    DEFAULT_EQUIP,
     get: read,
+    // Sửa ví trong một lần đọc/ghi; fn trả false thì không ghi.
+    update(fn) {
+      const w = read();
+      if (fn(w) === false) return null;
+      return write(w);
+    },
     // Cộng điểm ván vừa chơi, trả về số đốt cây vừa đổi được.
     addPoints(n) {
       const w = read();
@@ -83,6 +103,18 @@
       w.dot -= dot;
       write(w);
       return true;
+    },
+    // ----- Đồ trong Tiệm Sâu -----
+    owns(slot, id, w) {
+      if (DEFAULT_EQUIP[slot] === id) return true;
+      return !!(w || read()).owned[slot + ':' + id];
+    },
+    equipped() { return read().equip; },
+    equip(slot, id) {
+      return this.update((w) => {
+        if (!this.owns(slot, id, w)) return false;
+        w.equip[slot] = id;
+      });
     },
   };
 })();

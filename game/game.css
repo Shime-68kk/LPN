@@ -443,6 +443,19 @@ body.night .stars svg { fill: #3A3166; }
 .wallet-link { display: grid; place-items: center; min-height: 44px; margin-top: -6px; }
 .menu-wallet { display: inline-flex; align-items: center; min-height: 32px; padding: 0; border: 0; background: none; cursor: pointer; }
 .menu-wallet:empty { display: none; }
+.menu-links { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.menu-shop {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #FF8FA3;
+  color: #2B2140;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
 
 /* Ví đốt cây */
 .w-icon { width: 40px; height: 40px; margin: 0 auto; fill: none; stroke: #3D8A57; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }

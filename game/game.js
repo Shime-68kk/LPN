@@ -41,6 +41,7 @@
     },
     save() {
       try { localStorage.setItem('sautim:v1', JSON.stringify(this.data)); } catch (e) { /* bỏ qua */ }
+      if (window.Sync) window.Sync.dirty();
     },
   };
   Store.load();
@@ -71,6 +72,17 @@
   }
   const weather = pickWeather();
   const T = THEMES[weather];
+
+  // ================= Đồ đang mặc (Tiệm Sâu) =================
+  // Skin chỉ đổi hình, không đổi cách chơi hay điểm.
+  const LOOK = {};
+  function loadLook() {
+    const eq = window.Wallet ? Wallet.equipped() : {};
+    LOOK.skin = Skins.get('skin', eq.skin);
+    LOOK.fx = Skins.get('fx', eq.fx);
+    LOOK.wing = Skins.get('wing', eq.wing);
+  }
+  loadLook();
   document.body.classList.toggle('night', !!T.night);
   document.body.style.background = T.sky;
 
@@ -382,13 +394,6 @@
     x.bezierCurveTo(-w, h * 0.45, -w, -h * 0.5, 0, -h);
     x.closePath();
   }
-  function heartPath(x, cx, cy, s) {
-    x.beginPath();
-    x.moveTo(cx, cy + s * 0.9);
-    x.bezierCurveTo(cx - s * 1.4, cy, cx - s * 0.8, cy - s * 1.1, cx, cy - s * 0.35);
-    x.bezierCurveTo(cx + s * 0.8, cy - s * 1.1, cx + s * 1.4, cy, cx, cy + s * 0.9);
-    x.closePath();
-  }
   function buildSprites() {
     const h = LEAF_H, w = h * 0.68, pad = 4 * S;
     SPR.leafW = w * 2 + pad * 2;
@@ -421,23 +426,12 @@
     SPR.leafCY = pad + h;
 
     const r = SEG_R, sp = r + 6 * S;
-    const seg = (fill, mark) => makeSprite(sp * 2, sp * 2, (x) => {
+    const seg = (variant) => makeSprite(sp * 2, sp * 2, (x) => {
       x.translate(sp, sp);
-      x.fillStyle = '#6B4FA0';
-      x.beginPath(); x.ellipse(-r * 0.92, r * 0.35, r * 0.24, r * 0.17, 0.3, 0, Math.PI * 2); x.fill();
-      x.beginPath(); x.ellipse(r * 0.92, r * 0.35, r * 0.24, r * 0.17, -0.3, 0, Math.PI * 2); x.fill();
-      x.fillStyle = fill;
-      x.beginPath(); x.arc(0, 0, r, 0, Math.PI * 2); x.fill();
-      x.fillStyle = 'rgba(255,255,255,0.32)';
-      x.beginPath(); x.ellipse(-r * 0.3, -r * 0.38, r * 0.42, r * 0.24, -0.4, 0, Math.PI * 2); x.fill();
-      if (mark) {
-        x.fillStyle = '#FF8FA3';
-        heartPath(x, 0, r * 0.05, r * 0.32);
-        x.fill();
-      }
+      Skins.drawSegment(x, r, LOOK.skin, variant, S);
     });
     SPR.segSize = sp * 2;
-    SPR.seg = [seg('#B79CF0'), seg('#A88BE8'), seg('#B79CF0', true)];
+    SPR.seg = [seg(0), seg(1), seg(2)];
 
     const cloud = (scale) => makeSprite(150 * S * scale, 60 * S * scale, (x) => {
       x.scale(S * scale, S * scale);
@@ -581,11 +575,7 @@
     return null;
   }
   function burstCrumbs(x, y, n) {
-    for (let i = 0; i < n; i++) {
-      const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.4;
-      const sp = (90 + Math.random() * 170) * S;
-      spawn(0, x, y, Math.cos(a) * sp, Math.sin(a) * sp, 0.45 + Math.random() * 0.3, (2.5 + Math.random() * 2.5) * S, i % 2 ? T.leaf : T.leafLight);
-    }
+    for (const q of Skins.eatBurst(LOOK.fx, n, S, [T.leafLight, T.leaf])) spawn(q.kind, x, y, q.vx, q.vy, q.life, q.size, q.color);
   }
   function burstHearts(x, y, n) {
     for (let i = 0; i < n; i++) {
@@ -606,34 +596,13 @@
       if (!p.on) continue;
       p.life -= dt;
       if (p.life <= 0) { p.on = false; continue; }
-      if (p.kind === 0) { p.vy += 900 * S * dt; p.rot += p.vr * dt; }
-      else if (p.kind === 1) { p.vx = Math.sin(p.life * 6) * 25 * S; }
-      else if (p.kind === 2) { p.vx *= 1 - 3 * dt; p.vy *= 1 - 3 * dt; }
+      Skins.stepParticle(p, dt, S);
       p.x += p.vx * dt;
       p.y += p.vy * dt;
     }
   }
   function drawParticles() {
-    for (const p of parts) {
-      if (!p.on) continue;
-      const k = p.life / p.max;
-      g.globalAlpha = Math.min(1, k * 1.6);
-      g.fillStyle = p.color;
-      if (p.kind === 0) {
-        g.save(); g.translate(p.x, p.y); g.rotate(p.rot);
-        g.fillRect(-p.size, -p.size * 0.6, p.size * 2, p.size * 1.2);
-        g.restore();
-      } else if (p.kind === 1) {
-        heartPath(g, p.x, p.y, p.size);
-        g.fill();
-      } else if (p.kind === 2) {
-        g.beginPath(); g.arc(p.x, p.y, p.size * (0.4 + 0.6 * k), 0, Math.PI * 2); g.fill();
-      } else {
-        g.strokeStyle = p.color;
-        g.lineWidth = 2 * S * k;
-        g.beginPath(); g.arc(p.x, p.y, p.size + (1 - k) * 34 * S, 0, Math.PI * 2); g.stroke();
-      }
-    }
+    for (const p of parts) if (p.on) Skins.drawParticle(g, p, S);
     g.globalAlpha = 1;
   }
 
@@ -783,64 +752,9 @@
     g.save();
     g.translate(hx, hy);
     g.rotate(tilt);
-    // Râu
-    g.strokeStyle = '#6B4FA0';
-    g.lineWidth = 2.2 * S;
-    g.lineCap = 'round';
-    const bob = pulse * 3 * S;
-    for (const side of [-1, 1]) {
-      const tx = side * r * 0.8 + Sau.ant, ty = -r * 1.6 - bob;
-      g.beginPath();
-      g.moveTo(side * r * 0.4, -r * 0.75);
-      g.quadraticCurveTo(side * r * 0.45, -r * 1.35, tx, ty);
-      g.stroke();
-      g.fillStyle = '#FF8FA3';
-      g.beginPath(); g.arc(tx, ty, 3.8 * S, 0, Math.PI * 2); g.fill();
-    }
-    // Đầu
-    g.fillStyle = '#B79CF0';
-    g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.fill();
-    g.fillStyle = 'rgba(255,255,255,0.35)';
-    g.beginPath(); g.ellipse(-r * 0.34, -r * 0.42, r * 0.36, r * 0.2, -0.5, 0, Math.PI * 2); g.fill();
-    g.fillStyle = 'rgba(255,111,142,0.55)';
-    g.beginPath(); g.ellipse(-r * 0.56, r * 0.24, r * 0.17, r * 0.11, 0, 0, Math.PI * 2); g.fill();
-    g.beginPath(); g.ellipse(r * 0.56, r * 0.24, r * 0.17, r * 0.11, 0, 0, Math.PI * 2); g.fill();
-    // Mắt
-    g.fillStyle = '#2A1E3D';
-    g.strokeStyle = '#2A1E3D';
-    g.lineWidth = 2 * S;
-    for (const side of [-1, 1]) {
-      const ex = side * r * 0.32, ey = -r * 0.1;
-      if (Sau.happy > 0) {
-        g.beginPath(); g.moveTo(ex - r * 0.12, ey + r * 0.04); g.quadraticCurveTo(ex, ey - r * 0.14, ex + r * 0.12, ey + r * 0.04); g.stroke();
-      } else if (Sau.blink > 0) {
-        g.beginPath(); g.moveTo(ex - r * 0.1, ey); g.lineTo(ex + r * 0.1, ey); g.stroke();
-      } else {
-        const er = Sau.sad > 0 ? r * 0.09 : r * 0.115;
-        g.beginPath(); g.arc(ex, ey, er, 0, Math.PI * 2); g.fill();
-        g.fillStyle = '#FFFFFF';
-        g.beginPath(); g.arc(ex + er * 0.35, ey - er * 0.35, er * 0.38, 0, Math.PI * 2); g.fill();
-        g.fillStyle = '#2A1E3D';
-        if (Sau.sad > 0) {
-          g.beginPath(); g.moveTo(ex - side * r * 0.16, ey - r * 0.3); g.lineTo(ex + side * r * 0.05, ey - r * 0.22); g.stroke();
-        }
-      }
-    }
-    // Miệng
-    const my = r * 0.36;
-    if (Sau.sad > 0) {
-      g.beginPath(); g.moveTo(-r * 0.12, my + r * 0.06); g.quadraticCurveTo(0, my - r * 0.06, r * 0.12, my + r * 0.06); g.stroke();
-    } else if (Sau.chew > 0 || Sau.mouthOpen > 0.05) {
-      const open = Sau.chew > 0 ? 0.35 + 0.35 * Math.abs(Math.sin(Sau.chew * 38)) : Sau.mouthOpen;
-      g.fillStyle = '#4A2B4F';
-      g.beginPath(); g.ellipse(0, my, r * 0.17, r * (0.05 + 0.15 * open), 0, 0, Math.PI * 2); g.fill();
-      if (open > 0.4) {
-        g.fillStyle = '#FF8FA3';
-        g.beginPath(); g.ellipse(0, my + r * 0.08 * open, r * 0.09, r * 0.05, 0, 0, Math.PI * 2); g.fill();
-      }
-    } else {
-      g.beginPath(); g.moveTo(-r * 0.12, my - r * 0.02); g.quadraticCurveTo(0, my + r * 0.1, r * 0.12, my - r * 0.02); g.stroke();
-    }
+    Skins.drawHead(g, r, LOOK.skin, {
+      t: clock, ant: Sau.ant, bob: pulse, happy: Sau.happy, blink: Sau.blink, sad: Sau.sad, chew: Sau.chew, mouthOpen: Sau.mouthOpen,
+    }, S);
     g.restore();
   }
 
@@ -849,56 +763,15 @@
     g.translate(x, y);
     g.rotate(wobble);
     g.scale(sc, sc);
-    if (glow > 0) {
-      g.fillStyle = T.night ? '#8C6BC8' : '#FFF1C9';
-      g.globalAlpha = 0.35 * glow;
-      g.beginPath(); g.ellipse(0, 0, 44 * S, 56 * S, 0, 0, Math.PI * 2); g.fill();
-      g.globalAlpha = 1;
-    }
-    g.fillStyle = '#CDB8F0';
-    g.beginPath(); g.ellipse(0, 0, 26 * S, 38 * S, 0, 0, Math.PI * 2); g.fill();
-    g.strokeStyle = '#A88BE8';
-    g.lineWidth = 2.4 * S;
-    g.lineCap = 'round';
-    for (let i = -2; i <= 2; i++) {
-      g.beginPath(); g.moveTo(-22 * S, i * 12 * S - 4 * S); g.quadraticCurveTo(0, i * 12 * S + 4 * S, 22 * S, i * 12 * S - 4 * S); g.stroke();
-    }
-    g.fillStyle = 'rgba(255,255,255,0.4)';
-    g.beginPath(); g.ellipse(-9 * S, -16 * S, 7 * S, 13 * S, -0.3, 0, Math.PI * 2); g.fill();
+    Skins.drawCocoon(g, LOOK.skin, S, glow, T.night);
     g.restore();
   }
 
   function drawButterfly(x, y, sc, t) {
-    const flap = 0.3 + 0.7 * Math.abs(Math.sin(t * 7));
     g.save();
     g.translate(x, y);
     g.scale(sc, sc);
-    for (const side of [-1, 1]) {
-      g.save();
-      g.scale(side * flap, 1);
-      g.fillStyle = '#B79CF0';
-      g.beginPath(); g.ellipse(20 * S, -14 * S, 22 * S, 17 * S, -0.5, 0, Math.PI * 2); g.fill();
-      g.fillStyle = '#FFB0C0';
-      g.beginPath(); g.ellipse(15 * S, 13 * S, 14 * S, 11 * S, 0.5, 0, Math.PI * 2); g.fill();
-      g.fillStyle = '#FF6F8E';
-      heartPath(g, 22 * S, -15 * S, 6 * S); g.fill();
-      g.fillStyle = '#FFF1C9';
-      g.beginPath(); g.arc(16 * S, 14 * S, 4 * S, 0, Math.PI * 2); g.fill();
-      g.restore();
-    }
-    g.fillStyle = '#5B3E8F';
-    g.beginPath(); g.ellipse(0, 2 * S, 5 * S, 19 * S, 0, 0, Math.PI * 2); g.fill();
-    g.beginPath(); g.arc(0, -20 * S, 7 * S, 0, Math.PI * 2); g.fill();
-    g.strokeStyle = '#5B3E8F';
-    g.lineWidth = 2 * S;
-    g.lineCap = 'round';
-    for (const side of [-1, 1]) {
-      g.beginPath(); g.moveTo(side * 2 * S, -26 * S); g.quadraticCurveTo(side * 6 * S, -38 * S, side * 12 * S, -40 * S); g.stroke();
-      g.fillStyle = '#FF8FA3';
-      g.beginPath(); g.arc(side * 12 * S, -40 * S, 3 * S, 0, Math.PI * 2); g.fill();
-    }
-    g.fillStyle = '#FFFFFF';
-    g.beginPath(); g.arc(-2.6 * S, -21 * S, 1.6 * S, 0, Math.PI * 2); g.arc(2.6 * S, -21 * S, 1.6 * S, 0, Math.PI * 2); g.fill();
+    Skins.drawButterfly(g, LOOK.wing, S, t);
     g.restore();
   }
 
@@ -1852,6 +1725,22 @@
     }
     render(Game.state === 'paused' ? 0 : dt);
   }
+
+  // Quay lại từ Tiệm Sâu bằng nút back (trang lấy từ bộ nhớ đệm): mặc lại đồ mới chọn.
+  window.addEventListener('pageshow', (e) => {
+    if (!e.persisted) return;
+    loadLook();
+    buildSprites();
+    if (Game.state === 'menu') UI.renderSongs(SONGS);
+  });
+  // Bản sao lưu khác máy: chỉ làm mới khi đang ở menu, đang chơi thì để ván sau.
+  window.LPN_onSync = () => {
+    if (Game.state !== 'menu') return;
+    Store.load();
+    loadLook();
+    buildSprites();
+    UI.renderSongs(SONGS);
+  };
 
   // ================= Khởi động =================
   if (DEBUG) window.__sautim = { Game, Sau, Sound };

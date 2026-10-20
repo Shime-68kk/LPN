@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="home.css?v=8" />
+  <link rel="stylesheet" href="home.css?v=9" />
 </head>
 <body data-weather="nang">
   <!-- Cảnh trời: màu và các lớp đổi theo data-weather trên body -->
@@ -95,10 +95,10 @@
     <div class="intro">
       <div class="intro-row">
         <span class="date" id="today"></span>
-        <span class="days" id="days">
+        <a class="days" id="days" href="widget.html" title="Đưa số ngày lên màn hình khoá iPhone">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg>
           <span id="days-text"></span>
-        </span>
+        </a>
       </div>
       <h1 id="greet">Chào em</h1>
       <p class="lede" id="lede"></p>
@@ -152,9 +152,9 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM9 8a2 2 0 1 0 0 4a2 2 0 1 0 0-4M3 17l5-5 4 4 3-3 6 6" /></svg>
         <span>Album</span>
       </button>
-      <a class="tile t-gift" href="../style/gift/gift.html">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16v4H4zM5 12v8h14v-8M12 8v12M12 8C10.5 5 7 4.5 7 6.5S10 8 12 8c2 0 5-.5 5-1.5S13.5 5 12 8" /></svg>
-        <span>Hộp quà</span>
+      <a class="tile t-gift" href="../shop/">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2M9.5 13.5c.8 1 1.6 1.5 2.5 1.5s1.7-.5 2.5-1.5" /></svg>
+        <span>Tiệm Sâu</span>
       </a>
       <a class="tile t-game" href="../game/">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18a3 3 0 1 0 0-.01M11 15a3 3 0 1 0 0-.01M16 11a3.5 3.5 0 1 0 0-.01M15 6l-1-3M18 6l1-3" /></svg>
@@ -274,6 +274,7 @@
     </div>
   </div>
 
+  <script src="sync.js?v=1"></script>
   <script src="diary.js?v=1"></script>
   <script src="home.js?v=10"></script>
 </body>

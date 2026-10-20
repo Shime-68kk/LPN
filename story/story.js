@@ -31,7 +31,10 @@
     v.open = v.open || {};
     return v;
   })();
-  const persist = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* bỏ qua */ } };
+  const persist = () => {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* bỏ qua */ }
+    if (window.Sync) window.Sync.dirty();
+  };
 
   // Trời thật do trang chủ lưu (Open-Meteo); không có thì đoán theo giờ.
   const liveSky = (() => {
@@ -499,6 +502,7 @@
       try { opened = JSON.parse(localStorage.getItem('lpn:songs')) || {}; } catch (e) { /* bỏ qua */ }
       opened[item.song] = true;
       try { localStorage.setItem('lpn:songs', JSON.stringify(opened)); } catch (e) { /* bỏ qua */ }
+      if (window.Sync) window.Sync.dirty();
       const start = item.start || 0, dur = item.dur || 20;
       const card = $('song-card');
       if (this.info) {
@@ -546,6 +550,9 @@
       if (!keepCard) $('song-card').hidden = true;
     },
   };
+
+  // Bản sao lưu khác máy (vd. mới đổi điện thoại): đang ở bản đồ thì tải lại để thấy tiến độ cũ.
+  window.LPN_onSync = () => { if ($('play').hidden) location.reload(); };
 
   // ================= Sự kiện =================
   // Bấm "tiếp" liên tục trên điện thoại không bị hiểu là chạm đúp để phóng to.

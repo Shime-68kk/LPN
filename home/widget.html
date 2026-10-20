@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#FFF8EF" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Ngày bên nhau trên màn hình khoá</title>
+  <script>
+    try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df') location.replace('./'); }
+    catch (e) { location.replace('./'); }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
+  <link rel="stylesheet" href="home.css?v=9" />
+  <style>
+    .wg { max-width: 560px; margin: 0 auto; padding: calc(var(--safe-top) + 14px) 20px calc(var(--safe-bottom) + 32px); display: flex; flex-direction: column; gap: 18px; }
+    .wg-head { display: flex; align-items: center; justify-content: space-between; }
+    .wg-head .close { text-decoration: none; color: var(--ink); }
+    .wg h1 { font-size: clamp(26px, 7vw, 30px); }
+    .wg p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--muted); }
+    /* Mô phỏng màn hình khoá */
+    .lock {
+      position: relative;
+      height: 250px;
+      border-radius: 28px;
+      overflow: hidden;
+      background: linear-gradient(#8D9AB5, #E9B38A 55%, #F2C98F 75%, #C9A27A);
+      color: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 26px;
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+    }
+    .lock .l-date { font-size: 15px; font-weight: 600; opacity: .9; }
+    .lock .l-time { font-family: system-ui, sans-serif; font-weight: 700; font-size: 76px; line-height: 1; letter-spacing: -2px; opacity: .92; }
+    .lock .l-row { display: flex; gap: 14px; margin-top: 14px; width: 300px; max-width: 86%; }
+    .lock .l-box { flex: 1; display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+    .lock .l-box b { font-size: 19px; display: flex; align-items: center; gap: 6px; }
+    .lock .l-box b svg { width: 15px; height: 15px; fill: #FFFFFF; stroke: none; }
+    .lock .l-bar { height: 6px; border-radius: 999px; background: rgba(255, 255, 255, .3); overflow: hidden; margin-top: 3px; }
+    .lock .l-bar i { display: block; height: 100%; background: #FFFFFF; border-radius: inherit; }
+    .lock .l-box.dim { opacity: .55; }
+    .steps { margin: 0; padding: 0; list-style: none; counter-reset: s; display: flex; flex-direction: column; gap: 12px; }
+    .steps li { counter-increment: s; display: flex; gap: 12px; padding: 14px 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); font-size: 15px; line-height: 1.5; }
+    .steps li::before { content: counter(s); flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--t-music); color: var(--t-music-ink); font-weight: 700; font-size: 14px; }
+    .steps b { color: var(--ink); }
+    .steps a { color: var(--accent-ink); font-weight: 600; }
+    .code-box { display: flex; flex-direction: column; gap: 10px; }
+    .code-box pre { margin: 0; max-height: 180px; overflow: auto; padding: 14px; border-radius: 16px; background: var(--card); color: var(--card-ink); font-size: 11px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; -webkit-user-select: all; user-select: all; }
+    .note { font-size: 13px !important; }
+  </style>
+</head>
+<body>
+  <main class="wg">
+    <header class="wg-head">
+      <a class="close" href="./" aria-label="Về trang chủ"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6" /></svg></a>
+    </header>
+    <div>
+      <span class="eyebrow">Tiện ích iPhone</span>
+      <h1>Ngày bên nhau trên màn hình khoá</h1>
+    </div>
+
+    <div class="lock" aria-hidden="true">
+      <span class="l-date" id="l-date"></span>
+      <span class="l-time" id="l-time"></span>
+      <div class="l-row">
+        <div class="l-box dim"><b>52%</b><span>Pin</span><span class="l-bar"><i style="width:52%"></i></span></div>
+        <div class="l-box">
+          <b><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg><span id="l-days"></span></b>
+          <span id="l-next"></span>
+          <span class="l-bar"><i id="l-bar"></i></span>
+        </div>
+      </div>
+    </div>
+    <p>Ô bên phải chính là tiện ích. Số ngày tự đổi đúng lúc sang ngày mới, không cần mở app.</p>
+
+    <ol class="steps">
+      <li><span>Tải app <b>Scriptable</b> (miễn phí, không quảng cáo) trên App Store: <a href="https://apps.apple.com/app/scriptable/id1405459188">mở App Store</a>.</span></li>
+      <li><span>Bấm <b>Sao chép đoạn mã</b> ở dưới. Mở Scriptable, bấm dấu <b>+</b>, dán vào. Chạm tên ở trên cùng, đặt là <b>Ngày bên nhau</b>, rồi bấm <b>Done</b>.</span></li>
+      <li><span>Ra màn hình khoá, giữ tay lên màn hình, chọn <b>Tuỳ chỉnh</b> → <b>Màn hình khoá</b>. Chạm vùng tiện ích dưới đồng hồ → chọn <b>Scriptable</b> → ô <b>hình chữ nhật</b>.</span></li>
+      <li><span>Chạm vào ô Scriptable vừa thêm → mục <b>Script</b> chọn <b>Ngày bên nhau</b> → bấm <b>Xong</b>.</span></li>
+      <li><span>Thích thì thêm: chạm dòng ngày tháng phía trên đồng hồ → Scriptable → chọn script, sẽ có dòng <b>♥ Ngày thứ … bên nhau</b>. Màn hình chính cũng thêm được ô nhỏ màu tím hồng.</span></li>
+    </ol>
+
+    <div class="code-box">
+      <button class="btn primary" id="btn-copy" type="button">Sao chép đoạn mã</button>
+      <pre id="code">Đang tải…</pre>
+    </div>
+    <p class="note">Mỗi điện thoại cài một lần. Trên màn hình khoá, iPhone tự đổi màu chữ cho hợp hình nền.</p>
+  </main>
+
+  <script>
+    (() => {
+      const START = new Date('2026-08-06T23:38:58+07:00');
+      const MIL = [100, 200, 300, 365, 500, 600, 700, 730, 800, 900, 1000, 1095, 1200, 1461, 1500, 1826, 2000, 2500, 3000, 3650];
+      const YEARS = { 365: '1 năm', 730: '2 năm', 1095: '3 năm', 1461: '4 năm', 1826: '5 năm', 3650: '10 năm' };
+      const now = new Date();
+      const days = Math.max(1, Math.floor((now - START) / 864e5) + 1);
+      const next = MIL.find((m) => m > days) || (Math.floor(days / 1000) + 1) * 1000;
+      const prev = [...MIL].reverse().find((m) => m <= days) || 0;
+      document.getElementById('l-days').textContent = days + ' ngày';
+      document.getElementById('l-next').textContent = 'Còn ' + (next - days) + ' ngày tới ' + (YEARS[next] || next);
+      document.getElementById('l-bar').style.width = Math.round(((days - prev) / (next - prev)) * 100) + '%';
+      document.getElementById('l-time').textContent = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
+      document.getElementById('l-date').textContent = now.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' });
+      if (document.body.classList) {
+        try {
+          const s = JSON.parse(localStorage.getItem('lpn:sky'));
+          if (s && s.sky === 'dem') document.body.classList.add('night');
+        } catch (e) { /* bỏ qua */ }
+      }
+
+      let code = '';
+      fetch('widget.js?v=2').then((r) => r.text()).then((t) => {
+        code = t;
+        document.getElementById('code').textContent = t;
+      }).catch(() => { document.getElementById('code').textContent = 'Chưa tải được đoạn mã, thử lại sau nha.'; });
+
+      const btn = document.getElementById('btn-copy');
+      btn.addEventListener('click', async () => {
+        if (!code) return;
+        try {
+          await navigator.clipboard.writeText(code);
+        } catch (e) {
+          // Trình duyệt cũ: chọn sẵn đoạn mã để người dùng tự bấm Sao chép
+          const range = document.createRange();
+          range.selectNodeContents(document.getElementById('code'));
+          const sel = getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          btn.textContent = 'Đã chọn sẵn, bấm Sao chép trên menu';
+          return;
+        }
+        btn.textContent = 'Đã sao chép ✓ Giờ mở Scriptable và dán';
+        setTimeout(() => { btn.textContent = 'Sao chép đoạn mã'; }, 3000);
+      });
+    })();
+  </script>
+</body>
+</html>

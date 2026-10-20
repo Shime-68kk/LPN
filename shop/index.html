@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#FFF8EF" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Tiệm Sâu</title>
+  <script>
+    // Chưa mở khoá trên máy này thì quay về trang chủ để nhập mật khẩu.
+    try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df') location.replace('../home/'); }
+    catch (e) { location.replace('../home/'); }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
+  <link rel="stylesheet" href="../home/home.css?v=9" />
+  <link rel="stylesheet" href="shop.css?v=1" />
+</head>
+<body data-weather="nang">
+  <main class="shop">
+    <header class="shop-head">
+      <a class="close" id="btn-back" href="../home/" aria-label="Quay lại"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6" /></svg></a>
+      <a class="dot-pill" href="../game/" aria-label="Số đốt cây, chơi Sâu Tím để kiếm thêm">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h6v18H8zM8 9h6M8 15h6M14 12c1.5-3 4-4.5 7-4.5c-.5 3-3 5-7 4.5" /></svg>
+        <b id="dot">0</b><span>đốt</span>
+      </a>
+    </header>
+
+    <!-- Sân khấu: bé sâu mặc đồ đang dùng hoặc đang thử -->
+    <section class="stage" aria-label="Xem trước">
+      <canvas id="stage"></canvas>
+      <span class="stage-tag" id="stage-tag">Đang mặc</span>
+    </section>
+
+    <div class="shop-title">
+      <div>
+        <span class="eyebrow">Sâu Tím</span>
+        <h1>Tiệm Sâu</h1>
+      </div>
+      <span class="owned-count" id="owned-count"></span>
+    </div>
+
+    <nav class="tabs" role="tablist" aria-label="Các mục trong tiệm">
+      <button type="button" role="tab" data-tab="box" aria-selected="true">Hộp quà</button>
+      <button type="button" role="tab" data-tab="skin" aria-selected="false">Skin</button>
+      <button type="button" role="tab" data-tab="fx" aria-selected="false">Hiệu ứng</button>
+      <button type="button" role="tab" data-tab="wing" aria-selected="false">Cánh bướm</button>
+      <button type="button" role="tab" data-tab="memo" aria-selected="false">Kỷ niệm</button>
+    </nav>
+
+    <!-- Hộp quà may mắn -->
+    <section class="tab-panel box-panel" id="tab-box">
+      <button class="giftbox" id="giftbox" type="button" aria-label="Mở hộp quà">
+        <svg viewBox="0 0 160 150" aria-hidden="true">
+          <ellipse class="gb-shadow" cx="80" cy="140" rx="52" ry="7" />
+          <g class="gb-body">
+            <rect x="26" y="64" width="108" height="72" rx="12" class="gb-box" />
+            <rect x="72" y="64" width="16" height="72" class="gb-ribbon" />
+            <path d="M26 92h108" class="gb-shade" />
+          </g>
+          <g class="gb-lid">
+            <rect x="18" y="46" width="124" height="24" rx="10" class="gb-box gb-top" />
+            <rect x="72" y="46" width="16" height="24" class="gb-ribbon" />
+            <path d="M80 46c-8-20-34-26-34-10c0 10 18 10 34 10M80 46c8-20 34-26 34-10c0 10-18 10-34 10" class="gb-bow" />
+          </g>
+        </svg>
+      </button>
+      <button class="btn primary open-btn" id="btn-open" type="button"></button>
+      <p class="box-note" id="box-need" hidden></p>
+      <div class="pity">
+        <div class="pity-row"><span>Bảo đảm Sử thi</span><b id="pity-epic"></b></div>
+        <div class="pity-bar"><i id="pity-epic-bar"></i></div>
+        <div class="pity-row"><span>Bảo đảm Huyền thoại</span><b id="pity-legend"></b></div>
+        <div class="pity-bar legend"><i id="pity-legend-bar"></i></div>
+      </div>
+      <ul class="odds" id="odds"></ul>
+      <p class="box-note">Món chưa có luôn được ưu tiên. Trùng món đã có thì hoàn lại <b id="refund"></b> đốt.</p>
+    </section>
+
+    <!-- Lưới món đồ (Skin / Hiệu ứng / Cánh bướm) -->
+    <section class="tab-panel" id="tab-items" hidden>
+      <p class="tab-hint" id="items-hint"></p>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <!-- Bộ sưu tập kỷ niệm -->
+    <section class="tab-panel" id="tab-memo" hidden>
+      <div class="memo-head">
+        <b id="memo-count"></b>
+        <div class="pity-bar"><i id="memo-bar"></i></div>
+      </div>
+      <ol class="memo" id="memo"></ol>
+      <a class="old-gift" href="../style/gift/gift.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16v4H4zM5 12v8h14v-8M12 8v12M12 8C10.5 5 7 4.5 7 6.5S10 8 12 8c2 0 5-.5 5-1.5S13.5 5 12 8" /></svg>
+        <span><b>Bông hoa 8/3</b><small>Hộp quà ngày xưa, vẫn để ở đây</small></span>
+      </a>
+    </section>
+
+    <button class="sync-line" id="sync-line" type="button"></button>
+  </main>
+
+  <!-- Chi tiết một món -->
+  <div class="backdrop" id="sheet-backdrop" hidden></div>
+  <section class="panel item-sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-name" hidden>
+    <header class="panel-head">
+      <span class="rarity" id="sheet-rarity"></span>
+      <button class="close" id="sheet-close" type="button" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
+    </header>
+    <canvas class="sheet-art" id="sheet-art"></canvas>
+    <h2 id="sheet-name"></h2>
+    <p class="sheet-memory" id="sheet-memory"></p>
+    <p class="sheet-ch" id="sheet-ch"></p>
+    <button class="btn primary sheet-action" id="sheet-action" type="button"></button>
+  </section>
+
+  <!-- Mở hộp -->
+  <div class="reveal" id="reveal" role="dialog" aria-modal="true" aria-labelledby="reveal-name" hidden>
+    <canvas class="reveal-fx" id="reveal-fx"></canvas>
+    <div class="reveal-card" id="reveal-card">
+      <div class="rays" aria-hidden="true"></div>
+      <span class="rarity" id="reveal-rarity"></span>
+      <canvas class="reveal-art" id="reveal-art"></canvas>
+      <h2 id="reveal-name"></h2>
+      <p class="reveal-memory" id="reveal-memory"></p>
+      <p class="reveal-dup" id="reveal-dup" hidden></p>
+      <div class="reveal-actions">
+        <button class="btn primary" id="reveal-use" type="button">Dùng ngay</button>
+        <button class="btn" id="reveal-again" type="button"></button>
+        <button class="btn ghost" id="reveal-close" type="button">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Máy này của ai (để sao lưu) -->
+  <div class="backdrop" id="who-backdrop" hidden></div>
+  <section class="panel who-sheet" id="who" role="dialog" aria-modal="true" aria-labelledby="who-title" hidden>
+    <h2 id="who-title">Máy này của ai?</h2>
+    <p>Chọn một lần để sao lưu đốt cây, đồ trong tiệm và tiến độ cốt truyện. Đổi máy hay lỡ xoá dữ liệu cũng không mất.</p>
+    <div class="who-pick">
+      <button class="btn who-btn" type="button" data-who="thuy"><span class="who-dot pink"></span>Lệ Thủy</button>
+      <button class="btn who-btn" type="button" data-who="quang"><span class="who-dot purple"></span>Anh Quang</button>
+    </div>
+    <button class="btn ghost" id="who-later" type="button">Để sau</button>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="../home/sync.js?v=1"></script>
+  <script src="../home/wallet.js?v=5"></script>
+  <script src="skins.js?v=2"></script>
+  <script src="shop.js?v=1"></script>
+</body>
+</html>
