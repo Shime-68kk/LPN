@@ -69,13 +69,14 @@
   const fmt = (n) => n.toLocaleString('vi-VN');
   function renderWallet() {
     const w = Wallet.get();
-    $('w-dot').textContent = w.dot;
+    $('w-dot').textContent = fmt(w.dot);
     $('w-points').textContent = fmt(w.points) + ' điểm';
   }
 
   // Một hộp thoại dùng chung: đổi điểm, mở chương, thiếu đốt.
   let dialogOk = null;
-  function dialog(title, text, okLabel, onOk) {
+  function dialog(title, text, okLabel, onOk, noCancel) {
+    $('shop-cancel').hidden = !!noCancel;
     $('shop-title').textContent = title;
     $('shop-text').textContent = text;
     $('shop-ok').textContent = okLabel;
@@ -87,17 +88,11 @@
   const goPlay = () => { location.href = '../game/'; };
   const rateText = fmt(Wallet.PACK_POINTS * 10) + ' điểm = ' + Wallet.PACK_DOT * 10 + ' đốt cây';
 
+  // Điểm Sâu Tím tự đổi ra đốt cây sau mỗi ván, nên đây chỉ là chỗ xem cách kiếm.
   function openExchange() {
     const w = Wallet.get();
-    const can = Wallet.canExchange(w);
-    if (can) {
-      dialog('Đổi điểm lấy đốt cây', rateText + '. Ví đang có ' + fmt(w.points) + ' điểm, đổi được ' + can + ' đốt cây.',
-        'Đổi lấy ' + can + ' đốt', () => { Wallet.exchangeAll(); closeDialog(); renderMap(); });
-    } else {
-      const need = Wallet.PACK_POINTS - w.points;
-      dialog('Chưa đủ điểm để đổi', rateText + '. Chơi Sâu Tím thêm ' + fmt(need) + ' điểm nữa là đổi được ' + Wallet.PACK_DOT + ' đốt.',
-        'Chơi Sâu Tím', goPlay);
-    }
+    dialog('Kiếm thêm đốt cây', 'Chơi Sâu Tím, cứ ' + rateText + '. Điểm tự đổi ra đốt sau mỗi ván'
+      + (w.points ? ', đang dư ' + fmt(w.points) + ' điểm để dành ván sau.' : '.'), 'Chơi Sâu Tím', goPlay);
   }
 
   function unlock(i) {
@@ -118,12 +113,6 @@
       return;
     }
     const short = ch.cost - w.dot;
-    const can = Wallet.canExchange(w);
-    if (can >= short) {
-      dialog(title, 'Em có ' + w.dot + ' đốt, còn thiếu ' + short + '. Ví có ' + fmt(w.points) + ' điểm, đổi ra được ' + can + ' đốt.',
-        'Đổi điểm rồi mở', () => { Wallet.exchangeAll(); if (Wallet.spend(ch.cost)) unlock(i); });
-      return;
-    }
     const packs = Math.ceil(short / Wallet.PACK_DOT);
     const morePts = packs * Wallet.PACK_POINTS - w.points;
     dialog('Chưa đủ đốt cây', 'Chương này cần ' + ch.cost + ' đốt, em có ' + w.dot + '. Chơi Sâu Tím thêm khoảng '
@@ -450,6 +439,12 @@
 
   fetch('chapters.json')
     .then((r) => r.json())
-    .then((d) => { CHAPTERS = d.chapters || []; renderMap(); })
+    .then((d) => {
+      CHAPTERS = d.chapters || [];
+      renderMap();
+      // Quà tặng một lần: báo cho em biết vừa có thêm đốt cây.
+      const gift = Wallet.takeGiftNotice();
+      if (gift) dialog('Quà của anh 🎁', 'Anh tặng em ' + fmt(gift) + ' đốt cây để mở cốt truyện nè. Đọc từ từ thôi nha.', 'Cảm ơn anh!', closeDialog, true);
+    })
     .catch(() => { $('map-sub').textContent = 'Chưa tải được cốt truyện, em thử lại sau nha.'; });
 })();

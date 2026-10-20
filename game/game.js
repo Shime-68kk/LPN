@@ -927,7 +927,7 @@
         .map((n) => ({ t: n[0], x: n[1], dur: n[2], state: 0, held: 0, eaten: [], cur: null, grow: 0, crunch: 0 }));
       this.beats = this.map.beats;
       this.resetNotes();
-      this.score = 0; this.combo = 0; this.maxCombo = 0; this.hearts = 3; this.banked = 0;
+      this.score = 0; this.combo = 0; this.maxCombo = 0; this.hearts = 3; this.banked = 0; this.dotGot = 0;
       // Kỷ lục cũ của bài này ở độ khó này; vượt qua giữa ván thì báo ngay.
       this.prevBest = ((Store.data.best[this.song.id + ':' + this.diff] || {}).score) || 0;
       this.recordHit = false;
@@ -1531,28 +1531,29 @@
       }
       $('res-best').hidden = !isBest;
       bank();
-      const can = window.Wallet ? Wallet.canExchange() : 0;
-      $('res-wallet').textContent = '+' + fmtNum(gm.score) + ' điểm vào ví. ' + walletText()
-        + (can ? ', đổi thêm được ' + can + ' đốt.' : '.');
+      const left = window.Wallet ? Wallet.get().points : 0;
+      $('res-wallet').textContent = '+' + fmtNum(gm.score) + ' điểm'
+        + (gm.dotGot ? ' = +' + gm.dotGot + ' đốt cây' : '') + '. ' + walletText()
+        + (left ? ' (dư ' + fmtNum(left) + ' điểm để dành ván sau).' : '.');
       this.hide('hud');
       this.show('result');
       $('btn-again').focus({ preventScroll: true });
     },
   };
 
-  // Cất điểm vào ví chung (đổi ra đốt cây ở Cốt truyện). Chỉ cộng phần chưa cất.
+  // Cất điểm vào ví chung; đủ 10.000 điểm là tự đổi ra 3 đốt cây. Chỉ cộng phần chưa cất.
   function bank() {
     const add = Game.score - (Game.banked || 0);
     if (add <= 0 || !window.Wallet) return 0;
     Game.banked = Game.score;
-    Wallet.addPoints(add);
+    Game.dotGot = (Game.dotGot || 0) + Wallet.addPoints(add);
     return add;
   }
   const fmtNum = (n) => n.toLocaleString('vi-VN');
   function walletText() {
     if (!window.Wallet) return '';
     const w = Wallet.get();
-    return 'Ví: ' + fmtNum(w.points) + ' điểm · ' + w.dot + ' đốt cây';
+    return 'Ví: ' + fmtNum(w.dot) + ' đốt cây';
   }
 
   // ================= Nghe thử ở menu =================
