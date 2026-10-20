@@ -283,12 +283,23 @@
     b.style.transform = 'translate(' + bx + 'px,' + by + 'px)';
   }
 
+  // Tìm dòng mở khoá bài hát, kể cả nằm trong lựa chọn hay nhánh if.
+  function findSong(lines) {
+    for (const l of lines || []) {
+      if (l.song) return l;
+      const inner = findSong(l.then) || findSong(l.else) || (l.choice || []).reduce((f, o) => f || findSong(o.reply), null);
+      if (inner) return inner;
+    }
+    return null;
+  }
+
   const isTalk = (item) => item && !!item.text && (item.who === 'quang' || item.who === 'thuy');
 
   function play(i) {
     if (waitLeft(i) > 0) { openWait(i); return; }
     const ch = CHAPTERS[i];
-    if (ch.lines.some((l) => l.song)) Music.prepare(ch.lines.find((l) => l.song));
+    const song = findSong(ch.lines);
+    if (song) Music.prepare(song);
     P.ch = i;
     P.queue = ch.lines.slice();
     P.waiting = null;
@@ -419,7 +430,8 @@
         if (opt.flag) { save.flags[opt.flag] = true; persist(); }
         P.waiting = null;
         box.hidden = true;
-        P.queue.unshift({ who: 'thuy', text: opt.text }, ...(opt.reply || []));
+        // echo: false = nút làm theo hướng dẫn, không nhắc lại thành lời Thủy.
+        P.queue.unshift(...(opt.echo === false ? [] : [{ who: 'thuy', text: opt.text }]), ...(opt.reply || []));
         next();
       });
       box.appendChild(b);
