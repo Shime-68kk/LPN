@@ -16,8 +16,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="../home/home.css?v=9" />
-  <link rel="stylesheet" href="shop.css?v=2" />
+  <link rel="stylesheet" href="../home/home.css?v=10" />
+  <link rel="stylesheet" href="shop.css?v=3" />
 </head>
 <body data-weather="nang">
   <main class="shop">
@@ -44,12 +44,56 @@
     </div>
 
     <nav class="tabs" role="tablist" aria-label="Các mục trong tiệm">
+      <button type="button" role="tab" data-tab="ev" aria-selected="false" class="tab-ev" id="tab-btn-ev" hidden>Sự kiện<i class="ping" id="ev-ping" hidden></i></button>
       <button type="button" role="tab" data-tab="box" aria-selected="true">Hộp quà</button>
       <button type="button" role="tab" data-tab="skin" aria-selected="false">Skin</button>
       <button type="button" role="tab" data-tab="fx" aria-selected="false">Hiệu ứng</button>
       <button type="button" role="tab" data-tab="wing" aria-selected="false">Cánh bướm</button>
       <button type="button" role="tab" data-tab="memo" aria-selected="false">Kỷ niệm</button>
     </nav>
+
+    <!-- Sự kiện: vòng quay và các bộ đồ riêng -->
+    <section class="tab-panel ev-panel" id="tab-ev" hidden>
+      <div class="ev-banner">
+        <svg class="ev-art" viewBox="0 0 360 170" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="ev-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B2F7A" /><stop offset=".55" stop-color="#9A5FA8" /><stop offset="1" stop-color="#F2A27A" /></linearGradient>
+          </defs>
+          <rect width="360" height="170" fill="url(#ev-sky)" />
+          <circle cx="292" cy="44" r="16" fill="#FFE9B0" opacity=".9" />
+          <path d="M0 112L48 70l30 22 44-52 40 40 30-18 46 44 34-26 46 34 42-20v96H0z" fill="#5A4A9A" opacity=".75" />
+          <path d="M0 128l40-24 36 18 52-36 44 30 40-14 50 30 46-22 52 22v38H0z" fill="#3E3478" />
+          <g class="ev-cloud"><ellipse cx="70" cy="96" rx="46" ry="9" fill="#FFFFFF" opacity=".55" /><ellipse cx="250" cy="104" rx="60" ry="10" fill="#FFFFFF" opacity=".45" /></g>
+          <path d="M0 140q90-14 180 0t180 0v30H0z" fill="#E3A63A" />
+          <path d="M0 150q90-12 180 0t180 0v20H0z" fill="#F2C14E" />
+          <path d="M0 160q90-10 180 0t180 0v10H0z" fill="#9CC856" />
+        </svg>
+        <div class="ev-text">
+          <span class="ev-kicker">Sự kiện giới hạn</span>
+          <h2 id="ev-name"></h2>
+          <p id="ev-tag"></p>
+          <span class="ev-time" id="ev-time"></span>
+        </div>
+        <i class="brocade-strip" aria-hidden="true"></i>
+      </div>
+
+      <div class="wheel-wrap">
+        <canvas id="wheel" aria-label="Vòng quay"></canvas>
+        <button class="wheel-hub" id="wheel-hub" type="button" aria-label="Quay 1 lần">Quay</button>
+      </div>
+      <div class="spin-btns">
+        <button class="btn primary" id="spin-1" type="button"></button>
+        <button class="btn" id="spin-10" type="button"></button>
+      </div>
+      <p class="box-note" id="ev-need" hidden></p>
+      <div class="pity">
+        <div class="pity-row"><span id="ev-pity-name"></span><b id="ev-pity"></b></div>
+        <div class="pity-bar legend"><i id="ev-pity-bar"></i></div>
+      </div>
+      <div class="sets" id="ev-sets"></div>
+      <ul class="odds" id="ev-odds"></ul>
+      <p class="box-note" id="ev-note"></p>
+    </section>
 
     <!-- Hộp quà may mắn -->
     <section class="tab-panel box-panel" id="tab-box">
@@ -68,6 +112,17 @@
           </g>
         </svg>
       </button>
+      <div class="qty" role="group" aria-label="Số hộp muốn mở">
+        <button class="qty-step" id="qty-minus" type="button" aria-label="Bớt một hộp">−</button>
+        <span class="qty-num"><b id="qty">1</b> hộp</span>
+        <button class="qty-step" id="qty-plus" type="button" aria-label="Thêm một hộp">+</button>
+      </div>
+      <div class="qty-chips" id="qty-chips">
+        <button type="button" data-q="1">×1</button>
+        <button type="button" data-q="5">×5</button>
+        <button type="button" data-q="10">×10</button>
+        <button type="button" data-q="20">×20</button>
+      </div>
       <button class="btn primary open-btn" id="btn-open" type="button"></button>
       <p class="box-note" id="box-need" hidden></p>
       <div class="pity">
@@ -118,7 +173,6 @@
 
   <!-- Mở hộp -->
   <div class="reveal" id="reveal" role="dialog" aria-modal="true" aria-labelledby="reveal-name" hidden>
-    <canvas class="reveal-fx" id="reveal-fx"></canvas>
     <div class="reveal-card" id="reveal-card">
       <div class="rays" aria-hidden="true"></div>
       <span class="rarity" id="reveal-rarity"></span>
@@ -131,6 +185,38 @@
         <button class="btn" id="reveal-again" type="button"></button>
         <button class="btn ghost" id="reveal-close" type="button">Đóng</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Mở nhiều hộp / 10 lượt quay -->
+  <div class="pack" id="pack" role="dialog" aria-modal="true" aria-labelledby="pack-title" hidden>
+    <header class="pack-head">
+      <b id="pack-title"></b>
+      <span id="pack-count"></span>
+    </header>
+    <div class="pack-grid" id="pack-grid"></div>
+    <p class="pack-banner" id="pack-banner" aria-live="polite"></p>
+    <div class="pack-sum" id="pack-sum" hidden>
+      <p id="pack-sum-text"></p>
+      <div class="pack-new" id="pack-new"></div>
+    </div>
+    <div class="pack-actions">
+      <button class="btn primary" id="pack-all" type="button">Mở hết</button>
+      <button class="btn primary" id="pack-again" type="button" hidden></button>
+      <button class="btn ghost" id="pack-done" type="button">Xong</button>
+    </div>
+    <p class="pack-hint" id="pack-hint">Chạm từng hộp để mở, hoặc bấm Mở hết</p>
+  </div>
+
+  <!-- Thông báo sự kiện mới (một lần trên mỗi máy) -->
+  <div class="splash" id="splash" role="dialog" aria-modal="true" aria-labelledby="splash-title" hidden>
+    <div class="splash-card">
+      <canvas class="splash-art" id="splash-art"></canvas>
+      <span class="ev-kicker">Sự kiện mới</span>
+      <h2 id="splash-title"></h2>
+      <p id="splash-text"></p>
+      <button class="btn primary" id="splash-go" type="button">Đến vòng quay</button>
+      <button class="btn ghost" id="splash-later" type="button">Để sau</button>
     </div>
   </div>
 
@@ -147,10 +233,12 @@
   </section>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="flash" id="flash" aria-hidden="true"></div>
+  <canvas class="fx-layer" id="fx" aria-hidden="true"></canvas>
 
-  <script src="../home/sync.js?v=1"></script>
-  <script src="../home/wallet.js?v=5"></script>
-  <script src="skins.js?v=3"></script>
-  <script src="shop.js?v=2"></script>
+  <script src="../home/sync.js?v=2"></script>
+  <script src="../home/wallet.js?v=6"></script>
+  <script src="skins.js?v=4"></script>
+  <script src="shop.js?v=3"></script>
 </body>
 </html>

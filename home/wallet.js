@@ -27,6 +27,10 @@
       boxes: Math.max(0, Math.floor(v.boxes || 0)),
       pityEpic: Math.max(0, Math.floor(v.pityEpic || 0)),
       pityLegend: Math.max(0, Math.floor(v.pityLegend || 0)),
+      // Quà đốt đã nhận từ Firebase: { mã: thời điểm nhận } (sync.js dùng để không cộng hai lần).
+      grants: v.grants && typeof v.grants === 'object' ? v.grants : {},
+      // Sự kiện: { sapa: { spins, pity } } — số lượt đã quay và số lượt chưa ra Huyền thoại.
+      ev: v.ev && typeof v.ev === 'object' ? v.ev : {},
       updatedAt: v.updatedAt || 0,
     };
   };

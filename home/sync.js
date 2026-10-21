@@ -1,12 +1,14 @@
 // Sao lưu tiến độ lên Firebase để đổi máy hay xoá dữ liệu web cũng không mất:
 // ví đốt cây + đồ trong Tiệm Sâu, tiến độ cốt truyện, kỷ lục Sâu Tím, bài hát đã mở.
 // Mỗi người một bản: lpn/players/thuy hoặc lpn/players/quang (chọn "máy của ai" ở Tiệm Sâu).
+// Tặng đốt: ghi lpn/players/{ai}/grants/{mã} = { dot, note }; máy nhận cộng đúng một lần khi đồng bộ.
 // Chưa chọn hoặc Firebase chưa cho phép thì mọi thứ vẫn chạy bình thường trên máy.
 'use strict';
 (() => {
   const DB = 'https://yeult-diary-default-rtdb.asia-southeast1.firebasedatabase.app/';
   const WHO_KEY = 'lpn:who';
   const META_KEY = 'lpn:sync';
+  const GRANT_KEY = 'lpn:grantNotice'; // quà đốt vừa nhận, chờ báo cho người dùng
   const WHO = { thuy: 'Lệ Thủy', quang: 'Anh Quang' };
 
   const load = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
@@ -35,6 +37,7 @@
       const base = first || (rw.updatedAt || 0) > (lw.updatedAt || 0) ? rw : lw;
       out.wallet = Object.assign({}, base, {
         owned: union(lw.owned, rw.owned),
+        grants: union(lw.grants, rw.grants),
         gift: !!(lw.gift || rw.gift),
         giftSeen: !!(lw.giftSeen || rw.giftSeen),
         migrated: !!(lw.migrated || rw.migrated),
@@ -59,6 +62,26 @@
     }
     out.songs = union(local.songs, remote.songs);
     return out;
+  }
+
+  // Cộng các món quà đốt chưa nhận vào ví (đánh dấu theo mã để không cộng hai lần).
+  function claimGrants(wallet, grants) {
+    if (!wallet || !grants || typeof grants !== 'object') return;
+    wallet.grants = wallet.grants || {};
+    let dot = 0;
+    const notes = [];
+    for (const [id, g] of Object.entries(grants)) {
+      if (wallet.grants[id] || !g) continue;
+      const n = Math.max(0, Math.floor(g.dot || 0));
+      wallet.dot = (wallet.dot || 0) + n;
+      wallet.grants[id] = Date.now();
+      dot += n;
+      if (g.note) notes.push(g.note);
+    }
+    if (!dot) return;
+    wallet.updatedAt = Date.now();
+    const old = load(GRANT_KEY) || { dot: 0, notes: [] };
+    save(GRANT_KEY, { dot: old.dot + dot, notes: old.notes.concat(notes) });
   }
 
   function apply(data) {
@@ -112,6 +135,7 @@
       const meta = load(META_KEY) || {};
       const local = snapshot();
       const merged = merge(local, remote, !!meta.first && !!remote.wallet);
+      claimGrants(merged.wallet, remote.grants);
       const changed = stable(merged) !== stable(local);
       if (changed) apply(merged);
       meta.first = false;
@@ -125,8 +149,9 @@
       if (!this.who) return false;
       const body = Object.assign({}, data || snapshot(), { who: this.who, savedAt: Date.now() });
       try {
+        // PATCH chỉ thay các mục của máy, giữ nguyên quà (grants) đang chờ trên Firebase.
         const res = await fetch(url(this.who), {
-          method: 'PUT',
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
           keepalive: !!keepalive,

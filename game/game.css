@@ -457,6 +457,12 @@ body.night .stars svg { fill: #3A3166; }
   text-decoration: none;
 }
 
+.menu-ev {
+  margin-left: 6px; padding: 1px 6px; border-radius: 999px;
+  background: linear-gradient(135deg, #2F3B85, #D62F45); color: #FFF6E6;
+  font-size: 10px; font-weight: 800;
+}
+
 /* Ví đốt cây */
 .w-icon { width: 40px; height: 40px; margin: 0 auto; fill: none; stroke: #3D8A57; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 body.night .w-icon { stroke: #9FE0B2; }

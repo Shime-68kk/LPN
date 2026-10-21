@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="home.css?v=9" />
+  <link rel="stylesheet" href="home.css?v=10" />
 </head>
 <body data-weather="nang">
   <!-- Cảnh trời: màu và các lớp đổi theo data-weather trên body -->
@@ -155,6 +155,7 @@
       <a class="tile t-gift" href="../shop/">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2M9.5 13.5c.8 1 1.6 1.5 2.5 1.5s1.7-.5 2.5-1.5" /></svg>
         <span>Tiệm Sâu</span>
+        <span class="tile-badge" id="shop-badge" hidden>Sự kiện</span>
       </a>
       <a class="tile t-game" href="../game/">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18a3 3 0 1 0 0-.01M11 15a3 3 0 1 0 0-.01M16 11a3.5 3.5 0 1 0 0-.01M15 6l-1-3M18 6l1-3" /></svg>
@@ -274,8 +275,21 @@
     </div>
   </div>
 
-  <script src="sync.js?v=1"></script>
+  <script src="sync.js?v=2"></script>
   <script src="diary.js?v=1"></script>
   <script src="home.js?v=10"></script>
+  <script src="../shop/skins.js?v=4"></script>
+  <script>
+    // Tiệm Sâu đang có sự kiện thì gắn nhãn lên ô; máy này chưa xem thì nhãn nhấp nháy.
+    (() => {
+      const ev = window.Skins && Skins.activeEvent();
+      if (!ev) return;
+      let seen = {};
+      try { seen = JSON.parse(localStorage.getItem('lpn:evSeen')) || {}; } catch (e) { /* bỏ qua */ }
+      const b = document.getElementById('shop-badge');
+      b.hidden = false;
+      b.classList.toggle('new', !seen[ev.id]);
+    })();
+  </script>
 </body>
 </html>

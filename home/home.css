@@ -316,6 +316,14 @@ h1 {
   transition: background-color .8s, color .8s;
 }
 .tile:active { transform: scale(.96); }
+.tile { position: relative; }
+.tile-badge {
+  position: absolute; top: 6px; right: 6px; padding: 2px 7px; border-radius: 999px;
+  background: linear-gradient(135deg, #2F3B85, #D62F45); color: #FFF6E6;
+  font-size: 10px; font-weight: 800; line-height: 1.5;
+}
+.tile-badge.new { animation: badge-pop 1.4s ease-in-out infinite; }
+@keyframes badge-pop { 50% { transform: scale(1.12); box-shadow: 0 0 0 4px rgba(255, 201, 60, .35); } }
 .tile svg { width: 26px; height: 26px; }
 .t-music { background: var(--t-music); color: var(--t-music-ink); }
 .t-letter { background: var(--t-letter); color: var(--t-letter-ink); }

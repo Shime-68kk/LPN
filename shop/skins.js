@@ -90,12 +90,81 @@
       wing: { top: '#3D3670', bottom: '#5A5294', mark: 'star', markColor: '#FFE27A', spot: '#FFE27A', body: '#1E1A3A', glow: true } },
     { id: 'canh-cau-vong', slot: 'wing', name: 'Cánh Cầu Vồng', rarity: 'huyenthoai', price: 1200, ch: 9, memory: 'Không phải Thái Nguyên đẹp. Mà là Thái Nguyên có em.',
       wing: { top: 'rainbow', bottom: '#FFF1C9', mark: 'heart', markColor: '#FFFFFF', spot: '#FF6F8E', body: '#5B3E8F', glow: true } },
+
+    // ---------- Sự kiện Sa Pa · Mùa Mây (ev): trong thời gian sự kiện chỉ ra từ Vòng quay ----------
+    { id: 'tho-cam', slot: 'skin', name: 'Sâu Thổ Cẩm', rarity: 'huyenthoai', price: 1500, ch: 12, ev: 'sapa',
+      memory: 'Chợ Sa Pa đầy thổ cẩm sặc sỡ. Thứ anh muốn mang về nhất vẫn là em.',
+      pal: { body: '#2F3B85', body2: '#2F3B85', head: '#B79CF0', feet: '#1E2660', ant: '#1E2660', antTip: '#FFC93C', mark: '#FFC93C', cocoon: '#4A55A0', cocoonLine: '#D62F45' },
+      acc: 'khan', pattern: 'brocade', mark: 'diamond', glow: '#FFE9A0', antLen: 2 },
+    { id: 'canh-tho-cam', slot: 'wing', name: 'Cánh Thổ Cẩm', rarity: 'suthi', price: 600, ch: 12, ev: 'sapa',
+      memory: 'Sợi chỉ đỏ, sợi chỉ vàng đan vào nhau, như hai đứa mình.',
+      wing: { top: '#2F3B85', bottom: '#D62F45', pattern: 'brocade', mark: 'diamond', markColor: '#FFC93C', spot: '#FFC93C', body: '#1E2660' } },
+    { id: 'hoa-van', slot: 'fx', name: 'Hoa Văn Thổ Cẩm', rarity: 'suthi', price: 600, ch: 12, ev: 'sapa',
+      memory: 'Hoa văn thêu tay, chẳng tấm nào giống tấm nào. Em cũng vậy, chỉ có một.',
+      fx: { kind: 'diamond', colors: ['#D62F45', '#FFC93C', '#2F3B85', '#2FA36B'] } },
+    { id: 'lua-chin', slot: 'skin', name: 'Sâu Lúa Chín', rarity: 'hiem', price: 250, ch: 12, ev: 'sapa',
+      memory: 'Tháng mười, lúa trên ruộng bậc thang chín vàng tới chân mây.',
+      pal: { body: '#EDB547', body2: '#E3A63A', head: '#EDB547', feet: '#8A5E12', ant: '#8A5E12', antTip: '#7CB342', mark: '#FFF1C9', cocoon: '#F7DB98', cocoonLine: '#E3A63A' },
+      acc: 'rice', mark: 'grain' },
+    { id: 'canh-ruong', slot: 'wing', name: 'Cánh Ruộng Bậc Thang', rarity: 'hiem', price: 250, ch: 12, ev: 'sapa',
+      memory: 'Từng bậc ruộng nối nhau lên tận trời, như mình từng bước lại gần nhau.',
+      wing: { top: '#F2C14E', bottom: '#9CC856', pattern: 'terrace', mark: 'none', markColor: '#FFF1C9', spot: '#FFF1C9', body: '#6B4A1E' } },
+    { id: 'hat-lua', slot: 'fx', name: 'Hạt Lúa Vàng', rarity: 'thuong', price: 80, ch: 12, ev: 'sapa',
+      memory: 'Gió núi thổi qua, cả thung lũng thơm mùi lúa mới.',
+      fx: { kind: 'grain', colors: ['#F2C14E', '#E3A63A', '#FFE08A'] } },
   ];
+
+  // ================= Sự kiện =================
+  // Trong thời gian sự kiện, món có ev chỉ ra từ Vòng quay; chưa tới ngày thì ẩn hẳn;
+  // hết sự kiện thì thành món thường (mua được, có trong Hộp quà).
+  const EVENTS = [
+    {
+      id: 'sapa',
+      name: 'Sa Pa · Mùa Mây',
+      short: 'Sa Pa',
+      tagline: 'Vòng quay đã ra mắt!',
+      start: Date.parse('2026-10-21T00:00:00+07:00'),
+      end: Date.parse('2026-11-21T00:00:00+07:00'),
+      price: 100,     // đốt mỗi lượt quay
+      pity: 25,       // tối đa 25 lượt là có món Huyền thoại của sự kiện
+      refund: 50,     // trúng món đã có thì hoàn lại
+      sets: [
+        { id: 'tho-cam', name: 'Bộ Thổ Cẩm', items: ['skin:tho-cam', 'wing:canh-tho-cam', 'fx:hoa-van'] },
+        { id: 'lua-chin', name: 'Bộ Lúa Chín', items: ['skin:lua-chin', 'wing:canh-ruong', 'fx:hat-lua'] },
+      ],
+      // Thứ tự ô trên vòng quay (theo chiều kim đồng hồ từ đỉnh); w là tỉ lệ phần trăm.
+      wheel: [
+        { item: 'skin:tho-cam', w: 4 },
+        { item: 'fx:hat-lua', w: 14 },
+        { item: 'wing:canh-tho-cam', w: 8 },
+        { dot: 40, w: 28 },
+        { item: 'skin:lua-chin', w: 12 },
+        { item: 'fx:hoa-van', w: 8 },
+        { item: 'wing:canh-ruong', w: 12 },
+        { dot: 100, w: 14 },
+      ],
+    },
+  ];
+  const eventById = (id) => EVENTS.find((e) => e.id === id) || null;
+  const activeEvent = (now) => {
+    now = now || Date.now();
+    return EVENTS.find((e) => now >= e.start && now < e.end) || null;
+  };
+  // 'normal' | 'event' (chỉ có ở vòng quay) | 'hidden' (sự kiện chưa bắt đầu)
+  function itemState(item, now) {
+    if (!item.ev) return 'normal';
+    const e = eventById(item.ev);
+    now = now || Date.now();
+    if (!e) return 'normal';
+    if (now < e.start) return 'hidden';
+    return now < e.end ? 'event' : 'normal';
+  }
 
   const BY_ID = {};
   for (const it of ITEMS) BY_ID[it.slot + ':' + it.id] = it;
   const DEFAULT = { skin: 'tim', fx: 'la', wing: 'canh-tim' };
   const get = (slot, id) => BY_ID[slot + ':' + id] || BY_ID[slot + ':' + DEFAULT[slot]];
+  const byKey = (key) => BY_ID[key] || null;
   const palette = (skin) => Object.assign({}, BASE, skin.pal || {});
 
   // ================= Hình cơ bản =================
@@ -142,6 +211,14 @@
     x.arc(cx + s * 0.45, cy - s * 0.1, s * 0.8, Math.PI * 1.55, Math.PI * 0.45, true);
     x.closePath();
   }
+  function diamondPath(x, cx, cy, s) {
+    x.beginPath();
+    x.moveTo(cx, cy - s);
+    x.lineTo(cx + s * 0.72, cy);
+    x.lineTo(cx, cy + s);
+    x.lineTo(cx - s * 0.72, cy);
+    x.closePath();
+  }
   function snowPath(x, cx, cy, s, lw) {
     x.lineWidth = lw;
     x.lineCap = 'round';
@@ -165,6 +242,53 @@
     else if (kind === 'snow') { snowPath(x, cx, cy, s * 0.85, 1.6 * S); }
     else if (kind === 'drop') { dropPath(x, cx, cy, s * 0.8); x.fill(); }
     else if (kind === 'moon') { moonPath(x, cx, cy, s * 0.75); x.fill(); }
+    else if (kind === 'diamond') {
+      // hoa văn quả trám của thổ cẩm: trám vàng, lõi đỏ
+      diamondPath(x, cx, cy, s); x.fill();
+      x.fillStyle = '#D62F45';
+      diamondPath(x, cx, cy, s * 0.45); x.fill();
+    } else if (kind === 'grain') {
+      // hai hạt lúa chụm lại
+      for (const a of [-0.5, 0.5]) { x.beginPath(); x.ellipse(cx + a * s * 0.62, cy, s * 0.3, s * 0.62, a, 0, TAU); x.fill(); }
+    }
+  }
+
+  // ================= Hoa văn thổ cẩm =================
+  const BRO = { red: '#D62F45', pink: '#E0457B', gold: '#FFC93C', green: '#2FA36B', cream: '#FFF6E6' };
+  // Một hàng răng cưa (tam giác) chạy ngang từ x0 đến x1, cao h quanh trục y.
+  function zigzag(x, x0, x1, y, h, n) {
+    const w = (x1 - x0) / n;
+    x.beginPath();
+    for (let i = 0; i < n; i++) {
+      x.moveTo(x0 + i * w, y + h / 2);
+      x.lineTo(x0 + i * w + w / 2, y - h / 2);
+      x.lineTo(x0 + (i + 1) * w, y + h / 2);
+      x.closePath();
+    }
+    x.fill();
+  }
+  // Dải thổ cẩm ngang thân đốt: viền xanh, giữa đỏ (hoặc hồng) có răng cưa vàng, chấm chỉ trắng.
+  function brocadeBand(x, r, variant, bean) {
+    x.save();
+    x.beginPath();
+    if (bean) x.ellipse(0, 0, r, r * 0.92, 0, 0, TAU); else x.arc(0, 0, r, 0, TAU);
+    x.clip();
+    const h = r * 0.36;
+    x.fillStyle = BRO.green;
+    x.fillRect(-r, -h - r * 0.1, r * 2, r * 0.1);
+    x.fillRect(-r, h, r * 2, r * 0.1);
+    x.fillStyle = variant === 1 ? BRO.pink : BRO.red;
+    x.fillRect(-r, -h, r * 2, h * 2);
+    if (variant !== 2) { x.fillStyle = BRO.gold; zigzag(x, -r, r, 0, h * 1.1, 5); }
+    x.fillStyle = BRO.cream;
+    x.beginPath();
+    for (let i = 0; i <= 8; i++) {
+      const px = -r + (i * r) / 4;
+      x.moveTo(px + r * 0.05, -h - r * 0.24); x.arc(px, -h - r * 0.24, r * 0.05, 0, TAU);
+      x.moveTo(px + r * 0.05, h + r * 0.24); x.arc(px, h + r * 0.24, r * 0.05, 0, TAU);
+    }
+    x.fill();
+    x.restore();
   }
 
   // ================= Đốt thân =================
@@ -179,9 +303,10 @@
     if (skin.shape === 'bean') x.ellipse(0, 0, r, r * 0.92, 0, 0, TAU);
     else x.arc(0, 0, r, 0, TAU);
     x.fill();
+    if (skin.pattern === 'brocade') brocadeBand(x, r, variant, skin.shape === 'bean');
     x.fillStyle = p.shine;
     x.beginPath(); x.ellipse(-r * 0.3, -r * 0.38, r * 0.42, r * 0.24, -0.4, 0, TAU); x.fill();
-    if (variant === 2 && skin.mark !== 'none') drawMark(x, skin.mark || 'heart', 0, r * 0.05, r * 0.32, p.mark, S);
+    if (variant === 2 && skin.mark !== 'none') drawMark(x, skin.mark || 'heart', 0, skin.pattern ? 0 : r * 0.05, r * 0.32, p.mark, S);
   }
 
   // ================= Phụ kiện trên đầu =================
@@ -358,6 +483,79 @@
       x.fillStyle = '#E8456E';
       x.beginPath(); x.arc(0, 0, r * 0.15, 0, TAU); x.fill();
       x.restore();
+    } else if (acc === 'khan') {
+      // Khăn thổ cẩm quấn đầu, chùm quả bông đỏ vàng đung đưa bên phải.
+      if (back) return;
+      const B = (u) => { const v = 1 - u; return [(-0.97 * v * v + 0.97 * u * u) * r, (-0.38 * v * v - 0.62 * 2 * u * v - 0.38 * u * u) * r]; };
+      const T = (u) => { const v = 1 - u; return [(-0.9 * v * v + 0.9 * u * u) * r, (-0.72 * v * v - 0.98 * 2 * u * v - 0.72 * u * u) * r]; };
+      // đỉnh khăn đỏ
+      x.fillStyle = BRO.red;
+      x.beginPath();
+      x.moveTo(-r * 0.95, -r * 0.5);
+      x.quadraticCurveTo(-r * 0.92, -r * 1.42, 0, -r * 1.4);
+      x.quadraticCurveTo(r * 0.92, -r * 1.42, r * 0.95, -r * 0.5);
+      x.closePath();
+      x.fill();
+      x.strokeStyle = BRO.gold;
+      x.lineWidth = 1.5 * S;
+      x.globalAlpha = 0.8;
+      x.beginPath(); x.moveTo(-r * 0.62, -r * 1.12); x.quadraticCurveTo(0, -r * 1.34, r * 0.62, -r * 1.12); x.stroke();
+      x.globalAlpha = 1;
+      // vành khăn chàm có răng cưa vàng
+      x.fillStyle = '#2F3B85';
+      x.beginPath();
+      x.moveTo(-r * 0.97, -r * 0.38);
+      x.quadraticCurveTo(0, -r * 0.62, r * 0.97, -r * 0.38);
+      x.lineTo(r * 0.9, -r * 0.72);
+      x.quadraticCurveTo(0, -r * 0.98, -r * 0.9, -r * 0.72);
+      x.closePath();
+      x.fill();
+      x.strokeStyle = BRO.gold;
+      x.lineWidth = 1.8 * S;
+      x.beginPath();
+      for (let i = 0; i <= 12; i++) {
+        const u = 0.04 + (i / 12) * 0.92;
+        const b = B(u), tt = T(u), k = i % 2 ? 0.28 : 0.72;
+        const px = b[0] + (tt[0] - b[0]) * k, py = b[1] + (tt[1] - b[1]) * k;
+        if (i) x.lineTo(px, py); else x.moveTo(px, py);
+      }
+      x.stroke();
+      // chùm quả bông
+      const sw = Math.sin(t * 3) * r * 0.06;
+      const balls = [[1.06, -0.02, '#FF4F6A'], [1.26, -0.18, '#FFC93C'], [1.2, 0.2, '#FF8FC8']];
+      x.strokeStyle = BRO.gold;
+      x.lineWidth = 1.2 * S;
+      for (const [bx, by] of balls) {
+        x.beginPath(); x.moveTo(r * 0.86, -r * 0.5); x.lineTo(bx * r + sw, by * r); x.stroke();
+      }
+      for (const [bx, by, c] of balls) {
+        x.fillStyle = c;
+        x.beginPath(); x.arc(bx * r + sw, by * r, r * 0.13, 0, TAU); x.fill();
+      }
+    } else if (acc === 'rice') {
+      // Một bông lúa cắm trên đầu, trĩu hạt cong xuống, đung đưa theo gió.
+      if (back) return;
+      x.save();
+      x.translate(-r * 0.12, -r * 0.92);
+      x.rotate(-0.12 + Math.sin(t * 2) * 0.07);
+      const P = (u) => { const v = 1 - u; return [2 * u * v * r * 0.1 + u * u * r * 0.78, 2 * u * v * -r * 0.95 + u * u * -r * 0.72]; };
+      x.fillStyle = '#7CB342';
+      x.beginPath(); x.ellipse(-r * 0.28, -r * 0.3, r * 0.1, r * 0.36, -0.5, 0, TAU); x.fill();
+      x.strokeStyle = '#A08A2A';
+      x.lineWidth = 1.8 * S;
+      x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(r * 0.1, -r * 0.95, r * 0.78, -r * 0.72); x.stroke();
+      for (let i = 0; i < 7; i++) {
+        const u = 0.42 + i * 0.09;
+        const [px, py] = P(u), [qx, qy] = P(u + 0.01);
+        const a = Math.atan2(qy - py, qx - px);
+        for (const side of [-1, 1]) {
+          x.fillStyle = side < 0 ? '#F2C14E' : '#E3A63A';
+          x.beginPath();
+          x.ellipse(px + Math.cos(a + side * 1.2) * r * 0.1, py + Math.sin(a + side * 1.2) * r * 0.1, r * 0.06, r * 0.12, a + side * 0.6 + Math.PI / 2, 0, TAU);
+          x.fill();
+        }
+      }
+      x.restore();
     }
   }
 
@@ -374,7 +572,8 @@
     x.lineCap = 'round';
     const bob = (st.bob || 0) * 3 * S;
     for (const side of [-1, 1]) {
-      const tx = side * r * 0.8 + (st.ant || 0), ty = -r * (bean ? 1.7 : 1.6) - bob;
+      // antLen: râu dài hơn cho skin đội khăn cao, để râu vẫn nhô hẳn lên khỏi khăn
+      const tx = side * r * 0.8 + (st.ant || 0), ty = -r * (skin.antLen || (bean ? 1.7 : 1.6)) - bob;
       x.beginPath();
       x.moveTo(side * r * 0.4, -r * 0.75);
       x.quadraticCurveTo(side * r * 0.45, -r * 1.35, tx, ty);
@@ -382,7 +581,7 @@
       if (skin.glow) {
         x.fillStyle = skin.glow;
         x.globalAlpha = 0.35 + 0.25 * Math.abs(Math.sin(t * 3 + side));
-        x.beginPath(); x.arc(tx, ty, 7 * S, 0, TAU); x.fill();
+        x.beginPath(); x.arc(tx, ty, (skin.antLen ? 5.5 : 7) * S, 0, TAU); x.fill();
         x.globalAlpha = 1;
       }
       x.fillStyle = p.antTip;
@@ -478,6 +677,58 @@
 
   // ================= Bướm =================
   const RAINBOW = ['#FF6F8E', '#FFB86B', '#FFE27A', '#7FD48A', '#6FB6FF', '#B79CF0'];
+  // Vẽ hoa văn bên trong một cánh (đã cắt theo hình cánh). g: [cx, cy, rx, ry, góc] theo đơn vị S.
+  const WING_TOP = [20, -14, 22, 17, -0.5], WING_BOTTOM = [15, 13, 14, 11, 0.5];
+  function wingPattern(x, kind, g, top, S) {
+    x.save();
+    x.translate(g[0] * S, g[1] * S);
+    x.rotate(g[4]);
+    const R = g[2] * S, H = g[3] * S;
+    x.beginPath(); x.ellipse(0, 0, R, H, 0, 0, TAU); x.clip();
+    if (kind === 'brocade') {
+      if (top) {
+        x.fillStyle = BRO.green;
+        x.fillRect(-R, -H * 0.44, R * 2, H * 0.1);
+        x.fillRect(-R, H * 0.34, R * 2, H * 0.1);
+        x.fillStyle = BRO.red;
+        x.fillRect(-R, -H * 0.3, R * 2, H * 0.6);
+        x.fillStyle = BRO.gold;
+        zigzag(x, -R, R, 0, H * 0.4, 6);
+        x.fillStyle = BRO.cream;
+        x.beginPath();
+        for (let i = 0; i <= 9; i++) {
+          const px = -R + (i * R) / 4.5;
+          x.moveTo(px + 1.2 * S, -H * 0.62); x.arc(px, -H * 0.62, 1.2 * S, 0, TAU);
+          x.moveTo(px + 1.2 * S, H * 0.62); x.arc(px, H * 0.62, 1.2 * S, 0, TAU);
+        }
+        x.fill();
+      } else {
+        x.fillStyle = '#2F3B85';
+        x.fillRect(-R, -H * 0.22, R * 2, H * 0.44);
+        x.fillStyle = BRO.gold;
+        zigzag(x, -R, R, 0, H * 0.3, 4);
+      }
+    } else if (kind === 'terrace') {
+      // ruộng bậc thang: các dải cong vàng xanh nối nhau, viền bờ ruộng sẫm
+      const cols = top ? ['#F7D774', '#F2C14E', '#E3A63A', '#B5C94A', '#F2C14E', '#9CC856'] : ['#B5C94A', '#9CC856', '#7FB342', '#B5C94A'];
+      const n = cols.length, step = (H * 2.4) / n;
+      for (let i = 0; i < n; i++) {
+        const y0 = -H * 1.2 + i * step;
+        x.fillStyle = cols[i];
+        x.beginPath();
+        x.moveTo(-R * 1.1, y0 + H * 0.3);
+        x.quadraticCurveTo(0, y0 - H * 0.3, R * 1.1, y0 + H * 0.3);
+        x.lineTo(R * 1.1, y0 + H * 0.3 + step + 1);
+        x.quadraticCurveTo(0, y0 - H * 0.3 + step + 1, -R * 1.1, y0 + H * 0.3 + step + 1);
+        x.closePath();
+        x.fill();
+        x.strokeStyle = 'rgba(110, 74, 20, 0.35)';
+        x.lineWidth = 0.9 * S;
+        x.beginPath(); x.moveTo(-R * 1.1, y0 + H * 0.3); x.quadraticCurveTo(0, y0 - H * 0.3, R * 1.1, y0 + H * 0.3); x.stroke();
+      }
+    }
+    x.restore();
+  }
   function drawButterfly(x, wingItem, S, t) {
     const w = wingItem.wing;
     const flap = 0.3 + 0.7 * Math.abs(Math.sin(t * 7));
@@ -496,9 +747,11 @@
         x.fillStyle = gr;
       } else x.fillStyle = w.top;
       x.beginPath(); x.ellipse(20 * S, -14 * S, 22 * S, 17 * S, -0.5, 0, TAU); x.fill();
+      if (w.pattern) wingPattern(x, w.pattern, WING_TOP, true, S);
       x.fillStyle = w.bottom;
       x.beginPath(); x.ellipse(15 * S, 13 * S, 14 * S, 11 * S, 0.5, 0, TAU); x.fill();
-      drawMark(x, w.mark, 22 * S, -15 * S, 6 * S, w.markColor, S);
+      if (w.pattern) wingPattern(x, w.pattern, WING_BOTTOM, false, S);
+      if (w.mark !== 'none') drawMark(x, w.mark, 22 * S, -15 * S, 6 * S, w.markColor, S);
       if (w.mark === 'star') {
         x.fillStyle = w.markColor;
         x.globalAlpha = 0.7;
@@ -526,7 +779,7 @@
 
   // ================= Hạt hiệu ứng khi ăn lá =================
   // Trả về danh sách hạt {kind, vx, vy, life, size, color}; game và tiệm tự nhân với S và vị trí.
-  // kind: 0 vụn lá, 1 tim, 4 cánh hoa, 5 mây, 6 sao, 7 nốt nhạc, 8 pháo giấy.
+  // kind: 0 vụn lá, 1 tim, 4 cánh hoa, 5 mây, 6 sao, 7 nốt nhạc, 8 pháo giấy, 9 hoa văn trám, 10 hạt lúa.
   function eatBurst(fxItem, n, S, leafColors) {
     const fx = fxItem.fx;
     const out = [];
@@ -541,6 +794,8 @@
       else if (fx.kind === 'cloud') out.push({ kind: 5, vx: Math.cos(a) * sp * 0.45, vy: Math.sin(a) * sp * 0.45, life: 0.6 + Math.random() * 0.3, size: (4 + Math.random() * 4) * S, color: c });
       else if (fx.kind === 'star') out.push({ kind: 6, vx: Math.cos(a) * sp * 0.8, vy: Math.sin(a) * sp * 0.8, life: 0.5 + Math.random() * 0.35, size: (3.5 + Math.random() * 2.5) * S, color: c });
       else if (fx.kind === 'note') out.push({ kind: 7, vx: (Math.random() - 0.5) * 80 * S, vy: -(80 + Math.random() * 80) * S, life: 0.7 + Math.random() * 0.3, size: (9 + Math.random() * 5) * S, color: c });
+      else if (fx.kind === 'diamond') out.push({ kind: 9, vx: Math.cos(a) * sp * 0.85, vy: Math.sin(a) * sp * 0.85, life: 0.6 + Math.random() * 0.35, size: (3.8 + Math.random() * 2.4) * S, color: c });
+      else if (fx.kind === 'grain') out.push({ kind: 10, vx: Math.cos(a) * sp * 0.75, vy: Math.sin(a) * sp * 0.75, life: 0.6 + Math.random() * 0.35, size: (3.4 + Math.random() * 1.8) * S, color: c });
       else out.push({ kind: 8, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.55 + Math.random() * 0.35, size: (2.4 + Math.random() * 2) * S, color: c });
     }
     return out;
@@ -554,6 +809,8 @@
     else if (p.kind === 5) { p.vx *= 1 - 2.5 * dt; p.vy *= 1 - 2.5 * dt; p.size *= 1 + 0.9 * dt; }
     else if (p.kind === 6) { p.vx *= 1 - 2 * dt; p.vy = p.vy * (1 - 2 * dt) + 120 * S * dt; p.rot += p.vr * dt; }
     else if (p.kind === 7) { p.vx = Math.sin(p.life * 5) * 30 * S; }
+    else if (p.kind === 9) { p.vx *= 1 - 2 * dt; p.vy = p.vy * (1 - 2 * dt) + 140 * S * dt; p.rot += p.vr * dt * 0.5; }
+    else if (p.kind === 10) { p.vy += 520 * S * dt; p.vx *= 1 - 1.2 * dt; p.rot += p.vr * dt * 0.5; }
   }
   function drawParticle(x, p, S) {
     const k = p.life / p.max;
@@ -592,6 +849,18 @@
       x.textAlign = 'center';
       x.textBaseline = 'middle';
       x.fillText(p.size > 11 * S ? '♫' : '♪', p.x, p.y);
+    } else if (p.kind === 9) {
+      x.save(); x.translate(p.x, p.y); x.rotate(p.rot);
+      diamondPath(x, 0, 0, p.size); x.fill();
+      x.fillStyle = BRO.cream;
+      diamondPath(x, 0, 0, p.size * 0.42); x.fill();
+      x.restore();
+    } else if (p.kind === 10) {
+      x.save(); x.translate(p.x, p.y); x.rotate(p.rot);
+      x.beginPath(); x.ellipse(0, 0, p.size * 0.42, p.size, 0, 0, TAU); x.fill();
+      x.fillStyle = 'rgba(255,255,255,0.5)';
+      x.beginPath(); x.ellipse(-p.size * 0.12, -p.size * 0.25, p.size * 0.12, p.size * 0.42, 0, 0, TAU); x.fill();
+      x.restore();
     }
     x.globalAlpha = 1;
   }
@@ -639,5 +908,8 @@
     x.restore();
   }
 
-  window.Skins = { ITEMS, RARITY, DEFAULT, BASE, get, palette, drawSegment, drawHead, drawCocoon, drawButterfly, eatBurst, stepParticle, drawParticle, drawPreview, heartPath };
+  window.Skins = {
+    ITEMS, RARITY, DEFAULT, BASE, EVENTS, get, byKey, palette, eventById, activeEvent, itemState,
+    drawSegment, drawHead, drawCocoon, drawButterfly, eatBurst, stepParticle, drawParticle, drawPreview, heartPath,
+  };
 })();
