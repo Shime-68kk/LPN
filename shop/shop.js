@@ -18,7 +18,7 @@
   };
   const TAU = Math.PI * 2;
   const ITEMS = Skins.ITEMS;
-  const isLive = (e) => !!e && Date.now() >= e.start && Date.now() < e.end;
+  const isLive = (e) => !!e && Date.now() >= Skins.startOf(e) && Date.now() < e.end;
   const EV_LIST = Skins.visibleEvents(); // sự kiện đang diễn ra hoặc sắp mở
   const WAS_LIVE = {};
   for (const e of EV_LIST) WAS_LIVE[e.id] = isLive(e);
@@ -1212,7 +1212,8 @@
   function evTimeText(ev) {
     ev = ev || EV;
     const now = Date.now();
-    if (now < ev.start) return 'Mở sau ' + leftText(ev.start - now).trim() + ' · ngày ' + dayText(ev.start);
+    if (now < Skins.startOf(ev)) return 'Mở sau ' + leftText(ev.start - now).trim() + ' · ngày ' + dayText(ev.start);
+    if (Skins.isPreview(ev)) return 'Thử trước · em mở ngày ' + dayText(ev.start);
     if (now >= ev.end) return 'Đã kết thúc';
     const d = Math.floor((ev.end - now) / 864e5);
     return 'Còn ' + (d >= 1 ? d + ' ngày' : leftText(ev.end - now).trim()) + ' · đến hết ' + dayText(ev.end - 1);
@@ -1255,14 +1256,14 @@
       const name = document.createElement('b');
       name.textContent = e.short;
       const sub = document.createElement('small');
-      sub.textContent = isLive(e) ? 'Đang diễn ra' : 'Mở ' + dayText(e.start);
+      sub.textContent = Skins.isPreview(e) ? 'Chơi thử trước' : isLive(e) ? 'Đang diễn ra' : 'Mở ' + dayText(e.start);
       b.append(name, sub);
       b.addEventListener('click', () => { SFX.click(); selectEvent(e.id); });
       sw.appendChild(b);
     }
     document.querySelectorAll('.ev-banner').forEach((el) => { el.hidden = el.dataset.ev !== EV.id; });
     const banner = document.querySelector('.ev-banner[data-ev="' + EV.id + '"]');
-    banner.querySelector('.ev-kicker').textContent = live ? 'Sự kiện giới hạn' : 'Sắp diễn ra';
+    banner.querySelector('.ev-kicker').textContent = Skins.isPreview(EV) ? 'Chơi thử trước' : live ? 'Sự kiện giới hạn' : 'Sắp diễn ra';
     banner.querySelector('h2').textContent = EV.name;
     banner.querySelector('.ev-tagline').textContent = live ? EV.tagline : EV.teaser || EV.tagline;
     banner.querySelector('.ev-time').textContent = evTimeText();

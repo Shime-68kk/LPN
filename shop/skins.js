@@ -182,6 +182,8 @@
       teaser: 'Halloween tới rồi, cổng lâu đài sắp mở…',
       soon: Date.parse('2026-10-21T00:00:00+07:00'),  // từ hôm nay hiện bảng đếm ngược
       start: Date.parse('2026-10-26T00:00:00+07:00'),
+      // Máy của anh Quang được chơi thử trước từ hôm nay; máy của Thủy vẫn chờ tới ngày mở.
+      early: { quang: Date.parse('2026-10-21T00:00:00+07:00') },
       end: Date.parse('2026-11-10T00:00:00+07:00'),
       style: 'spooky',
       price: 100,
@@ -204,14 +206,18 @@
     },
   ];
   const eventById = (id) => EVENTS.find((e) => e.id === id) || null;
+  // Ngày mở thật của sự kiện trên máy này (máy được thử trước thì mở sớm hơn).
+  const WHO = (() => { try { return localStorage.getItem('lpn:who'); } catch (e) { return null; } })();
+  const startOf = (e) => (e.early && e.early[WHO] ? Math.min(e.start, e.early[WHO]) : e.start);
+  const isPreview = (e, now) => { now = now || Date.now(); return now >= startOf(e) && now < e.start; };
   const activeEvent = (now) => {
     now = now || Date.now();
-    return EVENTS.find((e) => now >= e.start && now < e.end) || null;
+    return EVENTS.find((e) => now >= startOf(e) && now < e.end) || null;
   };
   // Sự kiện hiện trong Tiệm: đang diễn ra, hoặc sắp diễn ra (đã tới ngày đếm ngược).
   const visibleEvents = (now) => {
     now = now || Date.now();
-    return EVENTS.filter((e) => now >= (e.soon || e.start) && now < e.end);
+    return EVENTS.filter((e) => now >= Math.min(e.soon || e.start, startOf(e)) && now < e.end);
   };
   // 'normal' | 'event' (chỉ có ở vòng quay) | 'hidden' (sự kiện chưa bắt đầu)
   function itemState(item, now) {
@@ -219,7 +225,7 @@
     const e = eventById(item.ev);
     now = now || Date.now();
     if (!e) return 'normal';
-    if (now < e.start) return 'hidden';
+    if (now < startOf(e)) return 'hidden';
     return now < e.end ? 'event' : 'normal';
   }
 
@@ -1508,7 +1514,7 @@
   }
 
   window.Skins = {
-    ITEMS, RARITY, DEFAULT, BASE, EVENTS, get, byKey, palette, eventById, activeEvent, visibleEvents, itemState,
+    ITEMS, RARITY, DEFAULT, BASE, EVENTS, get, byKey, palette, eventById, activeEvent, visibleEvents, itemState, startOf, isPreview,
     drawSegment, drawHead, drawCocoon, drawButterfly, eatBurst, stepParticle, drawParticle, drawPreview, heartPath,
     drawBackdrop, backdropTop,
   };
