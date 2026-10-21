@@ -16,8 +16,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="../home/home.css?v=10" />
-  <link rel="stylesheet" href="shop.css?v=3" />
+  <link rel="stylesheet" href="../home/home.css?v=11" />
+  <link rel="stylesheet" href="shop.css?v=4" />
 </head>
 <body data-weather="nang">
   <main class="shop">
@@ -49,12 +49,14 @@
       <button type="button" role="tab" data-tab="skin" aria-selected="false">Skin</button>
       <button type="button" role="tab" data-tab="fx" aria-selected="false">Hiệu ứng</button>
       <button type="button" role="tab" data-tab="wing" aria-selected="false">Cánh bướm</button>
+      <button type="button" role="tab" data-tab="bg" aria-selected="false">Nền</button>
       <button type="button" role="tab" data-tab="memo" aria-selected="false">Kỷ niệm</button>
     </nav>
 
     <!-- Sự kiện: vòng quay và các bộ đồ riêng -->
     <section class="tab-panel ev-panel" id="tab-ev" hidden>
-      <div class="ev-banner">
+      <div class="ev-switch" id="ev-switch" hidden></div>
+      <div class="ev-banner" data-ev="sapa">
         <svg class="ev-art" viewBox="0 0 360 170" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
           <defs>
             <linearGradient id="ev-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B2F7A" /><stop offset=".55" stop-color="#9A5FA8" /><stop offset="1" stop-color="#F2A27A" /></linearGradient>
@@ -70,14 +72,63 @@
         </svg>
         <div class="ev-text">
           <span class="ev-kicker">Sự kiện giới hạn</span>
-          <h2 id="ev-name"></h2>
-          <p id="ev-tag"></p>
-          <span class="ev-time" id="ev-time"></span>
+          <h2></h2>
+          <p class="ev-tagline"></p>
+          <span class="ev-time"></span>
         </div>
         <i class="brocade-strip" aria-hidden="true"></i>
       </div>
+      <div class="ev-banner ev-halloween" data-ev="halloween" hidden>
+        <svg class="ev-art" viewBox="0 0 360 170" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="hw-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#140A2A" /><stop offset=".6" stop-color="#3B1F5C" /><stop offset="1" stop-color="#7A3B5E" /></linearGradient>
+            <radialGradient id="hw-moon" cx=".4" cy=".4" r=".7"><stop offset="0" stop-color="#FFE9B8" /><stop offset="1" stop-color="#FFB347" /></radialGradient>
+            <path id="hw-bat" d="M0 2q-5-8-14-6q5 3 3 8q4-2 6 1q2-4 5-3q3-1 5 3q2-3 6-1q-2-5 3-8q-9-2-14 6z" />
+          </defs>
+          <rect width="360" height="170" fill="url(#hw-sky)" />
+          <g fill="#FFF4D6" opacity=".7"><circle cx="40" cy="20" r="1" /><circle cx="120" cy="12" r="1.2" /><circle cx="180" cy="30" r=".9" /><circle cx="230" cy="14" r="1" /><circle cx="345" cy="100" r="1" /><circle cx="210" cy="70" r=".8" /></g>
+          <circle cx="292" cy="52" r="50" fill="#FF9F43" opacity=".22" />
+          <circle cx="292" cy="52" r="31" fill="url(#hw-moon)" />
+          <g fill="#150B24">
+            <ellipse cx="292" cy="152" rx="72" ry="16" />
+            <rect x="264" y="106" width="56" height="44" />
+            <path d="M264 106h7v-6h-7zM278 106h7v-6h-7zM292 106h7v-6h-7zM306 106h7v-6h-7z" />
+            <rect x="246" y="86" width="16" height="66" /><path d="M242 86l12-28 12 28z" />
+            <rect x="322" y="96" width="14" height="56" /><path d="M319 96l10-24 10 24z" />
+            <rect x="285" y="74" width="18" height="34" /><path d="M281 74l13-32 13 32z" />
+            <path d="M293.4 42h1.2v-11h-1.2z" />
+          </g>
+          <path d="M294 31l9 3-9 3z" fill="#FF8A1F" />
+          <g fill="#FFC24B" class="hw-windows">
+            <rect x="251.5" y="100" width="5" height="8" rx="2.5" /><rect x="251.5" y="120" width="5" height="8" rx="2.5" />
+            <rect x="291.5" y="84" width="5" height="8" rx="2.5" /><rect x="326.5" y="110" width="5" height="8" rx="2.5" />
+            <rect x="274" y="126" width="5" height="8" rx="2.5" /><rect x="305" y="126" width="5" height="8" rx="2.5" />
+          </g>
+          <g fill="#0E0718" class="hw-bats">
+            <use href="#hw-bat" transform="translate(204 44) scale(1.1)" />
+            <use href="#hw-bat" transform="translate(236 26) scale(.8)" />
+            <use href="#hw-bat" transform="translate(178 62) scale(.6)" />
+          </g>
+          <path d="M0 150q90-12 180 0t180 0v20H0z" fill="#1C0F2E" />
+          <g>
+            <ellipse cx="206" cy="156" rx="13" ry="10" fill="#FF8A1F" />
+            <rect x="204.5" y="143" width="3" height="5" fill="#4E7A2A" />
+            <path d="M199 154l3-5 3 5zM207 154l3-5 3 5zM198 158q8 6 16 0q-8 3-16 0z" fill="#FFD34E" />
+            <ellipse cx="234" cy="160" rx="9" ry="7" fill="#F07A12" />
+            <rect x="233" y="151" width="2" height="4" fill="#4E7A2A" />
+          </g>
+        </svg>
+        <div class="ev-text">
+          <span class="ev-kicker">Sắp diễn ra</span>
+          <h2></h2>
+          <p class="ev-tagline"></p>
+          <span class="ev-time"></span>
+        </div>
+        <i class="spooky-strip" aria-hidden="true"></i>
+      </div>
 
-      <div class="wheel-wrap">
+      <div class="ev-live" id="ev-live">
+      <div class="wheel-wrap" id="wheel-wrap">
         <canvas id="wheel" aria-label="Vòng quay"></canvas>
         <button class="wheel-hub" id="wheel-hub" type="button" aria-label="Quay 1 lần">Quay</button>
       </div>
@@ -89,6 +140,7 @@
       <div class="pity">
         <div class="pity-row"><span id="ev-pity-name"></span><b id="ev-pity"></b></div>
         <div class="pity-bar legend"><i id="ev-pity-bar"></i></div>
+      </div>
       </div>
       <div class="sets" id="ev-sets"></div>
       <ul class="odds" id="ev-odds"></ul>
@@ -237,8 +289,8 @@
   <canvas class="fx-layer" id="fx" aria-hidden="true"></canvas>
 
   <script src="../home/sync.js?v=2"></script>
-  <script src="../home/wallet.js?v=6"></script>
-  <script src="skins.js?v=4"></script>
-  <script src="shop.js?v=3"></script>
+  <script src="../home/wallet.js?v=7"></script>
+  <script src="skins.js?v=5"></script>
+  <script src="shop.js?v=4"></script>
 </body>
 </html>

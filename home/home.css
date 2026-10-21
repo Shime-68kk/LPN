@@ -197,7 +197,9 @@ body[data-weather="mua"] .l-heart { opacity: 0; }
 .intro-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .date { font-size: 13px; font-weight: 500; color: var(--muted); }
 .days { display: flex; align-items: center; gap: 6px; min-height: 32px; font-size: 13px; font-weight: 600; color: var(--accent-ink); text-decoration: none; }
-.days svg { width: 14px; height: 14px; fill: currentColor; stroke: none; }
+.days svg { width: 14px; height: 14px; fill: #F0284A; stroke: none; animation: beat 1.8s ease-in-out infinite; }
+body.night .days svg { fill: #FF6B81; }
+@keyframes beat { 0%, 60%, 100% { transform: scale(1); } 15% { transform: scale(1.22); } 30% { transform: scale(1.05); } 45% { transform: scale(1.16); } }
 h1 {
   margin: 0;
   font-family: 'Fraunces', serif;

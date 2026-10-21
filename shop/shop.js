@@ -9,15 +9,20 @@
   const MAX_QTY = 20;     // mở nhiều nhất 20 hộp một lần
   const RARITY_ORDER = ['thuong', 'hiem', 'suthi', 'huyenthoai'];
   const BIG = (r) => r === 'suthi' || r === 'huyenthoai';
-  const SLOT_NAME = { skin: 'Skin', fx: 'Hiệu ứng', wing: 'Cánh bướm' };
+  const SLOT_NAME = { skin: 'Skin', fx: 'Hiệu ứng', wing: 'Cánh bướm', bg: 'Nền' };
   const HINT = {
     skin: 'Chạm để thử lên bé sâu. Skin chỉ để đẹp, không đổi cách chơi hay điểm.',
     fx: 'Hiện ra mỗi lần bé sâu đớp lá. Chạm để xem thử.',
     wing: 'Đôi cánh khi bé sâu hoá bướm cuối bài. Chạm để xem thử.',
+    bg: 'Khung cảnh phía sau khi chơi Sâu Tím, đổi luôn màu lá và cành. Chạm để xem thử.',
   };
   const TAU = Math.PI * 2;
   const ITEMS = Skins.ITEMS;
-  const EV = Skins.activeEvent();
+  const isLive = (e) => !!e && Date.now() >= e.start && Date.now() < e.end;
+  const EV_LIST = Skins.visibleEvents(); // sự kiện đang diễn ra hoặc sắp mở
+  const WAS_LIVE = {};
+  for (const e of EV_LIST) WAS_LIVE[e.id] = isLive(e);
+  let EV = null; // sự kiện đang xem trong tab Sự kiện (chọn lúc khởi động)
   // Món của sự kiện chưa bắt đầu thì chưa hiện ở đâu cả.
   const shown = () => ITEMS.filter((i) => Skins.itemState(i) !== 'hidden');
   const exclusive = (i) => Skins.itemState(i) === 'event';
@@ -106,7 +111,7 @@
   const look = () => {
     const eq = Wallet.equipped();
     const pick = (slot) => (UI.trying && UI.trying.slot === slot ? UI.trying : Skins.get(slot, eq[slot]));
-    return { skin: pick('skin'), fx: pick('fx'), wing: pick('wing') };
+    return { skin: pick('skin'), fx: pick('fx'), wing: pick('wing'), bg: pick('bg') };
   };
 
   // Kích thước canvas theo khung CSS (không bị ảnh hưởng bởi hiệu ứng phóng to thu nhỏ).
@@ -223,6 +228,7 @@
     }
   }
 
+  const STAGE_BG = {}; // nền vẽ sẵn của sân khấu
   // Một chiếc lá rơi xuống, bé sâu đớp, hiệu ứng nổ ra (lặp lại).
   const eat = { phase: 0, chew: 0, happy: 0, blink: 0, nextBlink: 2 };
   function leaf(ctx, x, y, s, rot) {
@@ -253,13 +259,15 @@
     const L = look();
     const showWing = UI.tab === 'wing' || (UI.trying && UI.trying.slot === 'wing');
 
+    // Nền riêng (Sa Pa, Lâu Đài Bí Ngô) thì vẽ cả khung cảnh; nền "Trời hôm nay" giữ trời của trang.
+    const scenic = Skins.drawBackdrop(x, L.bg, { W: SW, H: SH, t, dt, speed: 0, dpr: DPR, night: NIGHT, st: STAGE_BG });
     // mây nhẹ
     x.fillStyle = NIGHT ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.7)';
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 3 && !scenic; i++) {
       const cx = ((t * 8 + i * 140) % (SW + 120)) - 60, cy = 30 + i * 26;
       x.beginPath(); x.arc(cx, cy, 12, 0, TAU); x.arc(cx + 16, cy - 6, 15, 0, TAU); x.arc(cx + 32, cy, 12, 0, TAU); x.fill();
     }
-    if (NIGHT) {
+    if (NIGHT && !scenic) {
       x.fillStyle = '#FFF4D6';
       for (let i = 0; i < 14; i++) {
         x.globalAlpha = 0.4 + 0.6 * Math.abs(Math.sin(t * 1.3 + i));
@@ -442,7 +450,7 @@
       renderAll();
       return;
     }
-    if (exclusive(item)) { closeSheet(); switchTab('ev'); scrollToPanel(); return; }
+    if (exclusive(item)) { closeSheet(); switchTab('ev'); selectEvent(item.ev); scrollToPanel(); return; }
     if (w.dot < item.price) { SFX.no(); location.href = '../game/'; return; }
     // Bấm hai lần mới mua, tránh lỡ tay.
     if (UI.confirmBuy < Date.now()) {
@@ -876,32 +884,32 @@
   }
 
   // ================= Sự kiện: vòng quay =================
+  // Có thể có nhiều sự kiện cùng lúc (đang diễn ra hoặc sắp mở); EV là sự kiện đang xem trong tab.
   const SEEN_KEY = 'lpn:evSeen';
-  const seenEv = () => {
-    if (!EV) return true;
-    try { return !!(JSON.parse(localStorage.getItem(SEEN_KEY)) || {})[EV.id]; } catch (e) { return true; }
-  };
-  function markSeen() {
-    if (!EV) return;
+  const seenMap = () => { try { return JSON.parse(localStorage.getItem(SEEN_KEY)) || {}; } catch (e) { return null; } };
+  const seenEv = (ev) => { const m = seenMap(); return !ev || !m || !!m[ev.id]; };
+  function markSeen(ev) {
+    if (!ev || !isLive(ev)) return;
     try {
-      const o = JSON.parse(localStorage.getItem(SEEN_KEY)) || {};
-      o[EV.id] = Date.now();
+      const o = seenMap() || {};
+      o[ev.id] = Date.now();
       localStorage.setItem(SEEN_KEY, JSON.stringify(o));
     } catch (e) { /* bỏ qua */ }
-    $('ev-ping').hidden = true;
+    $('ev-ping').hidden = !EV_LIST.some((e) => isLive(e) && !seenEv(e));
   }
-  const evItems = () => (EV ? EV.wheel.filter((s) => s.item).map((s) => Skins.byKey(s.item)) : []);
-  const evLegend = () => evItems().find((i) => i.rarity === 'huyenthoai') || null;
-  const evState = (w) => (EV && w.ev[EV.id]) || { spins: 0, pity: 0 };
+  const evItems = (ev) => { ev = ev || EV; return ev ? ev.wheel.filter((s) => s.item).map((s) => Skins.byKey(s.item)) : []; };
+  const evLegend = (ev) => evItems(ev).find((i) => i.rarity === 'huyenthoai') || null;
+  const evState = (w, ev) => { ev = ev || EV; return (ev && w.ev[ev.id]) || { spins: 0, pity: 0 }; };
   const owns = (key, w) => { const it = Skins.byKey(key); return Wallet.owns(it.slot, it.id, w); };
+  const dayText = (ms) => new Date(ms).toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' });
 
-  // Quay một lượt trên ví v (đang sửa): chọn ô, cộng món hoặc đốt, tính bảo đảm.
-  function rollWheel(v) {
-    const st = v.ev[EV.id] || (v.ev[EV.id] = { spins: 0, pity: 0 });
-    const slices = EV.wheel;
+  // Quay một lượt của sự kiện ev trên ví v (đang sửa): chọn ô, cộng món hoặc đốt, tính bảo đảm.
+  function rollWheel(v, ev) {
+    const st = v.ev[ev.id] || (v.ev[ev.id] = { spins: 0, pity: 0 });
+    const slices = ev.wheel;
     const legendIdx = slices.findIndex((s) => s.item && Skins.byKey(s.item).rarity === 'huyenthoai');
     let idx;
-    if (legendIdx >= 0 && !owns(slices[legendIdx].item, v) && st.pity + 1 >= EV.pity) idx = legendIdx;
+    if (legendIdx >= 0 && !owns(slices[legendIdx].item, v) && st.pity + 1 >= ev.pity) idx = legendIdx;
     else {
       let r = Math.random() * slices.reduce((s, x) => s + x.w, 0);
       idx = slices.findIndex((x) => (r -= x.w) < 0);
@@ -921,7 +929,7 @@
       const it = Skins.byKey(sl.item);
       res.item = it;
       res.rar = it.rarity;
-      if (owns(sl.item, v)) { res.dup = true; res.refund = EV.refund; v.dot += EV.refund; }
+      if (owns(sl.item, v)) { res.dup = true; res.refund = ev.refund; v.dot += ev.refund; }
       else v.owned[sl.item] = Date.now();
     }
     st.spins += 1;
@@ -929,14 +937,30 @@
     return res;
   }
 
-  const WS = { angle: 0, from: 0, to: 0, t0: 0, dur: 0, spinning: false, last: -1, kick: 0, hl: -1, hlT: 0, face: null, faceKey: '', done: null };
+  // Kiểu vòng quay: thổ cẩm (mặc định) và ma quái (Halloween: nền tối, mạng nhện, dơi bay quanh).
+  const WHEEL_STYLE = {
+    default: {
+      rim: '#2F3B85', teeth: ['#D62F45', '#FFC93C'], sep: 'rgba(255,255,255,0.95)',
+      fill: { thuong: '#E6F4EA', hiem: '#E2EDFB', suthi: '#EEE3FF' }, legend: ['#FFF6D2', '#FFCF5A'],
+      dotFill: '#FFF6E6', dotText: '#2F7A49', bulbOn: '#FFF4C2', bulbOff: '#8C7FD6', pin: ['#D62F45', '#FFC93C'],
+    },
+    spooky: {
+      rim: '#1E1230', teeth: ['#FF8A1F', '#7B4BC4'], sep: 'rgba(255,170,90,0.55)',
+      fill: { thuong: '#3B2D57', hiem: '#2E3366', suthi: '#4B2C6E' }, legend: ['#FFE0A3', '#FF8A1F'],
+      dotFill: '#2A2340', dotText: '#9FE0B2', bulbOn: '#FFB347', bulbOff: '#4A3A66', pin: ['#7B4BC4', '#FF8A1F'], web: true, bats: true,
+    },
+  };
+  const wheelStyle = () => WHEEL_STYLE[(EV && EV.style) || 'default'] || WHEEL_STYLE.default;
+
+  const WS = { angle: 0, from: 0, to: 0, t0: 0, dur: 0, spinning: false, last: -1, kick: 0, hl: -1, hlT: 0, face: null, faceKey: '', done: null, before: null };
+  // Lúc kim đang quay thì vòng quay, bảo đảm và bộ đồ vẫn hiện như trước khi quay, để không lộ kết quả.
+  const shownWallet = () => (WS.spinning && WS.before ? WS.before : Wallet.get());
   function wheelGeom() {
     const c = $('wheel');
     const side = c.clientWidth;
     return { side, R: side / 2 - 20, cx: side / 2, cy: side / 2 + 6 };
   }
-  const SLICE_FILL = { thuong: '#E6F4EA', hiem: '#E2EDFB', suthi: '#EEE3FF' };
-  // Vẽ sẵn mặt vòng quay (chỉ vẽ lại khi đổi cỡ hoặc có thêm món), mỗi khung chỉ việc xoay.
+  // Vẽ sẵn mặt vòng quay (chỉ vẽ lại khi đổi cỡ, đổi sự kiện hoặc có thêm món), mỗi khung chỉ việc xoay.
   function buildFace(R) {
     const pad = 12;
     const D = Math.ceil((R + pad) * 2 * DPR);
@@ -944,14 +968,15 @@
     c.width = c.height = D;
     const x = c.getContext('2d');
     x.setTransform(DPR, 0, 0, DPR, D / 2, D / 2);
-    const w = Wallet.get();
+    const w = shownWallet();
+    const ST = wheelStyle();
     const N = EV.wheel.length, seg = TAU / N;
-    // viền chàm với răng cưa đỏ vàng như thổ cẩm
-    x.fillStyle = '#2F3B85';
+    // viền có răng cưa hai màu
+    x.fillStyle = ST.rim;
     x.beginPath(); x.arc(0, 0, R + 11, 0, TAU); x.fill();
     for (let i = 0; i < 40; i++) {
       const a = (i / 40) * TAU, b = a + TAU / 40;
-      x.fillStyle = i % 2 ? '#FFC93C' : '#D62F45';
+      x.fillStyle = ST.teeth[i % 2];
       x.beginPath();
       x.moveTo(Math.cos(a) * (R + 1), Math.sin(a) * (R + 1));
       x.lineTo(Math.cos((a + b) / 2) * (R + 7), Math.sin((a + b) / 2) * (R + 7));
@@ -966,11 +991,11 @@
       x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, R, a0, a1); x.closePath();
       if (it && it.rarity === 'huyenthoai') {
         const g = x.createRadialGradient(0, 0, R * 0.2, 0, 0, R);
-        g.addColorStop(0, '#FFF6D2'); g.addColorStop(1, '#FFCF5A');
+        g.addColorStop(0, ST.legend[0]); g.addColorStop(1, ST.legend[1]);
         x.fillStyle = g;
-      } else x.fillStyle = it ? SLICE_FILL[it.rarity] : '#FFF6E6';
+      } else x.fillStyle = it ? ST.fill[it.rarity] : ST.dotFill;
       x.fill();
-      x.strokeStyle = 'rgba(255,255,255,0.95)';
+      x.strokeStyle = ST.sep;
       x.lineWidth = 2;
       x.stroke();
       x.save();
@@ -984,19 +1009,16 @@
         x.fillStyle = Skins.RARITY[it.rarity].color;
         x.beginPath(); x.arc(0, -R * 0.36, 3.4, 0, TAU); x.fill();
         if (owns(s.item, w)) {
+          const bx = box * 0.42, by = -R * 0.64 - box * 0.4;
           x.fillStyle = '#3D8A57';
-          x.beginPath(); x.arc(box * 0.42, -R * 0.64 - box * 0.4, 7, 0, TAU); x.fill();
+          x.beginPath(); x.arc(bx, by, 7, 0, TAU); x.fill();
           x.strokeStyle = '#FFFFFF';
           x.lineWidth = 1.8;
           x.lineCap = 'round';
-          x.beginPath();
-          x.moveTo(box * 0.42 - 3.2, -R * 0.64 - box * 0.4);
-          x.lineTo(box * 0.42 - 0.8, -R * 0.64 - box * 0.4 + 2.4);
-          x.lineTo(box * 0.42 + 3.4, -R * 0.64 - box * 0.4 - 2.6);
-          x.stroke();
+          x.beginPath(); x.moveTo(bx - 3.2, by); x.lineTo(bx - 0.8, by + 2.4); x.lineTo(bx + 3.4, by - 2.6); x.stroke();
         }
       } else {
-        x.fillStyle = '#2F7A49';
+        x.fillStyle = ST.dotText;
         x.textAlign = 'center';
         x.textBaseline = 'middle';
         x.font = '800 ' + Math.round(R * 0.15) + 'px "Be Vietnam Pro", system-ui, sans-serif';
@@ -1006,6 +1028,20 @@
       }
       x.restore();
     }
+    // mạng nhện mảnh giăng giữa các nan
+    if (ST.web) {
+      x.strokeStyle = 'rgba(255,255,255,0.22)';
+      x.lineWidth = 1;
+      for (const k of [0.3, 0.5, 0.92]) {
+        x.beginPath();
+        for (let i = 0; i <= N; i++) {
+          const a = -Math.PI / 2 + i * seg, mid = a - seg / 2;
+          if (i === 0) x.moveTo(Math.cos(a) * R * k, Math.sin(a) * R * k);
+          else x.quadraticCurveTo(Math.cos(mid) * R * k * 0.86, Math.sin(mid) * R * k * 0.86, Math.cos(a) * R * k, Math.sin(a) * R * k);
+        }
+        x.stroke();
+      }
+    }
     return c;
   }
   function drawWheel(now, dt) {
@@ -1013,8 +1049,9 @@
     const [side] = sizeCanvas(c);
     if (side < 10) return;
     const { R, cx, cy } = wheelGeom();
-    const w = Wallet.get();
-    const key = side + '|' + EV.wheel.map((s) => (s.item ? (owns(s.item, w) ? 1 : 0) : '-')).join('');
+    const w = shownWallet();
+    const ST = wheelStyle();
+    const key = EV.id + '|' + side + '|' + EV.wheel.map((s) => (s.item ? (owns(s.item, w) ? 1 : 0) : '-')).join('');
     if (WS.faceKey !== key) {
       WS.face = buildFace(R);
       WS.faceKey = key;
@@ -1060,7 +1097,7 @@
       x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, R, a0, a0 + seg); x.closePath();
       x.fillStyle = 'rgba(255,255,255,' + (0.1 + 0.3 * pulse * k) + ')';
       x.fill();
-      x.strokeStyle = '#FFC93C';
+      x.strokeStyle = ST.pin[1];
       x.lineWidth = 3 + 2 * pulse * k;
       x.stroke();
     }
@@ -1075,23 +1112,38 @@
       else on = (i + Math.floor(now / 600)) % 2 === 0;
       const bx = cx + Math.cos(a) * (R + 6), by = cy + Math.sin(a) * (R + 6);
       if (on) {
-        x.fillStyle = 'rgba(255, 236, 160, 0.45)';
+        x.fillStyle = ST.bulbOn;
+        x.globalAlpha = 0.4;
         x.beginPath(); x.arc(bx, by, 6, 0, TAU); x.fill();
+        x.globalAlpha = 1;
       }
-      x.fillStyle = on ? '#FFF4C2' : '#8C7FD6';
+      x.fillStyle = on ? ST.bulbOn : ST.bulbOff;
       x.beginPath(); x.arc(bx, by, 3, 0, TAU); x.fill();
+    }
+    // dơi bay vòng quanh vòng quay ma quái
+    if (ST.bats) {
+      x.fillStyle = '#2A1B3D';
+      for (let i = 0; i < 3; i++) {
+        const a = now / 1000 * (0.5 + i * 0.13) + i * 2.1;
+        const rr = R + 16 + Math.sin(now / 700 + i) * 6;
+        const bx = cx + Math.cos(a) * rr, by = cy + Math.sin(a) * rr * 0.92;
+        x.save();
+        x.translate(bx, by);
+        Skins.drawParticle(x, { kind: 11, x: 0, y: 0, size: 6 + i, life: now / 1000 + i, max: now / 1000 + i, color: '#2A1B3D' }, 1);
+        x.restore();
+      }
     }
     // kim chỉ ở đỉnh, giật nhẹ mỗi lần lướt qua một ô
     x.save();
     x.translate(cx, cy - R - 8);
     x.rotate(-WS.kick * 0.45);
-    x.fillStyle = '#D62F45';
-    x.strokeStyle = '#FFC93C';
+    x.fillStyle = ST.pin[0];
+    x.strokeStyle = ST.pin[1];
     x.lineWidth = 2.5;
     x.lineJoin = 'round';
     x.beginPath(); x.moveTo(-11, -4); x.lineTo(11, -4); x.lineTo(0, 20); x.closePath();
     x.fill(); x.stroke();
-    x.fillStyle = '#FFC93C';
+    x.fillStyle = ST.pin[1];
     x.beginPath(); x.arc(0, -4, 6.5, 0, TAU); x.fill();
     x.restore();
   }
@@ -1105,15 +1157,17 @@
     Object.assign(WS, { from: WS.angle, to: WS.angle + (dur > 4000 ? 6 : 4) * TAU + delta, t0: performance.now(), dur, spinning: true, hl: -1, done });
   }
   function spin(n) {
-    if (!EV || WS.spinning || PK.on || opening) return;
+    const ev = EV;
+    if (!isLive(ev) || WS.spinning || PK.on || opening) return;
     const before = Wallet.get().dot;
-    const cost = n * EV.price;
+    const cost = n * ev.price;
     if (before < cost) { SFX.no(); toast('Chưa đủ đốt, chơi Sâu Tím thêm nha'); return; }
     const results = [];
+    WS.before = Wallet.get();
     const ok = Wallet.update((v) => {
       if (v.dot < cost) return false;
       v.dot -= cost;
-      for (let i = 0; i < n; i++) results.push(rollWheel(v));
+      for (let i = 0; i < n; i++) results.push(rollWheel(v, ev));
     });
     if (!ok) { SFX.no(); return; }
     bumpDot();
@@ -1124,9 +1178,9 @@
       if (n === 1) landSingle(results[0]);
       else {
         setTimeout(() => openPack(results, {
-          theme: 'ev',
-          title: n + ' lượt quay · ' + EV.short,
-          again: () => ({ label: 'Quay tiếp 10 lần · ' + fmt(10 * EV.price) + ' đốt', ok: Wallet.get().dot >= 10 * EV.price, run: () => spin(10) }),
+          theme: ev.id,
+          title: n + ' lượt quay · ' + ev.short,
+          again: () => ({ label: 'Quay tiếp 10 lần · ' + fmt(10 * ev.price) + ' đốt', ok: Wallet.get().dot >= 10 * ev.price, run: () => spin(10) }),
         }), 450);
       }
     });
@@ -1151,47 +1205,100 @@
     setTimeout(() => { showReveal(res, 'wheel', BIG(res.rar)); renderAll(); }, BIG(res.rar) ? 450 : 200);
   }
 
-  function evTimeText() {
-    const left = EV.end - Date.now();
-    const endDay = new Date(EV.end - 1).toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' });
-    if (left <= 0) return 'Đã kết thúc';
-    const d = Math.floor(left / 864e5), h = Math.floor((left % 864e5) / 36e5), m = Math.floor((left % 36e5) / 6e4);
-    return 'Còn ' + (d >= 1 ? d + ' ngày' : h >= 1 ? h + ' giờ ' + m + ' phút' : m + ' phút') + ' · đến hết ' + endDay;
+  function leftText(ms) {
+    const d = Math.floor(ms / 864e5), h = Math.floor((ms % 864e5) / 36e5), m = Math.floor((ms % 36e5) / 6e4);
+    return d >= 1 ? d + ' ngày ' + (h ? h + ' giờ' : '') : h >= 1 ? h + ' giờ ' + m + ' phút' : Math.max(1, m) + ' phút';
+  }
+  function evTimeText(ev) {
+    ev = ev || EV;
+    const now = Date.now();
+    if (now < ev.start) return 'Mở sau ' + leftText(ev.start - now).trim() + ' · ngày ' + dayText(ev.start);
+    if (now >= ev.end) return 'Đã kết thúc';
+    const d = Math.floor((ev.end - now) / 864e5);
+    return 'Còn ' + (d >= 1 ? d + ' ngày' : leftText(ev.end - now).trim()) + ' · đến hết ' + dayText(ev.end - 1);
+  }
+  function selectEvent(id) {
+    const ev = EV_LIST.find((e) => e.id === id);
+    if (!ev || ev === EV || WS.spinning) return;
+    EV = ev;
+    WS.faceKey = '';
+    WS.hl = -1;
+    WS.angle = 0;
+    try { sessionStorage.setItem('lpn:shopEv', id); } catch (e) { /* bỏ qua */ }
+    markSeen(ev);
+    renderEvent();
+  }
+  // Bóng đen của món (để nhá hàng sự kiện sắp mở mà chưa lộ màu).
+  function drawSilhouette(c, item) {
+    drawThumb(c, item);
+    const x = c.getContext('2d');
+    x.save();
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    x.globalCompositeOperation = 'source-in';
+    x.fillStyle = NIGHT ? '#0E0A1C' : '#2A1B3D';
+    x.fillRect(0, 0, c.width, c.height);
+    x.restore();
   }
   function renderEvent() {
     if (!EV) return;
-    const w = Wallet.get();
-    const st = evState(w);
-    $('ev-name').textContent = EV.name;
-    $('ev-tag').textContent = EV.tagline;
-    $('ev-time').textContent = evTimeText();
-    const label = (el, n) => {
-      const b = document.createElement('b');
-      b.textContent = 'Quay ' + n + ' lần';
-      const s = document.createElement('small');
-      s.textContent = fmt(EV.price * n) + ' đốt';
-      el.replaceChildren(b, s);
-    };
-    label($('spin-1'), 1);
-    label($('spin-10'), 10);
-    $('spin-1').disabled = $('spin-10').disabled = $('wheel-hub').disabled = WS.spinning;
-    const need = $('ev-need');
-    if (w.dot < EV.price) {
-      need.hidden = false;
-      need.replaceChildren('Còn thiếu ' + fmt(EV.price - w.dot) + ' đốt để quay. ');
-      const a = document.createElement('a');
-      a.href = '../game/';
-      a.textContent = 'Chơi Sâu Tím kiếm thêm';
-      need.appendChild(a);
-    } else need.hidden = true;
-    const L = evLegend();
-    if (L) {
-      const have = Wallet.owns(L.slot, L.id, w);
-      $('ev-pity-name').textContent = (have ? '' : 'Bảo đảm ') + L.name;
-      $('ev-pity').textContent = have ? 'Đã có ✓' : 'còn tối đa ' + (EV.pity - st.pity) + ' lượt';
-      $('ev-pity-bar').style.width = (have ? 100 : (st.pity / EV.pity) * 100) + '%';
+    const w = shownWallet();
+    const live = isLive(EV);
+    // chọn sự kiện khi có nhiều hơn một
+    const sw = $('ev-switch');
+    sw.hidden = EV_LIST.length < 2;
+    sw.replaceChildren();
+    for (const e of EV_LIST) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ev-chip ev-' + e.id;
+      b.setAttribute('aria-pressed', String(e === EV));
+      const name = document.createElement('b');
+      name.textContent = e.short;
+      const sub = document.createElement('small');
+      sub.textContent = isLive(e) ? 'Đang diễn ra' : 'Mở ' + dayText(e.start);
+      b.append(name, sub);
+      b.addEventListener('click', () => { SFX.click(); selectEvent(e.id); });
+      sw.appendChild(b);
     }
-    // Bộ đồ
+    document.querySelectorAll('.ev-banner').forEach((el) => { el.hidden = el.dataset.ev !== EV.id; });
+    const banner = document.querySelector('.ev-banner[data-ev="' + EV.id + '"]');
+    banner.querySelector('.ev-kicker').textContent = live ? 'Sự kiện giới hạn' : 'Sắp diễn ra';
+    banner.querySelector('h2').textContent = EV.name;
+    banner.querySelector('.ev-tagline').textContent = live ? EV.tagline : EV.teaser || EV.tagline;
+    banner.querySelector('.ev-time').textContent = evTimeText();
+    $('ev-live').hidden = !live;
+    $('ev-odds').hidden = !live;
+    $('wheel-wrap').classList.toggle('spooky', EV.style === 'spooky');
+    if (live) {
+      const st = evState(w);
+      const label = (el, n) => {
+        const b = document.createElement('b');
+        b.textContent = 'Quay ' + n + ' lần';
+        const s = document.createElement('small');
+        s.textContent = fmt(EV.price * n) + ' đốt';
+        el.replaceChildren(b, s);
+      };
+      label($('spin-1'), 1);
+      label($('spin-10'), 10);
+      $('spin-1').disabled = $('spin-10').disabled = $('wheel-hub').disabled = WS.spinning;
+      const need = $('ev-need');
+      if (w.dot < EV.price) {
+        need.hidden = false;
+        need.replaceChildren('Còn thiếu ' + fmt(EV.price - w.dot) + ' đốt để quay. ');
+        const a = document.createElement('a');
+        a.href = '../game/';
+        a.textContent = 'Chơi Sâu Tím kiếm thêm';
+        need.appendChild(a);
+      } else need.hidden = true;
+      const L = evLegend();
+      if (L) {
+        const have = Wallet.owns(L.slot, L.id, w);
+        $('ev-pity-name').textContent = (have ? '' : 'Bảo đảm ') + L.name;
+        $('ev-pity').textContent = have ? 'Đã có ✓' : 'còn tối đa ' + (EV.pity - st.pity) + ' lượt';
+        $('ev-pity-bar').style.width = (have ? 100 : (st.pity / EV.pity) * 100) + '%';
+      }
+    }
+    // Bộ đồ (sắp mở thì chỉ hiện bóng đen)
     const sets = $('ev-sets');
     sets.replaceChildren();
     for (const set of EV.sets) {
@@ -1199,51 +1306,64 @@
       const got = items.filter((i) => Wallet.owns(i.slot, i.id, w)).length;
       const wearing = items.every((i) => w.equip[i.slot] === i.id);
       const card = document.createElement('div');
-      card.className = 'set' + (got === items.length ? ' full' : '');
+      card.className = 'set' + (live && got === items.length ? ' full' : '') + (live ? '' : ' secret');
       const head = document.createElement('div');
       head.className = 'set-head';
       const name = document.createElement('b');
       name.textContent = set.name;
       const count = document.createElement('span');
-      count.textContent = got + '/' + items.length;
+      count.textContent = live ? got + '/' + items.length : items.length + ' món bí mật';
       head.append(name, count);
       const row = document.createElement('div');
       row.className = 'set-items';
+      row.style.gridTemplateColumns = 'repeat(' + items.length + ', minmax(0, 1fr))';
       for (const it of items) {
         const have = Wallet.owns(it.slot, it.id, w);
         const b = document.createElement('button');
         b.type = 'button';
-        b.className = 'set-item' + (have ? ' have' : '');
+        b.className = 'set-item' + (live && have ? ' have' : '');
         const cv = document.createElement('canvas');
-        const label = document.createElement('span');
-        label.textContent = SLOT_NAME[it.slot];
-        b.append(cv, label);
-        b.setAttribute('aria-label', it.name + (have ? ', đã có' : ', chưa có'));
-        b.addEventListener('click', () => { SFX.click(); openSheet(it); });
+        const lab = document.createElement('span');
+        lab.textContent = SLOT_NAME[it.slot];
+        b.append(cv, lab);
+        if (live) {
+          b.setAttribute('aria-label', it.name + (have ? ', đã có' : ', chưa có'));
+          b.addEventListener('click', () => { SFX.click(); openSheet(it); });
+          requestAnimationFrame(() => drawThumb(cv, it));
+        } else {
+          b.disabled = true;
+          b.setAttribute('aria-label', SLOT_NAME[it.slot] + ' bí mật');
+          requestAnimationFrame(() => drawSilhouette(cv, it));
+        }
         row.appendChild(b);
-        requestAnimationFrame(() => drawThumb(cv, it));
       }
       card.append(head, row);
-      const act = document.createElement('button');
-      act.type = 'button';
-      act.className = 'btn set-wear';
-      if (got === items.length) {
-        act.textContent = wearing ? 'Đang mặc cả bộ' : 'Mặc cả bộ';
-        act.disabled = wearing;
-        act.addEventListener('click', () => {
-          Wallet.update((v) => { for (const it of items) v.equip[it.slot] = it.id; });
-          SFX.buy();
-          toast('Đã mặc ' + set.name + ' ✨');
-          celebrate(items[0]);
-          renderAll();
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-      } else {
-        act.textContent = 'Đủ bộ thì mặc cả bộ một chạm';
-        act.disabled = true;
+      if (live) {
+        const act = document.createElement('button');
+        act.type = 'button';
+        act.className = 'btn set-wear';
+        if (got === items.length) {
+          act.textContent = wearing ? 'Đang mặc cả bộ' : 'Mặc cả bộ';
+          act.disabled = wearing;
+          act.addEventListener('click', () => {
+            Wallet.update((v) => { for (const it of items) v.equip[it.slot] = it.id; });
+            SFX.buy();
+            toast('Đã mặc ' + set.name + ' ✨');
+            celebrate(items[0]);
+            renderAll();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+        } else {
+          act.textContent = 'Đủ bộ thì mặc cả bộ một chạm';
+          act.disabled = true;
+        }
+        card.appendChild(act);
       }
-      card.appendChild(act);
       sets.appendChild(card);
+    }
+    if (!live) {
+      $('ev-note').textContent = 'Vòng quay mở lúc 0 giờ ngày ' + dayText(EV.start) + '. Để dành đốt từ giờ nha, mỗi lượt quay ' + EV.price + ' đốt.';
+      return;
     }
     // Tỉ lệ
     const odds = $('ev-odds');
@@ -1261,33 +1381,35 @@
       if (it && Wallet.owns(it.slot, it.id, w)) li.classList.add('have');
       odds.appendChild(li);
     }
-    const endDay = new Date(EV.end - 1).toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' });
     $('ev-note').textContent = 'Trúng món đã có thì kim dừng ở món cùng độ hiếm chưa có; có đủ rồi thì hoàn lại ' + EV.refund
-      + ' đốt. Các món này chỉ có ở vòng quay đến hết ' + endDay + ', sau đó sẽ vào Hộp quà và bán trong tiệm.';
+      + ' đốt. Các món này chỉ có ở vòng quay đến hết ' + dayText(EV.end - 1) + ', sau đó sẽ vào Hộp quà và bán trong tiệm.';
   }
   function scrollToPanel() {
     requestAnimationFrame(() => document.querySelector('.tabs').scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }
 
   // ================= Thông báo sự kiện mới =================
-  // pending: máy này chưa xem thông báo (chờ hộp "Máy này của ai?" đóng rồi mới hiện).
-  const SPL = { on: false, pending: !seenEv(), parts: [], acc: 0 };
+  // pending: sự kiện đang diễn ra mà máy này chưa xem thông báo (chờ hộp "Máy này của ai?" đóng rồi mới hiện).
+  const SPL = { on: false, ev: null, pending: EV_LIST.find((e) => isLive(e) && !seenEv(e)) || null, parts: [], acc: 0 };
   function openSplash() {
-    if (!EV || SPL.on || !SPL.pending) return;
+    const ev = SPL.pending;
+    if (!ev || SPL.on) return;
     SPL.on = true;
-    SPL.pending = false;
-    $('splash-title').textContent = EV.name;
-    const names = EV.sets.map((s) => s.name).join(' và ');
-    const endDay = new Date(EV.end - 1).toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' });
-    $('splash-text').textContent = EV.tagline + ' Có ' + names + ': skin, cánh bướm và hiệu ứng ăn lá riêng của ' + EV.short + ', chỉ có đến hết ' + endDay + '.';
+    SPL.ev = ev;
+    SPL.pending = null;
+    SPL.parts.length = 0;
+    $('splash-title').textContent = ev.name;
+    const names = ev.sets.map((s) => s.name).join(' và ');
+    $('splash-text').textContent = ev.tagline + ' Có ' + names + ': skin, cánh, hiệu ứng và nền riêng của ' + ev.short + ', chỉ có đến hết ' + dayText(ev.end - 1) + '.';
+    $('splash').querySelector('.splash-card').className = 'splash-card ev-' + ev.id;
     $('splash').hidden = false;
     SFX.reveal('suthi');
-    markSeen();
+    markSeen(ev);
   }
   function closeSplash(go) {
     SPL.on = false;
     $('splash').hidden = true;
-    if (go) { switchTab('ev'); scrollToPanel(); }
+    if (go) { switchTab('ev'); selectEvent(SPL.ev.id); scrollToPanel(); }
   }
   function drawSplash(t, dt) {
     const c = $('splash-art');
@@ -1295,10 +1417,10 @@
     const x = c.getContext('2d');
     x.setTransform(DPR, 0, 0, DPR, 0, 0);
     x.clearRect(0, 0, w, h);
-    const items = evItems();
+    const items = evItems(SPL.ev);
     const skin = items.find((i) => i.slot === 'skin' && i.rarity === 'huyenthoai') || items[0];
     const wing = items.find((i) => i.slot === 'wing' && i.rarity === 'suthi') || items.find((i) => i.slot === 'wing');
-    const fx = items.find((i) => i.slot === 'fx' && i.rarity === 'suthi') || Skins.get('fx', 'sao-vang');
+    const fx = items.find((i) => i.slot === 'fx' && i.rarity === 'suthi') || items.find((i) => i.slot === 'fx') || Skins.get('fx', 'sao-vang');
     x.save();
     x.translate(w * 0.04, h * 0.1 + Math.sin(t * 2) * 3);
     Skins.drawPreview(x, skin, w * 0.6, h * 0.78, t);
@@ -1404,7 +1526,7 @@
       tag.textContent = st.on ? 'Đang dùng' : 'Đang thử: ' + UI.trying.name;
       tag.classList.toggle('trying', !st.on);
     } else {
-      tag.textContent = UI.tab === 'wing' ? 'Cánh đang dùng' : 'Đang mặc';
+      tag.textContent = UI.tab === 'wing' ? 'Cánh đang dùng' : UI.tab === 'bg' ? 'Nền đang dùng' : 'Đang mặc';
       tag.classList.remove('trying');
     }
   }
@@ -1412,12 +1534,15 @@
     if (tab === 'ev' && !EV) tab = 'box';
     UI.tab = tab;
     try { sessionStorage.setItem('lpn:shopTab', tab); } catch (e) { /* bỏ qua */ }
-    document.querySelectorAll('.tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+    document.querySelectorAll('.tabs button').forEach((b) => {
+      b.setAttribute('aria-selected', String(b.dataset.tab === tab));
+      if (b.dataset.tab === tab && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    });
     $('tab-ev').hidden = tab !== 'ev';
     $('tab-box').hidden = tab !== 'box';
     $('tab-items').hidden = !SLOT_NAME[tab];
     $('tab-memo').hidden = tab !== 'memo';
-    if (tab === 'ev') markSeen();
+    if (tab === 'ev') markSeen(EV);
     parts.length = 0;
     eat.phase = 0;
     renderTab();
@@ -1472,15 +1597,19 @@
     closePack();
     if (again && again.ok) again.run();
   });
-  if (EV) {
+  if (EV_LIST.length) {
     $('tab-btn-ev').hidden = false;
-    $('ev-ping').hidden = seenEv();
+    $('ev-ping').hidden = !EV_LIST.some((e) => isLive(e) && !seenEv(e));
     $('spin-1').addEventListener('click', () => spin(1));
     $('spin-10').addEventListener('click', () => spin(10));
     $('wheel-hub').addEventListener('click', () => spin(1));
     $('splash-go').addEventListener('click', () => { SFX.click(); closeSplash(true); });
     $('splash-later').addEventListener('click', () => closeSplash(false));
-    setInterval(() => { if (UI.tab === 'ev') $('ev-time').textContent = evTimeText(); }, 30000);
+    setInterval(() => {
+      // Sự kiện đang chờ vừa tới giờ mở (hoặc vừa hết): tải lại để mọi món hiện đúng.
+      if (EV_LIST.some((e) => isLive(e) !== WAS_LIVE[e.id] && Date.now() < e.end + 60e3)) { location.reload(); return; }
+      if (UI.tab === 'ev' && EV) document.querySelector('.ev-banner[data-ev="' + EV.id + '"] .ev-time').textContent = evTimeText();
+    }, 30000);
   }
   $('sync-line').addEventListener('click', () => {
     const s = window.Sync;
@@ -1537,7 +1666,7 @@
     drawStage(t, dt);
     if (UI.sheet && !$('sheet').hidden) drawThumb(sheetArt, UI.sheet, t);
     if (UI.reveal && !$('reveal').hidden) drawThumb(revealArt, UI.reveal.item, t);
-    if (EV && (UI.tab === 'ev' || WS.spinning)) drawWheel(now, dt);
+    if (isLive(EV) && (UI.tab === 'ev' || WS.spinning)) drawWheel(now, dt);
     if (SPL.on) drawSplash(t, dt);
     drawFx(dt);
     requestAnimationFrame(frame);
@@ -1545,11 +1674,14 @@
 
   // ================= Khởi động =================
   const hashTab = location.hash.slice(1);
-  const firstLook = SPL.pending;
-  let startTab = 'box';
-  try { startTab = sessionStorage.getItem('lpn:shopTab') || 'box'; } catch (e) { /* bỏ qua */ }
+  const firstLook = !!SPL.pending;
+  let startTab = 'box', lastEv = null;
+  try { startTab = sessionStorage.getItem('lpn:shopTab') || 'box'; lastEv = sessionStorage.getItem('lpn:shopEv'); } catch (e) { /* bỏ qua */ }
+  // Sự kiện mở sẵn: cái chưa xem, rồi cái đã chọn lần trước, rồi cái đang diễn ra mới nhất, cuối cùng là cái sắp mở.
+  EV = SPL.pending || EV_LIST.find((e) => e.id === lastEv)
+    || EV_LIST.filter(isLive).sort((a, b) => b.start - a.start)[0] || EV_LIST[0] || null;
   if (firstLook) startTab = 'ev';
-  if (['ev', 'box', 'skin', 'fx', 'wing', 'memo'].includes(hashTab)) startTab = hashTab;
+  if (['ev', 'box', 'skin', 'fx', 'wing', 'bg', 'memo'].includes(hashTab)) startTab = hashTab;
   switchTab(startTab);
   renderAll();
   requestAnimationFrame(frame);

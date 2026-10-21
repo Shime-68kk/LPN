@@ -14,6 +14,9 @@ const prev = [...MILESTONES].reverse().find((m) => m <= days) || 0;
 const left = next - days;
 const progress = Math.max(0, Math.min(1, (days - prev) / (next - prev)));
 const label = (m) => YEARS[m] || String(m);
+// Tim đỏ. Lưu ý: trên màn hình khoá iPhone tự tô cả ô một màu cho hợp hình nền,
+// nên tim chỉ đỏ ở ô màn hình chính và chế độ chờ (StandBy).
+const RED = new Color('#FF2D55');
 
 // Thanh tiến độ bo tròn, giống thanh pin trên màn hình khoá.
 function bar(w, h, p, bg, fg) {
@@ -80,6 +83,7 @@ if (family === 'accessoryRectangular') {
   top.centerAlignContent();
   const h = top.addImage(SFSymbol.named('heart.fill').image);
   h.imageSize = new Size(15, 15);
+  h.tintColor = RED;
   top.addSpacer(5);
   const d = top.addText(days + ' ngày');
   d.font = Font.boldRoundedSystemFont(19);
@@ -107,13 +111,13 @@ if (family === 'accessoryRectangular') {
 } else {
   // Màn hình chính: nền tím hồng như app
   const gr = new LinearGradient();
-  gr.colors = [new Color('#B79CF0'), new Color('#FF8FA3')];
+  gr.colors = [new Color('#B79CF0'), new Color('#FFB0C0')];
   gr.locations = [0, 1];
   gr.startPoint = new Point(0, 0);
   gr.endPoint = new Point(1, 1);
   w.backgroundGradient = gr;
   w.setPadding(14, 14, 14, 14);
-  heart(20, Color.white());
+  heart(20, RED);
   w.addSpacer();
   const d = w.addText(String(days));
   d.font = Font.boldRoundedSystemFont(44);

@@ -71,7 +71,8 @@
     return 'nang';
   }
   const weather = pickWeather();
-  const T = THEMES[weather];
+  // Màu trời, lá, cành đang dùng: theo thời tiết thật, hoặc theo nền mua ở Tiệm Sâu.
+  let T = THEMES[weather];
 
   // ================= Đồ đang mặc (Tiệm Sâu) =================
   // Skin chỉ đổi hình, không đổi cách chơi hay điểm.
@@ -81,10 +82,16 @@
     LOOK.skin = Skins.get('skin', eq.skin);
     LOOK.fx = Skins.get('fx', eq.fx);
     LOOK.wing = Skins.get('wing', eq.wing);
+    LOOK.bg = Skins.get('bg', eq.bg);
+    // Nền riêng (Sa Pa, Lâu Đài Bí Ngô…) đổi luôn màu lá, cành; nền Lâu Đài thì lá hoá màu bí ngô.
+    const bg = LOOK.bg.bg || {};
+    T = Object.assign({}, THEMES[weather], bg.theme || {});
+    const top = Skins.backdropTop ? Skins.backdropTop(LOOK.bg, weather === 'dem') : null;
+    if (top) T.sky = top;
+    document.body.classList.toggle('night', !!T.night);
+    document.body.style.background = T.sky;
   }
   loadLook();
-  document.body.classList.toggle('night', !!T.night);
-  document.body.style.background = T.sky;
 
   // ================= Âm thanh (Web Audio) =================
   const Sound = {
@@ -494,7 +501,12 @@
     }
   }
 
+  const BGST = {}; // trạng thái của nền riêng (ảnh vẽ sẵn, mây, dơi)
   function drawBackground(dt, speed, pulse) {
+    if (LOOK.bg.bg && LOOK.bg.bg.kind !== 'weather') {
+      Skins.drawBackdrop(g, LOOK.bg, { W, H, t: clock, dt, speed, dpr: DPR, night: weather === 'dem', st: BGST });
+      return;
+    }
     g.fillStyle = T.sky;
     g.fillRect(0, 0, W, H);
     if (T.sun) {
@@ -1731,6 +1743,7 @@
     if (!e.persisted) return;
     loadLook();
     buildSprites();
+    initAmbient();
     if (Game.state === 'menu') UI.renderSongs(SONGS);
   });
   // Bản sao lưu khác máy: chỉ làm mới khi đang ở menu, đang chơi thì để ván sau.
@@ -1739,6 +1752,7 @@
     Store.load();
     loadLook();
     buildSprites();
+    initAmbient();
     UI.renderSongs(SONGS);
   };
 

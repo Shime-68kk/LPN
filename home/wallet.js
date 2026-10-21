@@ -8,7 +8,7 @@
   const PACK_DOT = 3;
   // Quà tặng một lần cho mỗi máy mở link.
   const GIFT_DOT = 1200;
-  const DEFAULT_EQUIP = { skin: 'tim', fx: 'la', wing: 'canh-tim' };
+  const DEFAULT_EQUIP = { skin: 'tim', fx: 'la', wing: 'canh-tim', bg: 'troi' };
 
   const read = () => {
     let v = null;
