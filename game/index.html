@@ -34,7 +34,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" />
-  <link rel="stylesheet" href="game.css?v=12" />
+  <link rel="stylesheet" href="game.css?v=13" />
 </head>
 <body>
   <script>document.body.style.background = LPN_GAME.sky; document.body.classList.toggle('night', LPN_GAME.night); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
@@ -127,6 +127,22 @@
     </div>
   </section>
 
+  <!-- Hết tim: dùng đốt cây để hồi sinh (tối đa 3 lần mỗi ván) -->
+  <section id="revive" class="overlay" hidden>
+    <div class="card revive-card">
+      <div class="rv-hearts" id="rv-hearts" aria-hidden="true"></div>
+      <h2 id="rv-title">Hết tim rồi!</h2>
+      <p class="message" id="rv-msg"></p>
+      <ol class="rv-steps" id="rv-steps" aria-label="Các lần hồi sinh"></ol>
+      <button type="button" class="btn primary rv-go" id="btn-revive"></button>
+      <p class="rv-need" id="rv-need" hidden></p>
+      <button type="button" class="btn" id="btn-giveup">Thôi, xem kết quả</button>
+    </div>
+  </section>
+
+  <!-- Đếm ngược 3, 2, 1 trước khi chơi tiếp -->
+  <div id="count" class="count" hidden aria-live="assertive"><b id="count-num">3</b></div>
+
   <!-- Kết quả -->
   <section id="result" class="overlay" hidden>
     <div class="card">
@@ -150,7 +166,7 @@
   <script src="../home/sync.js?v=2"></script>
   <script src="../home/wallet.js?v=8"></script>
   <script src="../shop/skins.js?v=7"></script>
-  <script src="game.js?v=21"></script>
+  <script src="game.js?v=22"></script>
   <script>
     // Tiệm Sâu đang có sự kiện thì gắn nhãn lên nút.
     if (window.Skins && Skins.activeEvent()) document.getElementById('menu-ev').hidden = false;

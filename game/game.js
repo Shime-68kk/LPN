@@ -354,6 +354,16 @@
       this.arp([5, 7, 9, 12], 0.05, 'square', 0.05, 0.15);
     },
     click() { this.tone(1100, 0.04, 'sine', 0.12, 760); },
+    // Đếm ngược hồi sinh: ba tiếng tách ở 3, 2, 1 và một tiếng cao, ngân hơn lúc vào nhạc.
+    countTicks(t0, beat) {
+      const d0 = t0 - this.ctx.currentTime;
+      for (let i = 0; i < 3; i++) {
+        this.tone(1046.5, 0.1, 'square', 0.1, null, d0 + i * beat);
+        this.tone(523.25, 0.14, 'sine', 0.22, null, d0 + i * beat);
+      }
+      this.tone(1568, 0.36, 'triangle', 0.24, null, d0 + 3 * beat);
+      this.tone(2093, 0.3, 'sine', 0.12, null, d0 + 3 * beat + 0.02);
+    },
   };
 
   // ================= Canvas & kích thước =================
@@ -793,6 +803,9 @@
   // Tốc độ mỗi vòng sau khi đủ 3 sao (giống Like a Dino), và độ chồng nhạc giữa hai vòng.
   const RATES = [1, 1.2, 1.5, 1.8, 2, 2.2, 2.4, 2.6];
   const XFADE = 0.8;
+  // Hết tim thì được dùng đốt cây hồi sinh, tối đa 3 lần mỗi ván: lần sau đắt hơn nhưng nhiều tim hơn.
+  const REVIVE = [{ dot: 50, hearts: 1 }, { dot: 100, hearts: 2 }, { dot: 200, hearts: 3 }];
+  const REWIND = 1.5; // giây nhạc lùi lại khi hồi sinh, để có đà vào lại
   const STAR_FLY = 0.75;
   const fmtRate = (r) => 'x' + r.toFixed(1).replace('.', ',');
 
@@ -803,6 +816,7 @@
     loop: 0, rate: 1, maxRate: 1, loopStartCtx: 0, nextQueued: false, nextStart: 0, nextRate: 1,
     stars: 0, starFx: [], botOn: BOT,
     score: 0, combo: 0, maxCombo: 0, hearts: 3, perfect: 0, good: 0, miss: 0,
+    revives: 0, downPos: 0, count: null, pendingPos: null,
     endT: 0, speed: 460, lead: 1.3, shake: 0, hintT: 0, resultShown: false, pulse: 0,
 
     setup() {
@@ -813,6 +827,8 @@
       this.beats = this.map.beats;
       this.resetNotes();
       this.score = 0; this.combo = 0; this.maxCombo = 0; this.hearts = 3; this.banked = 0; this.dotGot = 0;
+      this.revives = 0; this.count = null; this.pendingPos = null;
+      UI.count(null);
       // Kỷ lục cũ của bài này ở độ khó này; vượt qua giữa ván thì báo ngay.
       this.prevBest = ((Store.data.best[this.song.id + ':' + this.diff] || {}).score) || 0;
       this.recordHit = false;
@@ -934,6 +950,13 @@
     },
     resume() {
       UI.hide('pause');
+      // Đang đếm ngược hồi sinh mà lỡ thoát app: quay lại thì đếm lại từ đầu (không mất đốt).
+      if (this.pendingPos !== null) {
+        const pos = this.pendingPos;
+        this.pendingPos = null;
+        Sound.ctx.resume().then(() => this.startCount(pos));
+        return;
+      }
       Sound.ctx.resume().then(() => { this.resync = true; this.state = 'play'; });
     },
 
@@ -974,11 +997,95 @@
       Sound.miss();
       buzz(30);
       UI.hud(this);
-      // Đã đủ 3 sao thì hết tim vẫn là thắng: sâu hoá bướm.
+      // Đã đủ 3 sao thì hết tim vẫn là thắng: sâu hoá bướm. Chưa đủ thì mời hồi sinh (còn lượt).
       if (this.hearts <= 0) {
         if (this.stars >= 3) this.finish();
+        else if (this.revives < REVIVE.length) this.down();
         else this.gameOver();
       }
+    },
+
+    // Hết tim: đứng hình, nhạc dừng đúng chỗ (để tiếng hụt kêu xong đã), mời dùng đốt cây hồi sinh.
+    down() {
+      this.state = 'down';
+      this.downPos = this.songT - (this.song.offset || 0);
+      setTimeout(() => { if (this.state === 'down') Sound.ctx.suspend(); }, 260);
+      UI.showHint(false);
+      UI.revive(this);
+    },
+
+    revive() {
+      const step = REVIVE[this.revives];
+      if (!step || this.state !== 'down') return;
+      if (!window.Wallet || !Wallet.spend(step.dot)) { Sound.click(); UI.revive(this); return; }
+      this.revives++;
+      this.hearts = step.hearts;
+      UI.hide('revive');
+      UI.hud(this);
+      Sau.sad = 0;
+      Sau.happy = 0.6;
+      burstHearts(Sau.headX, Sau.headY - HEAD_R, 6 + step.hearts * 2);
+      Sound.ctx.resume();
+      Sound.heart();
+      // Nhạc lùi lại một chút để có đà; lá trong đoạn đó đã tính rồi nên không bị trừ tim lần nữa.
+      this.startCount(Math.max(this.map.start, this.downPos - REWIND));
+    },
+
+    // Đếm 3, 2, 1 theo nhịp bài (mỗi số một hoặc hai phách) rồi nhạc vào đúng lúc hô "Ăn thôi!".
+    // Tiếng đếm và nhạc hẹn giờ cùng trên đồng hồ âm thanh nên khớp nhau tuyệt đối.
+    startCount(pos) {
+      const ctx = Sound.ctx;
+      Sound.stopMusic();
+      this.nextQueued = false;
+      this.songT = pos + (this.song.offset || 0);
+      let beat = 60 / (this.map.bpm || 90) / this.rate;
+      while (beat < 0.55) beat *= 2;
+      while (beat > 1.1) beat /= 2;
+      const t0 = ctx.currentTime + 0.2;
+      const go = t0 + beat * 3;
+      Sound.countTicks(t0, beat);
+      Sound.playSection(this.buffer, pos, this.map.end - pos, go, this.rate, 0.2);
+      this.loopStartCtx = go - (pos - this.map.start) / this.rate;
+      this.count = { pos, t0, beat, go, shown: -1 };
+      this.state = 'count';
+    },
+
+    countTick() {
+      const c = this.count;
+      const now = Sound.now();
+      const k = Math.floor((now - c.t0) / c.beat);
+      if (k >= 0 && k < 3 && k !== c.shown) {
+        c.shown = k;
+        UI.count(3 - k, c.beat);
+        buzz(12);
+      }
+      if (now >= c.go) {
+        this.count = null;
+        this.resync = true;
+        this.state = 'play';
+        UI.count(0, c.beat);
+        setTimeout(() => { if (!this.count) UI.count(null); }, Math.round(c.beat * 900));
+      }
+    },
+
+    // Thoát app giữa lúc đếm: dừng hẳn, quay lại bấm "Chơi tiếp" thì đếm lại.
+    holdCount() {
+      if (this.state !== 'count') return;
+      this.pendingPos = this.count.pos;
+      this.count = null;
+      Sound.stopMusic();
+      Sound.ctx.suspend();
+      UI.count(null);
+      this.state = 'paused';
+      UI.show('pause');
+    },
+
+    giveUp() {
+      if (this.state !== 'down') return;
+      UI.hide('revive');
+      Sound.stopMusic();
+      Sound.ctx.resume();
+      this.gameOver(true);
     },
 
     update(dt) {
@@ -1139,12 +1246,18 @@
       UI.showHint(false);
     },
 
-    gameOver() {
+    // quick: hiện kết quả ngay (bấm "Thôi, xem kết quả"), không chờ bé sâu buồn xong.
+    gameOver(quick) {
       this.state = 'over';
       Sound.fadeOutMusic(1.2);
       Sound.lose();
       UI.showHint(false);
-      setTimeout(() => { if (this.state === 'over') UI.result(false, this); }, 900);
+      const show = () => {
+        if (this.state !== 'over' || this.resultShown) return;
+        this.resultShown = true;
+        UI.result(false, this);
+      };
+      if (quick) show(); else setTimeout(show, 900);
     },
   };
 
@@ -1239,10 +1352,11 @@
     const ox = sh ? (Math.random() - 0.5) * sh : 0;
     const oy = sh ? (Math.random() - 0.5) * sh : 0;
     g.setTransform(DPR, 0, 0, DPR, ox * DPR, oy * DPR);
-    const playing = Game.state === 'play' || Game.state === 'paused' || Game.state === 'over';
+    const playing = Game.state === 'play' || Game.state === 'paused' || Game.state === 'over' || Game.state === 'down' || Game.state === 'count';
+    const still = Game.state === 'paused' || Game.state === 'down' || Game.state === 'count';
     // Tốc độ thật trên màn hình (px/giây) tăng theo vòng nhanh.
     const wallSpeed = Game.speed * Game.rate;
-    drawBackground(Game.state === 'paused' ? 0 : dt, wallSpeed, Game.pulse || 0);
+    drawBackground(still ? 0 : dt, wallSpeed, Game.pulse || 0);
     if (playing) drawNotes();
     if (Game.state === 'ending') {
       const e = Game.endT;
@@ -1262,7 +1376,7 @@
       drawStarFx();
     }
     drawParticles();
-    drawPopups(Game.state === 'paused' ? 0 : dt);
+    drawPopups(still ? 0 : dt);
     if (DEBUG) {
       g.setTransform(DPR, 0, 0, DPR, 0, 0);
       g.fillStyle = '#000';
@@ -1279,7 +1393,7 @@
   // ================= Giao diện (DOM) =================
   const UI = {
     els: {
-      hud: $('hud'), menu: $('menu'), pause: $('pause'), result: $('result'), hint: $('hint'), toast: $('toast'),
+      hud: $('hud'), menu: $('menu'), pause: $('pause'), result: $('result'), revive: $('revive'), hint: $('hint'), toast: $('toast'),
       score: $('score'), scoreBox: $('score').parentElement, length: $('length'), hearts: $('hearts'), combo: $('combo'), comboNum: $('combo-num'),
       progress: $('progress-fill'), songs: $('songs'), pstars: $('pstars'), speed: $('speed'), wallet: $('wallet'),
     },
@@ -1314,6 +1428,48 @@
       el.classList.add('show');
     },
     showHint(on) { this.els.hint.hidden = !on; },
+
+    revive(gm) {
+      const i = gm.revives, step = REVIVE[i];
+      const dot = window.Wallet ? Wallet.get().dot : 0;
+      const box = $('rv-hearts');
+      box.replaceChildren();
+      for (let k = 0; k < step.hearts; k++) box.appendChild(svgIcon(PATH_HEART));
+      $('rv-title').textContent = i === REVIVE.length - 1 ? 'Cơ hội cuối cùng!' : 'Hết tim rồi!';
+      $('rv-msg').textContent = 'Dùng ' + step.dot + ' đốt cây để hồi sinh với ' + step.hearts + ' tim, chơi tiếp từ chỗ vừa rồi nha?';
+      const steps = $('rv-steps');
+      steps.replaceChildren();
+      REVIVE.forEach((r, j) => {
+        const li = document.createElement('li');
+        li.className = j < i ? 'used' : j === i ? 'now' : '';
+        const b = document.createElement('b');
+        b.textContent = '+' + r.hearts + ' tim';
+        li.append(b, r.dot + ' đốt');
+        li.setAttribute('aria-label', 'Lần ' + (j + 1) + ': ' + r.dot + ' đốt được ' + r.hearts + ' tim' + (j < i ? ', đã dùng' : ''));
+        steps.appendChild(li);
+      });
+      const ok = dot >= step.dot;
+      const btn = $('btn-revive');
+      btn.disabled = !ok;
+      btn.textContent = 'Hồi sinh · ' + step.dot + ' đốt';
+      const need = $('rv-need');
+      need.hidden = false;
+      need.textContent = ok ? 'Ví đang có ' + fmtNum(dot) + ' đốt cây' : 'Em đang có ' + fmtNum(dot) + ' đốt, còn thiếu ' + fmtNum(step.dot - dot) + ' đốt nữa.';
+      need.classList.toggle('short', !ok);
+      this.show('revive');
+      (ok ? btn : $('btn-giveup')).focus({ preventScroll: true });
+    },
+    // n: 3, 2, 1; 0 là "Ăn thôi!"; null là ẩn.
+    count(n, beat) {
+      const el = $('count'), b = $('count-num');
+      if (n === null) { el.hidden = true; return; }
+      el.hidden = false;
+      b.textContent = n ? String(n) : 'Ăn thôi!';
+      b.className = n ? '' : 'go';
+      b.style.setProperty('--beat', (beat || 0.7) + 's');
+      void b.offsetWidth;
+      b.classList.add('tick');
+    },
 
     resetStars() {
       const box = this.els.pstars;
@@ -1605,8 +1761,9 @@
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) return;
     Game.pause();
+    Game.holdCount();
     // Lỡ tắt app giữa chừng thì điểm đã ăn vẫn vào ví.
-    if (Game.state === 'paused') bank();
+    if (Game.state === 'paused' || Game.state === 'down') bank();
     Preview.stop(true);
   });
   window.addEventListener('resize', () => resize());
@@ -1620,6 +1777,8 @@
     Sound.ctx.resume().then(() => { Sound.click(); Game.finish(); });
   });
   $('btn-resume').addEventListener('click', () => { Sound.click(); Game.resume(); });
+  $('btn-revive').addEventListener('click', () => Game.revive());
+  $('btn-giveup').addEventListener('click', () => { Sound.click(); Game.giveUp(); });
 
   // Ví đốt cây trong game: xem số đốt, điểm còn dư tới 3 đốt tiếp theo, đổi nếu đủ.
   function showWallet() {
@@ -1728,14 +1887,16 @@
       slowTime = 0;
       resize();
     }
-    if (Game.state !== 'paused') {
+    if (Game.state === 'count') Game.countTick();
+    const still = Game.state === 'paused' || Game.state === 'down' || Game.state === 'count';
+    if (!still) {
       clock += dt;
       if (Game.state === 'play' && (keys.left || keys.right)) {
         Sau.target = clamp(Sau.target + (keys.right - keys.left) * PW * 1.6 * dt, PX0 + 18 * S, PX0 + PW - 18 * S);
       }
       Game.update(dt);
     }
-    render(Game.state === 'paused' ? 0 : dt);
+    render(still ? 0 : dt);
   }
 
   // Quay lại từ Tiệm Sâu bằng nút back (trang lấy từ bộ nhớ đệm): mặc lại đồ mới chọn.
