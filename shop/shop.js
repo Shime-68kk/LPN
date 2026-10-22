@@ -23,10 +23,10 @@
   const WAS_LIVE = {};
   for (const e of EV_LIST) WAS_LIVE[e.id] = isLive(e);
   let EV = null; // sự kiện đang xem trong tab Sự kiện (chọn lúc khởi động)
-  // Món của sự kiện chưa bắt đầu thì chưa hiện ở đâu cả.
-  const shown = () => ITEMS.filter((i) => Skins.itemState(i) !== 'hidden');
+  // Món của sự kiện chưa bắt đầu thì chưa hiện ở đâu cả; phần thưởng vụ án chỉ hiện khi đã nhận.
+  const shown = () => ITEMS.filter((i) => Skins.itemState(i) !== 'hidden' && (!i.reward || Wallet.owns(i.slot, i.id)));
   const exclusive = (i) => Skins.itemState(i) === 'event';
-  const inBox = (i) => !i.free && Skins.itemState(i) === 'normal';
+  const inBox = (i) => !i.free && !i.reward && Skins.itemState(i) === 'normal';
   const keyOf = (it) => it.slot + ':' + it.id;
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => n.toLocaleString('vi-VN');
@@ -410,7 +410,7 @@
     rarityTag($('sheet-rarity'), item);
     $('sheet-memory').textContent = item.memory || '';
     const ev = item.ev && exclusive(item) ? Skins.eventById(item.ev) : null;
-    $('sheet-ch').textContent = (ev ? 'Sự kiện ' + ev.name + ' · ' : '') + (item.ch ? 'Kỷ niệm ở chương ' + item.ch + ' · ' : '') + SLOT_NAME[item.slot];
+    $('sheet-ch').textContent = (ev ? 'Sự kiện ' + ev.name + ' · ' : '') + (item.reward ? 'Phần thưởng phá án · ' : '') + (item.ch ? 'Kỷ niệm ở chương ' + item.ch + ' · ' : '') + SLOT_NAME[item.slot];
     updateSheetAction();
     $('sheet').hidden = false;
     $('sheet-backdrop').hidden = false;
@@ -504,13 +504,18 @@
     const item = pool[Math.floor(Math.random() * pool.length)];
     return { item, dup: !fresh.length, rar: item.rarity };
   }
-  // Mua n hộp một lần: trừ đốt, chốt hết kết quả (bảo đảm tính lần lượt từng hộp) rồi mới chạy hiệu ứng,
-  // lỡ tắt app giữa chừng cũng không mất món.
-  function buyBoxes(n) {
+  // Mua n hộp một lần: trừ đốt (hoặc trừ hộp được tặng khi free), chốt hết kết quả (bảo đảm tính
+  // lần lượt từng hộp) rồi mới chạy hiệu ứng, lỡ tắt app giữa chừng cũng không mất món.
+  function buyBoxes(n, free) {
     const results = [];
     const ok = Wallet.update((v) => {
-      if (v.dot < n * BOX_PRICE) return false;
-      v.dot -= n * BOX_PRICE;
+      if (free) {
+        if (v.freeBoxes < n) return false;
+        v.freeBoxes -= n;
+      } else {
+        if (v.dot < n * BOX_PRICE) return false;
+        v.dot -= n * BOX_PRICE;
+      }
       for (let i = 0; i < n; i++) {
         const r = pickFromBox(v);
         v.boxes += 1;
@@ -530,6 +535,12 @@
   function renderBox() {
     const w = Wallet.get();
     const n = UI.qty, cost = n * BOX_PRICE;
+    const fb = $('btn-free');
+    fb.hidden = !w.freeBoxes;
+    if (w.freeBoxes) {
+      const k = Math.min(MAX_QTY, w.freeBoxes);
+      fb.textContent = '🎁 Mở ' + (k === 1 ? 'hộp quà tặng' : k + ' hộp quà tặng') + ' · Miễn phí';
+    }
     $('qty').textContent = n;
     $('qty-minus').disabled = n <= 1;
     $('qty-plus').disabled = n >= MAX_QTY;
@@ -624,6 +635,23 @@
       showReveal(res, 'single');
       renderAll();
     }, shakes * 900 + 350);
+  }
+
+  // Hộp được tặng (phần thưởng phá án…): mở luôn một lượt tối đa 20 hộp, không mất đốt.
+  function openFree() {
+    if (opening || PK.on) return;
+    const n = Math.min(MAX_QTY, Wallet.get().freeBoxes);
+    if (!n) return;
+    const results = buyBoxes(n, true);
+    if (!results) { SFX.no(); return; }
+    openPack(results, {
+      theme: 'box',
+      title: n === 1 ? 'Hộp quà tặng' : n + ' hộp quà tặng',
+      again: () => {
+        const k = Math.min(MAX_QTY, Wallet.get().freeBoxes);
+        return { label: 'Mở tiếp ' + k + ' hộp quà tặng', ok: k > 0, run: openFree };
+      },
+    });
   }
 
   // ================= Mở nhiều hộp cùng lúc =================
@@ -1570,6 +1598,7 @@
   // ================= Sự kiện bấm =================
   document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => { SFX.click(); switchTab(b.dataset.tab); }));
   $('btn-open').addEventListener('click', openBox);
+  $('btn-free').addEventListener('click', openFree);
   $('giftbox').addEventListener('click', openBox);
   $('qty-minus').addEventListener('click', () => { SFX.click(); setQty(UI.qty - 1); });
   $('qty-plus').addEventListener('click', () => { SFX.click(); setQty(UI.qty + 1); });
@@ -1683,12 +1712,18 @@
     || EV_LIST.filter(isLive).sort((a, b) => b.start - a.start)[0] || EV_LIST[0] || null;
   if (firstLook) startTab = 'ev';
   if (['ev', 'box', 'skin', 'fx', 'wing', 'bg', 'memo'].includes(hashTab)) startTab = hashTab;
+  // Từ trang vụ án bấm "Mở quà": vào thẳng tab Hộp quà và mở luôn các hộp được tặng.
+  const autoFree = params.get('free') === '1' && Wallet.get().freeBoxes > 0;
+  if (autoFree) startTab = 'box';
   switchTab(startTab);
   renderAll();
   requestAnimationFrame(frame);
   setTimeout(showGrant, 500);
   let later = false;
   try { later = !!sessionStorage.getItem('lpn:whoLater'); } catch (e) { /* bỏ qua */ }
-  if (window.Sync && !window.Sync.who && !later) setTimeout(openWho, 700);
+  if (autoFree) {
+    try { history.replaceState(null, '', location.pathname + '#box'); } catch (e) { /* bỏ qua */ }
+    setTimeout(openFree, 650);
+  } else if (window.Sync && !window.Sync.who && !later) setTimeout(openWho, 700);
   else if (firstLook) setTimeout(openSplash, 600);
 })();

@@ -141,6 +141,12 @@
     { id: 'nen-lau-dai', slot: 'bg', name: 'Nền Lâu Đài', rarity: 'suthi', price: 600, ev: 'halloween',
       memory: 'Lâu đài trên đồi, đèn bí ngô sáng cả đêm, chờ người cùng đi chơi Halloween.',
       bg: { kind: 'castle', theme: { night: true, sky: '#140A2A', cloud: '#3D2A5C', mote: null, stars: false, rain: false, leaf: '#FF9A3C', leafLight: '#FFC07A', leafDark: '#B8561A', stem: '#6B4A8C' } } },
+
+    // ---------- Phần thưởng vụ án (không bán, không có trong hộp quà) ----------
+    { id: 'tham-tu', slot: 'skin', name: 'Sâu Thám Tử', rarity: 'huyenthoai', price: 0, reward: 'vlts', ch: 13,
+      memory: 'Thám tử Thủy phá vụ án đầu tiên: vạch lá, tìm ra Sâu Tím, mở hộp quà bằng đúng giờ em nhận lời.',
+      pal: { body: '#D2B07F', body2: '#C49F6C', head: '#B79CF0', feet: '#6E4426', ant: '#6B4FA0', antTip: '#FF8FA3', mark: '#6E4426', cocoon: '#E6D2AE', cocoonLine: '#C49F6C' },
+      acc: 'detective', pattern: 'coat', mark: 'ques', antLen: 2.05 },
   ];
 
   // ================= Sự kiện =================
@@ -316,6 +322,15 @@
       diamondPath(x, cx, cy, s); x.fill();
       x.fillStyle = '#D62F45';
       diamondPath(x, cx, cy, s * 0.45); x.fill();
+    } else if (kind === 'ques') {
+      // dấu chấm hỏi của thám tử
+      x.lineWidth = s * 0.3;
+      x.lineCap = 'round';
+      x.beginPath();
+      x.arc(cx, cy - s * 0.36, s * 0.38, Math.PI * 1.1, Math.PI * 2.28);
+      x.quadraticCurveTo(cx, cy - s * 0.02, cx, cy + s * 0.26);
+      x.stroke();
+      x.beginPath(); x.arc(cx, cy + s * 0.7, s * 0.17, 0, TAU); x.fill();
     } else if (kind === 'grain') {
       // hai hạt lúa chụm lại
       for (const a of [-0.5, 0.5]) { x.beginPath(); x.ellipse(cx + a * s * 0.62, cy, s * 0.3, s * 0.62, a, 0, TAU); x.fill(); }
@@ -365,6 +380,22 @@
     clipBody(x, r, bean);
     x.fillStyle = color;
     for (const y of [-0.66, -0.1, 0.46]) x.fillRect(-r, y * r, r * 2, r * 0.26);
+    x.restore();
+  }
+
+  // Áo măng tô thám tử: thắt lưng nâu khoá vàng, hàng cúc đôi (đốt mang dấu thì không cúc).
+  function coatBelt(x, r, bean, variant) {
+    x.save();
+    clipBody(x, r, bean);
+    x.fillStyle = '#7A5230';
+    x.fillRect(-r, r * 0.4, r * 2, r * 0.22);
+    x.strokeStyle = '#E2A93B';
+    x.lineWidth = r * 0.07;
+    x.strokeRect(-r * 0.13, r * 0.38, r * 0.26, r * 0.26);
+    if (variant !== 2) {
+      x.fillStyle = '#7A5230';
+      for (const bx of [-0.3, 0.3]) for (const by of [-0.42, -0.02]) { x.beginPath(); x.arc(bx * r, by * r, r * 0.075, 0, TAU); x.fill(); }
+    }
     x.restore();
   }
 
@@ -421,6 +452,7 @@
     if (skin.pattern === 'brocade') brocadeBand(x, r, variant, skin.shape === 'bean');
     else if (skin.pattern === 'pumpkin') pumpkinRibs(x, r, skin.shape === 'bean');
     else if (skin.pattern === 'stripe') stockingStripes(x, r, skin.shape === 'bean', p.feet);
+    else if (skin.pattern === 'coat') coatBelt(x, r, skin.shape === 'bean', variant);
     x.fillStyle = p.shine;
     x.beginPath(); x.ellipse(-r * 0.3, -r * 0.38, r * 0.42, r * 0.24, -0.4, 0, TAU); x.fill();
     if (variant === 2 && skin.mark !== 'none') drawMark(x, skin.mark || 'heart', 0, skin.pattern ? 0 : r * 0.05, skin.mark === 'jack' ? r * 0.62 : r * 0.32, p.mark, S);
@@ -428,7 +460,7 @@
 
   // ================= Phụ kiện trên đầu =================
   // Vẽ trong toạ độ của đầu (tâm đầu ở gốc). back = phần nằm sau đầu (vẽ trước đầu).
-  function drawAccessory(x, acc, r, S, t, back) {
+  function drawAccessory(x, acc, r, S, t, back, st) {
     if (!acc) return;
     x.lineCap = 'round';
     x.lineJoin = 'round';
@@ -709,6 +741,80 @@
       x.fill();
       x.globalAlpha = 1;
       x.restore();
+    } else if (acc === 'detective') {
+      // Mũ thám tử kẻ ô (vạt tai buộc nơ trên đỉnh) và kính lúp trước mắt phải; mắt sau kính to ra.
+      if (back) return;
+      const crown = () => {
+        x.beginPath();
+        x.moveTo(-r * 1.07, -r * 0.46);
+        x.bezierCurveTo(-r * 1.07, -r * 1.42, r * 1.07, -r * 1.42, r * 1.07, -r * 0.46);
+        x.closePath();
+      };
+      x.fillStyle = '#B47D4A';
+      crown(); x.fill();
+      x.save();
+      crown(); x.clip();
+      x.strokeStyle = 'rgba(110,68,38,0.5)';
+      x.lineWidth = 1.6 * S;
+      x.beginPath();
+      for (const yy of [-0.74, -1.02]) { x.moveTo(-r * 1.2, yy * r); x.lineTo(r * 1.2, yy * r); }
+      for (const xx of [-0.66, 0, 0.66]) { x.moveTo(xx * r, -r * 1.5); x.lineTo(xx * r, -r * 0.4); }
+      x.stroke();
+      x.strokeStyle = 'rgba(226,176,122,0.7)';
+      x.lineWidth = 1 * S;
+      x.beginPath();
+      for (const yy of [-0.63, -0.91]) { x.moveTo(-r * 1.2, yy * r); x.lineTo(r * 1.2, yy * r); }
+      for (const xx of [-0.5, 0.16, 0.82]) { x.moveTo(xx * r, -r * 1.5); x.lineTo(xx * r, -r * 0.4); }
+      x.stroke();
+      x.strokeStyle = 'rgba(255,255,255,0.3)';
+      x.lineWidth = r * 0.1;
+      x.beginPath(); x.arc(0, -r * 0.46, r * 0.72, Math.PI * 1.22, Math.PI * 1.48); x.stroke();
+      x.restore();
+      x.strokeStyle = '#6E4426';
+      x.lineWidth = 1.2 * S;
+      crown(); x.stroke();
+      x.fillStyle = '#A06A3A';
+      for (const side of [-1, 1]) {
+        x.beginPath(); x.ellipse(side * r * 1.06, -r * 0.5, r * 0.16, r * 0.3, side * 0.3, 0, TAU); x.fill(); x.stroke();
+      }
+      x.fillStyle = '#6E4426';
+      x.fillRect(-r * 1.07, -r * 0.56, r * 2.14, r * 0.17);
+      x.fillStyle = '#C98B52';
+      for (const side of [-1, 1]) {
+        x.beginPath(); x.ellipse(side * r * 0.2, -r * 1.33, r * 0.2, r * 0.1, side * -0.25, 0, TAU); x.fill(); x.stroke();
+      }
+      x.fillStyle = '#6E4426';
+      x.beginPath(); x.arc(0, -r * 1.33, r * 0.08, 0, TAU); x.fill();
+      // kính lúp: cán nâu, mặt kính tím nhạt, mắt phải sau kính phóng to theo đúng biểu cảm
+      const lx = r * 0.36, ly = -r * 0.08, lr = r * 0.46;
+      const s2 = st || {};
+      x.strokeStyle = '#6E4426';
+      x.lineWidth = r * 0.24;
+      x.beginPath(); x.moveTo(lx + lr * 0.7, ly + lr * 0.7); x.lineTo(lx + r * 1.02, ly + r * 1.02); x.stroke();
+      x.fillStyle = '#ECE2FF';
+      x.beginPath(); x.arc(lx, ly, lr, 0, TAU); x.fill();
+      x.fillStyle = '#2A1E3D';
+      x.strokeStyle = '#2A1E3D';
+      x.lineWidth = r * 0.09;
+      if (s2.happy > 0) {
+        x.beginPath(); x.moveTo(lx - r * 0.22, ly + r * 0.06); x.quadraticCurveTo(lx, ly - r * 0.24, lx + r * 0.22, ly + r * 0.06); x.stroke();
+      } else if (s2.blink > 0) {
+        x.beginPath(); x.moveTo(lx - r * 0.22, ly); x.quadraticCurveTo(lx, ly + r * 0.16, lx + r * 0.22, ly); x.stroke();
+      } else {
+        const er = s2.sad > 0 ? r * 0.17 : r * 0.23;
+        x.beginPath(); x.arc(lx - r * 0.02, ly + r * 0.01, er, 0, TAU); x.fill();
+        x.fillStyle = '#FFFFFF';
+        x.beginPath(); x.arc(lx + er * 0.3, ly - er * 0.36, er * 0.38, 0, TAU); x.fill();
+        x.beginPath(); x.arc(lx - er * 0.4, ly + er * 0.42, er * 0.16, 0, TAU); x.fill();
+      }
+      x.fillStyle = 'rgba(221,240,255,0.22)';
+      x.beginPath(); x.arc(lx, ly, lr, 0, TAU); x.fill();
+      x.strokeStyle = '#E2A93B';
+      x.lineWidth = r * 0.15;
+      x.beginPath(); x.arc(lx, ly, lr, 0, TAU); x.stroke();
+      x.strokeStyle = 'rgba(255,255,255,0.9)';
+      x.lineWidth = r * 0.08;
+      x.beginPath(); x.arc(lx, ly, lr * 0.68, Math.PI * 1.05, Math.PI * 1.4); x.stroke();
     } else if (acc === 'rice') {
       // Một bông lúa cắm trên đầu, trĩu hạt cong xuống, đung đưa theo gió.
       if (back) return;
@@ -829,7 +935,7 @@
     } else {
       x.beginPath(); x.moveTo(-r * 0.12, my - r * 0.02); x.quadraticCurveTo(0, my + r * 0.1, r * 0.12, my - r * 0.02); x.stroke();
     }
-    drawAccessory(x, skin.acc, r, S, t, false);
+    drawAccessory(x, skin.acc, r, S, t, false, st);
   }
 
   // ================= Kén =================

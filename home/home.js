@@ -220,18 +220,36 @@
     },
 
     // Thẻ cốt truyện: chương đang chờ và tiến độ (đọc tiến độ lưu trên máy).
+    // Đọc xong chương mở vụ án mà chưa phá án thì thẻ dẫn thẳng vào hồ sơ.
     story() {
       fetch('../story/chapters.json')
         .then((r) => r.json())
         .then((d) => {
-          const list = d.chapters || [];
+          const list = (d.chapters || []).filter(released);
           let saved = store.get('lpn:story') || {};
           if (saved.ver !== 2) saved = {};
           const done = saved.done || {};
           const open = saved.open || {};
+          const flags = saved.flags || {};
           const n = list.filter((c) => done[c.id]).length;
           const nextI = list.findIndex((c) => !done[c.id]);
+          const card = $('story-card');
+          card.href = '../story/';
+          card.classList.remove('is-case', 'is-new');
           $('story-fill').style.width = (list.length ? (n / list.length) * 100 : 0) + '%';
+          News.check(list, done);
+          const cs = list.find((c) => c.case && done[c.id] && !flags[c.case.id + 'Done']);
+          if (cs) {
+            const c = cs.case;
+            let k = 0;
+            for (let i = 1; i <= c.steps; i++) if (flags[c.id + i]) k = i;
+            card.href = '../story/' + c.page;
+            card.classList.add('is-case');
+            $('story-eyebrow').textContent = 'Hồ sơ mật · Chặng ' + Math.min(c.steps, k + 1) + '/' + c.steps;
+            $('story-title').textContent = 'Vụ án ' + c.title;
+            $('story-fill').style.width = (k / c.steps) * 100 + '%';
+            return;
+          }
           if (nextI < 0) {
             $('story-eyebrow').textContent = 'Cốt truyện · ' + n + '/' + list.length + ' chương';
             $('story-title').textContent = 'Đã đi hết hành trình';
@@ -239,7 +257,10 @@
           }
           const ch = list[nextI];
           const locked = ch.cost && !open[ch.id];
-          $('story-eyebrow').textContent = 'Cốt truyện · Chương ' + (nextI + 1) + '/' + list.length + (locked ? ' · cần ' + ch.cost + ' đốt cây' : '');
+          const fresh = !!ch.announce;
+          card.classList.toggle('is-new', fresh);
+          if (fresh) card.href = '../story/?play=' + encodeURIComponent(ch.id);
+          $('story-eyebrow').textContent = 'Cốt truyện · Chương ' + (ch.no || nextI + 1) + (fresh ? ' · Mới' : '/' + list.length) + (locked ? ' · cần ' + ch.cost + ' đốt cây' : '');
           $('story-title').textContent = locked ? 'Một chương bí mật' : ch.title;
         })
         .catch(() => {});
@@ -470,6 +491,50 @@
     for (const ch of str) { h ^= ch.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0; }
     return h.toString(16);
   };
+  // ================= Thông báo chương mới =================
+  // Chương có releaseAt thì ẩn tới giờ đó (máy có early thấy sớm hơn), giống trang cốt truyện.
+  const WHO = (() => { try { return localStorage.getItem('lpn:who'); } catch (e) { return null; } })();
+  const released = (ch) => {
+    if (!ch.releaseAt) return true;
+    let at = Date.parse(ch.releaseAt);
+    if (ch.early && ch.early[WHO]) at = Math.min(at, Date.parse(ch.early[WHO]));
+    return Date.now() >= at;
+  };
+  // Chương có announce: báo một lần trên mỗi máy, sau khi đã qua màn khoá.
+  const News = {
+    ch: null,
+    check(list, done) {
+      if (this.ch) return;
+      const seen = store.get('lpn:news') || {};
+      this.ch = list.find((c) => c.announce && !done[c.id] && !seen[c.id]) || null;
+      this.show();
+    },
+    show() {
+      const ch = this.ch;
+      if (!ch || document.documentElement.classList.contains('need-lock') || !$('news').hidden) return;
+      const a = ch.announce;
+      if (a.logo) $('news-logo').src = a.logo;
+      $('news-title').textContent = a.title;
+      $('news-text').textContent = a.text;
+      $('news-ok').textContent = a.ok || 'Đọc ngay';
+      $('news-ok').href = '../story/?play=' + encodeURIComponent(ch.id);
+      $('news-later').textContent = a.later || 'Để sau';
+      $('news').hidden = false;
+    },
+    seen() {
+      if (!this.ch) return;
+      const seen = store.get('lpn:news') || {};
+      seen[this.ch.id] = Date.now();
+      store.set('lpn:news', seen);
+    },
+    close() {
+      this.seen();
+      $('news').hidden = true;
+    },
+  };
+  $('news-ok').addEventListener('click', () => News.seen());
+  $('news-later').addEventListener('click', () => News.close());
+
   const Lock = {
     pin: '',
     show() {
@@ -500,6 +565,7 @@
           dots.classList.remove('ok');
           this.pin = '';
           this.draw();
+          setTimeout(() => News.show(), 400);
         }, 280);
       } else {
         $('lock-msg').textContent = 'Sai rồi, thử lại nha';

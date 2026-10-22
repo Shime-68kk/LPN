@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="home.css?v=11" />
+  <link rel="stylesheet" href="home.css?v=12" />
 </head>
 <body data-weather="nang">
   <!-- Cảnh trời: màu và các lớp đổi theo data-weather trên body -->
@@ -104,9 +104,10 @@
       <p class="lede" id="lede"></p>
     </div>
 
-    <a class="story-card" href="../story/">
+    <a class="story-card" id="story-card" href="../story/">
       <span class="story-thumb" aria-hidden="true">
         <svg viewBox="0 0 24 24"><path d="M6 21a2 2 0 1 0 0-4a2 2 0 1 0 0 4M18 7a2 2 0 1 0 0-4a2 2 0 1 0 0 4M8 19h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7" /></svg>
+        <img class="st-case" src="../style/img/tham-tu.svg" alt="" width="52" height="52" />
       </span>
       <span class="game-meta">
         <span class="eyebrow" id="story-eyebrow">Cốt truyện</span>
@@ -258,6 +259,19 @@
     <span class="v-count" id="viewer-count"></span>
   </div>
 
+  <!-- Thông báo chương mới (một lần mỗi máy) -->
+  <div class="news" id="news" role="dialog" aria-modal="true" aria-labelledby="news-title" hidden>
+    <div class="news-card">
+      <span class="news-glow" aria-hidden="true"></span>
+      <img class="news-logo" id="news-logo" src="../style/img/tham-tu.svg" alt="" width="132" height="132" />
+      <span class="news-kicker">Cốt truyện · Chương mới</span>
+      <h2 id="news-title">Đã có chương truyện mới!</h2>
+      <p id="news-text"></p>
+      <a class="btn primary news-ok" id="news-ok" href="../story/">Sẵn sàng!</a>
+      <button class="btn ghost" id="news-later" type="button">Để sau</button>
+    </div>
+  </div>
+
   <!-- Màn khoá: cùng mật khẩu với trang cũ -->
   <div class="lock" id="lock" role="dialog" aria-modal="true" aria-labelledby="lock-title">
     <div class="lock-card">
@@ -277,8 +291,8 @@
 
   <script src="sync.js?v=2"></script>
   <script src="diary.js?v=1"></script>
-  <script src="home.js?v=10"></script>
-  <script src="../shop/skins.js?v=6"></script>
+  <script src="home.js?v=11"></script>
+  <script src="../shop/skins.js?v=7"></script>
   <script>
     // Tiệm Sâu đang có sự kiện thì gắn nhãn lên ô; máy này chưa xem thì nhãn nhấp nháy.
     (() => {

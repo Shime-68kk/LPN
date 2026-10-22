@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#F3E3C3" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Vạch Lá Tìm Sâu</title>
+  <script>
+    // Chưa mở khoá trên máy này thì quay về trang chủ để nhập mật khẩu.
+    try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df') location.replace('../home/'); }
+    catch (e) { location.replace('../home/'); }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" />
+  <link rel="stylesheet" href="../home/home.css?v=12" />
+  <link rel="stylesheet" href="case.css?v=1" />
+</head>
+<body class="case">
+  <header class="c-top">
+    <a class="c-icon" id="btn-back" href="../story/" aria-label="Về bản đồ truyện"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6" /></svg></a>
+    <span class="c-top-title">Hồ sơ mật · Số 01</span>
+    <button class="c-icon" id="btn-notes" type="button" aria-label="Sổ tay thám tử">
+      <svg viewBox="0 0 24 24"><path d="M6 3h11a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2V4a1 1 0 0 1 1-1zM5 18a2 2 0 0 1 2-2h12M9 7h6M9 10h4" /></svg>
+      <i class="c-dot" id="notes-dot" hidden></i>
+    </button>
+  </header>
+
+  <ol class="c-track" id="track" aria-label="Các chặng điều tra">
+    <li data-step="1"><i>1</i><span>Hiện trường</span></li>
+    <li data-step="2"><i>2</i><span>Nhân chứng</span></li>
+    <li data-step="3"><i>3</i><span>Truy tìm</span></li>
+    <li data-step="4"><i>4</i><span>Hộp quà</span></li>
+  </ol>
+
+  <main class="c-main">
+    <!-- Bìa hồ sơ -->
+    <section class="screen cover" id="s-cover" hidden>
+      <div class="folder">
+        <span class="folder-tab">VLTS · 01</span>
+        <span class="stamp" id="cover-stamp">Tuyệt mật</span>
+        <img class="cover-logo" src="../style/img/tham-tu.svg" alt="Sâu thám tử đội mũ, cầm kính lúp" width="150" height="150" />
+        <p class="kicker">Hồ sơ vụ án</p>
+        <h1>Vạch Lá Tìm Sâu</h1>
+        <dl class="file-rows">
+          <div><dt>Mất tích</dt><dd>Bé Sâu Tím (tự trốn đi)</dd></div>
+          <div><dt>Thám tử</dt><dd>Lệ Thủy</dd></div>
+          <div><dt>Độ khó</dt><dd>Dễ thương</dd></div>
+          <div><dt>Thời hạn</dt><dd>Không giới hạn. Anh chờ được.</dd></div>
+        </dl>
+        <p class="cover-note" id="cover-note"></p>
+        <button class="btn primary c-btn" id="cover-go" type="button">Mở hồ sơ</button>
+        <a class="btn ghost c-btn" id="cover-read" href="../story/?play=c13" hidden>Đọc chương 13 trước</a>
+        <button class="link-btn" id="cover-replay" type="button" hidden>Điều tra lại từ đầu</button>
+      </div>
+    </section>
+
+    <!-- Chặng 1 & 3: vạch lá -->
+    <section class="screen field-screen" id="s-field" hidden>
+      <div class="brief">
+        <p class="kicker" id="field-kicker"></p>
+        <p class="brief-text" id="field-brief"></p>
+      </div>
+      <div class="field-wrap" id="field-wrap">
+        <canvas class="field" id="field" aria-label="Khu vườn phủ đầy lá, vuốt để vạch lá ra"></canvas>
+        <span class="field-count" id="field-count"></span>
+        <span class="field-toast" id="field-toast" hidden></span>
+        <span class="field-tip" id="field-tip">Vuốt ngón tay để vạch lá</span>
+      </div>
+      <div class="field-foot">
+        <button class="btn ghost hint-btn" id="field-hint" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z" /></svg>
+          Lời nhắn của anh
+        </button>
+      </div>
+    </section>
+
+    <!-- Chặng 2: nhân chứng -->
+    <section class="screen" id="s-witness" hidden>
+      <div class="brief">
+        <p class="kicker">Chặng 2 · Nhân chứng</p>
+        <p class="brief-text">Sáng nay có ba bạn nhỏ đã nhìn thấy Sâu Tím. Sổ tay ghi rõ: lần này <b>đúng một bạn nói dối</b>. Đọc kỹ lời khai nhé.</p>
+      </div>
+      <div class="witnesses" id="witnesses"></div>
+      <div class="ask" id="ask">
+        <p class="ask-q" id="ask-q"></p>
+        <div class="places" id="places" hidden></div>
+        <p class="ask-fb" id="ask-fb" aria-live="polite" hidden></p>
+        <button class="btn primary c-btn" id="ask-next" type="button" hidden></button>
+      </div>
+    </section>
+
+    <!-- Chặng 4: hộp quà khoá số -->
+    <section class="screen" id="s-lock" hidden>
+      <div class="brief">
+        <p class="kicker">Chặng 4 · Hộp quà</p>
+        <p class="brief-text">Bị bắt rồi mà Sâu Tím vẫn ôm khư khư một hộp quà khoá bốn số. Hai mảnh thư ở hiện trường ghép lại thành:</p>
+        <p class="letter-strip">“Mật mã hộp quà là giờ và phút em nhận lời yêu anh.”</p>
+      </div>
+      <div class="lock-stage">
+        <canvas class="lock-worm" id="lock-worm" width="240" height="240" aria-hidden="true"></canvas>
+        <p class="bubble" id="lock-bubble">Mở được thì quà là của em hết.</p>
+        <div class="giftlock" id="giftlock">
+          <svg class="gl-box" viewBox="0 0 200 150" aria-hidden="true">
+            <rect x="24" y="52" width="152" height="90" rx="14" class="gl-body" />
+            <rect x="92" y="52" width="16" height="90" class="gl-ribbon" />
+            <g class="gl-lid"><rect x="14" y="34" width="172" height="26" rx="10" class="gl-body gl-top" /><rect x="92" y="34" width="16" height="26" class="gl-ribbon" />
+              <path d="M100 34c-10-22-40-28-40-12c0 10 22 12 40 12M100 34c10-22 40-28 40-12c0 10-22 12-40 12" class="gl-bow" /></g>
+            <g class="gl-padlock"><path d="M86 92v-12a14 14 0 0 1 28 0v12" class="gl-shackle" /><rect x="80" y="90" width="40" height="32" rx="7" class="gl-lockbody" /><circle cx="100" cy="104" r="4" class="gl-hole" /><path d="M100 107v7" class="gl-hole-s" /></g>
+          </svg>
+        </div>
+        <div class="dials" id="dials" role="group" aria-label="Khoá số bốn vòng"></div>
+        <p class="lock-fb" id="lock-fb" aria-live="polite"></p>
+        <button class="btn primary c-btn" id="lock-try" type="button">Mở khoá</button>
+        <button class="btn ghost hint-btn" id="lock-hint" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z" /></svg>
+          Lời nhắn của anh
+        </button>
+      </div>
+    </section>
+
+    <!-- Kết án -->
+    <section class="screen finale" id="s-finale" hidden>
+      <div class="win" id="win">
+        <span class="rays" aria-hidden="true"></span>
+        <span class="stamp big" id="win-stamp">Đã phá án</span>
+        <h2>Thám tử Thủy phá án thành công!</h2>
+        <p class="win-sub">Quà to của Sâu Tím đã vào túi em:</p>
+        <ul class="rewards">
+          <li class="rw-skin">
+            <canvas id="rw-skin" width="192" height="192" aria-hidden="true"></canvas>
+            <span><b>Sâu Thám Tử</b><small>Skin Huyền thoại · chỉ có ở vụ án này</small></span>
+          </li>
+          <li>
+            <span class="rw-ic">🌿</span>
+            <span><b id="rw-dot">+2.338 đốt cây</b><small>Đúng bằng 23:38</small></span>
+          </li>
+          <li>
+            <span class="rw-ic">🎁</span>
+            <span><b id="rw-box">20 hộp quà tặng</b><small>Mở cùng lúc ở Tiệm Sâu, không mất đốt</small></span>
+          </li>
+        </ul>
+        <button class="btn primary c-btn" id="win-next" type="button">Khoan đã…</button>
+      </div>
+
+      <div class="epi" id="epi" hidden>
+        <canvas class="epi-art" id="epi-art" aria-hidden="true"></canvas>
+        <div class="epi-talk" id="epi-talk">
+          <span class="epi-who" id="epi-who">Sâu Tím</span>
+          <p class="epi-line" id="epi-line" aria-live="polite"></p>
+          <div class="epi-choices" id="epi-choices" hidden></div>
+          <span class="epi-tap" id="epi-tap">Chạm để tiếp</span>
+        </div>
+      </div>
+
+      <div class="closed" id="closed" hidden>
+        <div class="folder small">
+          <span class="stamp" >Đã phá án</span>
+          <img class="cover-logo" src="../style/img/tham-tu.svg" alt="" width="110" height="110" />
+          <p class="kicker">Biên bản kết án</p>
+          <h2>Thủ phạm: Lệ Thủy</h2>
+          <p class="verdict">Tội danh: lấy trộm trái tim của Sâu Tím.<br />Hình phạt: ở bên anh thật lâu. Không được kháng cáo.</p>
+          <p class="closed-date" id="closed-date"></p>
+        </div>
+        <button class="btn primary c-btn" id="go-equip" type="button">Mặc skin Sâu Thám Tử</button>
+        <a class="btn c-btn gold" id="go-boxes" href="../shop/?free=1">Mở 20 hộp quà</a>
+        <a class="btn ghost c-btn" href="../story/">Về bản đồ truyện</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Thẻ manh mối vừa tìm được -->
+  <div class="pop" id="pop" role="dialog" aria-modal="true" aria-labelledby="pop-title" hidden>
+    <div class="pop-card">
+      <span class="pop-ic" id="pop-ic"></span>
+      <p class="kicker" id="pop-kicker">Manh mối mới</p>
+      <h3 id="pop-title"></h3>
+      <p class="pop-quote" id="pop-quote"></p>
+      <p class="pop-note" id="pop-note"></p>
+      <button class="btn primary c-btn" id="pop-ok" type="button">Ghi vào sổ</button>
+    </div>
+  </div>
+
+  <!-- Sổ tay thám tử -->
+  <div class="sheet-wrap" id="notes" role="dialog" aria-modal="true" aria-labelledby="notes-title" hidden>
+    <div class="sheet-back" id="notes-back"></div>
+    <section class="notes">
+      <header><h2 id="notes-title">Sổ tay thám tử</h2><button class="c-icon" id="notes-close" type="button" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button></header>
+      <ol class="rules">
+        <li>Nhìn kỹ trước khi đoán.</li>
+        <li>Nhân chứng nào cũng có thể nói dối. Nhưng không phải ai cũng nói dối.</li>
+        <li>Manh mối quan trọng nhất đôi khi không nằm dưới lá, mà nằm trong trí nhớ.</li>
+      </ol>
+      <h3>Manh mối đã có</h3>
+      <ul class="clues" id="clues"></ul>
+    </section>
+  </div>
+
+  <script src="../home/sync.js?v=2"></script>
+  <script src="../home/wallet.js?v=8"></script>
+  <script src="../shop/skins.js?v=7"></script>
+  <script src="case.js?v=1"></script>
+</body>
+</html>

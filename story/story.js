@@ -52,6 +52,20 @@
   }
 
   let CHAPTERS = [];
+  // Chương có releaseAt thì ẩn hẳn tới giờ đó; early cho máy của một người thấy sớm hơn (máy chọn ở Tiệm Sâu).
+  const WHO = (() => { try { return localStorage.getItem('lpn:who'); } catch (e) { return null; } })();
+  const released = (ch) => {
+    if (!ch.releaseAt) return true;
+    let at = Date.parse(ch.releaseAt);
+    if (ch.early && ch.early[WHO]) at = Math.min(at, Date.parse(ch.early[WHO]));
+    return Date.now() >= at;
+  };
+  // Tiến độ vụ án: số chặng đã qua (flags id1…idN) và đã phá án chưa (idDone).
+  const caseProgress = (c) => {
+    let n = 0;
+    for (let k = 1; k <= c.steps; k++) if (save.flags[c.id + k]) n = k;
+    return { n, done: !!save.flags[c.id + 'Done'] };
+  };
 
   // ================= Bản đồ =================
   // TẠM THỜI mở hết chương để đọc thử. Nhớ đổi lại false trước khi đưa lên GitHub.
@@ -206,6 +220,20 @@
       path.appendChild(stop);
     });
     drawTrail(done);
+    renderCase();
+  }
+
+  // Thẻ hồ sơ vụ án trên bản đồ: hiện khi đã đọc xong chương mở vụ án.
+  function renderCase() {
+    const card = $('case-card');
+    const ch = CHAPTERS.find((c) => c.case && save.done[c.id]);
+    card.hidden = !ch;
+    if (!ch) return;
+    const c = ch.case, pr = caseProgress(c);
+    card.href = c.page;
+    card.classList.toggle('solved', pr.done);
+    $('case-title').textContent = 'Vụ án ' + c.title;
+    $('case-note').textContent = pr.done ? 'Đã phá án · Xem lại hồ sơ' : pr.n ? 'Đang điều tra · Chặng ' + Math.min(c.steps, pr.n + 1) + '/' + c.steps : 'Chưa điều tra · ' + c.steps + ' chặng';
   }
 
   // Đường chấm nối các chương; đoạn đã đi tô đậm.
@@ -435,7 +463,9 @@
         P.waiting = null;
         box.hidden = true;
         // echo: false = nút làm theo hướng dẫn, không nhắc lại thành lời Thủy.
-        P.queue.unshift(...(opt.echo === false ? [] : [{ who: 'thuy', text: opt.text }]), ...(opt.reply || []));
+        // again: đáp án chưa đúng, nghe lời đáp xong thì chọn lại trong các lựa chọn còn lại.
+        const retry = opt.again ? [{ choice: options.filter((o) => o !== opt) }] : [];
+        P.queue.unshift(...(opt.echo === false ? [] : [{ who: 'thuy', text: opt.text }]), ...(opt.reply || []), ...retry);
         next();
       });
       box.appendChild(b);
@@ -450,6 +480,18 @@
     persist();
     const nextI = P.ch + 1;
     const nb = $('btn-end-next');
+    nb.dataset.case = '';
+    if (ch.case && !caseProgress(ch.case).done) {
+      $('end-title').textContent = 'Hồ sơ đã mở';
+      $('end-text').textContent = 'Vụ án ' + ch.case.title + ' đang chờ thám tử Thủy. Có ' + ch.case.steps + ' chặng, không tính giờ, cứ từ từ suy luận nha.';
+      nb.hidden = false;
+      nb.textContent = caseProgress(ch.case).n ? 'Điều tra tiếp' : 'Bắt đầu điều tra';
+      nb.dataset.case = ch.case.page;
+      $('end').hidden = false;
+      nb.focus({ preventScroll: true });
+      return;
+    }
+    $('end-title').textContent = 'Hết chương';
     if (nextI >= CHAPTERS.length) {
       $('end-text').textContent = 'Em đã đi hết hành trình hiện tại. Anh sẽ viết thêm chương mới nha.';
       nb.hidden = true;
@@ -564,7 +606,8 @@
   $('btn-skip').addEventListener('click', () => { if (P.typing) finishTyping(); });
   $('btn-back').addEventListener('click', () => history.back());
   $('btn-end-map').addEventListener('click', () => history.back());
-  $('btn-end-next').addEventListener('click', () => {
+  $('btn-end-next').addEventListener('click', (e) => {
+    if (e.currentTarget.dataset.case) { location.href = e.currentTarget.dataset.case; return; }
     const i = P.ch + 1;
     if (isOpen(i) && waitLeft(i) > 0) { $('end').hidden = true; openWait(i); return; }
     if (isOpen(i)) { play(i); return; }
@@ -592,8 +635,17 @@
   fetch('chapters.json')
     .then((r) => r.json())
     .then((d) => {
-      CHAPTERS = d.chapters || [];
+      CHAPTERS = (d.chapters || []).filter(released);
       renderMap();
+      // Từ thông báo ở trang chủ: mở thẳng chương được nhắc tới (nếu đọc được).
+      const want = new URLSearchParams(location.search).get('play');
+      const wi = CHAPTERS.findIndex((c) => c.id === want);
+      if (wi >= 0) {
+        try { history.replaceState(null, '', location.pathname); } catch (e) { /* bỏ qua */ }
+        const st = status(wi);
+        if (st.state === 'current' || st.state === 'done') play(wi);
+        else if (st.state === 'buy') openBuy(wi);
+      }
       // Quà tặng một lần: báo cho em biết vừa có thêm đốt cây.
       const gift = Wallet.takeGiftNotice();
       if (gift) dialog('Quà của anh 🎁', 'Anh tặng em ' + fmt(gift) + ' đốt cây để mở cốt truyện nè. Đọc từ từ thôi nha.', 'Cảm ơn anh!', closeDialog, true);

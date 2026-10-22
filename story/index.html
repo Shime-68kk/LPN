@@ -16,8 +16,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="../home/home.css?v=11" />
-  <link rel="stylesheet" href="story.css?v=11" />
+  <link rel="stylesheet" href="../home/home.css?v=12" />
+  <link rel="stylesheet" href="story.css?v=12" />
 </head>
 <body data-weather="nang">
   <!-- Bản đồ các chương -->
@@ -39,6 +39,15 @@
       <span class="w-points" id="w-points">0 điểm</span>
       <button class="btn ghost" id="btn-exchange" type="button">Kiếm đốt</button>
     </div>
+    <a class="case-card" id="case-card" href="case.html" hidden>
+      <img src="../style/img/tham-tu.svg" alt="" width="56" height="56" />
+      <span class="case-meta">
+        <small>Hồ sơ mật</small>
+        <b id="case-title">Vụ án</b>
+        <span id="case-note"></span>
+      </span>
+      <svg class="case-go" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+    </a>
     <div class="path" id="path">
       <svg class="trail" id="trail" aria-hidden="true"><path id="trail-all" /><path id="trail-done" /></svg>
     </div>
@@ -161,7 +170,7 @@
   </div>
 
   <script src="../home/sync.js?v=2"></script>
-  <script src="../home/wallet.js?v=7"></script>
-  <script src="story.js?v=19"></script>
+  <script src="../home/wallet.js?v=8"></script>
+  <script src="story.js?v=20"></script>
 </body>
 </html>

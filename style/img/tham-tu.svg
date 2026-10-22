@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <clipPath id="tt-crown"><path d="M33 49C33 23 91 23 91 49Z" /></clipPath>
+  </defs>
+  <!-- thân sâu -->
+  <ellipse cx="17" cy="111" rx="4" ry="2.6" fill="#6B4FA0" />
+  <ellipse cx="33" cy="105" rx="4.4" ry="2.8" fill="#6B4FA0" />
+  <ellipse cx="49" cy="107" rx="4.4" ry="2.8" fill="#6B4FA0" />
+  <circle cx="24" cy="101" r="12" fill="#A88BE8" />
+  <circle cx="41" cy="93" r="15" fill="#B79CF0" />
+  <path d="M41 99c-2-2.8-6.4-1.6-5.2 1.8c.8 2.1 5.2 4.8 5.2 4.8s4.4-2.7 5.2-4.8c1.2-3.4-3.2-4.6-5.2-1.8z" fill="#FF8FA3" />
+  <!-- râu, nhô lên khỏi mũ -->
+  <path d="M51 36Q46 20 37 12M73 36Q79 20 88 12" fill="none" stroke="#6B4FA0" stroke-width="3.2" stroke-linecap="round" />
+  <circle cx="37" cy="12" r="4.4" fill="#FF8FA3" />
+  <circle cx="88" cy="12" r="4.4" fill="#FF8FA3" />
+  <!-- đầu -->
+  <circle cx="62" cy="62" r="27" fill="#B79CF0" />
+  <ellipse cx="52" cy="52" rx="8" ry="4.4" transform="rotate(-28 52 52)" fill="#FFFFFF" opacity=".35" />
+  <ellipse cx="46" cy="70" rx="4.6" ry="3" fill="#FF6F8E" opacity=".5" />
+  <ellipse cx="79" cy="70" rx="4.6" ry="3" fill="#FF6F8E" opacity=".5" />
+  <circle cx="53" cy="63" r="3.4" fill="#2A1E3D" />
+  <circle cx="54.2" cy="61.8" r="1.2" fill="#FFFFFF" />
+  <path d="M58 73q4.5 4 9 0" fill="none" stroke="#4A2B4F" stroke-width="2.4" stroke-linecap="round" />
+  <!-- mũ thám tử: chóp kẻ ô, hai vạt tai buộc nơ trên đỉnh, lưỡi trai phía trước -->
+  <path d="M33 49C33 23 91 23 91 49Z" fill="#B47D4A" />
+  <g clip-path="url(#tt-crown)">
+    <path d="M30 32h64M30 40h64M44 20v32M62 20v32M80 20v32" stroke="#7E5230" stroke-width="1.8" opacity=".45" />
+    <path d="M30 35h64M30 43h64M48 20v32M66 20v32M84 20v32" stroke="#E2B07A" stroke-width="1" opacity=".6" />
+    <path d="M42 33c4-6 12-9 20-9" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity=".3" />
+  </g>
+  <path d="M33 49C33 23 91 23 91 49Z" fill="none" stroke="#6E4426" stroke-width="1.4" />
+  <path d="M34 41c-5 2-6 8-3 11c3 2 6-1 7-5" fill="#A06A3A" stroke="#6E4426" stroke-width="1.2" />
+  <path d="M90 41c5 2 6 8 3 11c-3 2-6-1-7-5" fill="#A06A3A" stroke="#6E4426" stroke-width="1.2" />
+  <path d="M33 47.5h58v4.5H33z" fill="#6E4426" />
+  <path d="M46 52c4 6 28 6 32 0z" fill="#8C5A2E" />
+  <path d="M62 26c-4-5-11-5-10-1s6 3 10 1M62 26c4-5 11-5 10-1s-6 3-10 1" fill="#C98B52" stroke="#6E4426" stroke-width="1.2" />
+  <circle cx="62" cy="26" r="2.2" fill="#6E4426" />
+  <!-- kính lúp trước mắt phải -->
+  <path d="M83 75L101 95" stroke="#6E4426" stroke-width="7" stroke-linecap="round" />
+  <path d="M85 77L88 80.4" stroke="#E2A93B" stroke-width="7.6" stroke-linecap="butt" />
+  <circle cx="74" cy="64" r="13" fill="#E9DDFF" />
+  <circle cx="73.5" cy="64" r="6.2" fill="#2A1E3D" />
+  <circle cx="75.8" cy="61.6" r="2.4" fill="#FFFFFF" />
+  <circle cx="71.4" cy="66.6" r="1" fill="#FFFFFF" />
+  <circle cx="74" cy="64" r="13" fill="#DDF0FF" fill-opacity=".22" stroke="#E2A93B" stroke-width="4.4" />
+  <path d="M66 60a9 9 0 0 1 7-5.6" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" opacity=".9" />
+</svg>

@@ -1,5 +1,5 @@
 {
-  "note": "Lời thoại mẫu: sửa thoải mái bằng kỷ niệm thật. who: quang | thuy | ke (người kể) | none (chỉ hiện chữ, không nhãn). cost: số đốt cây cần để mở chương (0 = mở sẵn); chương mở lần lượt, xong chương trước mới mở được chương sau. scene: nang | may | mua | hoanghon | dem (bỏ trống = theo thời tiết thật). cast: ai có mặt trong cảnh, vd [\"quang\"] khi Thủy chưa xuất hiện (bỏ trống = cả hai); giữa chương thêm dòng { \"cast\": [\"quang\", \"thuy\"] } để Thủy hiện ra. near: [đầu, cuối] (0 = hai mép màn hình, 1 = sát nhau): hai bé nhích lại gần theo từng câu thoại, chưa có tim; dòng { \"near\": 1, \"heart\": true } cho sát nhau và hiện tim. emote: biểu cảm nhỏ trên đầu bé (emoteWho: quang | thuy). no: số chương hiển thị (để chừa chỗ chương viết sau). anyOrder: đọc được không cần xong chương trước. openAt: giờ mở chương (đếm ngược). Dòng { \"song\": id, \"start\": giây, \"dur\": giây }: mở khoá bài hát trong Sâu Tím và phát một đoạn. choice: các lựa chọn, mỗi lựa chọn có reply (lời đáp) và flag (ghi nhớ để dùng ở if). ifWeather: chỉ hiện khi trời thật đang như vậy.",
+  "note": "Lời thoại mẫu: sửa thoải mái bằng kỷ niệm thật. who: quang | thuy | ke (người kể) | none (chỉ hiện chữ, không nhãn). cost: số đốt cây cần để mở chương (0 = mở sẵn); chương mở lần lượt, xong chương trước mới mở được chương sau. scene: nang | may | mua | hoanghon | dem (bỏ trống = theo thời tiết thật). cast: ai có mặt trong cảnh, vd [\"quang\"] khi Thủy chưa xuất hiện (bỏ trống = cả hai); giữa chương thêm dòng { \"cast\": [\"quang\", \"thuy\"] } để Thủy hiện ra. near: [đầu, cuối] (0 = hai mép màn hình, 1 = sát nhau): hai bé nhích lại gần theo từng câu thoại, chưa có tim; dòng { \"near\": 1, \"heart\": true } cho sát nhau và hiện tim. emote: biểu cảm nhỏ trên đầu bé (emoteWho: quang | thuy). no: số chương hiển thị (để chừa chỗ chương viết sau). anyOrder: đọc được không cần xong chương trước. openAt: giờ mở chương (đếm ngược). Dòng { \"song\": id, \"start\": giây, \"dur\": giây }: mở khoá bài hát trong Sâu Tím và phát một đoạn. choice: các lựa chọn, mỗi lựa chọn có reply (lời đáp) và flag (ghi nhớ để dùng ở if). ifWeather: chỉ hiện khi trời thật đang như vậy. releaseAt: giờ chương xuất hiện (trước giờ đó ẩn hẳn); early: { \"quang\": giờ } cho máy đó thấy sớm hơn. announce: { title, text, ok, later }: thông báo hiện một lần ở trang chủ khi chương xuất hiện. case: { id, page, title, steps }: vụ án mở ra sau khi đọc xong chương (tiến độ lưu ở flags id1…idN, idDone). Lựa chọn có \"again\": true là đáp án chưa đúng: nghe lời đáp xong được chọn lại trong các lựa chọn còn lại.",
   "chapters": [
     {
       "id": "c1",
@@ -385,6 +385,59 @@
         { "who": "ke", "text": "Có những bài hát, nghe một lần là nhớ cả một ngày." },
         { "who": "ke", "text": "Ở nơi mây chạm xuống mặt đất, có một người vừa được nhận quà. Và một người khác, còn vui hơn cả người nhận." },
         { "who": "quang", "text": "Chờ anh chút nữa thôi. Rồi mình còn đi thật nhiều nơi nữa." }
+      ]
+    },
+    {
+      "id": "c13",
+      "no": 13,
+      "title": "Mất một bé sâu, thêm một thám tử",
+      "cost": 0,
+      "anyOrder": true,
+      "releaseAt": "2026-10-23T20:00:00+07:00",
+      "early": { "quang": "2026-10-22T00:00:00+07:00" },
+      "scene": "nang",
+      "cast": ["thuy"],
+      "case": { "id": "vlts", "page": "case.html", "title": "Vạch Lá Tìm Sâu", "steps": 4 },
+      "announce": {"title": "Đã có chương truyện mới!", "text": "Chương 13 · Mất một bé sâu, thêm một thám tử. Bé Sâu Tím vừa mất tích, để lại một phong thư gửi đích danh em. Thám tử Thủy đã sẵn sàng chưa?", "ok": "Sẵn sàng!", "later": "Chờ em chút"},
+      "lines": [
+        { "who": "none", "text": "Ngoại truyện · Vườn Lá" },
+        { "who": "ke", "text": "Có một khu vườn chỉ có trong điện thoại của hai đứa. Ở đó, ngày nào bé Sâu Tím cũng ăn lá theo nhạc, ăn đến tròn cả bụng." },
+        { "who": "ke", "text": "Sáng nay, khu vườn im phăng phắc." },
+        { "who": "ke", "text": "Không có tiếng nhạc. Không có chiếc lá nào bị gặm dở. Bé Sâu Tím biến mất rồi." },
+        { "who": "thuy", "text": "Ơ… anh đâu rồi?", "emote": "🤨" },
+        { "who": "ke", "text": "Trên chiếc lá to nhất vườn có một phong thư, dán tem trái tim đỏ. Ngoài bì chỉ ghi đúng một dòng:" },
+        { "who": "none", "text": "GỬI THÁM TỬ THỦY · TUYỆT MẬT" },
+        { "who": "ke", "text": "Em bóc thư." },
+        { "who": "none", "text": "“Anh trốn rồi. Trốn ở đâu thì không nói đâu. Tìm ra anh thì có quà to. Chưa tìm ra thì anh cứ ngồi đây chờ, bao lâu cũng chờ.” · Sâu Tím 🐛" },
+        { "who": "thuy", "text": "Đúng là ất dở hơi mà.", "emote": "😑" },
+        { "who": "ke", "text": "Miệng thì chê vậy thôi. Còn tay thì đã gấp lá thư lại, cất vào túi áo cẩn thận." },
+        { "scene": "may" },
+        { "who": "ke", "text": "Ông bà mình có câu “vạch lá tìm sâu”, để chê những người hay soi mói, bắt bẻ từng li từng tí." },
+        { "who": "ke", "text": "Nhưng hôm nay thì khác. Hôm nay cần một người chịu vạch lá thật, để tìm một con sâu thật." },
+        { "who": "ke", "text": "Người ấy phải tinh mắt, phải nhớ dai, và phải đủ bình tĩnh để không tin ngay mọi điều người khác nói." },
+        { "who": "ke", "text": "Nói cách khác: phải là một thám tử." },
+        { "who": "none", "text": "Thám tử Thủy, em đã sẵn sàng chưa?" },
+        {"choice": [{"text": "Sẵn sàng rồi!", "reply": [{"who": "ke", "text": "Câu trả lời của một thám tử thực thụ."}]}, {"text": "Cho em chuẩn bị chút đã", "reply": [{"who": "ke", "text": "Thám tử nào cũng cần chuẩn bị. Chỉ là đừng lâu quá, vì có một con sâu đang ngồi chờ đấy."}]}]},
+        { "who": "ke", "text": "Trong phong thư còn ba món đồ nghề." },
+        { "who": "none", "text": "Một: chiếc mũ thám tử kẻ ô, đội vào hơi rộng.", "emote": "🕵️‍♀️", "emoteWho": "thuy" },
+        { "who": "none", "text": "Hai: chiếc kính lúp, soi gì cũng to gấp ba.", "emote": "🔍", "emoteWho": "thuy" },
+        { "who": "none", "text": "Ba: cuốn sổ tay, trang đầu ghi “Ba quy tắc của thám tử”.", "emote": "📒", "emoteWho": "thuy" },
+        { "who": "ke", "text": "Quy tắc thứ nhất: nhìn kỹ trước khi đoán." },
+        { "who": "ke", "text": "Quy tắc thứ hai: nhân chứng nào cũng có thể nói dối. Nhưng không phải ai cũng nói dối." },
+        { "who": "ke", "text": "Quy tắc thứ ba: manh mối quan trọng nhất đôi khi không nằm dưới lá, mà nằm trong trí nhớ." },
+        { "scene": "nang" },
+        { "who": "ke", "text": "Bài kiểm tra đầu tiên đến ngay. Trước chiếc lá to có ba vệt bò, đi về ba hướng." },
+        { "who": "none", "text": "Vệt thứ nhất: thẳng tắp như kẻ thước, có cả trăm dấu chân li ti." },
+        { "who": "none", "text": "Vệt thứ hai: ngoằn ngoèo, lúc nhanh lúc chậm, cứ được một quãng lại có một chiếc lá bị gặm dở." },
+        { "who": "none", "text": "Vệt thứ ba: mảnh như sợi chỉ, lấp lánh ánh bạc, bò chậm ơi là chậm." },
+        { "who": "none", "text": "Vệt nào là của Sâu Tím?" },
+        {"choice": [{"text": "Vệt thẳng tắp", "echo": false, "again": true, "reply": [{"who": "ke", "text": "Cả trăm dấu chân, đi thẳng hàng như xếp hàng vào lớp? Đó là đường của đàn kiến. Sâu Tím đi đâu mà chẳng tạt ngang ăn vặt."}]}, {"text": "Vệt ngoằn ngoèo, có lá gặm dở", "echo": false, "reply": [{"who": "ke", "text": "Chuẩn! Ai ăn lá theo nhạc thì đi đường nào cũng phải lắc lư, gặp lá là phải gặm một miếng.", "emote": "😎", "emoteWho": "thuy"}]}, {"text": "Vệt lấp lánh bạc", "echo": false, "again": true, "reply": [{"who": "ke", "text": "Vừa lấp lánh ánh bạc, vừa chậm ơi là chậm: đó là bạn Ốc Sên. Sâu Tím có bò chậm thật, nhưng không để lại vệt bạc đâu."}]}]},
+        { "who": "ke", "text": "Vệt bò ngoằn ngoèo dẫn ra tận cuối vườn, rồi mất hút dưới một đám lá dày đặc." },
+        { "who": "ke", "text": "Lá chồng lên lá, xanh chồng lên xanh. Nhìn từ trên xuống, chẳng thấy gì ngoài lá." },
+        { "who": "thuy", "text": "Được. Vạch thì vạch.", "emote": "🔍" },
+        { "scene": "hoanghon" },
+        { "who": "ke", "text": "Ở đâu đó dưới đám lá kia, có một con sâu đang nín cười." },
+        { "who": "none", "text": "📁 Hồ sơ đã mở: VỤ ÁN VẠCH LÁ TÌM SÂU" }
       ]
     }
   ]
