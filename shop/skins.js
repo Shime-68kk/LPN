@@ -1909,6 +1909,8 @@
   // bounce (nhún), squish (bẹp má khi được vuốt), look (liếc), lean (nghiêng), hearts/notes, then (phản ứng kế tiếp).
   // Nàng Thơ (Lệ Thủy): nhẹ nhàng, đôi lúc cá tính, thích tự do, hay nũng nịu.
   // Vi Mạch (anh Quang): thương em, hơi cáu khi đang làm việc, nhưng trước mặt em thì như trẻ con.
+  // Tạm tắt cho đến khi lời thoại được sửa xong; bật lại bằng PET_ON = true.
+  const PET_ON = false;
   const PERSONA = {
     tho: {
       bubble: { bg: '#FFF8F0', ink: '#7A3B52', line: '#FFB7C9' },
@@ -1964,7 +1966,7 @@
   // Bộ điều khiển một bé sâu có tính cách. Trang gọi pointer(...) với toạ độ so với tâm đầu,
   // update(dt) mỗi khung hình, face() để lấy nét mặt, apply(x, r) trước khi vẽ đầu, drawFx(x, r, S) sau đó.
   function makePet(item, who) {
-    const P = item && PERSONA[item.persona];
+    const P = PET_ON && item && PERSONA[item.persona];
     if (!P) return null;
     who = who || WHO;
     const line = (list) => {
