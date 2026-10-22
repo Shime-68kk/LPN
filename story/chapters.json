@@ -393,8 +393,6 @@
       "title": "Mất một bé sâu, thêm một thám tử",
       "cost": 0,
       "anyOrder": true,
-      "releaseAt": "2026-10-23T20:00:00+07:00",
-      "early": { "quang": "2026-10-22T00:00:00+07:00" },
       "scene": "nang",
       "cast": ["thuy"],
       "case": { "id": "vlts", "page": "case.html", "title": "Vạch Lá Tìm Sâu", "steps": 4 },
