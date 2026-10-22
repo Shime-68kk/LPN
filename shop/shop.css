@@ -614,3 +614,136 @@ body.night .item .i-state.on { color: #CDB8F0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ===== Bậc Định mệnh (trên Huyền thoại, độc quyền) ===== */
+.rarity.destiny {
+  padding: 2px 9px 2px 7px; border-radius: 999px;
+  color: #FFFFFF !important; text-shadow: 0 1px 2px rgba(60, 10, 50, .35);
+  background: linear-gradient(100deg, #FF5FA2, #A86BFF 40%, #34D6C2 75%, #FF5FA2);
+  background-size: 260% 100%;
+  animation: destiny-shine 3.2s linear infinite;
+}
+.rarity.destiny::before { background: #FFFFFF; box-shadow: 0 0 6px #FFFFFF; }
+@keyframes destiny-shine { to { background-position: -260% 0; } }
+
+/* nhấp nháy viền món Định mệnh trong lưới và trong bộ */
+.item:has(.rarity.destiny) { box-shadow: 0 0 0 2px rgba(224, 64, 138, .35); }
+.set-item.r-dinhmenh.have { border-color: transparent; background: linear-gradient(var(--bg), var(--bg)) padding-box, linear-gradient(120deg, #FF5FA2, #A86BFF, #34D6C2) border-box; }
+
+/* hộp trong cửa sổ mở nhiều hộp */
+.pack.theme-destiny { background: radial-gradient(120% 80% at 50% 32%, #6B2D7A 0%, #2D1A5A 45%, #0C1F2E 100%); }
+.pack.theme-destiny::after {
+  content: ''; position: fixed; left: 0; right: 0; bottom: 0; height: 6px;
+  background: linear-gradient(90deg, #FF5FA2, #A86BFF, #34D6C2, #FF5FA2); background-size: 200% 100%; animation: destiny-shine 3s linear infinite;
+}
+.theme-destiny .pbox { --gb-box: #8A3FC0; --gb-top: #A956D6; --gb-ribbon: #FFE9A8; --gb-bow: #5FFFE0; }
+.pbox.tell.r-dinhmenh { --gb-box: #E0408A; --gb-top: #FF6FAE; --gb-ribbon: #5FFFE0; --gb-bow: #FFFFFF; }
+.pbox.tell.r-dinhmenh .pb-glow { animation-duration: 2.2s; background: radial-gradient(circle, #FF8FC0 0%, #A86BFF 35%, transparent 64%); }
+.pbox.tell.r-dinhmenh .pb-rays {
+  background: repeating-conic-gradient(from 0deg, rgba(255, 111, 174, .7) 0deg 6deg, rgba(95, 255, 224, .55) 6deg 12deg, transparent 12deg 22deg);
+  animation: rays-in 2.2s ease-in forwards, spin-c 2.2s linear infinite;
+}
+.pbox.open.r-dinhmenh { animation: destiny-glow 1.2s ease-in-out infinite alternate; }
+@keyframes destiny-glow {
+  from { box-shadow: inset 0 0 0 2px #FF6FAE, 0 0 16px #FF6FAE; }
+  to { box-shadow: inset 0 0 0 2px #5FFFE0, 0 0 34px #A86BFF; }
+}
+
+/* loé cực quang */
+.flash.fl-destiny {
+  background: radial-gradient(circle at 50% 45%, #FFFFFF 0%, #FFB3DA 22%, #C9A2FF 42%, rgba(95, 255, 224, .7) 62%, transparent 85%);
+  animation: flash-destiny 1.6s ease-out;
+}
+@keyframes flash-destiny { 0% { opacity: 0; } 8% { opacity: 1; } 22% { opacity: .55; } 32% { opacity: 1; } 100% { opacity: 0; } }
+
+/* thẻ món vừa nhận */
+.reveal-card.destiny {
+  box-shadow: 0 0 0 3px #FF6FAE, 0 0 80px #FF6FAE, 0 0 160px rgba(95, 255, 224, .45);
+  animation: card-in .6s cubic-bezier(.2, 1.4, .4, 1), destiny-pulse 2.4s ease-in-out .6s infinite;
+}
+.reveal-card.destiny .rays {
+  opacity: .1; animation-duration: 9s;
+  background: repeating-conic-gradient(from 0deg, #FF6FAE 0deg 7deg, transparent 7deg 15deg, #5FFFE0 15deg 22deg, transparent 22deg 30deg);
+}
+.reveal-card.destiny h2 { background: linear-gradient(100deg, #E0408A, #8A4FE0 50%, #1FA894); -webkit-background-clip: text; background-clip: text; color: transparent; }
+@keyframes destiny-pulse {
+  33% { box-shadow: 0 0 0 4px #A86BFF, 0 0 100px #A86BFF, 0 0 180px rgba(255, 111, 174, .5); }
+  66% { box-shadow: 0 0 0 4px #5FFFE0, 0 0 100px #34D6C2, 0 0 180px rgba(168, 107, 255, .5); }
+}
+
+/* ===== Sự kiện Định Mệnh: băng rôn, hộp, hai bộ, quà trọn bộ ===== */
+.ev-destiny { background: #2A1650; }
+.ev-destiny .ev-kicker { background: linear-gradient(100deg, #FF5FA2, #A86BFF 50%, #34D6C2); color: #FFFFFF; text-shadow: 0 1px 2px rgba(60, 10, 50, .3); }
+.ev-destiny .ev-text { max-width: 70%; }
+.destiny-strip { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: linear-gradient(90deg, #FF5FA2, #A86BFF, #34D6C2, #FF5FA2); background-size: 200% 100%; animation: destiny-shine 3s linear infinite; }
+.dm-waves { animation: dm-wave 1.8s ease-in-out infinite; transform-origin: 336px 88px; }
+@keyframes dm-wave { 50% { opacity: .45; transform: scale(1.08); } }
+
+.evb { display: flex; flex-direction: column; gap: 14px; }
+.evb-box {
+  position: relative; align-self: center; width: min(62vw, 230px); aspect-ratio: 170 / 160;
+  border: 0; padding: 0; background: none;
+}
+.evb-box svg { position: relative; width: 100%; height: 100%; overflow: visible; stroke: none; }
+.evb-halo {
+  position: absolute; inset: -18%; border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(255, 95, 162, .45), rgba(168, 107, 255, .45), rgba(52, 214, 194, .45), rgba(255, 95, 162, .45));
+  filter: blur(18px); animation: spin 8s linear infinite;
+}
+.evb-box:not(:disabled) .evb-body, .evb-box:not(:disabled) .evb-lid { animation: evb-bob 2.6s ease-in-out infinite; }
+.evb-box:not(:disabled) .evb-lid { animation-name: evb-lid; }
+.evb-spark { animation: twinkle-s 1.6s ease-in-out infinite; }
+@keyframes evb-bob { 50% { transform: translateY(-3px); } }
+@keyframes evb-lid { 50% { transform: translateY(-6px) rotate(-1.5deg); } }
+@keyframes twinkle-s { 50% { opacity: .3; } }
+.evb-box:active svg { transform: scale(.96); }
+.evb.done .evb-box { filter: saturate(.7); }
+.evb.done .spin-btns { display: none; }
+.evb-done { margin: 0; padding: 10px 14px; border-radius: 16px; text-align: center; font-weight: 700; color: #FFFFFF; background: linear-gradient(100deg, #E0408A, #8A4FE0 50%, #1FA894); }
+.pity-bar.destiny i { background: linear-gradient(90deg, #FF5FA2, #A86BFF, #34D6C2); }
+
+.set.destiny-set { position: relative; overflow: hidden; }
+.set.destiny-set::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+.set-nang-tho::before { background: linear-gradient(#FFB7C9, #D9B26A); }
+.set-vi-mach::before { background: linear-gradient(#5FFFE0, #E8B84A); }
+.set.destiny-set.full { border-color: transparent; background: linear-gradient(var(--surface), var(--surface)) padding-box, linear-gradient(120deg, #FF5FA2, #A86BFF, #34D6C2) border-box; box-shadow: 0 0 18px rgba(168, 107, 255, .25); }
+.set-name { display: flex; flex-direction: column; gap: 1px; }
+.set-name small { font-size: 12px; font-weight: 600; color: var(--muted); }
+.set-item { position: relative; }
+.set-gift {
+  position: absolute; top: 4px; right: 4px; padding: 1px 6px; border-radius: 999px;
+  font-size: 10px; font-style: normal; font-weight: 800; color: #FFFFFF; background: #E0408A;
+}
+.destiny-bonus { flex-direction: row; align-items: center; gap: 12px; cursor: pointer; }
+.destiny-bonus .bonus-art { flex: none; width: 96px; height: 72px; border-radius: 12px; }
+.destiny-bonus:not(.full) .bonus-art { filter: grayscale(.7) brightness(.8); }
+.bonus-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.bonus-text b { font-size: 15px; }
+.bonus-text small { font-size: 12px; color: var(--muted); }
+.bonus-bar { display: block; height: 6px; border-radius: 6px; background: var(--line); overflow: hidden; }
+.bonus-bar i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, #FF5FA2, #A86BFF, #34D6C2); }
+.destiny-bonus.full { border-color: transparent; background: linear-gradient(var(--surface), var(--surface)) padding-box, linear-gradient(120deg, #FF5FA2, #A86BFF, #34D6C2) border-box; }
+.ev-chip.ev-dinh-menh[aria-pressed="true"] { background: linear-gradient(135deg, #7B3FBF, #E0408A 55%, #1F8C8A); box-shadow: inset 0 0 0 2px #FFB3DA; color: #FFFFFF; }
+
+.splash-card.ev-dinh-menh {
+  background: linear-gradient(160deg, #2A1650, #6B2D7A 45%, #E0408A 75%, #1F8C8A);
+  box-shadow: 0 0 0 3px #FF8FC0, 0 0 60px rgba(168, 107, 255, .55), 0 20px 60px rgba(0, 0, 0, .45);
+}
+.splash-card.ev-dinh-menh .ev-kicker { background: #FFFFFF; color: #8A2A6A; }
+.splash-card.ev-dinh-menh::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: linear-gradient(90deg, #FF5FA2, #A86BFF, #34D6C2, #FF5FA2); background-size: 200% 100%; animation: destiny-shine 3s linear infinite; }
+
+/* ===== Hoạt cảnh khi mặc skin Định mệnh ===== */
+.cut { position: fixed; inset: 0; z-index: 42; animation: fade .35s ease-out; cursor: pointer; }
+.cut-art { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cut-cap {
+  position: absolute; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
+  display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; pointer-events: none;
+}
+.cut-cap b { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 600; }
+.cut-poem .cut-cap b { color: #7A3B52; }
+.cut-signal .cut-cap b { color: #E6FFF9; }
+.cut-tap { font-size: 12px; font-weight: 600; opacity: 0; transition: opacity .4s; }
+.cut-tap.on { opacity: .7; }
+.cut-poem .cut-tap { color: #7A5A4A; }
+.cut-signal .cut-tap { color: #9FF5E4; }
+@media (prefers-reduced-motion: reduce) { .evb-halo, .rarity.destiny { animation: none; } }

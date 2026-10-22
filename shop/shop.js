@@ -7,8 +7,10 @@
   const PITY_EPIC = 10;   // tối đa 10 hộp là có Sử thi trở lên
   const PITY_LEGEND = 40; // tối đa 40 hộp là có Huyền thoại
   const MAX_QTY = 20;     // mở nhiều nhất 20 hộp một lần
-  const RARITY_ORDER = ['thuong', 'hiem', 'suthi', 'huyenthoai'];
-  const BIG = (r) => r === 'suthi' || r === 'huyenthoai';
+  const RARITY_ORDER = ['thuong', 'hiem', 'suthi', 'huyenthoai']; // các bậc có trong Hộp quà thường
+  const RANK = ['thuong', 'hiem', 'suthi', 'huyenthoai', 'dinhmenh']; // xếp hạng, gồm cả bậc độc quyền
+  const TOP = (r) => r === 'huyenthoai' || r === 'dinhmenh';
+  const BIG = (r) => r === 'suthi' || TOP(r);
   const SLOT_NAME = { skin: 'Skin', fx: 'Hiệu ứng', wing: 'Cánh bướm', bg: 'Nền' };
   const HINT = {
     skin: 'Chạm để thử lên bé sâu. Skin chỉ để đẹp, không đổi cách chơi hay điểm.',
@@ -72,7 +74,7 @@
     buy() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.25, 0.14, i * 0.07, 'triangle')); },
     shake(n) { for (let i = 0; i < Math.round(6 * (n || 1)); i++) tone(180 + (i % 6) * 25 + i * 8, 0.08, 0.06, i * 0.14, 'triangle'); },
     reveal(r) {
-      const steps = { thuong: [523, 659, 784], hiem: [523, 659, 784, 988], suthi: [523, 659, 784, 988, 1175], huyenthoai: [523, 659, 784, 1047, 1319, 1568] }[r];
+      const steps = { thuong: [523, 659, 784], hiem: [523, 659, 784, 988], suthi: [523, 659, 784, 988, 1175], huyenthoai: [523, 659, 784, 1047, 1319, 1568], dinhmenh: [440, 554, 659, 880, 1109, 1319, 1760] }[r];
       steps.forEach((f, i) => tone(f, 0.4, 0.15, i * 0.08, 'triangle'));
       if (BIG(r)) steps.forEach((f, i) => tone(f * 2, 0.5, 0.05, 0.3 + i * 0.06));
     },
@@ -82,8 +84,8 @@
     pop(i) { const f = 520 * Math.pow(2, Math.min(i, 20) / 24); tone(f, 0.12, 0.1, 0, 'triangle'); tone(f * 2, 0.09, 0.035, 0.02); },
     // hộp hiếm rung lên: tiếng ngân dồn dập dần
     charge(r) {
-      const legend = r === 'huyenthoai';
-      const n = legend ? 16 : 9, span = legend ? 1.35 : 0.65;
+      const legend = TOP(r);
+      const n = r === 'dinhmenh' ? 24 : legend ? 16 : 9, span = r === 'dinhmenh' ? 2.05 : legend ? 1.35 : 0.65;
       for (let i = 0; i < n; i++) tone(330 * Math.pow(2, i / (legend ? 8 : 6)), 0.14, 0.035 + i * 0.004, (i / n) * span, 'triangle');
     },
     epic() { [659, 831, 988, 1319].forEach((f, i) => tone(f, 0.55, 0.13, i * 0.06, 'triangle')); tone(1976, 0.9, 0.04, 0.28); },
@@ -91,6 +93,21 @@
       [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.35, 0.14, i * 0.09, 'triangle'));
       [1047, 1319, 1568, 2093].forEach((f) => tone(f, 1.4, 0.06, 0.4, 'triangle'));
       for (let i = 0; i < 8; i++) tone(2093 + i * 180, 0.18, 0.025, 0.55 + i * 0.07);
+    },
+    // Định mệnh: hợp âm la trưởng ngân dài, lấp lánh như chuông gió rồi một nốt tim cao.
+    destiny() {
+      [440, 554, 659, 880].forEach((f, i) => tone(f, 0.5, 0.13, i * 0.1, 'triangle'));
+      [880, 1109, 1319, 1760].forEach((f) => tone(f, 1.8, 0.05, 0.45, 'triangle'));
+      for (let i = 0; i < 12; i++) tone(1760 + ((i * 7) % 12) * 120, 0.2, 0.025, 0.6 + i * 0.065);
+      tone(2637, 1.2, 0.04, 1.3);
+    },
+    // hoạt cảnh Nàng Thơ: tiếng đàn tranh ngũ cung nhẹ
+    poem() { [587, 659, 784, 880, 1047, 880, 784, 1175].forEach((f, i) => tone(f, 0.9, 0.07, 0.2 + i * 0.32, 'sine')); },
+    // hoạt cảnh Vi Mạch: tiếng dò sóng lách tách rồi chuông kết nối
+    signal() {
+      for (let i = 0; i < 10; i++) tone(700 + ((i * 37) % 9) * 140, 0.05, 0.03, 0.15 + i * 0.09, 'square');
+      [784, 1175, 1568].forEach((f, i) => tone(f, 0.45, 0.1, 1.6 + i * 0.09, 'triangle'));
+      tone(2093, 0.9, 0.05, 2.45);
     },
     tick() { tone(1500, 0.03, 0.045, 0, 'triangle'); },
     land() { tone(784, 0.3, 0.12, 0, 'triangle'); tone(1175, 0.4, 0.08, 0.05); },
@@ -135,16 +152,17 @@
     hiem: ['#7FB5F5', '#FFFFFF', '#4C8DE0'],
     suthi: ['#C9A0FF', '#9B5DE5', '#FFFFFF', '#E7D4FF'],
     huyenthoai: ['#FFE27A', '#FFC24B', '#FFFFFF', '#FF8FA3', '#FFB347'],
+    dinhmenh: ['#FF6FAE', '#B983FF', '#5FFFE0', '#FFFFFF', '#FFE27A', '#FF9FD0'],
   };
   // Bung hạt sáng từ (cx, cy) theo độ hiếm: Sử thi tím, Huyền thoại vàng và nhiều hơn hẳn.
   function fxBurst(cx, cy, rar, power) {
     const p = power || 1;
     const cols = RCOL[rar];
-    const big = BIG(rar), legend = rar === 'huyenthoai';
-    const n = Math.round({ thuong: 8, hiem: 12, suthi: 46, huyenthoai: 100 }[rar] * p);
+    const big = BIG(rar), legend = TOP(rar), destiny = rar === 'dinhmenh';
+    const n = Math.round({ thuong: 8, hiem: 12, suthi: 46, huyenthoai: 100, dinhmenh: 150 }[rar] * p);
     for (let i = 0; i < n; i++) {
       const a = Math.random() * TAU;
-      const sp = (big ? 140 + Math.random() * (legend ? 480 : 320) : 70 + Math.random() * 180) * Math.sqrt(p);
+      const sp = (big ? 140 + Math.random() * (destiny ? 560 : legend ? 480 : 320) : 70 + Math.random() * 180) * Math.sqrt(p);
       const kind = legend ? [6, 8, 2, 1][i % 4] : rar === 'suthi' ? [6, 2, 2][i % 3] : 2;
       const life = (big ? 0.9 : 0.5) + Math.random() * (big ? 0.9 : 0.35);
       fxParts.push({
@@ -153,7 +171,7 @@
         color: cols[i % cols.length], rot: Math.random() * 6, vr: (Math.random() - 0.5) * 12, s: 1,
       });
     }
-    const rings = { thuong: 0, hiem: 1, suthi: 2, huyenthoai: 3 }[rar];
+    const rings = { thuong: 0, hiem: 1, suthi: 2, huyenthoai: 3, dinhmenh: 4 }[rar];
     for (let i = 0; i < rings; i++) {
       const life = 0.5 + i * 0.18;
       fxParts.push({ kind: 3, x: cx, y: cy, vx: 0, vy: 0, life, max: life, size: 12 + i * 8, color: cols[i % 2], rot: 0, vr: 0, s: big ? 2.6 + i : 1.4 });
@@ -204,8 +222,8 @@
     const el = $('flash');
     el.className = 'flash';
     void el.offsetWidth;
-    el.style.setProperty('--flash', rar === 'huyenthoai' ? '#FFD86B' : rar === 'suthi' ? '#B57CFF' : '#FFFFFF');
-    el.classList.add(rar === 'huyenthoai' ? 'fl-big' : 'fl-on');
+    el.style.setProperty('--flash', rar === 'dinhmenh' ? '#FFB3DA' : rar === 'huyenthoai' ? '#FFD86B' : rar === 'suthi' ? '#B57CFF' : '#FFFFFF');
+    el.classList.add(rar === 'dinhmenh' ? 'fl-destiny' : rar === 'huyenthoai' ? 'fl-big' : 'fl-on');
   }
 
   // ================= Sân khấu (canvas) =================
@@ -338,14 +356,15 @@
   }
   function rarityTag(el, item) {
     const r = Skins.RARITY[item.rarity];
-    el.textContent = r.name;
+    el.classList.toggle('destiny', item.rarity === 'dinhmenh');
+    el.textContent = item.rarity === 'dinhmenh' ? r.name + ' · Độc quyền' : r.name;
     el.style.setProperty('--r', r.color);
   }
   // Đang dùng lên đầu, rồi đến đồ đã có, cuối cùng là đồ chưa có (rẻ trước, hiếm sau).
   const rank = (item, w) => (w.equip[item.slot] === item.id ? 0 : Wallet.owns(item.slot, item.id, w) ? 1 : 2);
   const sortItems = (list, w) => list.slice().sort((a, b) =>
     rank(a, w) - rank(b, w) || (b.free ? 1 : 0) - (a.free ? 1 : 0)
-    || RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || a.price - b.price);
+    || RANK.indexOf(a.rarity) - RANK.indexOf(b.rarity) || a.price - b.price);
 
   function stateOf(item, w) {
     const owned = Wallet.owns(item.slot, item.id, w);
@@ -387,7 +406,7 @@
       const state = document.createElement('span');
       const evOnly = !st.owned && exclusive(item);
       state.className = 'i-state' + (st.on ? ' on' : st.owned ? '' : evOnly ? ' ev' : ' price');
-      state.textContent = st.on ? 'Đang dùng' : st.owned ? 'Đã có' : evOnly ? 'Vòng quay' : fmt(item.price) + ' đốt';
+      state.textContent = st.on ? 'Đang dùng' : st.owned ? 'Đã có' : evOnly ? evWhere(item) : fmt(item.price) + ' đốt';
       foot.append(rar, state);
       b.append(c, name, foot);
       if (item.ev && exclusive(item)) {
@@ -412,7 +431,7 @@
     rarityTag($('sheet-rarity'), item);
     $('sheet-memory').textContent = item.memory || '';
     const ev = item.ev && exclusive(item) ? Skins.eventById(item.ev) : null;
-    $('sheet-ch').textContent = (ev ? 'Sự kiện ' + ev.name + ' · ' : '') + (item.reward ? 'Phần thưởng phá án · ' : '') + (item.ch ? 'Kỷ niệm ở chương ' + item.ch + ' · ' : '') + SLOT_NAME[item.slot];
+    $('sheet-ch').textContent = (ev ? 'Sự kiện ' + ev.name + ' · ' : '') + (item.who ? 'Bộ của ' + (item.who === 'thuy' ? 'em' : 'anh') + ' · ' : '') + (item.reward ? 'Phần thưởng phá án · ' : '') + (item.ch ? 'Kỷ niệm ở chương ' + item.ch + ' · ' : '') + SLOT_NAME[item.slot];
     updateSheetAction();
     $('sheet').hidden = false;
     $('sheet-backdrop').hidden = false;
@@ -434,7 +453,8 @@
     btn.disabled = false;
     if (st.on) { btn.textContent = 'Đang dùng'; btn.disabled = true; }
     else if (st.owned) btn.textContent = 'Dùng ' + item.name;
-    else if (exclusive(item)) btn.textContent = 'Chỉ có ở Vòng quay ' + Skins.eventById(item.ev).short + ' · Đến quay';
+    else if (item.bonus) btn.textContent = 'Sưu tập đủ 6 món Định Mệnh để nhận';
+    else if (exclusive(item)) btn.textContent = isBoxEv(Skins.eventById(item.ev)) ? 'Chỉ có ở Hộp ' + Skins.eventById(item.ev).short + ' · Đến mở' : 'Chỉ có ở Vòng quay ' + Skins.eventById(item.ev).short + ' · Đến quay';
     else if (w.dot >= item.price) btn.textContent = UI.confirmBuy > Date.now() ? 'Bấm lần nữa để mua · ' + fmt(item.price) + ' đốt' : 'Mua · ' + fmt(item.price) + ' đốt';
     else btn.textContent = 'Còn thiếu ' + fmt(item.price - w.dot) + ' đốt · Chơi Sâu Tím';
   }
@@ -447,11 +467,12 @@
     if (st.owned) {
       Wallet.equip(item.slot, item.id);
       SFX.click();
-      toast('Đã dùng ' + item.name);
       closeSheet();
       renderAll();
+      if (!playCut(item)) toast('Đã dùng ' + item.name);
       return;
     }
+    if (item.bonus) { SFX.no(); return; }
     if (exclusive(item)) { closeSheet(); switchTab('ev'); selectEvent(item.ev); scrollToPanel(); return; }
     if (w.dot < item.price) { SFX.no(); location.href = '../game/'; return; }
     // Bấm hai lần mới mua, tránh lỡ tay.
@@ -663,7 +684,7 @@
     + '<g class="gb-lid"><rect x="18" y="46" width="124" height="24" rx="10" class="gb-box gb-top" /><rect x="72" y="46" width="16" height="24" class="gb-ribbon" />'
     + '<path d="M80 46c-8-20-34-26-34-10c0 10 18 10 34 10M80 46c8-20 34-26 34-10c0 10-18 10-34 10" class="gb-bow" /></g></svg>';
   const PK = { on: false, res: [], cells: [], opened: [], done: [], auto: false, waiting: false, busy: 0, timer: 0, opts: null };
-  const resRank = (r) => (r.item ? RARITY_ORDER.indexOf(r.rar) * 2 + (r.dup ? 0 : 1) : -1);
+  const resRank = (r) => (r.item ? RANK.indexOf(r.rar) * 2 + (r.dup ? 0 : 1) : -1);
 
   function openPack(results, opts) {
     Object.assign(PK, { on: true, res: results, opts, opened: results.map(() => false), done: results.map(() => false), auto: false, waiting: false, busy: 0 });
@@ -718,13 +739,13 @@
     const res = PK.res[i], cell = PK.cells[i];
     if (quick || !BIG(res.rar)) { revealCell(i, quick); return quick ? 0 : 190; }
     // Hộp hiếm: đổi màu, toả sáng, rung mạnh dần rồi mới bung.
-    const legend = res.rar === 'huyenthoai';
+    const legend = TOP(res.rar), destiny = res.rar === 'dinhmenh';
     cell.classList.add('tell');
     SFX.charge(res.rar);
     buzz(legend ? [20, 60, 20, 60, 20] : 40);
     if (legend) { $('pack').classList.add('dim'); cell.classList.add('focus'); }
     PK.busy++;
-    const wait = legend ? 1500 : 760;
+    const wait = destiny ? 2200 : legend ? 1500 : 760;
     setTimeout(() => {
       PK.busy--;
       if (!PK.on) return;
@@ -761,7 +782,8 @@
       const [cx, cy] = centerOf(cell);
       if (res.dot) fxLeaves(cx, cy, 10);
       fxBurst(cx, cy, res.rar, BIG(res.rar) ? 1 : 0.8);
-      if (res.rar === 'huyenthoai') { SFX.legend(); flash('huyenthoai'); buzz([30, 40, 80]); }
+      if (res.rar === 'dinhmenh') { SFX.destiny(); flash('dinhmenh'); buzz([40, 50, 40, 50, 120]); }
+      else if (res.rar === 'huyenthoai') { SFX.legend(); flash('huyenthoai'); buzz([30, 40, 80]); }
       else if (res.rar === 'suthi') { SFX.epic(); flash('suthi'); buzz(40); }
       else SFX.pop(PK.done.filter(Boolean).length);
     }
@@ -814,7 +836,7 @@
       const [cx, cy] = centerOf($('pack-grid'));
       fxBurst(cx, cy, best.rar, BIG(best.rar) ? 1 : 1.5);
       if (BIG(best.rar)) flash(best.rar);
-      if (best.rar === 'huyenthoai') { SFX.legend(); setTimeout(() => { if (PK.on) spotlight(best); }, 600); }
+      if (TOP(best.rar)) { if (best.rar === 'dinhmenh') SFX.destiny(); else SFX.legend(); setTimeout(() => { if (PK.on) spotlight(best); }, 600); }
       else if (best.rar === 'suthi') { SFX.epic(); bannerFor(best); }
       else SFX.pop(12);
     }
@@ -867,6 +889,7 @@
     $('pack').hidden = true;
     $('pack').classList.remove('dim');
     renderAll();
+    if (PK.opts && PK.opts.after) PK.opts.after();
   }
 
   // ================= Thẻ món vừa nhận =================
@@ -879,6 +902,7 @@
     card.style.setProperty('--r', r.color);
     card.classList.toggle('epic', item.rarity === 'suthi');
     card.classList.toggle('legend', item.rarity === 'huyenthoai');
+    card.classList.toggle('destiny', item.rarity === 'dinhmenh');
     rarityTag($('reveal-rarity'), item);
     $('reveal-name').textContent = item.name;
     $('reveal-memory').textContent = item.memory || '';
@@ -889,6 +913,7 @@
     const again = $('reveal-again');
     if (ctx === 'single') { again.textContent = 'Mở tiếp · ' + BOX_PRICE + ' đốt'; again.hidden = w.dot < BOX_PRICE; }
     else if (ctx === 'wheel' && EV) { again.textContent = 'Quay tiếp · ' + fmt(EV.price) + ' đốt'; again.hidden = w.dot < EV.price; }
+    else if (ctx === 'gift') { again.textContent = 'Đến Hộp ' + (EV ? EV.short : 'sự kiện'); again.hidden = false; }
     else again.hidden = true;
     $('reveal-close').textContent = ctx === 'pack' ? 'Tiếp tục' : 'Đóng';
     $('reveal').hidden = false;
@@ -898,7 +923,7 @@
     card.style.animation = '';
     if (!quiet || PK.waiting) {
       if (!quiet) SFX.reveal(item.rarity);
-      buzz(item.rarity === 'huyenthoai' ? [30, 40, 60] : 25);
+      buzz(TOP(item.rarity) ? [30, 40, 60] : 25);
       requestAnimationFrame(() => { const [cx, cy] = centerOf($('reveal-art')); fxConfetti(cx, cy, item.rarity); });
     }
   }
@@ -906,6 +931,9 @@
     $('reveal').hidden = true;
     const ctx = UI.revealCtx;
     UI.reveal = null;
+    const after = UI.afterReveal;
+    UI.afterReveal = null;
+    if (after) after();
     if (ctx === 'pack' && PK.waiting) {
       PK.waiting = false;
       if (PK.auto) PK.timer = setTimeout(packStep, 250);
@@ -927,7 +955,11 @@
     } catch (e) { /* bỏ qua */ }
     $('ev-ping').hidden = !EV_LIST.some((e) => isLive(e) && !seenEv(e));
   }
-  const evItems = (ev) => { ev = ev || EV; return ev ? ev.wheel.filter((s) => s.item).map((s) => Skins.byKey(s.item)) : []; };
+  const isBoxEv = (e) => !!e && e.kind === 'box';
+  const evAllKeys = (ev) => ev.sets.flatMap((s) => s.items);
+  const evItems = (ev) => { ev = ev || EV; return !ev ? [] : isBoxEv(ev) ? evAllKeys(ev).map(Skins.byKey) : ev.wheel.filter((s) => s.item).map((s) => Skins.byKey(s.item)); };
+  // Món độc quyền đang chỉ có ở sự kiện: ghi rõ ở đâu mới có.
+  const evWhere = (item) => (item.bonus ? 'Quà trọn bộ' : isBoxEv(Skins.eventById(item.ev)) ? 'Hộp sự kiện' : 'Vòng quay');
   const evLegend = (ev) => evItems(ev).find((i) => i.rarity === 'huyenthoai') || null;
   const evState = (w, ev) => { ev = ev || EV; return (ev && w.ev[ev.id]) || { spins: 0, pity: 0 }; };
   const owns = (key, w) => { const it = Skins.byKey(key); return Wallet.owns(it.slot, it.id, w); };
@@ -1244,6 +1276,7 @@
     const now = Date.now();
     if (now < Skins.startOf(ev)) return 'Mở sau ' + leftText(ev.start - now).trim() + ' · ngày ' + dayText(ev.start);
     if (Skins.isPreview(ev)) return 'Thử trước · em mở ngày ' + dayText(ev.start);
+    if (ev.forever) return boxLeft(ev, meWho(), Wallet.get()) ? 'Mở mãi, tới khi sưu tập trọn bộ' : 'Đã sưu tập trọn bộ ✓';
     if (now >= ev.end) return 'Đã kết thúc';
     const d = Math.floor((ev.end - now) / 864e5);
     return 'Còn ' + (d >= 1 ? d + ' ngày' : leftText(ev.end - now).trim()) + ' · đến hết ' + dayText(ev.end - 1);
@@ -1286,19 +1319,22 @@
       const name = document.createElement('b');
       name.textContent = e.short;
       const sub = document.createElement('small');
-      sub.textContent = Skins.isPreview(e) ? 'Chơi thử trước' : isLive(e) ? 'Đang diễn ra' : 'Mở ' + dayText(e.start);
+      sub.textContent = Skins.isPreview(e) ? 'Chơi thử trước' : e.forever ? 'Độc quyền' : isLive(e) ? 'Đang diễn ra' : 'Mở ' + dayText(e.start);
       b.append(name, sub);
       b.addEventListener('click', () => { SFX.click(); selectEvent(e.id); });
       sw.appendChild(b);
     }
     document.querySelectorAll('.ev-banner').forEach((el) => { el.hidden = el.dataset.ev !== EV.id; });
     const banner = document.querySelector('.ev-banner[data-ev="' + EV.id + '"]');
-    banner.querySelector('.ev-kicker').textContent = Skins.isPreview(EV) ? 'Chơi thử trước' : live ? 'Sự kiện giới hạn' : 'Sắp diễn ra';
+    banner.querySelector('.ev-kicker').textContent = Skins.isPreview(EV) ? 'Chơi thử trước' : EV.forever ? 'Độc quyền · Định mệnh' : live ? 'Sự kiện giới hạn' : 'Sắp diễn ra';
     banner.querySelector('h2').textContent = EV.name;
     banner.querySelector('.ev-tagline').textContent = live ? EV.tagline : EV.teaser || EV.tagline;
     banner.querySelector('.ev-time').textContent = evTimeText();
-    $('ev-live').hidden = !live;
+    const boxEv = isBoxEv(EV);
+    $('ev-live').hidden = !live || boxEv;
+    $('evb').hidden = !live || !boxEv;
     $('ev-odds').hidden = !live;
+    if (boxEv) { renderBoxEvent(Wallet.get()); return; }
     $('wheel-wrap').classList.toggle('spooky', EV.style === 'spooky');
     if (live) {
       const st = evState(w);
@@ -1376,14 +1412,7 @@
         if (got === items.length) {
           act.textContent = wearing ? 'Đang mặc cả bộ' : 'Mặc cả bộ';
           act.disabled = wearing;
-          act.addEventListener('click', () => {
-            Wallet.update((v) => { for (const it of items) v.equip[it.slot] = it.id; });
-            SFX.buy();
-            toast('Đã mặc ' + set.name + ' ✨');
-            celebrate(items[0]);
-            renderAll();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          });
+          act.addEventListener('click', () => wearSet(set, items));
         } else {
           act.textContent = 'Đủ bộ thì mặc cả bộ một chạm';
           act.disabled = true;
@@ -1419,6 +1448,496 @@
     requestAnimationFrame(() => document.querySelector('.tabs').scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }
 
+  // Mặc cả bộ một chạm; bộ có skin Định mệnh thì chạy luôn hoạt cảnh của skin đó.
+  function wearSet(set, items) {
+    Wallet.update((v) => { for (const it of items) v.equip[it.slot] = it.id; });
+    SFX.buy();
+    celebrate(items[0]);
+    renderAll();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const skin = items.find((i) => i.slot === 'skin');
+    if (!(skin && playCut(skin))) toast('Đã mặc ' + set.name + ' ✨');
+  }
+
+  // ================= Sự kiện mở hộp: Định Mệnh =================
+  // Máy nào được tặng skin "của mình"; skin của người kia, hiệu ứng và cánh của cả hai bộ phải mở hộp.
+  const meWho = () => (window.Sync && window.Sync.who) || null;
+  const partnerSkinKey = (ev, who) => ev.sets.find((s) => s.who !== (who || 'thuy')).items[0];
+  const boxKeys = (ev, who) => evAllKeys(ev).filter((k) => k !== ev.gift[who || 'thuy']);
+  // Số món còn phải mở hộp mới có (0 = đã đủ, sự kiện khép lại trên máy này).
+  const boxLeft = (ev, who, w) => (isBoxEv(ev) ? boxKeys(ev, who).filter((k) => !owns(k, w)).length : 1);
+  // Bảng tỉ lệ hiện tại: món đã có bỏ ra, phần còn lại tự chia lại.
+  function boxOdds(ev, who, w) {
+    const out = [];
+    const pk = partnerSkinKey(ev, who);
+    for (const k of boxKeys(ev, who)) {
+      if (owns(k, w)) continue;
+      const it = Skins.byKey(k);
+      out.push({ item: k, w: k === pk ? ev.odds.partnerSkin : it.slot === 'wing' ? ev.odds.wing : ev.odds.fx });
+    }
+    for (const d of ev.odds.dot) out.push({ dot: d.dot, w: d.w });
+    return out;
+  }
+  function rollBox(v, ev, who) {
+    const st = v.ev[ev.id] || (v.ev[ev.id] = { spins: 0, pity: 0 });
+    const pk = partnerSkinKey(ev, who);
+    const res = {};
+    if (!boxLeft(ev, who, v)) {
+      // đủ rồi mà còn hộp trong lượt mở nhiều: trả lại nguyên giá
+      res.dot = ev.price; res.rar = 'thuong'; res.back = true; v.dot += ev.price;
+      return res;
+    }
+    let pick;
+    if (!owns(pk, v) && st.pity + 1 >= ev.pity) pick = { item: pk };
+    else {
+      const list = boxOdds(ev, who, v);
+      let r = Math.random() * list.reduce((a, b) => a + b.w, 0);
+      pick = list.find((o) => (r -= o.w) < 0) || list[list.length - 1];
+    }
+    if (pick.dot) { res.dot = pick.dot; res.rar = 'thuong'; v.dot += pick.dot; }
+    else { const it = Skins.byKey(pick.item); res.item = it; res.rar = it.rarity; v.owned[pick.item] = Date.now(); }
+    st.spins += 1;
+    st.pity = res.rar === 'dinhmenh' ? 0 : st.pity + 1;
+    // Trọn bộ sáu món: tặng thêm nền thưởng
+    if (ev.bonus && !owns(ev.bonus, v) && evAllKeys(ev).every((k) => owns(k, v))) { v.owned[ev.bonus] = Date.now(); res.bonus = true; }
+    return res;
+  }
+  function openEvBox(n) {
+    const ev = EV;
+    if (!isBoxEv(ev) || !isLive(ev) || PK.on || opening || WS.spinning) return;
+    const who = meWho();
+    if (!who) { toast('Chọn máy này của ai trước đã nha'); openWho(); return; }
+    if (!boxLeft(ev, who, Wallet.get())) return;
+    const cost = n * ev.price;
+    const before = Wallet.get().dot;
+    if (before < cost) { SFX.no(); toast('Chưa đủ đốt, chơi Sâu Tím thêm nha'); return; }
+    const results = [];
+    const ok = Wallet.update((v) => {
+      if (v.dot < cost) return false;
+      v.dot -= cost;
+      for (let i = 0; i < n; i++) results.push(rollBox(v, ev, who));
+    });
+    if (!ok) { SFX.no(); return; }
+    bumpDot();
+    $('dot').textContent = fmt(before - cost);
+    const bonus = results.some((r) => r.bonus);
+    openPack(results, {
+      theme: 'destiny',
+      title: n === 1 ? 'Hộp ' + ev.short : n + ' Hộp ' + ev.short,
+      again: () => ({
+        label: 'Mở tiếp ' + n + ' hộp · ' + fmt(n * ev.price) + ' đốt',
+        ok: Wallet.get().dot >= n * ev.price && !!boxLeft(ev, who, Wallet.get()),
+        run: () => openEvBox(n),
+      }),
+      after: bonus ? () => setTimeout(() => celebrateFull(ev), 300) : null,
+    });
+    renderEvent();
+  }
+  // Đủ cả sáu món: màn chúc mừng trọn bộ, tặng nền Hai Tần Số.
+  function celebrateFull(ev) {
+    const bg = Skins.byKey(ev.bonus);
+    flash('dinhmenh');
+    SFX.destiny();
+    const [cx, cy] = [window.innerWidth / 2, window.innerHeight * 0.4];
+    fxBurst(cx, cy, 'dinhmenh', 1.3);
+    fxConfetti(cx, cy, 'dinhmenh');
+    showReveal({ item: bg, rar: bg.rarity }, 'pack', true);
+    $('reveal-memory').textContent = 'Trọn bộ Định Mệnh! ' + bg.memory;
+    renderAll();
+  }
+  // Quà tặng: skin "của mình" vào ví một lần (đồng bộ qua owned nên máy khác không tặng lại).
+  function grantGift(ev) {
+    const who = meWho();
+    if (!isBoxEv(ev) || !isLive(ev) || !who || !ev.gift[who]) return null;
+    const key = ev.gift[who];
+    if (owns(key, Wallet.get())) return null;
+    Wallet.update((v) => { if (!owns(key, v)) v.owned[key] = Date.now(); });
+    return Skins.byKey(key);
+  }
+  function showGift(item) {
+    flash('dinhmenh');
+    SFX.destiny();
+    buzz([40, 50, 40, 50, 120]);
+    UI.afterReveal = () => { switchTab('ev'); selectEvent(SPL.ev ? SPL.ev.id : EV.id); scrollToPanel(); };
+    setTimeout(() => {
+      showReveal({ item, rar: item.rarity }, 'gift', true);
+      const [cx, cy] = centerOf($('reveal-art'));
+      fxBurst(cx, cy, 'dinhmenh', 1.2);
+      fxConfetti(cx, cy, 'dinhmenh');
+    }, 380);
+  }
+  function renderBoxEvent(w) {
+    const ev = EV, who = meWho() || 'thuy';
+    const st = evState(w, ev);
+    const left = boxLeft(ev, who, w);
+    const label = (el, n) => {
+      const b = document.createElement('b');
+      b.textContent = 'Mở ' + n + ' hộp';
+      const s2 = document.createElement('small');
+      s2.textContent = fmt(ev.price * n) + ' đốt';
+      el.replaceChildren(b, s2);
+    };
+    label($('evb-1'), 1);
+    label($('evb-10'), 10);
+    $('evb-1').disabled = $('evb-10').disabled = $('evb-box').disabled = !left;
+    $('evb').classList.toggle('done', !left);
+    $('evb-done').hidden = !!left;
+    const need = $('evb-need');
+    if (left && w.dot < ev.price) {
+      need.hidden = false;
+      need.replaceChildren('Còn thiếu ' + fmt(ev.price - w.dot) + ' đốt để mở hộp. ');
+      const a = document.createElement('a');
+      a.href = '../game/';
+      a.textContent = 'Chơi Sâu Tím kiếm thêm';
+      need.appendChild(a);
+    } else need.hidden = true;
+    const pk = Skins.byKey(partnerSkinKey(ev, who));
+    const havePk = Wallet.owns(pk.slot, pk.id, w);
+    $('evb-pity-name').textContent = (havePk ? '' : 'Bảo đảm ') + pk.name;
+    $('evb-pity').textContent = havePk ? 'Đã có ✓' : 'còn tối đa ' + (ev.pity - st.pity) + ' hộp';
+    $('evb-pity-bar').style.width = (havePk ? 100 : (st.pity / ev.pity) * 100) + '%';
+    $('evb-pity').parentElement.parentElement.hidden = !left && havePk;
+    // Hai bộ đồ
+    const sets = $('ev-sets');
+    sets.replaceChildren();
+    for (const set of ev.sets) {
+      const items = set.items.map(Skins.byKey);
+      const got = items.filter((i) => Wallet.owns(i.slot, i.id, w)).length;
+      const wearing = items.every((i) => w.equip[i.slot] === i.id);
+      const card = document.createElement('div');
+      card.className = 'set destiny-set set-' + set.id + (got === items.length ? ' full' : '');
+      const head = document.createElement('div');
+      head.className = 'set-head';
+      const nm = document.createElement('span');
+      nm.className = 'set-name';
+      const b = document.createElement('b');
+      b.textContent = set.name;
+      const sub = document.createElement('small');
+      sub.textContent = set.sub + ' · bộ của ' + (set.who === 'thuy' ? 'em' : 'anh');
+      nm.append(b, sub);
+      const count = document.createElement('span');
+      count.textContent = got + '/' + items.length;
+      head.append(nm, count);
+      const row = document.createElement('div');
+      row.className = 'set-items';
+      row.style.gridTemplateColumns = 'repeat(' + items.length + ', minmax(0, 1fr))';
+      for (const it of items) {
+        const have = Wallet.owns(it.slot, it.id, w);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'set-item' + (have ? ' have' : '') + (it.rarity === 'dinhmenh' ? ' r-dinhmenh' : '');
+        const cv = document.createElement('canvas');
+        const lab = document.createElement('span');
+        lab.textContent = SLOT_NAME[it.slot];
+        btn.append(cv, lab);
+        if (keyOf(it) === ev.gift[who]) {
+          const g = document.createElement('i');
+          g.className = 'set-gift';
+          g.textContent = 'Quà tặng';
+          btn.appendChild(g);
+        }
+        btn.setAttribute('aria-label', it.name + (have ? ', đã có' : ', chưa có'));
+        btn.addEventListener('click', () => { SFX.click(); openSheet(it); });
+        requestAnimationFrame(() => drawThumb(cv, it));
+        row.appendChild(btn);
+      }
+      const act = document.createElement('button');
+      act.type = 'button';
+      act.className = 'btn set-wear';
+      if (got === items.length) {
+        act.textContent = wearing ? 'Đang mặc cả bộ' : 'Mặc cả bộ';
+        act.disabled = wearing;
+        act.addEventListener('click', () => wearSet(set, items));
+      } else {
+        act.textContent = 'Đủ bộ thì mặc cả bộ một chạm';
+        act.disabled = true;
+      }
+      card.append(head, row, act);
+      sets.appendChild(card);
+    }
+    // Quà trọn bộ
+    const bonus = Skins.byKey(ev.bonus);
+    const all = evAllKeys(ev);
+    const got = all.filter((k) => owns(k, w)).length;
+    const haveBonus = owns(ev.bonus, w);
+    const card = document.createElement('div');
+    card.className = 'set destiny-bonus' + (haveBonus ? ' full' : '');
+    const cv = document.createElement('canvas');
+    cv.className = 'bonus-art';
+    const txt = document.createElement('div');
+    txt.className = 'bonus-text';
+    const t1 = document.createElement('b');
+    t1.textContent = haveBonus ? bonus.name + ' · đã nhận' : 'Trọn bộ ' + all.length + ' món: tặng ' + bonus.name;
+    const t2 = document.createElement('small');
+    t2.textContent = haveBonus ? 'Hai bộ đã về đủ một nhà.' : 'Đã có ' + got + '/' + all.length + ' món của cả hai bộ.';
+    const bar = document.createElement('i');
+    bar.className = 'bonus-bar';
+    const fill = document.createElement('i');
+    fill.style.width = (got / all.length) * 100 + '%';
+    bar.appendChild(fill);
+    txt.append(t1, t2, bar);
+    card.append(cv, txt);
+    card.addEventListener('click', () => { SFX.click(); openSheet(bonus); });
+    requestAnimationFrame(() => drawThumb(cv, bonus));
+    sets.appendChild(card);
+    // Tỉ lệ hiện tại
+    const odds = $('ev-odds');
+    odds.replaceChildren();
+    odds.hidden = !left;
+    if (left) {
+      const list = boxOdds(ev, who, w);
+      const total = list.reduce((a, b2) => a + b2.w, 0);
+      for (const o of list) {
+        const li = document.createElement('li');
+        const dot = document.createElement('span');
+        dot.className = 'r-dot';
+        const it = o.item ? Skins.byKey(o.item) : null;
+        dot.style.background = it ? Skins.RARITY[it.rarity].color : '#62BC7C';
+        const pct = document.createElement('b');
+        pct.textContent = (Math.round((o.w / total) * 1000) / 10).toLocaleString('vi-VN') + '%';
+        li.append(dot, it ? it.name : '+' + o.dot + ' đốt', pct);
+        odds.appendChild(li);
+      }
+    }
+    $('ev-note').textContent = left
+      ? 'Mỗi hộp ' + ev.price + ' đốt. Món đã có sẽ không ra nữa, phần tỉ lệ đó chia lại cho các món còn lại. Tối đa ' + ev.pity
+        + ' hộp chắc chắn có ' + pk.name + '. Sự kiện này mở mãi, tới khi sưu tập trọn bộ.'
+      : 'Trọn bộ rồi! Cả sáu món và ' + bonus.name + ' đã nằm trong tủ đồ.';
+  }
+
+  // ================= Hoạt cảnh khi mặc skin Định mệnh =================
+  const CUTS = { 'skin:nang-tho': 'poem', 'skin:vi-mach': 'signal' };
+  const CUT = { on: false, kind: '', item: null, t0: 0, parts: [], acc: 0 };
+  const POEM = ['Thuyền về có nhớ bến chăng,', 'Bến thì một dạ khăng khăng đợi thuyền.'];
+  function playCut(item) {
+    const kind = item && CUTS[keyOf(item)];
+    if (!kind) return false;
+    Object.assign(CUT, { on: true, kind, item, t0: performance.now(), parts: [], acc: 0 });
+    const el = $('cut');
+    el.className = 'cut cut-' + kind;
+    $('cut-name').textContent = item.name;
+    el.hidden = false;
+    SFX[kind]();
+    buzz(20);
+    return true;
+  }
+  function closeCut() {
+    if (!CUT.on) return;
+    CUT.on = false;
+    $('cut').hidden = true;
+    toast('Đã mặc ' + CUT.item.name + ' ✨');
+  }
+  // Vẽ một bé sâu đứng (đầu trên, thân vòng xuống) với nét mặt tuỳ ý.
+  function drawWormAt(x, item, size, t, face) {
+    const S = size / 90, r = 21 * S, sr = 16.5 * S;
+    for (let k = 3; k >= 1; k--) {
+      x.save();
+      x.translate(Math.sin(t * 2 + k) * 2 * S + k * sr * 0.55, k * sr * 1.05);
+      Skins.drawSegment(x, sr, item, k === 3 ? 2 : k % 2, S);
+      x.restore();
+    }
+    Skins.drawHead(x, r, item, Object.assign({ t, ant: Math.sin(t * 2) * 2 * S, bob: 0, happy: 0, blink: 0, sad: 0, chew: 0, mouthOpen: 0 }, face || {}), S);
+  }
+  const easeOut = (k) => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3);
+  const easeBack = (k) => { k = Math.min(1, Math.max(0, k)); const c = 1.7; return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2); };
+  function drawCut(now, dt) {
+    if (!CUT.on) return;
+    const t = (now - CUT.t0) / 1000;
+    const c = $('cut-art');
+    const [W, H] = sizeCanvas(c);
+    const x = c.getContext('2d');
+    x.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (CUT.kind === 'poem') drawPoem(x, W, H, t, dt); else drawSignal(x, W, H, t, dt);
+    $('cut-tap').classList.toggle('on', t > 3.4);
+    if (t > 6.5) closeCut();
+  }
+  function cutParticles(x, dt, S) {
+    for (let i = CUT.parts.length - 1; i >= 0; i--) {
+      const p = CUT.parts[i];
+      p.life -= dt;
+      if (p.life <= 0) { CUT.parts.splice(i, 1); continue; }
+      Skins.stepParticle(p, dt, S);
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      Skins.drawParticle(x, p, S);
+    }
+    x.globalAlpha = 1;
+  }
+  // Nàng Thơ: trang sách mở ra, bé sâu ngồi trên sách, câu ca dao hiện dần từng chữ, hoa đào rơi.
+  function drawPoem(x, W, H, t, dt) {
+    const g = x.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#FDF6EA'); g.addColorStop(1, '#F3E1C4');
+    x.fillStyle = g;
+    x.fillRect(0, 0, W, H);
+    const cx = W / 2, by = H * 0.44;
+    const bw = Math.min(W * 0.86, 380), bh = bw * 0.46;
+    const k = easeBack(t / 0.7);
+    x.save();
+    x.translate(cx, by);
+    x.scale(k, k);
+    x.fillStyle = 'rgba(122,82,48,0.18)';
+    x.beginPath(); x.ellipse(0, bh * 0.58, bw * 0.52, bh * 0.12, 0, 0, TAU); x.fill();
+    for (const side of [-1, 1]) {
+      const open = easeOut((t - 0.15) / 0.8);
+      x.save();
+      x.scale(side, 1);
+      x.fillStyle = '#C9A46A';
+      x.beginPath(); x.moveTo(0, -bh * 0.42); x.quadraticCurveTo(bw * 0.25, -bh * 0.56, bw * 0.51, -bh * 0.46); x.lineTo(bw * 0.51, bh * 0.52); x.quadraticCurveTo(bw * 0.25, bh * 0.42, 0, bh * 0.56); x.closePath(); x.fill();
+      x.fillStyle = '#FFFBF2';
+      x.beginPath(); x.moveTo(0, -bh * 0.38); x.quadraticCurveTo(bw * 0.25 * open, -bh * 0.52, bw * 0.48 * open, -bh * 0.42); x.lineTo(bw * 0.48 * open, bh * 0.46); x.quadraticCurveTo(bw * 0.25 * open, bh * 0.36, 0, bh * 0.5); x.closePath(); x.fill();
+      x.strokeStyle = 'rgba(90,74,110,0.22)';
+      x.lineWidth = 1;
+      for (let i = 0; i < 6; i++) { const yy = -bh * 0.22 + i * bh * 0.12; x.beginPath(); x.moveTo(bw * 0.07, yy); x.lineTo(bw * 0.42 * open, yy - bh * 0.03); x.stroke(); }
+      x.restore();
+    }
+    const sp = x.createLinearGradient(-bw * 0.06, 0, bw * 0.06, 0);
+    sp.addColorStop(0, 'rgba(90,60,40,0)'); sp.addColorStop(0.5, 'rgba(90,60,40,0.25)'); sp.addColorStop(1, 'rgba(90,60,40,0)');
+    x.fillStyle = sp;
+    x.fillRect(-bw * 0.06, -bh * 0.4, bw * 0.12, bh * 0.94);
+    x.restore();
+    // bé sâu ngồi trên trang sách
+    const wk = easeBack((t - 0.5) / 0.6);
+    if (wk > 0) {
+      x.save();
+      x.translate(cx - 12, by - bh * 0.62 + Math.sin(t * 2) * 3 - (1 - wk) * 30);
+      x.scale(wk, wk);
+      drawWormAt(x, CUT.item, Math.min(150, W * 0.36), t, t > 3.6 ? { happy: 1 } : {});
+      x.restore();
+    }
+    // câu ca dao hiện dần từng chữ
+    // cỡ chữ vừa khít câu dài nhất trong 88% bề ngang
+    let fs = Math.min(30, W / 14);
+    x.font = '700 ' + fs + 'px "Dancing Script", "Fraunces", serif';
+    const widest = Math.max(...POEM.map((l) => x.measureText(l).width));
+    if (widest > W * 0.88) { fs *= (W * 0.88) / widest; x.font = '700 ' + fs + 'px "Dancing Script", "Fraunces", serif'; }
+    x.textAlign = 'center';
+    x.textBaseline = 'middle';
+    x.fillStyle = '#7A3B52';
+    POEM.forEach((line, i) => {
+      const t0 = 1.0 + i * 1.25;
+      const n = Math.floor(Math.max(0, t - t0) * 26);
+      if (n <= 0) return;
+      x.fillText([...line].slice(0, n).join(''), cx, H * 0.69 + i * fs * 1.45);
+    });
+    if (t > 3.7) {
+      x.globalAlpha = Math.min(1, (t - 3.7) * 2);
+      x.font = 'italic 500 13px Fraunces, serif';
+      x.fillStyle = '#9A7B6A';
+      x.fillText('· ca dao ·', cx, H * 0.69 + fs * 2.9);
+      x.globalAlpha = 1;
+    }
+    // hoa đào rơi, chữ bay lên từ trang sách
+    CUT.acc += dt;
+    while (CUT.acc > 0.12) {
+      CUT.acc -= 0.12;
+      const petal = Skins.eatBurst(Skins.get('fx', 'canh-sen'), 1, 1.4, [])[0];
+      Object.assign(petal, { x: Math.random() * W, y: -10, vx: 10 + Math.random() * 20, vy: 30 + Math.random() * 30, life: 6, max: 6, rot: Math.random() * 6, vr: 1.5, color: Math.random() < 0.5 ? '#FFB7C9' : '#FFD3DE' });
+      CUT.parts.push(petal);
+      if (t > 0.8 && t < 4.5 && Math.random() < 0.6) {
+        const l = Skins.eatBurst(Skins.byKey('fx:trang-tho'), 2, 1.5, [])[1];
+        Object.assign(l, { x: cx + (Math.random() - 0.5) * bw * 0.7, y: by - bh * 0.1, life: 1.6, max: 1.6 + Math.random(), vy: -(40 + Math.random() * 40) });
+        CUT.parts.push(l);
+      }
+    }
+    cutParticles(x, dt, 1);
+  }
+  // Vi Mạch: màn máy hiện sóng, sóng uốn thành trái tim; vạch sóng đầy dần; dòng chữ báo đã kết nối.
+  function drawSignal(x, W, H, t, dt) {
+    x.fillStyle = '#071219';
+    x.fillRect(0, 0, W, H);
+    x.strokeStyle = 'rgba(95,255,224,0.06)';
+    x.lineWidth = 1;
+    for (let gx = (t * 12) % 24; gx < W; gx += 24) { x.beginPath(); x.moveTo(gx, 0); x.lineTo(gx, H); x.stroke(); }
+    for (let gy = 0; gy < H; gy += 24) { x.beginPath(); x.moveTo(0, gy); x.lineTo(W, gy); x.stroke(); }
+    const pw = Math.min(W * 0.86, 380), ph = pw * 0.62, px = (W - pw) / 2, py = H * 0.4 - ph / 2;
+    const k = easeBack(t / 0.6);
+    x.save();
+    x.translate(W / 2, H * 0.4);
+    x.scale(k, k);
+    x.translate(-W / 2, -H * 0.4);
+    x.fillStyle = '#0B2A2A';
+    x.strokeStyle = '#2FD4B4';
+    x.lineWidth = 2;
+    x.beginPath();
+    const rr = 14;
+    x.moveTo(px + rr, py); x.arcTo(px + pw, py, px + pw, py + ph, rr); x.arcTo(px + pw, py + ph, px, py + ph, rr); x.arcTo(px, py + ph, px, py, rr); x.arcTo(px, py, px + pw, py, rr); x.closePath();
+    x.fill(); x.stroke();
+    x.strokeStyle = 'rgba(95,255,224,0.12)';
+    for (let i = 1; i < 6; i++) { x.beginPath(); x.moveTo(px + (pw * i) / 6, py + 6); x.lineTo(px + (pw * i) / 6, py + ph - 6); x.stroke(); }
+    for (let i = 1; i < 4; i++) { x.beginPath(); x.moveTo(px + 6, py + (ph * i) / 4); x.lineTo(px + pw - 6, py + (ph * i) / 4); x.stroke(); }
+    // vạch sóng
+    for (let i = 0; i < 4; i++) {
+      const on = t > 0.4 + i * 0.32;
+      x.fillStyle = on ? '#5FFFE0' : 'rgba(95,255,224,0.18)';
+      const bh = 6 + i * 5;
+      x.fillRect(px + pw - 54 + i * 11, py + 30 - bh, 7, bh);
+    }
+    // sóng sin uốn dần thành trái tim
+    const N = 120, cx = px + pw / 2, cy = py + ph * 0.54;
+    const m = easeOut((t - 1.3) / 1.2);
+    const amp = ph * 0.22 * Math.min(1, t / 0.8);
+    const hs = ph * 0.026;
+    x.beginPath();
+    for (let i = 0; i <= N; i++) {
+      const u = i / N;
+      const sx = px + 14 + u * (pw - 28), sy = cy + Math.sin(u * TAU * 2.5 - t * 7) * amp * (0.6 + 0.4 * Math.sin(t * 3 + u * 6));
+      const a = u * TAU;
+      const hx = cx + hs * 16 * Math.pow(Math.sin(a), 3);
+      const hy = cy - hs * (13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a)) - ph * 0.04;
+      const X = sx + (hx - sx) * m, Y = sy + (hy - sy) * m;
+      if (i) x.lineTo(X, Y); else x.moveTo(X, Y);
+    }
+    const col = m > 0.5 ? '#FF6FAE' : '#5FFFE0';
+    x.strokeStyle = col;
+    x.globalAlpha = 0.25;
+    x.lineWidth = 9;
+    x.stroke();
+    x.globalAlpha = 1;
+    x.lineWidth = 2.6;
+    x.stroke();
+    if (m >= 1) {
+      x.fillStyle = 'rgba(255,111,174,' + (0.18 + 0.12 * Math.sin(t * 6)) + ')';
+      x.fill();
+    }
+    x.restore();
+    // bé sâu kỹ sư bên trên màn máy
+    const wk = easeBack((t - 0.3) / 0.6);
+    if (wk > 0) {
+      x.save();
+      x.translate(px + 30, py - 24 + Math.sin(t * 2) * 2);
+      x.scale(wk * 0.8, wk * 0.8);
+      drawWormAt(x, CUT.item, Math.min(130, W * 0.3), t, t > 3 ? { happy: 1 } : {});
+      x.restore();
+    }
+    // dòng chữ
+    const who = meWho();
+    const lines = [
+      { t0: 0.3, text: '> Đang dò tần số…', col: '#5FFFE0' },
+      { t0: 1.5, text: '> Kết nối thành công', col: '#5FFFE0' },
+      { t0: 2.5, text: who === 'quang' ? '> Tần số: Lệ Thủy ♥' : '> Tín hiệu từ: anh Quang ♥', col: '#FF8FC0' },
+    ];
+    const fs = Math.max(14, Math.min(18, W / 24));
+    x.font = '600 ' + fs + 'px "Be Vietnam Pro", system-ui, sans-serif';
+    x.textAlign = 'left';
+    x.textBaseline = 'middle';
+    lines.forEach((l, i) => {
+      const n = Math.floor(Math.max(0, t - l.t0) * 22);
+      if (n <= 0) return;
+      const s2 = [...l.text].slice(0, n).join('');
+      x.fillStyle = l.col;
+      x.fillText(s2 + (n < l.text.length && Math.floor(t * 6) % 2 ? '▌' : ''), px + 4, py + ph + 34 + i * fs * 1.7);
+    });
+    CUT.acc += dt;
+    while (CUT.acc > 0.1) {
+      CUT.acc -= 0.1;
+      for (const p of Skins.eatBurst(Skins.byKey('fx:song-tin-hieu'), 3, 1.4, []).slice(1)) {
+        Object.assign(p, { x: Math.random() * W, y: H + 10, vy: -(50 + Math.random() * 60), life: 3, max: 3 + Math.random() });
+        if (p.kind === 15) { p.life = p.max = 0.5; p.y = Math.random() * H; p.vx *= 0.3; p.vy *= 0.3; }
+        CUT.parts.push(p);
+      }
+    }
+    cutParticles(x, dt, 1);
+  }
+
   // ================= Thông báo sự kiện mới =================
   // pending: sự kiện đang diễn ra mà máy này chưa xem thông báo (chờ hộp "Máy này của ai?" đóng rồi mới hiện).
   const SPL = { on: false, ev: null, pending: EV_LIST.find((e) => isLive(e) && !seenEv(e)) || null, parts: [], acc: 0 };
@@ -1431,7 +1950,24 @@
     SPL.parts.length = 0;
     $('splash-title').textContent = ev.name;
     const names = ev.sets.map((s) => s.name).join(' và ');
-    $('splash-text').textContent = ev.tagline + ' Có ' + names + ': skin, cánh, hiệu ứng và nền riêng của ' + ev.short + ', chỉ có đến hết ' + dayText(ev.end - 1) + '.';
+    if (isBoxEv(ev)) {
+      const who = meWho();
+      const gift = who ? Skins.byKey(ev.gift[who]) : null;
+      if (gift) grantGift(ev);
+      SPL.gift = gift;
+      $('splash-kicker').textContent = 'Độc quyền · Định mệnh';
+      $('splash-text').textContent = !gift
+        ? ev.tagline + ' Chọn máy này của ai để nhận quà nha.'
+        : who === 'thuy'
+          ? 'Anh tặng em ' + gift.name + ': bậc Định mệnh, độc quyền cho cô giáo Văn tương lai. Còn Sâu Vi Mạch của anh thì… em tự mở Hộp Định Mệnh mà tìm nha.'
+          : 'Quà tặng anh: ' + gift.name + ', bậc Định mệnh, độc quyền cho kỹ sư Điện tử Viễn thông. Muốn có Sâu Nàng Thơ của em thì phải tự mở Hộp Định Mệnh.';
+      $('splash-go').textContent = gift ? 'Nhận quà 🎁' : 'Chọn máy';
+    } else {
+      SPL.gift = null;
+      $('splash-kicker').textContent = 'Sự kiện mới';
+      $('splash-go').textContent = 'Đến vòng quay';
+      $('splash-text').textContent = ev.tagline + ' Có ' + names + ': skin, cánh, hiệu ứng và nền riêng của ' + ev.short + ', chỉ có đến hết ' + dayText(ev.end - 1) + '.';
+    }
     $('splash').querySelector('.splash-card').className = 'splash-card ev-' + ev.id;
     $('splash').hidden = false;
     SFX.reveal('suthi');
@@ -1440,6 +1976,12 @@
   function closeSplash(go) {
     SPL.on = false;
     $('splash').hidden = true;
+    if (go && isBoxEv(SPL.ev)) {
+      // chưa biết máy của ai: chọn xong thì màn chào hiện lại để nhận quà
+      if (!SPL.gift) { SPL.pending = SPL.ev; openWho(); return; }
+      showGift(SPL.gift);
+      return;
+    }
     if (go) { switchTab('ev'); selectEvent(SPL.ev.id); scrollToPanel(); }
   }
   function drawSplash(t, dt) {
@@ -1449,9 +1991,16 @@
     x.setTransform(DPR, 0, 0, DPR, 0, 0);
     x.clearRect(0, 0, w, h);
     const items = evItems(SPL.ev);
-    const skin = items.find((i) => i.slot === 'skin' && i.rarity === 'huyenthoai') || items[0];
-    const wing = items.find((i) => i.slot === 'wing' && i.rarity === 'suthi') || items.find((i) => i.slot === 'wing');
-    const fx = items.find((i) => i.slot === 'fx' && i.rarity === 'suthi') || items.find((i) => i.slot === 'fx') || Skins.get('fx', 'sao-vang');
+    let skin, wing, fx;
+    if (isBoxEv(SPL.ev)) {
+      // món của chính máy này: quà tặng cùng cánh và hiệu ứng trong bộ đó
+      const mine = SPL.ev.sets.find((s2) => s2.who === (meWho() || 'thuy')).items.map(Skins.byKey);
+      [skin, fx, wing] = mine;
+    } else {
+      skin = items.find((i) => i.slot === 'skin' && i.rarity === 'huyenthoai') || items[0];
+      wing = items.find((i) => i.slot === 'wing' && i.rarity === 'suthi') || items.find((i) => i.slot === 'wing');
+      fx = items.find((i) => i.slot === 'fx' && i.rarity === 'suthi') || items.find((i) => i.slot === 'fx') || Skins.get('fx', 'sao-vang');
+    }
     x.save();
     x.translate(w * 0.04, h * 0.1 + Math.sin(t * 2) * 3);
     Skins.drawPreview(x, skin, w * 0.6, h * 0.78, t);
@@ -1492,7 +2041,7 @@
     const owned = all.filter((i) => Wallet.owns(i.slot, i.id, w)).length;
     $('memo-count').textContent = 'Đã sưu tập ' + owned + '/' + all.length + ' món';
     $('memo-bar').style.width = (owned / all.length) * 100 + '%';
-    const withCh = all.filter((i) => i.ch).sort((a, b) => a.ch - b.ch || RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity));
+    const withCh = all.filter((i) => i.ch).sort((a, b) => a.ch - b.ch || RANK.indexOf(a.rarity) - RANK.indexOf(b.rarity));
     for (const item of withCh) {
       const have = Wallet.owns(item.slot, item.id, w);
       const li = document.createElement('li');
@@ -1612,16 +2161,22 @@
   $('reveal-again').addEventListener('click', () => {
     const ctx = UI.revealCtx;
     closeReveal();
+    if (ctx === 'gift') return;
     if (ctx === 'wheel') spin(1);
     else { UI.qty = 1; openBox(); }
   });
   $('reveal-use').addEventListener('click', () => {
     const res = UI.reveal, ctx = UI.revealCtx;
-    if (res) { Wallet.equip(res.item.slot, res.item.id); SFX.click(); toast('Đã dùng ' + res.item.name); }
+    if (res) {
+      Wallet.equip(res.item.slot, res.item.id);
+      SFX.click();
+      if (!playCut(res.item)) toast('Đã dùng ' + res.item.name);
+    }
     closeReveal();
     if (res && ctx === 'single') switchTab(res.item.slot);
     renderAll();
   });
+  $('cut').addEventListener('click', () => { if (performance.now() - CUT.t0 > 500) closeCut(); });
   $('pack-all').addEventListener('click', packAll);
   $('pack-done').addEventListener('click', closePack);
   $('pack-again').addEventListener('click', () => {
@@ -1635,6 +2190,9 @@
     $('spin-1').addEventListener('click', () => spin(1));
     $('spin-10').addEventListener('click', () => spin(10));
     $('wheel-hub').addEventListener('click', () => spin(1));
+    $('evb-1').addEventListener('click', () => openEvBox(1));
+    $('evb-10').addEventListener('click', () => openEvBox(10));
+    $('evb-box').addEventListener('click', () => openEvBox(1));
     $('splash-go').addEventListener('click', () => { SFX.click(); closeSplash(true); });
     $('splash-later').addEventListener('click', () => closeSplash(false));
     setInterval(() => {
@@ -1662,7 +2220,8 @@
   $('who-backdrop').addEventListener('click', closeWho);
   window.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (!$('reveal').hidden) closeReveal();
+    if (CUT.on) closeCut();
+    else if (!$('reveal').hidden) closeReveal();
     else if (PK.on) closePack();
     else if (SPL.on) closeSplash(false);
     else if (!$('sheet').hidden) closeSheet();
@@ -1700,6 +2259,7 @@
     if (UI.reveal && !$('reveal').hidden) drawThumb(revealArt, UI.reveal.item, t);
     if (isLive(EV) && (UI.tab === 'ev' || WS.spinning)) drawWheel(now, dt);
     if (SPL.on) drawSplash(t, dt);
+    if (CUT.on) drawCut(now, dt);
     drawFx(dt);
     requestAnimationFrame(frame);
   }
@@ -1721,6 +2281,11 @@
   renderAll();
   requestAnimationFrame(frame);
   setTimeout(showGrant, 500);
+  for (const e of EV_LIST) {
+    if (!isBoxEv(e) || !isLive(e) || !seenEv(e)) continue;
+    const g = grantGift(e);
+    if (g) setTimeout(() => { toast('🎁 Quà Định Mệnh: ' + g.name + ' đã vào tủ đồ'); renderAll(); }, 900);
+  }
   let later = false;
   try { later = !!sessionStorage.getItem('lpn:whoLater'); } catch (e) { /* bỏ qua */ }
   if (autoFree) {

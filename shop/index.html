@@ -37,9 +37,9 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Dancing+Script:wght@600;700&display=swap" />
   <link rel="stylesheet" href="../home/home.css?v=14" />
-  <link rel="stylesheet" href="shop.css?v=5" />
+  <link rel="stylesheet" href="shop.css?v=8" />
 </head>
 <body data-weather="nang">
   <script>document.body.classList.toggle('night', LPN_NIGHT); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
@@ -148,6 +148,85 @@
           <span class="ev-time"></span>
         </div>
         <i class="spooky-strip" aria-hidden="true"></i>
+      </div>
+
+      <div class="ev-banner ev-destiny" data-ev="dinh-menh" hidden>
+        <svg class="ev-art" viewBox="0 0 360 170" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="dm-sky" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2A1650" /><stop offset=".5" stop-color="#5B2A7A" /><stop offset="1" stop-color="#0F4F55" /></linearGradient>
+            <radialGradient id="dm-glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FF8FC0" stop-opacity=".55" /><stop offset="1" stop-color="#FF8FC0" stop-opacity="0" /></radialGradient>
+          </defs>
+          <rect width="360" height="170" fill="url(#dm-sky)" />
+          <g fill="#FFF4D6" opacity=".75"><circle cx="30" cy="22" r="1.1" /><circle cx="96" cy="14" r=".9" /><circle cx="160" cy="28" r="1.2" /><circle cx="214" cy="12" r=".9" /><circle cx="330" cy="26" r="1.1" /><circle cx="280" cy="60" r=".8" /></g>
+          <circle cx="300" cy="100" r="62" fill="url(#dm-glow)" />
+          <!-- ăng-ten phát sóng (Điện tử Viễn thông) -->
+          <g stroke="#9FF5E4" stroke-width="2" stroke-linecap="round" fill="none" opacity=".9">
+            <path d="M326 152L336 104L346 152M329 138h14M332 124h8M336 104V90" />
+          </g>
+          <circle cx="336" cy="88" r="3" fill="#FF4F7B" />
+          <g fill="none" stroke="#5FFFE0" stroke-width="1.8" stroke-linecap="round" class="dm-waves">
+            <path d="M324 80a17 17 0 0 0 0 16" opacity=".9" />
+            <path d="M316 74a28 28 0 0 0 0 28" opacity=".6" />
+            <path d="M308 68a39 39 0 0 0 0 40" opacity=".35" />
+          </g>
+          <!-- sóng uốn thành trái tim -->
+          <path d="M262 64c8-14 14 14 22 0s14-16 20-2" fill="none" stroke="#5FFFE0" stroke-width="2" stroke-linecap="round" opacity=".8" />
+          <path d="M290 112c-5-8-17-4-14 4c2 6 14 13 14 13s12-7 14-13c3-8-9-12-14-4z" fill="#FF6FAE" />
+          <!-- sách mở và bút lông ngỗng (Văn) -->
+          <g transform="translate(286 150) scale(.62)">
+            <path d="M0-14Q-30-26-62-18V20Q-30 12 0 24Q30 12 62 20V-18Q30-26 0-14z" fill="#C9A46A" />
+            <path d="M0-12Q-28-23-58-16V17Q-28 9 0 21Q28 9 58 17V-16Q28-23 0-12z" fill="#FFFBF2" />
+            <path d="M-50-8h38M-50 0h40M-50 8h30M12-8h38M12 0h40M12 8h26" stroke="#5A4A6E" stroke-opacity=".35" stroke-width="1.6" stroke-linecap="round" />
+          </g>
+          <g transform="translate(258 92) rotate(-28) scale(.8)">
+            <path d="M0 40C-9 26-8 6 0-6C6 6 7 26 0 40z" fill="#F3ECFF" stroke="#8C78BE" stroke-width="1" />
+            <path d="M0 46V-4" stroke="#D9B26A" stroke-width="1.6" stroke-linecap="round" />
+          </g>
+          <path d="M0 160q90-12 180 0t180 0v10H0z" fill="#170C2E" opacity=".8" />
+        </svg>
+        <div class="ev-text">
+          <span class="ev-kicker">Độc quyền · Định mệnh</span>
+          <h2></h2>
+          <p class="ev-tagline"></p>
+          <span class="ev-time"></span>
+        </div>
+        <i class="destiny-strip" aria-hidden="true"></i>
+      </div>
+
+      <!-- Sự kiện mở hộp (Định Mệnh) -->
+      <div class="evb" id="evb" hidden>
+        <button class="evb-box" id="evb-box" type="button" aria-label="Mở một Hộp Định Mệnh">
+          <span class="evb-halo" aria-hidden="true"></span>
+          <svg viewBox="0 0 170 160" aria-hidden="true">
+            <defs>
+              <linearGradient id="evb-body" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7B3FBF" /><stop offset=".55" stop-color="#C2408A" /><stop offset="1" stop-color="#1F8C8A" /></linearGradient>
+              <linearGradient id="evb-rib" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE9A8" /><stop offset="1" stop-color="#E8B84A" /></linearGradient>
+            </defs>
+            <ellipse cx="85" cy="150" rx="56" ry="7" fill="rgba(20,10,40,.25)" />
+            <g class="evb-body">
+              <rect x="28" y="68" width="114" height="76" rx="14" fill="url(#evb-body)" />
+              <path d="M40 92h90M40 120h90" stroke="#FFFFFF" stroke-opacity=".14" stroke-width="3" />
+              <rect x="77" y="68" width="16" height="76" fill="url(#evb-rib)" />
+              <path d="M85 104c-4-6-13-4-11 3c1.5 4 11 9 11 9s9.5-5 11-9c2-7-7-9-11-3z" fill="#FF6FAE" stroke="#FFF1C9" stroke-width="1.4" />
+            </g>
+            <g class="evb-lid">
+              <rect x="20" y="48" width="130" height="26" rx="11" fill="url(#evb-body)" />
+              <rect x="77" y="48" width="16" height="26" fill="url(#evb-rib)" />
+              <path d="M85 48c-9-22-37-28-37-11c0 11 20 11 37 11M85 48c9-22 37-28 37-11c0 11-20 11-37 11" fill="none" stroke="url(#evb-rib)" stroke-width="7" stroke-linecap="round" />
+            </g>
+            <g class="evb-spark" fill="#FFF4D6"><path d="M24 30l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" /><path d="M146 22l1.5 4.5 4.5 1.5-4.5 1.5-1.5 4.5-1.5-4.5-4.5-1.5 4.5-1.5z" /><path d="M150 100l1.2 3.6 3.6 1.2-3.6 1.2-1.2 3.6-1.2-3.6-3.6-1.2 3.6-1.2z" /></g>
+          </svg>
+        </button>
+        <div class="spin-btns">
+          <button class="btn primary" id="evb-1" type="button"></button>
+          <button class="btn" id="evb-10" type="button"></button>
+        </div>
+        <p class="box-note" id="evb-need" hidden></p>
+        <div class="pity">
+          <div class="pity-row"><span id="evb-pity-name"></span><b id="evb-pity"></b></div>
+          <div class="pity-bar destiny"><i id="evb-pity-bar"></i></div>
+        </div>
+        <p class="evb-done" id="evb-done" hidden>Đã sưu tập trọn bộ Định Mệnh 💞</p>
       </div>
 
       <div class="ev-live" id="ev-live">
@@ -284,11 +363,21 @@
     <p class="pack-hint" id="pack-hint">Chạm từng hộp để mở, hoặc bấm Mở hết</p>
   </div>
 
+  <!-- Hoạt cảnh khi mặc skin Định mệnh (chạm để bỏ qua) -->
+  <div class="cut" id="cut" role="dialog" aria-modal="true" aria-label="Hoạt cảnh mặc skin" hidden>
+    <canvas class="cut-art" id="cut-art"></canvas>
+    <div class="cut-cap">
+      <span class="rarity destiny" style="--r:#E0408A">Định mệnh · Độc quyền</span>
+      <b id="cut-name"></b>
+      <small class="cut-tap" id="cut-tap">Chạm để tiếp tục</small>
+    </div>
+  </div>
+
   <!-- Thông báo sự kiện mới (một lần trên mỗi máy) -->
   <div class="splash" id="splash" role="dialog" aria-modal="true" aria-labelledby="splash-title" hidden>
     <div class="splash-card">
       <canvas class="splash-art" id="splash-art"></canvas>
-      <span class="ev-kicker">Sự kiện mới</span>
+      <span class="ev-kicker" id="splash-kicker">Sự kiện mới</span>
       <h2 id="splash-title"></h2>
       <p id="splash-text"></p>
       <button class="btn primary" id="splash-go" type="button">Đến vòng quay</button>
@@ -314,7 +403,7 @@
 
   <script src="../home/sync.js?v=2"></script>
   <script src="../home/wallet.js?v=8"></script>
-  <script src="skins.js?v=7"></script>
-  <script src="shop.js?v=7"></script>
+  <script src="skins.js?v=8"></script>
+  <script src="shop.js?v=8"></script>
 </body>
 </html>
