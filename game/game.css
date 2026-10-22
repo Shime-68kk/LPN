@@ -28,6 +28,8 @@ body.night {
 /* Chuyển giữa các trang (trang chủ, game, truyện, Tiệm Sâu): giữ hình trang cũ tới khi trang mới vẽ xong
    rồi mờ dần sang, không lộ khung trống. Trình duyệt chưa hỗ trợ thì bỏ qua. */
 @view-transition { navigation: auto; }
+/* Không mờ dần (Safari có lúc pha hai trang ra màu sáng): giữ trang cũ tới khi trang mới sẵn sàng rồi đổi luôn. */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
 
 * { box-sizing: border-box; }
 

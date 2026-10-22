@@ -58,6 +58,8 @@
   function pickWeather() {
     const q = params.get('weather');
     if (THEMES[q]) return q;
+    // Đã đoán sẵn trong <head> (cùng cách với mọi trang) thì dùng luôn.
+    if (window.LPN_GAME && THEMES[window.LPN_GAME.w]) return window.LPN_GAME.w;
     // Trang chủ lưu kiểu trời thật (Open-Meteo); dùng nếu còn mới trong 1 giờ.
     try {
       const s = JSON.parse(localStorage.getItem('lpn:sky'));
@@ -355,14 +357,30 @@
     },
     click() { this.tone(1100, 0.04, 'sine', 0.12, 760); },
     // Đếm ngược hồi sinh: ba tiếng tách ở 3, 2, 1 và một tiếng cao, ngân hơn lúc vào nhạc.
+    // Đi thẳng ra loa (không qua nút tắt âm hiệu ứng) vì đây là nhịp để vào lại bài.
     countTicks(t0, beat) {
-      const d0 = t0 - this.ctx.currentTime;
+      const ctx = this.ctx;
+      const blip = (t, f, dur, vol, type) => {
+        const o = ctx.createOscillator();
+        o.type = type;
+        o.frequency.setValueAtTime(f, t);
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(vol, t + 0.005);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(g);
+        g.connect(this.master);
+        o.start(t);
+        o.stop(t + dur + 0.03);
+      };
       for (let i = 0; i < 3; i++) {
-        this.tone(1046.5, 0.1, 'square', 0.1, null, d0 + i * beat);
-        this.tone(523.25, 0.14, 'sine', 0.22, null, d0 + i * beat);
+        const t = t0 + i * beat;
+        blip(t, 1046.5, 0.08, 0.16, 'square');
+        blip(t, 523.25, 0.16, 0.34, 'sine');
       }
-      this.tone(1568, 0.36, 'triangle', 0.24, null, d0 + 3 * beat);
-      this.tone(2093, 0.3, 'sine', 0.12, null, d0 + 3 * beat + 0.02);
+      const t = t0 + 3 * beat;
+      blip(t, 1568, 0.42, 0.32, 'triangle');
+      blip(t + 0.02, 2093, 0.34, 0.16, 'sine');
     },
   };
 
@@ -1025,10 +1043,15 @@
       Sau.sad = 0;
       Sau.happy = 0.6;
       burstHearts(Sau.headX, Sau.headY - HEAD_R, 6 + step.hearts * 2);
-      Sound.ctx.resume();
-      Sound.heart();
       // Nhạc lùi lại một chút để có đà; lá trong đoạn đó đã tính rồi nên không bị trừ tim lần nữa.
-      this.startCount(Math.max(this.map.start, this.downPos - REWIND));
+      // iPhone cần một nhịp để bật lại âm thanh: chờ chạy hẳn rồi mới hẹn giờ đếm, kẻo mất tiếng.
+      const pos = Math.max(this.map.start, this.downPos - REWIND);
+      this.state = 'count';
+      this.count = null;
+      const ctx = Sound.ctx;
+      const start = () => { if (this.state === 'count' && !this.count) { Sound.heart(); this.startCount(pos); } };
+      if (ctx.state === 'running') start();
+      else { ctx.resume().then(start, start); setTimeout(start, 800); }
     },
 
     // Đếm 3, 2, 1 theo nhịp bài (mỗi số một hoặc hai phách) rồi nhạc vào đúng lúc hô "Ăn thôi!".
@@ -1041,7 +1064,7 @@
       let beat = 60 / (this.map.bpm || 90) / this.rate;
       while (beat < 0.55) beat *= 2;
       while (beat > 1.1) beat /= 2;
-      const t0 = ctx.currentTime + 0.2;
+      const t0 = ctx.currentTime + 0.3;
       const go = t0 + beat * 3;
       Sound.countTicks(t0, beat);
       Sound.playSection(this.buffer, pos, this.map.end - pos, go, this.rate, 0.2);
@@ -1052,6 +1075,7 @@
 
     countTick() {
       const c = this.count;
+      if (!c) return;
       const now = Sound.now();
       const k = Math.floor((now - c.t0) / c.beat);
       if (k >= 0 && k < 3 && k !== c.shown) {

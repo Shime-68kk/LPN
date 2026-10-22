@@ -8,33 +8,42 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Sâu Tím</title>
   <script>
-    // Đoán màu trời ngay từ đầu (giống game.js), để từ trang khác sang không bị chớp nền xanh sáng ban đêm.
+    // Ngày / đêm đoán ngay từ đầu, trước khi tải CSS, và mọi trang đoán cùng một cách (giờ mặt trời mọc / lặn
+    // trang chủ lưu lại, không có thì theo đồng hồ) để chuyển trang không bao giờ trang này tối trang kia sáng.
+    (() => {
+      const d = new Date(), h = d.getHours() + d.getMinutes() / 60, n = d.getHours() * 60 + d.getMinutes();
+      let night = h >= 18.5 || h < 5.5, s = null;
+      try { s = JSON.parse(localStorage.getItem('lpn:sky')); } catch (e) { /* bỏ qua */ }
+      if (s && s.rise && s.set) {
+        const m = (t) => { const x = new Date(t); return x.getHours() * 60 + x.getMinutes(); };
+        night = n < m(s.rise) - 30 || n > m(s.set) + 30;
+      }
+      let sky = night ? 'dem' : h < 6.5 ? 'binhminh' : h >= 17 ? 'hoanghon' : 'nang';
+      // Trời vừa xem còn mới (mưa, mây…) thì giữ, miễn là cùng ngày / đêm.
+      const wasNight = s && (s.night !== undefined ? !!s.night : s.sky === 'dem');
+      if (s && s.sky && Date.now() - s.at < 3600e3 && wasNight === night && (s.sky !== 'dem' || night)) sky = s.sky;
+      window.LPN_SKY = sky;
+      window.LPN_NIGHT = night;
+    })();
+    // Màu trời của game (giống game.js) và nền đang dùng ở Tiệm Sâu.
     window.LPN_GAME = (() => {
       const SKY = { binhminh: '#FFE3D3', nang: '#BFE4FF', may: '#D5DBE9', mua: '#8D9AB5', hoanghon: '#FFB996', dem: '#29224E' };
-      let w = new URLSearchParams(location.search).get('weather');
-      if (!SKY[w]) {
-        w = null;
-        try { const s = JSON.parse(localStorage.getItem('lpn:sky')); if (s && SKY[s.sky] && Date.now() - s.at < 3600e3) w = s.sky; } catch (e) { /* bỏ qua */ }
-        if (!w) {
-          const d = new Date(), h = d.getHours() + d.getMinutes() / 60;
-          w = h >= 18.5 || h < 5.5 ? 'dem' : h < 6.5 ? 'binhminh' : h >= 17 ? 'hoanghon' : 'nang';
-        }
-      }
+      const q = new URLSearchParams(location.search).get('weather');
+      const w = SKY[q] ? q : LPN_NIGHT ? 'dem' : SKY[LPN_SKY] ? LPN_SKY : 'nang';
       let bg = null;
       try { bg = (JSON.parse(localStorage.getItem('lpn:wallet')) || {}).equip.bg; } catch (e) { /* bỏ qua */ }
-      // Nền mua ở Tiệm Sâu (xem backdropTop trong skins.js): Lâu Đài luôn là đêm, Sa Pa theo ngày/đêm.
-      if (bg === 'nen-lau-dai') return { sky: '#120A26', night: true };
-      if (bg === 'nen-sapa') return { sky: w === 'dem' ? '#121738' : '#86BCEB', night: w === 'dem' };
-      return { sky: SKY[w], night: w === 'dem' };
+      // Nền mua ở Tiệm Sâu (xem backdropTop trong skins.js): Lâu Đài luôn là đêm, Sa Pa theo ngày / đêm.
+      if (bg === 'nen-lau-dai') return { sky: '#120A26', night: true, w };
+      if (bg === 'nen-sapa') return { sky: w === 'dem' ? '#121738' : '#86BCEB', night: w === 'dem', w };
+      return { sky: SKY[w], night: w === 'dem', w };
     })();
     document.documentElement.style.background = LPN_GAME.sky;
-    // Giữ đúng màu nền cả lúc CSS vừa tải xong mà trang chưa kịp nhận ngày/đêm (gỡ ngay ở đầu <body>).
     (() => { const st = document.createElement('style'); st.id = 'lpn-early'; st.textContent = 'body{background:' + LPN_GAME.sky + ' !important}'; document.head.appendChild(st); })();
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" />
-  <link rel="stylesheet" href="game.css?v=13" />
+  <link rel="stylesheet" href="game.css?v=14" />
 </head>
 <body>
   <script>document.body.style.background = LPN_GAME.sky; document.body.classList.toggle('night', LPN_GAME.night); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
@@ -166,7 +175,7 @@
   <script src="../home/sync.js?v=2"></script>
   <script src="../home/wallet.js?v=8"></script>
   <script src="../shop/skins.js?v=7"></script>
-  <script src="game.js?v=22"></script>
+  <script src="game.js?v=23"></script>
   <script>
     // Tiệm Sâu đang có sự kiện thì gắn nhãn lên nút.
     if (window.Skins && Skins.activeEvent()) document.getElementById('menu-ev').hidden = false;

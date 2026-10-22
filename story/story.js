@@ -38,6 +38,8 @@
 
   // Trời thật do trang chủ lưu (Open-Meteo); không có thì đoán theo giờ.
   const liveSky = (() => {
+    // Đã đoán sẵn trong <head> (cùng cách với mọi trang) thì dùng luôn.
+    if (window.LPN_SKY) return window.LPN_NIGHT ? 'dem' : SKY_COLOR[window.LPN_SKY] ? window.LPN_SKY : 'nang';
     try {
       const s = JSON.parse(localStorage.getItem('lpn:sky'));
       if (s && SKY_COLOR[s.sky] && Date.now() - s.at < 6 * 3600e3) return s.sky;

@@ -36,6 +36,8 @@
 
   // ================= Trời ngày / đêm (giống trang chủ) =================
   const sky = (() => {
+    // Đã đoán sẵn trong <head> (cùng cách với mọi trang) thì dùng luôn.
+    if (window.LPN_SKY) return window.LPN_NIGHT ? 'dem' : window.LPN_SKY;
     try {
       const s = JSON.parse(localStorage.getItem('lpn:sky'));
       if (s && s.sky && Date.now() - s.at < 6 * 3600e3) return s.sky;

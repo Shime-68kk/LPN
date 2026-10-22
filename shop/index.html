@@ -14,25 +14,35 @@
     catch (e) { location.replace('../home/'); }
   </script>
   <script>
-    // Đoán ngày/đêm ngay từ đầu (giống shop.js), trước khi tải CSS, để chuyển trang không bị chớp nền sáng ban đêm.
-    window.LPN_SKY = (() => {
-      try { const s = JSON.parse(localStorage.getItem('lpn:sky')); if (s && s.sky && Date.now() - s.at < 6 * 3600e3) return s.sky; } catch (e) { /* bỏ qua */ }
-      const h = new Date().getHours();
-      return h >= 18 || h < 5 ? 'dem' : h < 7 ? 'binhminh' : h >= 17 ? 'hoanghon' : 'nang';
+    // Ngày / đêm đoán ngay từ đầu, trước khi tải CSS, và mọi trang đoán cùng một cách (giờ mặt trời mọc / lặn
+    // trang chủ lưu lại, không có thì theo đồng hồ) để chuyển trang không bao giờ trang này tối trang kia sáng.
+    (() => {
+      const d = new Date(), h = d.getHours() + d.getMinutes() / 60, n = d.getHours() * 60 + d.getMinutes();
+      let night = h >= 18.5 || h < 5.5, s = null;
+      try { s = JSON.parse(localStorage.getItem('lpn:sky')); } catch (e) { /* bỏ qua */ }
+      if (s && s.rise && s.set) {
+        const m = (t) => { const x = new Date(t); return x.getHours() * 60 + x.getMinutes(); };
+        night = n < m(s.rise) - 30 || n > m(s.set) + 30;
+      }
+      let sky = night ? 'dem' : h < 6.5 ? 'binhminh' : h >= 17 ? 'hoanghon' : 'nang';
+      // Trời vừa xem còn mới (mưa, mây…) thì giữ, miễn là cùng ngày / đêm.
+      const wasNight = s && (s.night !== undefined ? !!s.night : s.sky === 'dem');
+      if (s && s.sky && Date.now() - s.at < 3600e3 && wasNight === night && (s.sky !== 'dem' || night)) sky = s.sky;
+      window.LPN_SKY = sky;
+      window.LPN_NIGHT = night;
     })();
-    document.documentElement.style.background = LPN_SKY === 'dem' ? '#1D1832' : '#FFF8EF';
-    // Giữ đúng màu nền cả lúc CSS vừa tải xong mà trang chưa kịp nhận ngày/đêm (gỡ ngay ở đầu <body>).
-    (() => { const st = document.createElement('style'); st.id = 'lpn-early'; st.textContent = 'body{background:' + (LPN_SKY === 'dem' ? '#1D1832' : '#FFF8EF') + ' !important}'; document.head.appendChild(st); })();
-    document.querySelector('meta[name="theme-color"]').setAttribute('content', LPN_SKY === 'dem' ? '#1D1832' : '#FFF8EF');
+    document.documentElement.style.background = LPN_NIGHT ? '#1D1832' : '#FFF8EF';
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', LPN_NIGHT ? '#1D1832' : '#FFF8EF');
+    (() => { const st = document.createElement('style'); st.id = 'lpn-early'; st.textContent = 'body{background:' + (LPN_NIGHT ? '#1D1832' : '#FFF8EF') + ' !important}'; document.head.appendChild(st); })();
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="../home/home.css?v=13" />
+  <link rel="stylesheet" href="../home/home.css?v=14" />
   <link rel="stylesheet" href="shop.css?v=5" />
 </head>
 <body data-weather="nang">
-  <script>document.body.classList.toggle('night', LPN_SKY === 'dem'); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
+  <script>document.body.classList.toggle('night', LPN_NIGHT); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
   <main class="shop">
     <header class="shop-head">
       <a class="close" id="btn-back" href="../home/" aria-label="Quay lại"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6" /></svg></a>
@@ -305,6 +315,6 @@
   <script src="../home/sync.js?v=2"></script>
   <script src="../home/wallet.js?v=8"></script>
   <script src="skins.js?v=7"></script>
-  <script src="shop.js?v=6"></script>
+  <script src="shop.js?v=7"></script>
 </body>
 </html>
