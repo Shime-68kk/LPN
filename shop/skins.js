@@ -251,7 +251,7 @@
       end: Date.parse('2100-01-01T00:00:00+07:00'),
       forever: true,
       style: 'destiny',
-      price: 150,     // đốt mỗi hộp
+      price: 200,     // đốt mỗi hộp (độc quyền nên đắt hơn hộp thường)
       pity: 40,       // tối đa 40 hộp là có skin Định mệnh của người kia
       gift: { thuy: 'skin:nang-tho', quang: 'skin:vi-mach' },
       bonus: 'bg:nen-hai-tan-so',
@@ -260,7 +260,7 @@
         { id: 'vi-mach', name: 'Bộ Vi Mạch', who: 'quang', sub: 'Điện tử Viễn thông', items: ['skin:vi-mach', 'fx:song-tin-hieu', 'wing:canh-vi-mach'] },
       ],
       // Tỉ lệ mỗi hộp (phần trăm) theo vai: món nào có rồi thì bỏ ra, phần còn lại chia lại.
-      odds: { partnerSkin: 3, wing: 7, fx: 12, dot: [{ dot: 30, w: 34 }, { dot: 80, w: 25 }] },
+      odds: { partnerSkin: 3, wing: 7, fx: 12, dot: [{ dot: 40, w: 34 }, { dot: 100, w: 25 }] },
     },
   ];
   const eventById = (id) => EVENTS.find((e) => e.id === id) || null;
