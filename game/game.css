@@ -25,6 +25,10 @@ body.night {
   --chip: rgba(39, 33, 67, 0.86);
 }
 
+/* Chuyển giữa các trang (trang chủ, game, truyện, Tiệm Sâu): giữ hình trang cũ tới khi trang mới vẽ xong
+   rồi mờ dần sang, không lộ khung trống. Trình duyệt chưa hỗ trợ thì bỏ qua. */
+@view-transition { navigation: auto; }
+
 * { box-sizing: border-box; }
 
 html, body {

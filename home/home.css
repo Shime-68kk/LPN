@@ -69,6 +69,10 @@ body[data-weather="dem"] {
   --far: #3C3368; --near: #2D2655; --tree: #241E46; --trunk: #1E1A3A;
 }
 
+/* Chuyển giữa các trang (trang chủ, game, truyện, Tiệm Sâu): giữ hình trang cũ tới khi trang mới vẽ xong
+   rồi mờ dần sang, không lộ khung trống. Trình duyệt chưa hỗ trợ thì bỏ qua. */
+@view-transition { navigation: auto; }
+
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
