@@ -54,13 +54,83 @@
     { id: 'bang', ic: '🌳', name: 'Gốc cây bàng', fb: 'Bọ Rùa nói thật, và bạn ấy chỉ về phía một loài hoa. Cây bàng đâu phải hoa.' },
   ];
   const PLACE_OK = 'Đúng rồi! 15 bông sen hồng cuối cùng ở chợ Thái, gom từ 3 cửa hàng. Cánh sen rơi ở hiện trường cũng là manh mối đó. Sâu Tím đang trốn ở bụi sen hồng!';
+  // Không bắt em phải nhớ: tấm ảnh đêm 6/8 có đồng hồ chỉ 11:38 và cửa sổ trời tối, tự suy ra 23:38.
   const LOCK_HINTS = [
-    'Đêm ấy là ngày 6 tháng 8, sinh nhật anh, sau bó sen hồng và chiếc bánh kem.',
-    'Chương 8 có ghi đó, câu gần cuối chương: “… giờ … phút, ngày 6 tháng 8. Em đã nhận lời.”',
-    'Gần nửa đêm rồi: 23 giờ … phút.',
-    'Thôi anh nói luôn: mật mã là 23:38.',
+    'Tấm ảnh anh đánh rơi chụp đúng lúc em nhận lời. Soi chiếc đồng hồ treo tường trong ảnh xem.',
+    'Kim dài chỉ phút: nó nằm giữa số 7 và số 8. Số 7 là 35 phút, đếm thêm 3 vạch nhỏ nữa.',
+    'Kim ngắn nằm giữa số 11 và 12, vậy là 11 giờ hơn. Nhưng nhìn ra cửa sổ: trời tối, có trăng. 11 giờ đêm thì ghi là mấy giờ?',
+    'Thôi anh nói luôn: 23:38. Đúng 23 giờ 38 phút đêm 6/8, sinh nhật anh.',
   ];
-  const LOCK_WRONG = ['Chưa đúng rồi. Thử nhớ lại xem nào.', 'Khoá vẫn cứng ngắc. Đọc lại mảnh thư nhé.', 'Gần lắm rồi đó, thám tử!'];
+  const LOCK_WRONG = ['Chưa đúng rồi. Soi lại tấm ảnh xem nào.', 'Khoá vẫn cứng ngắc. Đồng hồ trong ảnh chỉ mấy giờ nhỉ?', 'Gần lắm rồi đó, thám tử!'];
+  // Nhập gần đúng thì nhắc đúng chỗ sai.
+  const lockNear = (code) => {
+    const hh = code.slice(0, 2), mm = code.slice(2);
+    if (code === '1138') return 'Đọc đồng hồ chuẩn rồi đó! Nhưng ngoài cửa sổ trời đang tối om. 11 giờ đêm thì khoá này phải ghi là mấy giờ?';
+    if (hh === '23') return 'Giờ đúng rồi! Giờ đếm lại kim dài xem: giữa số 7 và số 8, thêm mấy vạch?';
+    if (mm === '38') return hh === '11' ? '' : 'Phút đúng rồi! Còn giờ thì xem kim ngắn, rồi nhìn ra cửa sổ: trời sáng hay tối?';
+    if (hh === '11') return 'Kim ngắn đọc đúng rồi, nhưng trời bên ngoài đang tối. Với lại đếm lại kim dài nữa nha.';
+    return '';
+  };
+
+  // Tấm ảnh đêm 6/8: phòng tối, cửa sổ có trăng, đồng hồ treo tường 11:38, bình sen hồng, bánh kem, hai bé.
+  function photoSVG() {
+    const cx = 80, cy = 80, rr = 54;
+    const at = (deg, r) => [cx + r * Math.sin((deg * Math.PI) / 180), cy - r * Math.cos((deg * Math.PI) / 180)];
+    let ticks = '', nums = '';
+    for (let i = 0; i < 60; i++) {
+      const big = i % 5 === 0;
+      const [x1, y1] = at(i * 6, big ? rr - 11 : rr - 7), [x2, y2] = at(i * 6, rr - 3);
+      ticks += '<path d="M' + x1.toFixed(1) + ' ' + y1.toFixed(1) + 'L' + x2.toFixed(1) + ' ' + y2.toFixed(1) + '" stroke="#3A2614" stroke-width="' + (big ? 2.2 : 1) + '" />';
+    }
+    for (let n = 1; n <= 12; n++) {
+      const [x, y] = at(n * 30, rr - 20);
+      nums += '<text x="' + x.toFixed(1) + '" y="' + (y + 4).toFixed(1) + '" text-anchor="middle">' + n + '</text>';
+    }
+    const [hx, hy] = at((11 + 38 / 60) * 30, 27), [mx, my] = at(38 * 6, 41);
+    const star = (x, y, r) => '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#FFF4D6" />';
+    return '<svg viewBox="0 0 300 240" aria-hidden="true">'
+      + '<defs><radialGradient id="pg-candle" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#FFD66B" stop-opacity=".55" /><stop offset="1" stop-color="#FFD66B" stop-opacity="0" /></radialGradient>'
+      + '<linearGradient id="pg-glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14102E" /><stop offset="1" stop-color="#2C2463" /></linearGradient></defs>'
+      + '<rect width="300" height="240" fill="#3A2F5E" />'
+      + '<rect x="186" y="18" width="98" height="112" rx="6" fill="url(#pg-glass)" stroke="#8C7AB8" stroke-width="5" />'
+      + '<path d="M235 18v112M186 74h98" stroke="#8C7AB8" stroke-width="4" />'
+      + '<circle cx="260" cy="44" r="13" fill="#FFF1C9" /><circle cx="266" cy="39" r="11" fill="#17123A" />'
+      + star(204, 34, 1.6) + star(220, 54, 1.2) + star(208, 100, 1.4) + star(258, 96, 1.6) + star(272, 112, 1.1) + star(246, 60, 1.1)
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="' + (rr + 4) + '" fill="#6E4426" />'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="' + rr + '" fill="#FFF8EF" />'
+      + ticks
+      + '<g font-family="Be Vietnam Pro, sans-serif" font-size="11" font-weight="700" fill="#3A2614">' + nums + '</g>'
+      + '<path d="M' + cx + ' ' + cy + 'L' + hx.toFixed(1) + ' ' + hy.toFixed(1) + '" stroke="#2A1E3D" stroke-width="5" stroke-linecap="round" />'
+      + '<path d="M' + cx + ' ' + cy + 'L' + mx.toFixed(1) + ' ' + my.toFixed(1) + '" stroke="#2A1E3D" stroke-width="3" stroke-linecap="round" />'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="4" fill="#B0412E" />'
+      + '<rect y="186" width="300" height="54" fill="#6B4A32" /><rect y="186" width="300" height="5" fill="#8A6244" />'
+      + '<circle cx="205" cy="150" r="46" fill="url(#pg-candle)" />'
+      // bình sen hồng (đặt bên phải, không che mặt đồng hồ)
+      + '<g transform="translate(216 0)">'
+      + '<path d="M30 160h34l-4 28H34z" fill="#8EC5FF" /><path d="M34 166h26" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="2" />'
+      + '<path d="M40 160C38 140 30 128 26 122M47 160c0-18 2-30 4-40M54 160c4-14 12-24 18-28" stroke="#3F8C5A" stroke-width="2.5" fill="none" />'
+      + '<g fill="#FF9DB4"><ellipse cx="26" cy="118" rx="7" ry="11" transform="rotate(-20 26 118)" /><ellipse cx="51" cy="114" rx="7" ry="12" /><ellipse cx="73" cy="128" rx="7" ry="11" transform="rotate(25 73 128)" /></g>'
+      + '<g fill="#FFC2D1"><ellipse cx="22" cy="120" rx="4" ry="8" transform="rotate(-30 22 120)" /><ellipse cx="46" cy="116" rx="4" ry="9" transform="rotate(-12 46 116)" /><ellipse cx="56" cy="116" rx="4" ry="9" transform="rotate(12 56 116)" /></g>'
+      + '</g>'
+      // hai bé và trái tim
+      + '<rect x="102" y="146" width="24" height="40" rx="12" fill="#B79CF0" /><rect x="130" y="152" width="22" height="34" rx="11" fill="#FFB0C0" />'
+      + '<g fill="#2A1E3D"><circle cx="110" cy="160" r="1.8" /><circle cx="118" cy="160" r="1.8" /><circle cx="137" cy="165" r="1.8" /><circle cx="145" cy="165" r="1.8" /></g>'
+      + '<path d="M127 136c-2.5-3.5-8-2-6.5 2.2c1 2.6 6.5 6 6.5 6s5.5-3.4 6.5-6c1.5-4.2-4-5.7-6.5-2.2z" fill="#FF4F7B" />'
+      // bánh kem có nến
+      + '<rect x="180" y="160" width="52" height="26" rx="5" fill="#FFE0EA" /><rect x="180" y="160" width="52" height="8" rx="4" fill="#FF8FA3" />'
+      + '<g fill="#FFFFFF"><circle cx="190" cy="172" r="2" /><circle cx="206" cy="175" r="2" /><circle cx="222" cy="172" r="2" /></g>'
+      + '<rect x="204" y="144" width="4" height="16" rx="1.5" fill="#8EC5FF" /><path d="M206 132c4 5 3 10 0 11c-3-1-4-6 0-11z" fill="#FFB347" />'
+      + '</svg><span class="polaroid-cap">6/8 · Thái Nguyên</span>';
+  }
+  function openPhoto() {
+    SFX.click();
+    $('photo-big').innerHTML = photoSVG();
+    $('photo-view').hidden = false;
+    $('photo-close').focus({ preventScroll: true });
+  }
+  $('photo-open').addEventListener('click', openPhoto);
+  $('photo-close').addEventListener('click', () => { SFX.click(); $('photo-view').hidden = true; });
+  $('photo-view').addEventListener('click', (e) => { if (e.target === e.currentTarget) $('photo-view').hidden = true; });
   const EPILOGUE = [
     { who: 'tim', text: 'Thám tử Thủy phá án nhanh thật đấy.' },
     { who: 'tim', text: 'Nhưng mà… còn một vụ nữa, anh chưa báo với ai.' },
@@ -254,6 +324,7 @@
     if (s1) rows.push(['🧩', 'Ghép hai mảnh thư: “Mật mã hộp quà là giờ và phút em nhận lời yêu anh.”']);
     if (s2) rows.push(['🐌', 'Ốc Sên nói dối. Bọ Rùa và Châu Chấu nói thật. Sâu Tím trốn ở bụi sen hồng.']);
     if (s3) rows.push(['🐛', 'Đã bắt được Sâu Tím ở bụi sen. Cậu ấy ôm một hộp quà khoá bốn số.']);
+    if (s3) rows.push(['📷', 'Tấm ảnh đêm 6/8 Sâu Tím đánh rơi: có đồng hồ treo tường, ngoài cửa sổ trời tối.']);
     if (s4) rows.push(['🔓', 'Mật mã hộp quà: 23:38. Đêm 6/8, em nhận lời.']);
     if (!rows.length) {
       const li = document.createElement('li');
@@ -804,7 +875,7 @@
     } else {
       pop({
         ic: '🐛', kicker: 'Bắt được rồi!', title: 'Sâu Tím đã sa lưới',
-        note: 'Bị bắt rồi mà Sâu Tím vẫn ôm khư khư một hộp quà. Hộp có khoá, khoá bốn số.',
+        note: 'Bị bắt rồi mà Sâu Tím vẫn ôm khư khư một hộp quà khoá bốn số. Lúc giãy giụa, cậu ấy còn đánh rơi một tấm ảnh chụp đêm 6/8. Nhặt lấy, chắc chắn có ích.',
         ok: 'Mở hộp quà',
         then: () => { stopField(); completeStep(3); },
       });
@@ -1049,6 +1120,7 @@
     $('lock-fb').classList.remove('bad');
     $('lock-bubble').textContent = 'Mở được thì quà là của em hết.';
     $('lock-try').disabled = false;
+    $('photo-open').innerHTML = photoSVG();
     const box = $('dials');
     box.replaceChildren();
     L4.dials.forEach((v, i) => {
@@ -1125,7 +1197,7 @@
     void g.offsetWidth;
     g.classList.add('shake');
     fb.classList.add('bad');
-    fb.textContent = LOCK_WRONG[(L4.tries - 1) % LOCK_WRONG.length] + (L4.tries >= 2 && !L4.hint ? ' Cần thì bấm “Lời nhắn của anh” nha.' : '');
+    fb.textContent = lockNear(code) || LOCK_WRONG[(L4.tries - 1) % LOCK_WRONG.length] + (L4.tries >= 2 && !L4.hint ? ' Cần thì bấm “Lời nhắn của anh” nha.' : '');
   }
   $('lock-try').addEventListener('click', tryLock);
   $('lock-hint').addEventListener('click', () => {
@@ -1350,7 +1422,7 @@
   document.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false });
   document.addEventListener('gesturestart', (e) => e.preventDefault());
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { if (!$('notes').hidden) closeNotes(); }
+    if (e.key === 'Escape') { if (!$('notes').hidden) closeNotes(); else if (!$('photo-view').hidden) $('photo-view').hidden = true; }
     else if ((e.key === ' ' || e.key === 'Enter') && !$('epi').hidden && !FIN.waiting && document.activeElement === document.body) { e.preventDefault(); nextLine(); }
   });
 

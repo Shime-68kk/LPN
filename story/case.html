@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" />
   <link rel="stylesheet" href="../home/home.css?v=12" />
-  <link rel="stylesheet" href="case.css?v=1" />
+  <link rel="stylesheet" href="case.css?v=2" />
 </head>
 <body class="case">
   <header class="c-top">
@@ -99,6 +99,10 @@
         <p class="kicker">Chặng 4 · Hộp quà</p>
         <p class="brief-text">Bị bắt rồi mà Sâu Tím vẫn ôm khư khư một hộp quà khoá bốn số. Hai mảnh thư ở hiện trường ghép lại thành:</p>
         <p class="letter-strip">“Mật mã hộp quà là giờ và phút em nhận lời yêu anh.”</p>
+        <div class="evidence">
+          <button class="polaroid small" id="photo-open" type="button" aria-label="Soi kỹ tấm ảnh đêm 6/8"></button>
+          <p class="evidence-text">Không nhớ giờ cũng không sao. Lúc bị bắt, Sâu Tím đánh rơi <b>tấm ảnh chụp đúng khoảnh khắc ấy</b>. Thám tử giỏi không cần nhớ hết, chỉ cần nhìn kỹ.<span class="evidence-tap">Chạm vào ảnh để soi</span></p>
+        </div>
       </div>
       <div class="lock-stage">
         <canvas class="lock-worm" id="lock-worm" width="240" height="240" aria-hidden="true"></canvas>
@@ -184,6 +188,15 @@
     </div>
   </div>
 
+  <!-- Soi ảnh đêm 6/8 -->
+  <div class="photo-view" id="photo-view" role="dialog" aria-modal="true" aria-label="Tấm ảnh đêm 6/8" hidden>
+    <div class="photo-inner">
+      <div class="polaroid big" id="photo-big"></div>
+      <p class="photo-note">Đồng hồ treo tường, ngoài cửa sổ, cả trên bàn nữa. Thám tử soi kỹ từng góc nhé.</p>
+      <button class="btn primary c-btn" id="photo-close" type="button">Soi xong rồi</button>
+    </div>
+  </div>
+
   <!-- Sổ tay thám tử -->
   <div class="sheet-wrap" id="notes" role="dialog" aria-modal="true" aria-labelledby="notes-title" hidden>
     <div class="sheet-back" id="notes-back"></div>
@@ -202,6 +215,6 @@
   <script src="../home/sync.js?v=2"></script>
   <script src="../home/wallet.js?v=8"></script>
   <script src="../shop/skins.js?v=7"></script>
-  <script src="case.js?v=1"></script>
+  <script src="case.js?v=2"></script>
 </body>
 </html>
