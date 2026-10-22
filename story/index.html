@@ -13,6 +13,18 @@
     try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df') location.replace('../home/'); }
     catch (e) { location.replace('../home/'); }
   </script>
+  <script>
+    // Đoán ngày/đêm ngay từ đầu (giống story.js), trước khi tải CSS, để chuyển trang không bị chớp nền sáng ban đêm.
+    window.LPN_SKY = (() => {
+      try { const s = JSON.parse(localStorage.getItem('lpn:sky')); if (s && s.sky && Date.now() - s.at < 6 * 3600e3) return s.sky; } catch (e) { /* bỏ qua */ }
+      const h = new Date().getHours();
+      return h >= 18 || h < 5 ? 'dem' : h < 7 ? 'binhminh' : h >= 17 ? 'hoanghon' : 'nang';
+    })();
+    document.documentElement.style.background = LPN_SKY === 'dem' ? '#1D1832' : '#FFF8EF';
+    // Giữ đúng màu nền cả lúc CSS vừa tải xong mà trang chưa kịp nhận ngày/đêm (gỡ ngay ở đầu <body>).
+    (() => { const st = document.createElement('style'); st.id = 'lpn-early'; st.textContent = 'body{background:' + (LPN_SKY === 'dem' ? '#1D1832' : '#FFF8EF') + ' !important}'; document.head.appendChild(st); })();
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', LPN_SKY === 'dem' ? '#1D1832' : '#FFF8EF');
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
@@ -20,6 +32,7 @@
   <link rel="stylesheet" href="story.css?v=12" />
 </head>
 <body data-weather="nang">
+  <script>document.body.dataset.weather = LPN_SKY; document.body.classList.toggle('night', LPN_SKY === 'dem'); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
   <!-- Bản đồ các chương -->
   <main class="map" id="map">
     <header class="map-head">

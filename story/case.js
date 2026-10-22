@@ -4,7 +4,10 @@
 // Tiến độ lưu chung với cốt truyện (lpn:story.flags: vlts1…vlts4, vltsGift, vltsDone) nên được sync.js sao lưu.
 'use strict';
 (() => {
-  const ID = 'vlts';
+  // Lượt điều tra: 'vlts' là bản đầu (không có tấm ảnh); 'vlts2' mở lại hồ sơ để em chơi bản mới.
+  // Quà chỉ phát một lần cho cả hai lượt (xem grantReward).
+  const ID = 'vlts2';
+  const GIFT_FLAGS = ['vltsGift', 'vlts2Gift'];
   const CHAPTER = 'c13';
   const STEPS = 4;
   // Quà to khi mở được hộp: skin chỉ có ở vụ án này, đốt cây (đúng bằng 23:38) và hộp quà mở miễn phí.
@@ -182,7 +185,7 @@
   // Phát quà một lần (đánh dấu vltsGift; máy khác đồng bộ về cũng không phát lại).
   function grantReward() {
     save = load();
-    if (save.flags[ID + 'Gift']) return false;
+    if (GIFT_FLAGS.some((k) => save.flags[k])) return false;
     Wallet.update((w) => {
       const k = 'skin:' + REWARD.skin;
       if (!w.owned[k]) w.owned[k] = Date.now();
@@ -1186,6 +1189,7 @@
       $('lock-bubble').textContent = 'Đúng là em nhớ mà 🥹';
       SFX.win();
       buzz([30, 60, 30]);
+      if (!replay) setFlag('4');
       const fresh = replay ? false : grantReward();
       setTimeout(() => { cancelAnimationFrame(L4.raf); startFinale(fresh); }, 1500);
       return;
@@ -1228,13 +1232,13 @@
     current = 5;
     renderTrack();
     show('s-finale');
-    const gifted = flag('Gift');
+    const gifted = GIFT_FLAGS.some((k) => save.flags[k]);
     $('win').hidden = false;
     $('epi').hidden = true;
     $('closed').hidden = true;
     $('rw-dot').textContent = '+' + fmt(REWARD.dot) + ' đốt cây';
     $('rw-box').textContent = REWARD.boxes + ' hộp quà tặng';
-    document.querySelector('.win-sub').textContent = fresh || !gifted || !replay
+    document.querySelector('.win-sub').textContent = fresh || !gifted
       ? 'Quà to của Sâu Tím đã vào túi em:'
       : 'Quà to em đã nhận từ lần phá án đầu tiên:';
     $('win-stamp').style.animation = 'none';

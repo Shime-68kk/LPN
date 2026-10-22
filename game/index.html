@@ -7,12 +7,37 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Sâu Tím</title>
+  <script>
+    // Đoán màu trời ngay từ đầu (giống game.js), để từ trang khác sang không bị chớp nền xanh sáng ban đêm.
+    window.LPN_GAME = (() => {
+      const SKY = { binhminh: '#FFE3D3', nang: '#BFE4FF', may: '#D5DBE9', mua: '#8D9AB5', hoanghon: '#FFB996', dem: '#29224E' };
+      let w = new URLSearchParams(location.search).get('weather');
+      if (!SKY[w]) {
+        w = null;
+        try { const s = JSON.parse(localStorage.getItem('lpn:sky')); if (s && SKY[s.sky] && Date.now() - s.at < 3600e3) w = s.sky; } catch (e) { /* bỏ qua */ }
+        if (!w) {
+          const d = new Date(), h = d.getHours() + d.getMinutes() / 60;
+          w = h >= 18.5 || h < 5.5 ? 'dem' : h < 6.5 ? 'binhminh' : h >= 17 ? 'hoanghon' : 'nang';
+        }
+      }
+      let bg = null;
+      try { bg = (JSON.parse(localStorage.getItem('lpn:wallet')) || {}).equip.bg; } catch (e) { /* bỏ qua */ }
+      // Nền mua ở Tiệm Sâu (xem backdropTop trong skins.js): Lâu Đài luôn là đêm, Sa Pa theo ngày/đêm.
+      if (bg === 'nen-lau-dai') return { sky: '#120A26', night: true };
+      if (bg === 'nen-sapa') return { sky: w === 'dem' ? '#121738' : '#86BCEB', night: w === 'dem' };
+      return { sky: SKY[w], night: w === 'dem' };
+    })();
+    document.documentElement.style.background = LPN_GAME.sky;
+    // Giữ đúng màu nền cả lúc CSS vừa tải xong mà trang chưa kịp nhận ngày/đêm (gỡ ngay ở đầu <body>).
+    (() => { const st = document.createElement('style'); st.id = 'lpn-early'; st.textContent = 'body{background:' + LPN_GAME.sky + ' !important}'; document.head.appendChild(st); })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" />
   <link rel="stylesheet" href="game.css?v=11" />
 </head>
 <body>
+  <script>document.body.style.background = LPN_GAME.sky; document.body.classList.toggle('night', LPN_GAME.night); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
   <canvas id="stage" aria-label="Màn chơi Sâu Tím"></canvas>
 
   <!-- HUD khi đang chơi -->

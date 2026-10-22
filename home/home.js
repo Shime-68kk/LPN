@@ -134,8 +134,12 @@
       $('weather-text').textContent = this.preview
         ? 'Xem thử: ' + SKY_NAME[sky]
         : w.label + (w.temp !== null ? ' · ' + w.temp + '°' : '');
-      // Game Sâu Tím đọc giá trị này để nền game giống trời thật.
-      if (!this.preview) store.set('lpn:sky', { sky, at: Date.now() });
+      // Game Sâu Tím đọc giá trị này để nền game giống trời thật; giờ mọc / lặn để lần sau
+      // mở trang đoán đúng ngày hay đêm ngay từ đầu (đoạn script trong <head> của index.html).
+      if (!this.preview) {
+        const prev = store.get('lpn:sky') || {};
+        store.set('lpn:sky', { sky, night: !!w.night, rise: w.rise || prev.rise || null, set: w.set || prev.set || null, at: Date.now() });
+      }
       Home.render(sky);
       this.renderPanel();
     },
@@ -237,7 +241,7 @@
           card.href = '../story/';
           card.classList.remove('is-case', 'is-new');
           $('story-fill').style.width = (list.length ? (n / list.length) * 100 : 0) + '%';
-          News.check(list, done);
+          News.check(list, done, flags);
           const cs = list.find((c) => c.case && done[c.id] && !flags[c.case.id + 'Done']);
           if (cs) {
             const c = cs.case;
@@ -500,31 +504,36 @@
     if (ch.early && ch.early[WHO]) at = Math.min(at, Date.parse(ch.early[WHO]));
     return Date.now() >= at;
   };
-  // Chương có announce: báo một lần trên mỗi máy, sau khi đã qua màn khoá.
+  // Báo một lần trên mỗi máy, sau khi đã qua màn khoá: chương mới có announce (chưa đọc),
+  // hoặc hồ sơ vụ án được mở lại (case.announce, đã đọc chương nhưng chưa phá án lượt này).
   const News = {
-    ch: null,
-    check(list, done) {
-      if (this.ch) return;
+    item: null,
+    check(list, done, flags) {
+      if (this.item) return;
       const seen = store.get('lpn:news') || {};
-      this.ch = list.find((c) => c.announce && !done[c.id] && !seen[c.id]) || null;
+      const ch = list.find((c) => c.announce && !done[c.id] && !seen[c.id]);
+      const cs = list.find((c) => c.case && c.case.announce && done[c.id] && !flags[c.case.id + 'Done'] && !seen[c.case.announce.key]);
+      if (ch) this.item = { key: ch.id, a: ch.announce, href: '../story/?play=' + encodeURIComponent(ch.id) };
+      else if (cs) this.item = { key: cs.case.announce.key, a: cs.case.announce, href: '../story/' + cs.case.page };
       this.show();
     },
     show() {
-      const ch = this.ch;
-      if (!ch || document.documentElement.classList.contains('need-lock') || !$('news').hidden) return;
-      const a = ch.announce;
+      const it = this.item;
+      if (!it || document.documentElement.classList.contains('need-lock') || !$('news').hidden) return;
+      const a = it.a;
       if (a.logo) $('news-logo').src = a.logo;
+      $('news-kicker').textContent = a.kicker || 'Cốt truyện · Chương mới';
       $('news-title').textContent = a.title;
       $('news-text').textContent = a.text;
       $('news-ok').textContent = a.ok || 'Đọc ngay';
-      $('news-ok').href = '../story/?play=' + encodeURIComponent(ch.id);
+      $('news-ok').href = it.href;
       $('news-later').textContent = a.later || 'Để sau';
       $('news').hidden = false;
     },
     seen() {
-      if (!this.ch) return;
+      if (!this.item) return;
       const seen = store.get('lpn:news') || {};
-      seen[this.ch.id] = Date.now();
+      seen[this.item.key] = Date.now();
       store.set('lpn:news', seen);
     },
     close() {
@@ -606,7 +615,10 @@
   });
 
   // ================= Khởi động =================
-  Weather.current = guessByClock();
+  // Màn đầu dùng đúng ngày / đêm đã đoán trong <head>, để nền không đổi màu giữa chừng.
+  Weather.current = window.LPN_SKY
+    ? Object.assign(guessByClock(), { sky: window.LPN_SKY, night: !!window.LPN_NIGHT, label: window.LPN_NIGHT ? 'Buổi tối' : 'Hôm nay' })
+    : guessByClock();
   Weather.apply();
   fetch('../game/beatmaps/index.json')
     .then((r) => r.json())
