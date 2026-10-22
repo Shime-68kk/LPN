@@ -79,6 +79,7 @@
   // ================= Đồ đang mặc (Tiệm Sâu) =================
   // Skin chỉ đổi hình, không đổi cách chơi hay điểm.
   const LOOK = {};
+  let PET = null;
   function loadLook() {
     const eq = window.Wallet ? Wallet.equipped() : {};
     LOOK.skin = Skins.get('skin', eq.skin);
@@ -92,6 +93,8 @@
     if (top) T.sky = top;
     document.body.classList.toggle('night', !!T.night);
     document.body.style.background = T.sky;
+    // skin có tính cách (Nàng Thơ, Vi Mạch): ở màn chọn bài chạm, vuốt được
+    PET = Skins.makePet ? Skins.makePet(LOOK.skin, (window.Sync && window.Sync.who) || null) : null;
   }
   loadLook();
 
@@ -789,12 +792,20 @@
   function drawHead(hx, hy, pulse) {
     const r = HEAD_R * (1 + (Sau.chew > 0 ? Math.sin(Sau.chew * 50) * 0.05 : 0));
     const tilt = clamp(Sau.vx / (PW * 4), -0.3, 0.3);
+    const pet = Game.state === 'menu' ? PET : null;
     g.save();
     g.translate(hx, hy);
+    g.save();
     g.rotate(tilt);
-    Skins.drawHead(g, r, LOOK.skin, {
+    if (pet) pet.apply(g, r);
+    Skins.drawHead(g, r, LOOK.skin, Object.assign({
       t: clock, ant: Sau.ant, bob: pulse, happy: Sau.happy, blink: Sau.blink, sad: Sau.sad, chew: Sau.chew, mouthOpen: Sau.mouthOpen,
-    }, S);
+    }, pet ? pet.face() : {}), S);
+    g.restore();
+    if (pet) {
+      pet.drawFx(g, r, S);
+      for (const e of pet.takeEvents()) petSound(e);
+    }
     g.restore();
   }
 
@@ -1152,7 +1163,10 @@
           this.loopTick();
         }
       } else if (this.state === 'menu') {
-        Sau.target = PX0 + PW * (0.5 + 0.26 * Math.sin(clock * 0.9));
+        if (PET) PET.update(dt);
+        // đang được chạm, vuốt thì đứng yên cho dễ cưng
+        if (PET && PET.busy()) Sau.target = Sau.headX;
+        else Sau.target = PX0 + PW * (0.5 + 0.26 * Math.sin(clock * 0.9));
         Sau.headY = lerp(Sau.headY || H * 0.28, H * 0.27, 1 - Math.exp(-dt * 3));
         pulse = Math.exp(-((clock % 0.66) * 7)) * 0.6;
       } else if (this.state === 'over') {
@@ -1743,7 +1757,24 @@
   // ================= Điều khiển =================
   const SENS = 1.25;
   let dragId = null, lastPX = 0;
+  // Màn chọn bài: chạm, vuốt, giữ lâu bé sâu có tính cách để xem bé phản ứng.
+  let petId = null;
+  function petSound(e) {
+    if (e === 'squish' || e === 'heart' || e === 'pet') Sound.tone(784 + Math.random() * 260, 0.12, 'sine', 0.12);
+    else if (e === 'pout' || e === 'grumpy') { Sound.tone(300, 0.12, 'triangle', 0.16); Sound.tone(240, 0.16, 'triangle', 0.14, null, 0.08); }
+    else if (e === 'teary') { Sound.tone(587, 0.22, 'sine', 0.12); Sound.tone(494, 0.3, 'sine', 0.12, null, 0.16); }
+    else { Sound.tone(988, 0.08, 'triangle', 0.14); Sound.tone(1319, 0.12, 'sine', 0.1, null, 0.07); }
+    buzz(8);
+  }
   canvas.addEventListener('pointerdown', (e) => {
+    if (Game.state === 'menu' && PET) {
+      if (PET.pointer('down', e.clientX - Sau.headX, e.clientY - Sau.headY, HEAD_R)) {
+        Sound.unlock();
+        petId = e.pointerId;
+        try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* bỏ qua */ }
+      }
+      return;
+    }
     if (Game.state !== 'play') return;
     dragId = e.pointerId;
     lastPX = e.clientX;
@@ -1751,6 +1782,7 @@
     if (Game.hintT > 0) Game.hintT = Math.min(Game.hintT, 0.6);
   });
   canvas.addEventListener('pointermove', (e) => {
+    if (petId !== null && e.pointerId === petId && PET) { PET.pointer('move', e.clientX - Sau.headX, e.clientY - Sau.headY, HEAD_R); return; }
     if (Game.state !== 'play') return;
     if (e.pointerType === 'mouse' && dragId === null) {
       Sau.target = clamp(e.clientX, PX0 + 18 * S, PX0 + PW - 18 * S);
@@ -1760,7 +1792,10 @@
     Sau.target = clamp(Sau.target + (e.clientX - lastPX) * SENS, PX0 + 18 * S, PX0 + PW - 18 * S);
     lastPX = e.clientX;
   });
-  const endDrag = (e) => { if (e.pointerId === dragId) dragId = null; };
+  const endDrag = (e) => {
+    if (petId !== null && e.pointerId === petId) { if (PET) PET.pointer('up', e.clientX - Sau.headX, e.clientY - Sau.headY, HEAD_R); petId = null; }
+    if (e.pointerId === dragId) dragId = null;
+  };
   canvas.addEventListener('pointerup', endDrag);
   canvas.addEventListener('pointercancel', endDrag);
 

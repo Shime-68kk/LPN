@@ -336,15 +336,54 @@
         Skins.drawSegment(x, seg, L.skin, k % 5 === 0 ? 2 : k % 2, S);
         x.restore();
       }
+      // skin có tính cách: chạm, vuốt, giữ lâu thì bé phản ứng (xem Skins.makePet)
+      const pet = petFor(L.skin);
+      if (pet) { pet.update(dt); for (const e of pet.takeEvents()) petSound(e); }
+      STAGE_HEAD = { hx, hy, r };
       x.save();
       x.translate(hx, hy);
+      x.save();
       x.rotate(Math.cos(t * 1.4) * 0.08);
-      Skins.drawHead(x, r, L.skin, { t, ant: Math.sin(t * 2) * 3 * S, bob: Math.abs(Math.sin(t * 3)) * 0.6, happy: eat.happy, blink: eat.blink, sad: 0, chew: eat.chew, mouthOpen: eat.phase > 0.8 && eat.phase < 1.05 ? 0.7 : 0 }, S);
+      if (pet) pet.apply(x, r);
+      Skins.drawHead(x, r, L.skin, Object.assign({ t, ant: Math.sin(t * 2) * 3 * S, bob: Math.abs(Math.sin(t * 3)) * 0.6, happy: eat.happy, blink: eat.blink, sad: 0, chew: eat.chew, mouthOpen: eat.phase > 0.8 && eat.phase < 1.05 ? 0.7 : 0 }, pet ? pet.face() : {}), S);
+      x.restore();
+      if (pet) pet.drawFx(x, r, S);
       x.restore();
     }
     stepParts(parts, dt, S);
     for (const p of parts) Skins.drawParticle(x, p, S);
   }
+
+  // ================= Chạm & vuốt bé sâu có tính cách =================
+  let PET = null, PET_ITEM = null, STAGE_HEAD = null;
+  function petFor(skin) {
+    if (PET_ITEM !== skin) { PET_ITEM = skin; PET = Skins.makePet(skin, (window.Sync && window.Sync.who) || null); }
+    return PET;
+  }
+  function petSound(e) {
+    if (e === 'squish' || e === 'heart' || e === 'pet') tone(784 + Math.random() * 260, 0.12, 0.05, 0, 'sine');
+    else if (e === 'pout' || e === 'grumpy') { tone(300, 0.12, 0.07, 0, 'triangle'); tone(240, 0.16, 0.06, 0.08, 'triangle'); }
+    else if (e === 'teary') { tone(587, 0.22, 0.05); tone(494, 0.3, 0.05, 0.16); }
+    else if (e === 'shy' || e === 'blush') { tone(660, 0.1, 0.05); tone(880, 0.14, 0.04, 0.08); }
+    else { tone(988, 0.08, 0.07, 0, 'triangle'); tone(1319, 0.12, 0.05, 0.07); }
+    buzz(8);
+  }
+  const petPos = (e) => { const b = stage.getBoundingClientRect(); return [e.clientX - b.left - STAGE_HEAD.hx, e.clientY - b.top - STAGE_HEAD.hy]; };
+  stage.addEventListener('pointerdown', (e) => {
+    if (!PET || !STAGE_HEAD) return;
+    const [px, py] = petPos(e);
+    if (PET.pointer('down', px, py, STAGE_HEAD.r)) { try { stage.setPointerCapture(e.pointerId); } catch (err) { /* bỏ qua */ } }
+  });
+  stage.addEventListener('pointermove', (e) => { if (PET && PET.g) { const [px, py] = petPos(e); PET.pointer('move', px, py, STAGE_HEAD.r); } });
+  const petUp = (e) => { if (PET && PET.g) { const [px, py] = petPos(e); PET.pointer('up', px, py, STAGE_HEAD.r); } };
+  stage.addEventListener('pointerup', petUp);
+  stage.addEventListener('pointercancel', petUp);
+  // Chạm trúng bé thì không cho trang cuộn, để vuốt được; chạm chỗ khác vẫn cuộn bình thường.
+  stage.addEventListener('touchstart', (e) => {
+    if (!PET || !STAGE_HEAD) return;
+    const b = stage.getBoundingClientRect(), t0 = e.touches[0];
+    if (Math.hypot(t0.clientX - b.left - STAGE_HEAD.hx, t0.clientY - b.top - STAGE_HEAD.hy + STAGE_HEAD.r * 0.35) < STAGE_HEAD.r * 1.9) e.preventDefault();
+  }, { passive: false });
 
   // ================= Thẻ món đồ =================
   function drawThumb(c, item, t) {

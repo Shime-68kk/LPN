@@ -155,7 +155,7 @@
     { id: 'nang-tho', slot: 'skin', name: 'Sâu Nàng Thơ', rarity: 'dinhmenh', price: 0, ev: 'dinh-menh', who: 'thuy',
       memory: 'Cô giáo Văn tương lai: tà áo dài trắng thêu hoa đào, nón lá nghiêng, cây bút lông ngỗng giắt bên vành. Thương em, thương cả những trang thơ.',
       pal: { body: '#FFFBF4', body2: '#F9EFE4', head: '#FFE8EE', feet: '#C9A46A', ant: '#8C6A4A', antTip: '#FF8FA3', blush: 'rgba(255,111,142,0.62)', mark: '#B88A4A', mouth: '#C2456A', cocoon: '#FFF4E6', cocoonLine: '#E8D2B4', shine: 'rgba(255,255,255,0.7)' },
-      acc: 'nonla', pattern: 'aodai', mark: 'book', eyes: 'lash', antHide: true, idle: 'poet' },
+      acc: 'nonla', pattern: 'aodai', mark: 'book', eyes: 'lash', antHide: true, idle: 'poet', persona: 'tho' },
     { id: 'trang-tho', slot: 'fx', name: 'Trang Thơ', rarity: 'suthi', price: 0, ev: 'dinh-menh', who: 'thuy',
       memory: 'Lá vỡ ra thành những trang giấy nhỏ, chữ bay lả tả như câu thơ em chưa kịp viết xong.',
       fx: { kind: 'page', colors: ['#C23A5C', '#D9A441', '#7A5CC8'] } },
@@ -165,7 +165,7 @@
     { id: 'vi-mach', slot: 'skin', name: 'Sâu Vi Mạch', rarity: 'dinhmenh', price: 0, ev: 'dinh-menh', who: 'quang',
       memory: 'Kỹ sư Điện tử Viễn thông: thân là bảng mạch, râu là ăng-ten, tai nghe luôn bật. Sóng phát đi chỉ có một tần số: Lệ Thủy.',
       pal: { body: '#12594B', body2: '#0F4F43', head: '#B79CF0', feet: '#C9A24A', ant: '#C9CED6', antTip: '#38E8C6', mark: '#F2C14E', cocoon: '#1E6E5E', cocoonLine: '#F2C14E', blush: 'rgba(255,111,142,0.5)', shine: 'rgba(255,255,255,0.3)' },
-      acc: 'headset', pattern: 'pcb', mark: 'chip', glow: '#38E8C6', antLen: 1.95, idle: 'signal' },
+      acc: 'headset', pattern: 'pcb', mark: 'chip', glow: '#38E8C6', antLen: 1.95, idle: 'signal', persona: 'mach' },
     { id: 'song-tin-hieu', slot: 'fx', name: 'Sóng Tín Hiệu', rarity: 'suthi', price: 0, ev: 'dinh-menh', who: 'quang',
       memory: 'Mỗi miếng lá là một gói tin: tia điện, số 0, số 1, và một vòng sóng gửi về Thái Nguyên.',
       fx: { kind: 'signal', colors: ['#14B89A', '#E8A93B', '#4FA3FF'] } },
@@ -1090,8 +1090,208 @@
     }
   }
 
+  // ================= Nét mặt theo tâm trạng (khi được chạm, vuốt) =================
+  // mood: smile | happy | wink | blush | squish | pout | shy | dreamy | focus | grumpy | kid | heart | teary | surprised
+  // look: liếc sang trái (-1) hay phải (1).
+  function moodFace(x, r, p, skin, st, S, t) {
+    const mood = st.mood, lk = (st.look || 0) * r * 0.13;
+    const ey = -r * 0.1, my = r * 0.36, mx = lk * 0.7;
+    const L = -r * 0.32 + lk, R = r * 0.32 + lk;
+    const open = [];
+    x.lineCap = 'round';
+    x.lineJoin = 'round';
+    x.strokeStyle = p.eye;
+    x.lineWidth = 2 * S;
+    const dot = (ex, yy, er, hl) => {
+      x.fillStyle = p.eye;
+      x.beginPath(); x.arc(ex, yy, er, 0, TAU); x.fill();
+      x.fillStyle = p.eye === BASE.eye ? '#FFFFFF' : '#2A1E3D';
+      x.beginPath(); x.arc(ex + er * 0.35, yy - er * 0.35, er * 0.36, 0, TAU); x.fill();
+      if (hl > 1) { x.beginPath(); x.arc(ex - er * 0.32, yy + er * 0.32, er * 0.18, 0, TAU); x.fill(); }
+      open.push([ex, yy]);
+    };
+    const arcUp = (ex, w) => { x.beginPath(); x.moveTo(ex - w, ey + w * 0.35); x.quadraticCurveTo(ex, ey - w * 1.15, ex + w, ey + w * 0.35); x.stroke(); };
+    const arcDown = (ex, w) => { x.beginPath(); x.moveTo(ex - w, ey - w * 0.2); x.quadraticCurveTo(ex, ey + w * 0.85, ex + w, ey - w * 0.2); x.stroke(); };
+    const blush = (k, lines) => {
+      x.fillStyle = 'rgba(255,90,130,' + Math.min(0.75, 0.32 * k) + ')';
+      for (const sd of [-1, 1]) { x.beginPath(); x.ellipse(sd * r * 0.56, r * 0.25, r * 0.22, r * 0.14, 0, 0, TAU); x.fill(); }
+      if (lines) {
+        x.save();
+        x.strokeStyle = 'rgba(214,60,100,0.7)';
+        x.lineWidth = 1.1 * S;
+        for (const sd of [-1, 1]) for (let i = -1; i <= 1; i++) {
+          x.beginPath(); x.moveTo(sd * r * 0.56 + i * r * 0.08 - r * 0.03, r * 0.3); x.lineTo(sd * r * 0.56 + i * r * 0.08 + r * 0.03, r * 0.19); x.stroke();
+        }
+        x.restore();
+      }
+    };
+    const smile = (w) => { x.strokeStyle = p.mouth; x.beginPath(); x.moveTo(mx - r * w, my - r * 0.03); x.quadraticCurveTo(mx, my + r * (w * 0.8), mx + r * w, my - r * 0.03); x.stroke(); };
+    const openMouth = (w, h) => {
+      x.fillStyle = p.mouth === BASE.mouth ? '#4A2B4F' : p.mouth;
+      x.beginPath(); x.moveTo(mx - r * w, my - r * 0.05); x.quadraticCurveTo(mx, my + r * h, mx + r * w, my - r * 0.05); x.closePath(); x.fill();
+      x.fillStyle = p.tongue;
+      x.beginPath(); x.ellipse(mx, my + r * h * 0.42, r * w * 0.5, r * 0.05, 0, 0, TAU); x.fill();
+    };
+    switch (mood) {
+      case 'happy':
+        arcUp(L, r * 0.12); arcUp(R, r * 0.12); openMouth(0.16, 0.26); blush(1.1);
+        break;
+      case 'wink':
+        dot(L, ey, r * 0.115, 1); arcUp(R, r * 0.12); smile(0.15);
+        x.fillStyle = p.tongue; x.beginPath(); x.ellipse(mx + r * 0.07, my + r * 0.08, r * 0.055, r * 0.045, 0, 0, TAU); x.fill();
+        break;
+      case 'blush':
+        dot(L, ey + r * 0.02, r * 0.1, 1); dot(R, ey + r * 0.02, r * 0.1, 1); blush(1.5, true); smile(0.09);
+        break;
+      case 'squish':
+        x.beginPath();
+        x.moveTo(L - r * 0.1, ey - r * 0.09); x.lineTo(L + r * 0.07, ey); x.lineTo(L - r * 0.1, ey + r * 0.09);
+        x.moveTo(R + r * 0.1, ey - r * 0.09); x.lineTo(R - r * 0.07, ey); x.lineTo(R + r * 0.1, ey + r * 0.09);
+        x.stroke();
+        blush(1.6);
+        x.strokeStyle = p.mouth;
+        x.beginPath(); x.arc(mx - r * 0.06, my, r * 0.06, 0.1, Math.PI - 0.1); x.arc(mx + r * 0.06, my, r * 0.06, 0.1, Math.PI - 0.1); x.stroke();
+        break;
+      case 'pout': {
+        // dỗi: mí mắt sụp, liếc đi chỗ khác, má phồng một bên, môi chu ra
+        const sd = (st.look || 0) < 0 ? 1 : -1;
+        x.fillStyle = p.head;
+        x.beginPath(); x.arc(sd * r * 0.84, r * 0.26, r * 0.24, 0, TAU); x.fill();
+        x.fillStyle = 'rgba(255,90,130,0.5)';
+        x.beginPath(); x.ellipse(sd * r * 0.7, r * 0.27, r * 0.2, r * 0.13, 0, 0, TAU); x.fill();
+        for (const e of [L, R]) {
+          dot(e + lk * 0.4, ey + r * 0.03, r * 0.1, 1);
+          x.fillStyle = p.head;
+          x.fillRect(e - r * 0.16, ey - r * 0.2, r * 0.32, r * 0.17);
+          x.beginPath(); x.moveTo(e - r * 0.14, ey - r * 0.03 + (e < 0 ? -1 : 1) * r * 0.025); x.lineTo(e + r * 0.14, ey - r * 0.03 - (e < 0 ? -1 : 1) * r * 0.025); x.stroke();
+        }
+        x.strokeStyle = p.mouth;
+        x.lineWidth = 1.8 * S;
+        x.beginPath(); x.arc(mx + sd * r * 0.06, my + r * 0.02, r * 0.055, 0, TAU); x.stroke();
+        x.lineWidth = 2 * S;
+        break;
+      }
+      case 'shy':
+        dot(L, ey + r * 0.07, r * 0.09, 1); dot(R, ey + r * 0.07, r * 0.09, 1); blush(1.9, true);
+        x.strokeStyle = p.mouth;
+        x.beginPath(); x.moveTo(mx - r * 0.08, my + r * 0.01); x.quadraticCurveTo(mx - r * 0.04, my - r * 0.04, mx, my + r * 0.01); x.quadraticCurveTo(mx + r * 0.04, my + r * 0.06, mx + r * 0.08, my + r * 0.01); x.stroke();
+        x.fillStyle = 'rgba(150,200,255,0.9)';
+        x.beginPath(); x.moveTo(r * 0.74, -r * 0.62); x.quadraticCurveTo(r * 0.86, -r * 0.4, r * 0.74, -r * 0.34); x.quadraticCurveTo(r * 0.62, -r * 0.4, r * 0.74, -r * 0.62); x.fill();
+        break;
+      case 'dreamy':
+        arcDown(L, r * 0.11); arcDown(R, r * 0.11); blush(1.1); smile(0.1);
+        break;
+      case 'focus':
+        x.fillStyle = p.eye;
+        for (const e of [L, R]) { x.beginPath(); x.ellipse(e, ey + r * 0.03, r * 0.11, r * 0.055, 0, 0, TAU); x.fill(); }
+        x.beginPath();
+        x.moveTo(L - r * 0.15, ey - r * 0.2); x.lineTo(L + r * 0.12, ey - r * 0.15);
+        x.moveTo(R + r * 0.15, ey - r * 0.2); x.lineTo(R - r * 0.12, ey - r * 0.15);
+        x.stroke();
+        x.strokeStyle = p.mouth;
+        x.beginPath(); x.moveTo(mx - r * 0.1, my + r * 0.01); x.lineTo(mx + r * 0.1, my); x.stroke();
+        break;
+      case 'grumpy':
+        dot(L, ey + r * 0.04, r * 0.085, 1); dot(R, ey + r * 0.04, r * 0.085, 1);
+        x.lineWidth = 2.6 * S;
+        x.beginPath();
+        x.moveTo(L - r * 0.15, ey - r * 0.28); x.lineTo(L + r * 0.13, ey - r * 0.13);
+        x.moveTo(R + r * 0.15, ey - r * 0.28); x.lineTo(R - r * 0.13, ey - r * 0.13);
+        x.stroke();
+        x.lineWidth = 2 * S;
+        x.strokeStyle = p.mouth;
+        x.beginPath(); x.moveTo(mx - r * 0.14, my + r * 0.06); x.lineTo(mx - r * 0.05, my - r * 0.01); x.lineTo(mx + r * 0.03, my + r * 0.06); x.lineTo(mx + r * 0.13, my - r * 0.01); x.stroke();
+        break;
+      case 'kid':
+        dot(L, ey, r * 0.155, 2); dot(R, ey, r * 0.155, 2); blush(1.3); openMouth(0.19, 0.32);
+        break;
+      case 'heart':
+        x.fillStyle = '#FF4F7B';
+        for (const e of [L, R]) { heartPath(x, e, ey + r * 0.02, r * 0.17 * (1 + 0.12 * Math.sin(t * 14))); x.fill(); }
+        blush(1.2); openMouth(0.15, 0.24);
+        break;
+      case 'teary': {
+        dot(L, ey, r * 0.15, 2); dot(R, ey, r * 0.15, 2);
+        x.strokeStyle = 'rgba(150,200,255,0.95)';
+        x.lineWidth = 1.6 * S;
+        for (const e of [L, R]) { x.beginPath(); x.arc(e, ey, r * 0.17, 0.35, Math.PI - 0.35); x.stroke(); }
+        const q = (t * 1.3) % 1;
+        x.fillStyle = 'rgba(150,200,255,' + (1 - q * 0.6) + ')';
+        const tx = R + r * 0.1, ty = ey + r * 0.18 + q * r * 0.5;
+        x.beginPath(); x.moveTo(tx, ty - r * 0.08); x.quadraticCurveTo(tx + r * 0.06, ty, tx, ty + r * 0.04); x.quadraticCurveTo(tx - r * 0.06, ty, tx, ty - r * 0.08); x.fill();
+        blush(1.1);
+        x.strokeStyle = p.mouth;
+        x.lineWidth = 2 * S;
+        x.beginPath(); x.moveTo(mx - r * 0.13, my + r * 0.07); x.quadraticCurveTo(mx - r * 0.06, my - r * 0.04, mx, my + r * 0.03); x.quadraticCurveTo(mx + r * 0.06, my - r * 0.04, mx + r * 0.13, my + r * 0.07); x.stroke();
+        break;
+      }
+      case 'surprised':
+        dot(L, ey, r * 0.12, 1); dot(R, ey, r * 0.12, 1);
+        x.fillStyle = p.mouth === BASE.mouth ? '#4A2B4F' : p.mouth;
+        x.beginPath(); x.ellipse(mx, my + r * 0.04, r * 0.07, r * 0.09, 0, 0, TAU); x.fill();
+        break;
+      default:
+        dot(L, ey, r * 0.115, 1); dot(R, ey, r * 0.115, 1); smile(0.15);
+    }
+    // lông mi cho mắt đang mở (Nàng Thơ); lúc ngại nhìn xuống thì thôi kẻo trông như cau mày
+    if (skin.eyes === 'lash' && mood !== 'shy') {
+      x.strokeStyle = p.eye;
+      x.lineWidth = 1.5 * S;
+      for (const [ex, yy] of open) {
+        const sd = ex < lk ? -1 : 1;
+        for (let i = 0; i < 2; i++) {
+          const a = -Math.PI / 2 + sd * (0.75 + i * 0.4);
+          x.beginPath(); x.moveTo(ex + Math.cos(a) * r * 0.12, yy + Math.sin(a) * r * 0.12); x.lineTo(ex + Math.cos(a) * r * 0.22, yy + Math.sin(a) * r * 0.22); x.stroke();
+        }
+      }
+      x.lineWidth = 2 * S;
+    }
+  }
+  // Hiệu ứng nhỏ theo tâm trạng, vẽ sau phụ kiện: nốt nhạc ngân nga, khói bốc khi cáu, lấp lánh khi vui.
+  function moodExtras(x, r, st, S, t) {
+    const mood = st.mood;
+    if (mood === 'dreamy') {
+      x.font = '700 ' + Math.round(r * 0.55) + 'px system-ui, sans-serif';
+      x.textAlign = 'center';
+      x.textBaseline = 'middle';
+      for (let k = 0; k < 2; k++) {
+        const q = (t * 0.45 + k * 0.5) % 1;
+        x.globalAlpha = Math.sin(q * Math.PI);
+        x.fillStyle = k ? '#C27AE0' : '#FF8FA3';
+        x.fillText(k ? '♫' : '♪', -r * (1.05 + Math.sin(t * 2 + k) * 0.15), -r * (0.5 + q * 1.3));
+      }
+      x.globalAlpha = 1;
+    } else if (mood === 'grumpy') {
+      for (let k = 0; k < 3; k++) {
+        const q = (t * 1.4 + k / 3) % 1;
+        x.globalAlpha = (1 - q) * 0.75;
+        x.fillStyle = '#E8ECF2';
+        x.beginPath(); x.arc(r * (0.7 + q * 0.35 + Math.sin(q * 6 + k) * 0.08), -r * (1.0 + q * 1.1), r * (0.12 + q * 0.2), 0, TAU); x.fill();
+      }
+      x.globalAlpha = 1;
+      // dấu giận đỏ trên trán
+      x.strokeStyle = '#FF4F5E';
+      x.lineWidth = 2 * S;
+      const ax = -r * 0.62, ay = -r * 0.62, a = r * 0.13;
+      x.beginPath();
+      x.moveTo(ax - a, ay - a * 0.3); x.quadraticCurveTo(ax - a * 0.3, ay - a * 0.3, ax - a * 0.3, ay - a);
+      x.moveTo(ax + a, ay - a * 0.3); x.quadraticCurveTo(ax + a * 0.3, ay - a * 0.3, ax + a * 0.3, ay - a);
+      x.moveTo(ax - a, ay + a * 0.3); x.quadraticCurveTo(ax - a * 0.3, ay + a * 0.3, ax - a * 0.3, ay + a);
+      x.moveTo(ax + a, ay + a * 0.3); x.quadraticCurveTo(ax + a * 0.3, ay + a * 0.3, ax + a * 0.3, ay + a);
+      x.stroke();
+    } else if (mood === 'kid' || mood === 'heart' || mood === 'happy') {
+      x.fillStyle = '#FFE27A';
+      for (const sd of [-1, 1]) {
+        x.globalAlpha = 0.5 + 0.5 * Math.abs(Math.sin(t * 6 + sd));
+        starPath(x, sd * r * 1.1, -r * 0.55, r * 0.14, r * 0.05);
+        x.fill();
+      }
+      x.globalAlpha = 1;
+    }
+  }
+
   // ================= Đầu =================
-  // st: { ant, bob, happy, blink, sad, chew, mouthOpen, t }
+  // st: { ant, bob, happy, blink, sad, chew, mouthOpen, t, mood, look }
   function drawHead(x, r, skin, st, S) {
     const p = palette(skin);
     const t = st.t || 0;
@@ -1119,9 +1319,9 @@
       }
       x.fillStyle = p.antTip;
       if (signal) {
-        if (Math.floor(t * 2.5 + (side > 0 ? 1 : 0)) % 2) x.fillStyle = '#FF4F7B';
+        if (st.mood === 'grumpy' || Math.floor(t * 2.5 + (side > 0 ? 1 : 0)) % 2) x.fillStyle = '#FF4F7B';
         const ph = (t % 2.4) / 2.4;
-        if (ph < 0.62) {
+        if (ph < 0.62 && st.mood !== 'grumpy') {
           x.save();
           x.strokeStyle = '#38E8C6';
           x.lineWidth = 1.4 * S;
@@ -1158,8 +1358,10 @@
     x.lineWidth = 2 * S;
     const sleepy = skin.eyes === 'sleepy';
     // Nàng Thơ thỉnh thoảng nhắm mắt mơ màng (như đang ngâm thơ); Vi Mạch thỉnh thoảng "bắt được sóng" mắt hoá tim.
-    const dream = skin.idle === 'poet' && t % 7 > 5.7 && !(st.sad > 0);
-    const heartEye = skin.idle === 'signal' && t % 8.5 > 7.3 && !(st.happy > 0) && !(st.sad > 0) && !(st.blink > 0);
+    const dream = !st.mood && skin.idle === 'poet' && t % 7 > 5.7 && !(st.sad > 0);
+    const heartEye = !st.mood && skin.idle === 'signal' && t % 8.5 > 7.3 && !(st.happy > 0) && !(st.sad > 0) && !(st.blink > 0);
+    if (st.mood) moodFace(x, r, p, skin, st, S, t);
+    else {
     for (const side of [-1, 1]) {
       const ex = side * r * 0.32, ey = -r * 0.1;
       if (heartEye) {
@@ -1212,7 +1414,9 @@
     } else {
       x.beginPath(); x.moveTo(-r * 0.12, my - r * 0.02); x.quadraticCurveTo(0, my + r * 0.1, r * 0.12, my - r * 0.02); x.stroke();
     }
+    }
     drawAccessory(x, skin.acc, r, S, t, false, st);
+    if (st.mood) moodExtras(x, r, st, S, t);
     if (dream) {
       // một trái tim nhỏ bay lên bên vành nón lúc mơ màng
       const k = (t % 7 - 5.7) / 1.3;
@@ -1700,6 +1904,236 @@
     x.globalAlpha = 1;
   }
 
+  // ================= Chạm & vuốt: skin có tính cách (độc quyền) =================
+  // Mỗi phản ứng: mood (nét mặt), say (câu nói, có thể chỉ hiện trên máy của một người), dur (giây),
+  // bounce (nhún), squish (bẹp má khi được vuốt), look (liếc), lean (nghiêng), hearts/notes, then (phản ứng kế tiếp).
+  // Nàng Thơ (Lệ Thủy): nhẹ nhàng, đôi lúc cá tính, thích tự do, hay nũng nịu.
+  // Vi Mạch (anh Quang): thương em, hơi cáu khi đang làm việc, nhưng trước mặt em thì như trẻ con.
+  const PERSONA = {
+    tho: {
+      bubble: { bg: '#FFF8F0', ink: '#7A3B52', line: '#FFB7C9' },
+      idle: [
+        { mood: 'dreamy', dur: 3.2, look: -0.2, say: ['La la la~', 'Gió mát ghê…', null, null] },
+        { mood: 'smile', dur: 2.6, look: 0.8, say: ['Muốn đi chơi quá…', 'Hôm nay đi đâu ta?', 'Mây trôi đẹp ghê…', null] },
+        { mood: 'wink', dur: 1.4, say: [null, 'Hihi'] },
+      ],
+      tap: [
+        { mood: 'smile', dur: 1.6, bounce: 0.6, say: ['Hihi', 'Em đây nè', 'Đang làm thơ nè', { t: 'Gì đó anh~', who: 'quang' }] },
+        { mood: 'wink', dur: 1.5, bounce: 0.5, say: ['Hì~', 'Nhẹ thôi nha', { t: 'Anh nhớ em hả?', who: 'quang' }] },
+        { mood: 'blush', dur: 1.7, say: ['Ơ…', 'Ngượng ghê', { t: 'Nhìn gì đó anh', who: 'quang' }] },
+      ],
+      pet: { mood: 'squish', dur: 1.4, squish: 1, hearts: 2, say: ['Ưm~ thêm nữa', 'Nũng xíu nha', 'Dễ chịu ghê~', { t: 'Thương em hông?', who: 'quang' }] },
+      spam: {
+        mood: 'pout', dur: 2.2, look: -0.9, lean: -0.16,
+        say: ['Hứ!', 'Dỗi rồi đó!', 'Đừng chọc nữa mà', { t: 'Anh chọc em hoài!', who: 'quang' }],
+        then: { after: 2.1, mood: 'wink', dur: 1.6, look: 0.2, bounce: 0.6, say: ['Đùa thôi~', 'Hì, hết dỗi rồi'] },
+      },
+      hold: { mood: 'shy', dur: 2.2, say: ['Ngại quá à…', 'Ơ… nhìn gì vậy', 'Hihi ngại ghê'], then: { after: 2.2, mood: 'happy', dur: 1.4, bounce: 0.7, hearts: 3, say: ['Hì hì'] } },
+    },
+    mach: {
+      bubble: { bg: '#0B2A2A', ink: '#9FF5E4', line: '#2FD4B4' },
+      work: 'focus', // để yên một lúc là quay lại làm việc, mặt nghiêm
+      idle: [
+        { mood: 'grumpy', dur: 2.4, say: ['Bug ở đâu ra vậy!', 'Cáu ghê á…', 'Sao chạy không được!'] },
+        { mood: 'focus', dur: 3, say: ['Đang code…', 'Sắp xong rồi…', 'Chút nữa thôi…', null] },
+      ],
+      idleWithHer: [
+        { mood: 'kid', dur: 1.6, bounce: 0.6, say: [null, 'Hì hì', { t: 'Chơi với anh đi', who: 'thuy' }] },
+        { mood: 'heart', dur: 1.6, hearts: 2, say: [null, { t: 'Nhớ em ghê', who: 'thuy' }] },
+      ],
+      // đang làm việc mà bị chạm: cáu một giây rồi nhận ra là em, tan chảy thành trẻ con
+      tapWork: {
+        mood: 'grumpy', dur: 0.8, say: ['Ai đấy!', 'Đang bận mà…'],
+        then: { after: 0.8, mood: 'kid', dur: 1.9, bounce: 1, hearts: 3, say: [{ t: 'A, em à! 🥺', who: 'thuy' }, { t: 'Hì, nghỉ tay chút', who: 'quang' }] },
+      },
+      tap: [
+        { mood: 'kid', dur: 1.4, bounce: 0.8, say: ['Hì hì', 'Anh ngoan mà', { t: 'Em chơi với anh đi', who: 'thuy' }] },
+        { mood: 'heart', dur: 1.4, bounce: 0.5, hearts: 2, say: ['Hehe', { t: 'Thương em', who: 'thuy' }] },
+        { mood: 'surprised', dur: 1, bounce: 0.4, say: ['Ơ!', 'Gì vậy gì vậy'] },
+      ],
+      pet: { mood: 'heart', dur: 1.4, squish: 1, hearts: 2, say: ['Nữa đi mà~', 'Hì hì sướng ghê', { t: 'Thương em nhất', who: 'thuy' }] },
+      spam: {
+        mood: 'teary', dur: 2, say: ['Đừng chọc anh mà~', 'Anh mách mẹ đó!', 'Huhu…'],
+        then: { after: 2, mood: 'kid', dur: 1.4, bounce: 0.8, say: ['Hì, đùa đó!', 'Hết khóc rồi'] },
+      },
+      hold: { mood: 'heart', dur: 2.4, bounce: 1.2, hearts: 4, say: [{ t: 'Thương em nhất trên đời', who: 'thuy' }, 'Hì hì hì', { t: 'Ôm cái nữa', who: 'thuy' }] },
+    },
+  };
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
+
+  // Bộ điều khiển một bé sâu có tính cách. Trang gọi pointer(...) với toạ độ so với tâm đầu,
+  // update(dt) mỗi khung hình, face() để lấy nét mặt, apply(x, r) trước khi vẽ đầu, drawFx(x, r, S) sau đó.
+  function makePet(item, who) {
+    const P = item && PERSONA[item.persona];
+    if (!P) return null;
+    who = who || WHO;
+    const line = (list) => {
+      const ok = (list || []).filter((l) => l === null || typeof l === 'string' || l.who === who);
+      const l = ok.length ? pick(ok) : null;
+      return l && typeof l === 'object' ? l.t : l;
+    };
+    const pet = {
+      item, P, clock: 0,
+      mood: null, moodT: 0, next: null, nextT: 0,
+      look: 0, lookTo: 0, lean: 0, leanTo: 0, bounce: 0, bv: 0, squish: 0,
+      bubble: null, bubbleT: 0, bubbleK: 0,
+      idleT: 0, idleNext: 3 + Math.random() * 3, withHer: 0,
+      taps: [], g: null, parts: [], events: [],
+      busy() { return !!this.g || this.idleT < 1.6; },
+      react(r) {
+        if (!r) return;
+        this.mood = r.mood || null;
+        this.moodT = r.dur || 1.5;
+        this.lookTo = r.look !== undefined ? r.look : 0;
+        this.leanTo = r.lean || 0;
+        if (r.bounce) this.bv = -r.bounce * 9;
+        if (r.squish) this.squish = 1;
+        if (r.hearts) for (let i = 0; i < r.hearts; i++) this.spawn('heart');
+        const text = line(r.say);
+        if (text) { this.bubble = text; this.bubbleT = 1.3 + [...text].length * 0.06; this.bubbleK = 0; }
+        this.next = r.then || null;
+        this.nextT = r.then ? r.then.after : 0;
+        this.events.push(r.mood || 'tap');
+      },
+      spawn(kind) {
+        if (this.parts.length >= 7) return;
+        const sd = Math.random() < 0.5 ? -1 : 1;
+        this.parts.push({ kind, x: sd * (0.75 + Math.random() * 0.45), y: -0.2 - Math.random() * 0.5, vx: sd * (0.35 + Math.random() * 0.5), vy: -(0.8 + Math.random() * 0.5), life: 1.1, max: 1.1, s: 0.75 + Math.random() * 0.45 });
+      },
+      // type: down | move | up | cancel; px, py so với tâm đầu; r: bán kính đầu. Trả về true nếu chạm vào bé.
+      pointer(type, px, py, r) {
+        if (type === 'down') {
+          if (Math.hypot(px, py + r * 0.35) > r * 1.9) return false;
+          this.g = { t0: this.clock, x: px, y: py, dist: 0, acc: 0, strokes: 0, held: false, r };
+          this.idleT = 0;
+          return true;
+        }
+        const g = this.g;
+        if (!g) return false;
+        if (type === 'move') {
+          const d = Math.hypot(px - g.x, py - g.y);
+          g.dist += d; g.acc += d; g.x = px; g.y = py;
+          if (g.acc > r * 1.3) { g.acc = 0; g.strokes++; this.stroke(); }
+          this.idleT = 0;
+          return true;
+        }
+        if (!g.held && !g.strokes && this.clock - g.t0 < 0.4 && g.dist < r * 0.6) this.tap();
+        this.g = null;
+        this.idleT = 0;
+        return true;
+      },
+      tap() {
+        const now = this.clock;
+        // đang dỗi mà còn chọc: dỗi thêm chút nữa, chưa chịu làm lành
+        if (this.mood === P.spam.mood && this.moodT > 0) {
+          this.moodT = Math.max(this.moodT, 1.6);
+          if (this.next) this.nextT = Math.max(this.nextT, 1.6);
+          this.bv = -4;
+          if (this.bubbleT < 0.6) { const t = line(P.spam.say); if (t) { this.bubble = t; this.bubbleT = 1.4; this.bubbleK = 0; } }
+          this.events.push(P.spam.mood);
+          return;
+        }
+        this.taps = this.taps.filter((x0) => now - x0 < 1.6);
+        this.taps.push(now);
+        if (this.taps.length >= 4) { this.taps = []; this.react(P.spam); if (P.work) this.withHer = 14; return; }
+        if (P.work && this.withHer <= 0) { this.react(P.tapWork); this.withHer = 14; return; }
+        this.react(pick(P.tap));
+        if (P.work) this.withHer = 14;
+      },
+      stroke() {
+        // vuốt liên tục: giữ nguyên nét mặt được cưng, thêm tim, thỉnh thoảng nói thêm
+        if (this.mood === P.pet.mood && this.moodT > 0) {
+          this.moodT = Math.max(this.moodT, 1.2);
+          this.squish = 1;
+          this.spawn('heart');
+          if (this.bubbleT <= 0.3 && Math.random() < 0.4) { const t = line(P.pet.say); if (t) { this.bubble = t; this.bubbleT = 1.6; this.bubbleK = 0; } }
+          this.events.push('pet');
+        } else this.react(P.pet);
+        if (P.work) this.withHer = 14;
+      },
+      update(dt) {
+        this.clock += dt;
+        this.idleT += dt;
+        if (this.withHer > 0) this.withHer -= dt;
+        const g = this.g;
+        if (g && !g.held && !g.strokes && this.clock - g.t0 > 0.65 && g.dist < g.r * 0.5) { g.held = true; this.react(P.hold); if (P.work) this.withHer = 14; }
+        if (this.next) { this.nextT -= dt; if (this.nextT <= 0) { const n = this.next; this.next = null; this.react(n); } }
+        if (this.moodT > 0) { this.moodT -= dt; if (this.moodT <= 0 && !this.next) { this.mood = null; this.lookTo = 0; this.leanTo = 0; } }
+        // để yên: tự làm việc riêng theo tính cách
+        if (!g && !this.next && this.moodT <= 0 && this.idleT > 2.5) {
+          this.idleNext -= dt;
+          if (this.idleNext <= 0) {
+            this.idleNext = 5 + Math.random() * 4;
+            this.react(pick(P.work && this.withHer > 0 ? P.idleWithHer : P.idle));
+            this.events.pop();
+          }
+        }
+        this.look += (this.lookTo - this.look) * Math.min(1, dt * 6);
+        this.lean += (this.leanTo - this.lean) * Math.min(1, dt * 6);
+        this.bv += (-this.bounce * 160 - this.bv * 9) * dt;
+        this.bounce += this.bv * dt;
+        this.squish = Math.max(0, this.squish - dt * 1.6);
+        if (this.bubbleT > 0) { this.bubbleT -= dt; this.bubbleK = Math.min(1, this.bubbleK + dt * 6); }
+        for (let i = this.parts.length - 1; i >= 0; i--) {
+          const q = this.parts[i];
+          q.life -= dt;
+          if (q.life <= 0) { this.parts.splice(i, 1); continue; }
+          q.x += q.vx * dt; q.y += q.vy * dt; q.vx *= 1 - dt;
+        }
+      },
+      // nét mặt hiện tại (Vi Mạch để yên thì về mặt làm việc)
+      face() {
+        const mood = this.mood || (P.work && this.withHer <= 0 ? P.work : null);
+        return mood ? { mood, look: this.look } : {};
+      },
+      apply(x, r) {
+        x.translate(0, Math.min(0, this.bounce) * r * 0.08);
+        x.rotate(this.lean);
+        const k = this.squish * this.squish;
+        x.scale(1 + k * 0.1, 1 - k * 0.09);
+      },
+      takeEvents() { const e = this.events; this.events = []; return e; },
+      drawFx(x, r, S) {
+        for (const q of this.parts) {
+          const k = q.life / q.max;
+          x.globalAlpha = Math.min(1, k * 2);
+          x.fillStyle = '#FF6F8E';
+          heartPath(x, q.x * r, q.y * r - (1 - k) * r * 0.6, r * 0.2 * q.s);
+          x.fill();
+        }
+        x.globalAlpha = 1;
+        if (this.bubbleT > 0 && this.bubble) drawBubble(x, this.bubble, 0, -r * (this.item.acc === 'nonla' ? 2.25 : 2.45), Math.max(12, r * 0.55), P.bubble, Math.min(1, this.bubbleT * 3) * easeOutBack(this.bubbleK));
+      },
+    };
+    return pet;
+  }
+  const easeOutBack = (k) => { const c = 1.7; return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2); };
+  // Bong bóng lời nói phía trên đầu bé sâu (cx, by: điểm đuôi bong bóng chỉ xuống).
+  function drawBubble(x, text, cx, by, fs, col, k) {
+    if (k <= 0) return;
+    x.save();
+    x.font = '700 ' + Math.round(fs) + 'px "Be Vietnam Pro", system-ui, sans-serif';
+    const w = x.measureText(text).width + fs * 1.3, h = fs * 2;
+    x.translate(cx, by);
+    x.scale(k, k);
+    const L = -w / 2, T = -h - fs * 0.5, rr = h / 2;
+    x.fillStyle = col.bg;
+    x.strokeStyle = col.line;
+    x.lineWidth = 2;
+    x.beginPath();
+    x.moveTo(L + rr, T); x.lineTo(L + w - rr, T); x.arc(L + w - rr, T + rr, rr, -Math.PI / 2, Math.PI / 2);
+    x.lineTo(fs * 0.4, T + h); x.lineTo(0, 0); x.lineTo(-fs * 0.35, T + h);
+    x.lineTo(L + rr, T + h); x.arc(L + rr, T + rr, rr, Math.PI / 2, Math.PI * 1.5);
+    x.closePath();
+    x.fill();
+    x.stroke();
+    x.fillStyle = col.ink;
+    x.textAlign = 'center';
+    x.textBaseline = 'middle';
+    x.fillText(text, 0, T + h / 2 + fs * 0.05);
+    x.restore();
+  }
+
   // ================= Nền: khung cảnh phía sau khi chơi =================
   // Phần đứng yên (trời, núi, lâu đài) vẽ sẵn vào một canvas theo cỡ màn hình;
   // mỗi khung hình chỉ vẽ thêm phần chuyển động (mây, sương, dơi, đèn).
@@ -1981,12 +2415,18 @@
   }
 
   // ----- Nền Hai Tần Số: ăng-ten Hà Nội gửi sóng tới khung cửa sổ có sách trên đồi chè Thái Nguyên -----
+  // Mặt đất liền một dải: phố Hà Nội bằng phẳng bên trái, lên dần thành đồi chè bên phải; xn = x / W.
+  function twoGround(W, H, xn) {
+    const k = Math.min(1, Math.max(0, (xn - 0.4) / 0.42));
+    const rise = k * k * (3 - 2 * k);
+    return H * (0.84 - 0.12 * rise - 0.014 * Math.sin(xn * 11 + 0.6) * rise);
+  }
   function twoGeom(W, H) {
     const u = Math.min(W, H) / 100;
-    const base = H * 0.8;
-    const tx = W * 0.2, top = H * 0.46, mast = top - 9 * u;
-    const hx = W * 0.8, hy = H * 0.735;
-    return { u, base, tx, top, mast, hx, hy, win: { x: hx - 3.2 * u, y: hy - 7.4 * u, w: 6.4 * u, h: 5.2 * u } };
+    const tx = W * 0.17, base = twoGround(W, H, 0.17), top = base - H * 0.3, mast = top - 9 * u;
+    // chân nhà đặt đúng trên mặt đồi
+    const hx = W * 0.8, hy = twoGround(W, H, 0.8) + 0.6 * u;
+    return { u, base, tx, top, mast, hx, hy, win: { x: hx - 3.4 * u, y: hy - 7.8 * u, w: 5.2 * u, h: 4.4 * u } };
   }
   function paintTwoFreq(x, W, H) {
     const G = twoGeom(W, H), u = G.u;
@@ -1994,13 +2434,13 @@
     sky.addColorStop(0, '#0B0C2A'); sky.addColorStop(0.55, '#221B50'); sky.addColorStop(1, '#3B2A66');
     x.fillStyle = sky;
     x.fillRect(0, 0, W, H);
-    const haze = x.createRadialGradient(W * 0.5, H * 0.38, 0, W * 0.5, H * 0.38, W * 0.7);
-    haze.addColorStop(0, 'rgba(160,140,255,0.12)'); haze.addColorStop(1, 'rgba(160,140,255,0)');
+    const haze = x.createRadialGradient(W * 0.5, H * 0.45, 0, W * 0.5, H * 0.45, W * 0.75);
+    haze.addColorStop(0, 'rgba(160,140,255,0.14)'); haze.addColorStop(1, 'rgba(160,140,255,0)');
     x.fillStyle = haze;
     x.fillRect(0, 0, W, H);
     for (let i = 0; i < 80; i++) {
       x.fillStyle = 'rgba(255,244,214,' + (0.25 + rnd(i + 400) * 0.6) + ')';
-      x.beginPath(); x.arc(rnd(i + 200) * W, rnd(i + 300) * H * 0.7, (0.25 + rnd(i + 500) * 0.55) * u * 0.5, 0, TAU); x.fill();
+      x.beginPath(); x.arc(rnd(i + 200) * W, rnd(i + 300) * H * 0.6, (0.25 + rnd(i + 500) * 0.55) * u * 0.5, 0, TAU); x.fill();
     }
     // trăng khuyết
     const mx = W * 0.8, my = H * 0.12, mr = 4.6 * u;
@@ -2012,18 +2452,36 @@
     x.beginPath(); x.arc(mx, my, mr, 0, TAU); x.fill();
     x.fillStyle = '#0F0F33';
     x.beginPath(); x.arc(mx + mr * 0.45, my - mr * 0.3, mr * 0.85, 0, TAU); x.fill();
-    // phố Hà Nội (bên trái)
-    for (let i = 0; i < 16; i++) {
-      const bw = (3.5 + rnd(i + 600) * 5) * u, bx = i * W * 0.034 - u * 2, bh = H * (0.04 + rnd(i + 700) * 0.12);
-      x.fillStyle = '#17143A';
-      x.fillRect(bx, G.base - bh, bw, bh + H * 0.1);
+    // dãy núi xa nối liền hai bên (phía Thái Nguyên cao hơn, như núi Tam Đảo)
+    const far = (col, y0, amp, ph) => {
+      x.fillStyle = col;
+      x.beginPath();
+      x.moveTo(0, H);
+      for (let i = 0; i <= 60; i++) {
+        const xn = i / 60;
+        x.lineTo(xn * W, H * (y0 - amp * (0.4 + 0.6 * xn) * (0.6 + 0.4 * Math.sin(xn * 7 + ph)) - 0.02 * Math.sin(xn * 17 + ph)));
+      }
+      x.lineTo(W, H);
+      x.closePath();
+      x.fill();
+    };
+    far('#1C1946', 0.72, 0.12, 0.4);
+    far('#211D52', 0.77, 0.07, 2.1);
+    // phố Hà Nội: nhà cao thấp đứng trên mặt đất, cửa sổ lấm tấm đèn
+    for (let i = 0; i < 15; i++) {
+      const bw = (3.6 + rnd(i + 600) * 4.6) * u, bx = i * W * 0.029 - u, bh = H * (0.035 + rnd(i + 700) * 0.1);
+      const gy = twoGround(W, H, Math.min(0.42, (bx + bw / 2) / W)) + u;
+      x.fillStyle = i % 3 ? '#17143A' : '#1B1844';
+      x.fillRect(bx, gy - bh, bw, bh + u);
       for (let k = 0; k < 6; k++) {
         if (rnd(i * 13 + k) < 0.55) continue;
+        const wy = gy - bh + (1.5 + k * 2.4) * u;
+        if (wy > gy - 1.5 * u) continue;
         x.fillStyle = 'rgba(255,210,122,' + (0.35 + rnd(i * 7 + k) * 0.5) + ')';
-        x.fillRect(bx + (0.8 + rnd(i * 5 + k) * (bw / u - 2.2)) * u, G.base - bh + (1.5 + k * 2.4) * u, 0.9 * u, 1.3 * u);
+        x.fillRect(bx + (0.8 + rnd(i * 5 + k) * Math.max(0.2, bw / u - 2.2)) * u, wy, 0.9 * u, 1.3 * u);
       }
     }
-    // tháp ăng-ten (dàn thép)
+    // tháp ăng-ten (dàn thép) đứng trên mặt đất
     x.strokeStyle = '#3A3578';
     x.lineWidth = 0.9 * u;
     x.lineCap = 'round';
@@ -2044,33 +2502,64 @@
     x.stroke();
     x.fillStyle = '#3A3578';
     x.fillRect(G.tx - 2.4 * u, G.top - 0.8 * u, 4.8 * u, 1.4 * u);
-    // đồi chè Thái Nguyên (bên phải)
-    const hill = (y0, amp, col) => {
-      x.fillStyle = col;
-      x.beginPath();
-      x.moveTo(W * 0.42, H);
-      for (let i = 0; i <= 40; i++) {
-        const xx = W * 0.42 + (W * 0.6 * i) / 40;
-        x.lineTo(xx, y0 - Math.sin((i / 40) * Math.PI * 1.15 + 0.3) * amp);
-      }
-      x.lineTo(W, H);
-      x.closePath();
-      x.fill();
-    };
-    hill(H * 0.8, H * 0.07, '#1A3A33');
-    hill(H * 0.86, H * 0.08, '#1F4A3B');
+    // mặt đất liền: phố tím thẫm chuyển dần sang đồi chè xanh
+    const gg = x.createLinearGradient(0, 0, W, 0);
+    gg.addColorStop(0, '#16133A'); gg.addColorStop(0.42, '#181A3C'); gg.addColorStop(0.62, '#1B3634'); gg.addColorStop(1, '#1F4A3B');
+    x.fillStyle = gg;
+    x.beginPath();
+    x.moveTo(0, H);
+    for (let i = 0; i <= 80; i++) x.lineTo((i / 80) * W, twoGround(W, H, i / 80));
+    x.lineTo(W, H);
+    x.closePath();
+    x.fill();
+    // luống chè chạy theo sườn đồi
     x.strokeStyle = 'rgba(140,210,160,0.16)';
-    x.lineWidth = 0.7 * u;
-    for (let r = 0; r < 7; r++) {
+    x.lineWidth = 0.8 * u;
+    for (let j = 1; j <= 8; j++) {
       x.beginPath();
-      const y = H * (0.82 + r * 0.025);
-      x.moveTo(W * 0.46, y + 2 * u); x.quadraticCurveTo(W * 0.72, y - 5 * u, W, y + 1 * u);
+      for (let i = 0; i <= 40; i++) {
+        const xn = 0.5 + (0.5 * i) / 40;
+        const y = twoGround(W, H, xn) + j * H * 0.019;
+        if (i) x.lineTo(xn * W, y); else x.moveTo(xn * W, y);
+      }
       x.stroke();
     }
-    // căn nhà nhỏ có khung cửa sổ sáng đèn
+    // con đường từ phố lên tận cửa nhà, có hai cột đèn
+    const road = (xn) => twoGround(W, H, xn) + H * 0.028 * Math.sin(Math.min(1, (xn - 0.3) / 0.5) * Math.PI);
+    x.strokeStyle = 'rgba(255,214,150,0.32)';
+    x.lineWidth = 1.6 * u;
+    x.beginPath();
+    for (let i = 0; i <= 40; i++) {
+      const xn = 0.3 + (0.5 * i) / 40;
+      const y = i === 40 ? G.hy : road(xn);
+      if (i) x.lineTo(xn * W, y); else x.moveTo(xn * W, y);
+    }
+    x.stroke();
+    for (const xn of [0.48, 0.64]) {
+      const lx = xn * W, ly = road(xn);
+      x.strokeStyle = '#3A3578';
+      x.lineWidth = 0.6 * u;
+      x.beginPath(); x.moveTo(lx, ly); x.lineTo(lx, ly - 6 * u); x.stroke();
+      const lg = x.createRadialGradient(lx, ly - 6.4 * u, 0, lx, ly - 6.4 * u, 4 * u);
+      lg.addColorStop(0, 'rgba(255,214,120,0.55)'); lg.addColorStop(1, 'rgba(255,214,120,0)');
+      x.fillStyle = lg;
+      x.beginPath(); x.arc(lx, ly - 6.4 * u, 4 * u, 0, TAU); x.fill();
+      x.fillStyle = '#FFD27A';
+      x.beginPath(); x.arc(lx, ly - 6.4 * u, 0.8 * u, 0, TAU); x.fill();
+    }
+    // cây bên nhà
+    x.fillStyle = '#14352B';
+    x.fillRect(G.hx - 11.6 * u, G.hy - 6 * u, 1.2 * u, 6.5 * u);
+    x.beginPath(); x.arc(G.hx - 11 * u, G.hy - 8 * u, 4 * u, 0, TAU); x.arc(G.hx - 13.4 * u, G.hy - 6 * u, 2.8 * u, 0, TAU); x.fill();
+    // căn nhà nhỏ đứng trên đồi, cửa đi và khung cửa sổ sáng đèn
     x.fillStyle = '#2B2347';
-    x.fillRect(G.hx - 7 * u, G.hy - 9.5 * u, 14 * u, 11 * u);
-    x.beginPath(); x.moveTo(G.hx - 9 * u, G.hy - 9.5 * u); x.lineTo(G.hx, G.hy - 16 * u); x.lineTo(G.hx + 9 * u, G.hy - 9.5 * u); x.closePath(); x.fill();
+    x.fillRect(G.hx - 7 * u, G.hy - 10 * u, 14 * u, 10.6 * u);
+    x.fillStyle = '#3A2E5C';
+    x.beginPath(); x.moveTo(G.hx - 8.6 * u, G.hy - 9.6 * u); x.lineTo(G.hx, G.hy - 16 * u); x.lineTo(G.hx + 8.6 * u, G.hy - 9.6 * u); x.closePath(); x.fill();
+    x.fillStyle = '#1C1733';
+    x.fillRect(G.hx + 2.4 * u, G.hy - 5.6 * u, 3 * u, 5.8 * u);
+    x.fillStyle = 'rgba(255,200,107,0.6)';
+    x.beginPath(); x.arc(G.hx + 4.8 * u, G.hy - 2.6 * u, 0.35 * u, 0, TAU); x.fill();
     const wn = G.win;
     x.fillStyle = '#FFC96B';
     x.fillRect(wn.x, wn.y, wn.w, wn.h);
@@ -2079,14 +2568,12 @@
     x.fillRect(wn.x + wn.w * 0.1, wn.y + wn.h * 0.72, wn.w * 0.5, wn.h * 0.14);
     x.fillRect(wn.x + wn.w * 0.14, wn.y + wn.h * 0.58, wn.w * 0.42, wn.h * 0.14);
     x.fillStyle = '#8C4A5E';
-    x.beginPath(); x.moveTo(wn.x + wn.w * 0.62, wn.y + wn.h * 0.24); x.lineTo(wn.x + wn.w * 0.9, wn.y + wn.h * 0.24); x.lineTo(wn.x + wn.w * 0.82, wn.y + wn.h * 0.05); x.lineTo(wn.x + wn.w * 0.7, wn.y + wn.h * 0.05); x.closePath(); x.fill();
-    x.fillRect(wn.x + wn.w * 0.74, wn.y + wn.h * 0.24, wn.w * 0.04, wn.h * 0.62);
+    x.beginPath(); x.moveTo(wn.x + wn.w * 0.62, wn.y + wn.h * 0.26); x.lineTo(wn.x + wn.w * 0.92, wn.y + wn.h * 0.26); x.lineTo(wn.x + wn.w * 0.84, wn.y + wn.h * 0.06); x.lineTo(wn.x + wn.w * 0.7, wn.y + wn.h * 0.06); x.closePath(); x.fill();
+    x.fillRect(wn.x + wn.w * 0.75, wn.y + wn.h * 0.26, wn.w * 0.04, wn.h * 0.6);
     x.strokeStyle = '#2B2347';
     x.lineWidth = 0.6 * u;
     x.strokeRect(wn.x, wn.y, wn.w, wn.h);
     x.beginPath(); x.moveTo(wn.x + wn.w / 2, wn.y); x.lineTo(wn.x + wn.w / 2, wn.y + wn.h * 0.5); x.stroke();
-    x.fillStyle = '#120F2C';
-    x.fillRect(0, H * 0.93, W, H * 0.07);
   }
   function liveTwoFreq(x, o, st) {
     const { W, H, t } = o;
@@ -2255,7 +2742,7 @@
   }
 
   window.Skins = {
-    ITEMS, RARITY, DEFAULT, BASE, EVENTS, get, byKey, palette, eventById, activeEvent, visibleEvents, itemState, startOf, isPreview,
+    ITEMS, RARITY, DEFAULT, BASE, EVENTS, get, byKey, palette, eventById, activeEvent, visibleEvents, itemState, startOf, isPreview, makePet,
     drawSegment, drawHead, drawCocoon, drawButterfly, eatBurst, stepParticle, drawParticle, drawPreview, heartPath,
     drawBackdrop, backdropTop,
   };
