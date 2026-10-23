@@ -458,8 +458,8 @@
       const skill = item.slot === 'skin' && Skins.skillOf ? Skins.skillOf(item, Wallet.skillLevel(item.id, w)) : null;
       if (skill) {
         const sk = document.createElement('span');
-        sk.className = 'i-sk';
-        sk.innerHTML = Skins.skillIcon(item.id, 16);
+        sk.className = 'i-sk' + (skill.iconTier ? ' max' : '');
+        sk.innerHTML = Skins.skillIcon(item.id, skill.iconTier ? 32 : 16, skill.iconTier);
         sk.style.color = skill.color;
         sk.title = 'Kỹ năng ' + skill.name + (skill.level ? ', bậc ' + skill.level : '');
         if (skill.level) {
@@ -493,7 +493,7 @@
       box.style.setProperty('--sk', skill.color);
       const ic = document.createElement('span');
       ic.className = 'ss-ic';
-      ic.innerHTML = Skins.skillIcon(item.id, 22);
+      ic.innerHTML = Skins.skillIcon(item.id, skill.iconTier ? 36 : 22, skill.iconTier);
       const head = document.createElement('b');
       head.textContent = 'Kỹ năng ' + skill.name;
       const body = document.createElement('span');
@@ -567,6 +567,14 @@
     if (next.time !== cur.time) list.appendChild(li('Thời gian', cur.time + ' giây', next.time + ' giây'));
     for (const e of next.effects) if (!cur.effects.includes(e)) list.appendChild(el('li', '', e.charAt(0).toUpperCase() + e.slice(1)));
     parts.push(list);
+    // bậc này đổi biểu tượng (nâng tối đa: đá quý; đột phá: siêu cấp) thì cho xem trước
+    if (next.iconTier > cur.iconTier) {
+      const pv = el('div', 'su-icon');
+      const ic = el('span', 'su-icon-ic');
+      ic.innerHTML = Skins.skillIcon(item.id, 44, next.iconTier);
+      pv.append(ic, el('span', '', next.iconTier === 2 ? 'Biểu tượng đột phá siêu cấp' : 'Biểu tượng mới khi nâng tối đa'));
+      parts.push(pv);
+    }
     const cost = Skins.UP_COST[item.rarity][lvl];
     let ready = owned;
     if (brk) {

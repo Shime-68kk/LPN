@@ -189,6 +189,21 @@ body.night .score.record #score { color: #FFC24B; }
 .skill.on .sk-ic { color: var(--sk, #FFC24B); transform: scale(1.1); }
 .skill.on { opacity: 1; background: rgba(43, 33, 64, 0.72); }
 .skill.on .sk-fill { transition: none; }
+.sk-sup { display: none; fill: none; stroke: #FFC93C; stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 138.2; stroke-dashoffset: 138.2; transition: stroke-dashoffset .25s; }
+.skill.has-sup .sk-sup { display: inline; }
+body.in-domain .skill, body.in-domain .combo { display: none; }
+/* Lãnh Địa sẵn sàng: nút đổi màu ngọc tím, nhịp sáng mạnh */
+.skill.super { opacity: 1; background: linear-gradient(135deg, #0FA88C, #5B26D8); animation: sk-super 0.9s ease-in-out infinite; }
+@keyframes sk-super {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(95, 255, 224, 0.7), 0 0 18px rgba(124, 77, 255, 0.6); transform: scale(1); }
+  50% { box-shadow: 0 0 0 10px rgba(95, 255, 224, 0), 0 0 30px rgba(124, 77, 255, 0.9); transform: scale(1.08); }
+}
+/* Biểu tượng kỹ năng đã nâng tối đa / đột phá */
+.sk-tier2 .sk-rays { transform-origin: 12px 12px; animation: sk-spin 9s linear infinite; }
+.sk-spark { transform-box: fill-box; transform-origin: center; animation: sk-twinkle 1.8s ease-in-out infinite; }
+@keyframes sk-spin { to { transform: rotate(360deg); } }
+@keyframes sk-twinkle { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.6); } }
+@media (prefers-reduced-motion: reduce) { .sk-tier2 .sk-rays, .sk-spark, .skill.super { animation: none; } }
 @keyframes sk-ready {
   0% { box-shadow: 0 0 0 0 rgba(255, 194, 75, 0.65); transform: scale(1); }
   45% { transform: scale(1.07); }

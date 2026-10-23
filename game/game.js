@@ -18,8 +18,10 @@
   const PATH_PLAY = 'M8 5v14l11-7z';
   let touched = false;
   const buzz = (ms) => { if (touched && navigator.vibrate) navigator.vibrate(ms); };
-  document.addEventListener('pointerdown', () => {
+  document.addEventListener('pointerdown', (e) => {
     touched = true;
+    // Lãnh địa: chạm ở đâu cũng tính (pha chạm liên tục), còn pha né thì bắt đầu kéo.
+    if (typeof Game !== 'undefined' && Game.state === 'domain') domainPointer(e);
     // Đang đếm ngược hồi sinh mà âm thanh bị tắt: chạm là bật lại (iPhone chỉ cho bật khi có chạm).
     if (typeof Game !== 'undefined' && Game.state === 'count' && Sound.ctx && Sound.ctx.state !== 'running') Sound.ctx.resume().catch(() => {});
   }, { capture: true, passive: true });
@@ -109,7 +111,7 @@
       if (sk) {
         ms.style.setProperty('--sk', sk.color);
         ms.style.setProperty('--sk-bg', sk.color + '24');
-        document.getElementById('menu-skill-ic').innerHTML = Skins.skillIcon(sk.id, 22);
+        document.getElementById('menu-skill-ic').innerHTML = Skins.skillIcon(sk.id, sk.iconTier ? 30 : 22, sk.iconTier);
         document.getElementById('menu-skill-name').textContent = sk.name;
         document.getElementById('menu-skill-sub').textContent = sk.breakthrough ? 'Đột phá · ' + sk.breakthrough : sk.level ? 'Kỹ năng · bậc ' + sk.level + '/' + sk.max : 'Kỹ năng · xem';
         ms.setAttribute('aria-label', 'Kỹ năng ' + sk.name + ', xem chi tiết');
@@ -393,6 +395,65 @@
       this.tone(this.freq(9), 0.3, 'sine', 0.16, this.freq(7));
       this.noise(0.12, 2600, 2, 0.05);
     },
+    // ----- Lãnh Địa Vi Mạch -----
+    superReady() {
+      this.arp([7, 9, 12, 14, 16], 0.05, 'square', 0.06, 0.2);
+      this.tone(this.freq(19), 0.5, 'sine', 0.13, null, 0.26);
+    },
+    domainEnter() {
+      this.tone(70, 0.9, 'sawtooth', 0.14, 880);
+      this.noise(0.8, 1800, 0.6, 0.12);
+      this.arp([0, 7, 12, 19, 24], 0.06, 'square', 0.05, 0.25);
+    },
+    // tiếng ù bảng mạch suốt lúc ở trong lãnh địa
+    hum(on) {
+      const ctx = this.ctx;
+      if (!ctx) return;
+      if (on) {
+        if (this.humNodes || !Store.data.sfx) return;
+        const t = ctx.currentTime;
+        const gn = ctx.createGain();
+        gn.gain.setValueAtTime(0.0001, t);
+        gn.gain.exponentialRampToValueAtTime(0.08, t + 0.6);
+        const lp = ctx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.value = 520;
+        const o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), lfo = ctx.createOscillator(), lg = ctx.createGain();
+        o1.type = o2.type = 'sawtooth';
+        o1.frequency.value = 55;
+        o2.frequency.value = 55.8;
+        lfo.frequency.value = 2;
+        lg.gain.value = 260;
+        lfo.connect(lg); lg.connect(lp.frequency);
+        o1.connect(lp); o2.connect(lp); lp.connect(gn); gn.connect(this.sfx);
+        o1.start(t); o2.start(t); lfo.start(t);
+        this.humNodes = { gn, o1, o2, lfo };
+      } else if (this.humNodes) {
+        const { gn, o1, o2, lfo } = this.humNodes, t = ctx.currentTime;
+        gn.gain.cancelScheduledValues(t);
+        gn.gain.setValueAtTime(Math.max(0.0001, gn.gain.value), t);
+        gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+        for (const o of [o1, o2, lfo]) o.stop(t + 0.45);
+        this.humNodes = null;
+      }
+    },
+    lzWarn() { this.tone(1500, 0.05, 'square', 0.05); this.tone(1500, 0.05, 'square', 0.05, null, 0.09); },
+    lzFire() { this.tone(2400, 0.28, 'sawtooth', 0.08, 260); this.noise(0.18, 5000, 0.8, 0.07); },
+    lzHit() { this.tone(110, 0.3, 'square', 0.18, 60); this.noise(0.25, 600, 0.7, 0.2); },
+    item() { this.arp([12, 16, 19, 24], 0.04, 'triangle', 0.16, 0.2); },
+    whoosh() { this.noise(0.45, 900, 0.5, 0.16); this.tone(200, 0.45, 'triangle', 0.08, 900); },
+    ram() { this.noise(0.4, 300, 0.6, 0.35); this.tone(140, 0.45, 'sine', 0.3, 38); },
+    tap(n) {
+      const f = 300 + Math.min(1, n / 24) * 900;
+      this.tone(f, 0.06, 'square', 0.07, f * 1.4);
+      this.noise(0.04, 3000, 1.2, 0.06);
+    },
+    boom() {
+      this.noise(1.1, 220, 0.5, 0.45);
+      this.tone(90, 1.0, 'sine', 0.35, 30);
+      this.arp([12, 16, 19, 24, 28, 31], 0.06, 'triangle', 0.14, 0.4);
+    },
+    domainExit() { this.tone(900, 0.6, 'sawtooth', 0.09, 80); this.noise(0.5, 1200, 0.6, 0.08); },
     // Đếm ngược hồi sinh: ba tiếng tách ở 3, 2, 1 và một tiếng cao, ngân hơn lúc vào nhạc.
     // Đi thẳng ra loa (không qua nút tắt âm hiệu ứng) vì đây là nhịp để vào lại bài.
     countTicks(t0, beat) {
@@ -882,7 +943,7 @@
     stars: 0, starFx: [], botOn: BOT,
     score: 0, combo: 0, maxCombo: 0, hearts: 3, perfect: 0, good: 0, miss: 0,
     revives: 0, downPos: 0, count: null, pendingPos: null,
-    sk: { charge: 0, on: 0, ready: false, told: false, fx: null, hit: 0, cnt: 0, net: 0, lotus: 0, label: '' },
+    sk: { charge: 0, on: 0, ready: false, told: false, fx: null, hit: 0, cnt: 0, net: 0, lotus: 0, label: '', sup: 0 },
     vmul: 1, bonusDot: 0, bonusBanked: 0,
     endT: 0, speed: 460, lead: 1.3, shake: 0, hintT: 0, resultShown: false, pulse: 0,
 
@@ -895,7 +956,7 @@
       this.resetNotes();
       this.score = 0; this.combo = 0; this.maxCombo = 0; this.hearts = 3; this.banked = 0; this.dotGot = 0;
       this.revives = 0; this.count = null; this.pendingPos = null;
-      this.sk = { charge: 0, on: 0, ready: false, told: false, fx: null, hit: 0, cnt: 0, net: 0, lotus: 0, label: '' };
+      this.sk = { charge: 0, on: 0, ready: false, told: false, fx: null, hit: 0, cnt: 0, net: 0, lotus: 0, label: '', sup: 0 };
       this.vmul = 1;
       this.bonusDot = 0; this.bonusBanked = 0;
       VAC.length = 0;
@@ -1102,13 +1163,25 @@
     // Đang dùng thì không nạp. Hiệu ứng ở sk.fx (Tưng Tửng mỗi lần bốc một phép khác).
     chargeSkill() {
       const sk = LOOK.skill, K = this.sk;
-      if (!sk || K.on > 0 || K.ready) return;
+      if (!sk) return;
+      // Lãnh Địa Vi Mạch: thanh nạp riêng, đủ 60 lá thì chạm đúp mở lãnh địa (ưu tiên hơn kỹ năng thường).
+      if (sk.fx.domain && K.sup < DOMAIN_NEED) {
+        K.sup++;
+        if (K.sup >= DOMAIN_NEED) { Sound.superReady(); UI.toast('Lãnh Địa sẵn sàng! Chạm đúp'); buzz([20, 30, 20]); }
+      }
+      if (K.on > 0 || K.ready) return;
       K.charge = Math.min(sk.need, K.charge + 1);
       if (K.charge >= sk.need) {
         K.ready = true;
         Sound.skillReady();
         if (!K.told) { K.told = true; UI.toast('Chạm đúp để dùng ' + sk.name); }
       }
+    },
+    // Chạm đúp / phím cách / nút: lãnh địa sẵn sàng thì mở lãnh địa, không thì dùng kỹ năng thường.
+    trigger() {
+      if (this.state !== 'play') return;
+      if (domainReady()) { startDomain(); return; }
+      this.useSkill();
     },
     useSkill() {
       const sk = LOOK.skill, K = this.sk;
@@ -1391,6 +1464,8 @@
       } else if (this.state === 'over') {
         Sau.headY = lerp(Sau.headY, H * 0.34, 1 - Math.exp(-dt * 2.5));
         Sau.sad = Math.max(Sau.sad, 0.2);
+      } else if (this.state === 'domain') {
+        domainTick(dt);
       } else if (this.state === 'ending') {
         this.endT += dt;
         Sau.target = W / 2;
@@ -2016,6 +2091,580 @@
     g.restore();
   }
 
+  // ================= Lãnh Địa Vi Mạch: đột phá siêu cấp của Sâu Vi Mạch =================
+  // Nạp đủ 60 lá (vòng vàng ngoài nút kỹ năng) rồi chạm đúp: nhạc dừng, mở ra một thế giới bảng mạch riêng.
+  //  1. Né laze (~5,6 giây): chiếc lá chip khổng lồ bắn laze dọc / ngang, có vạch đỏ báo trước. Trong lãnh địa
+  //     bé đi được cả lên xuống; chỉ tính trúng khi tia chạm vào đầu, mỗi lần trúng mất 60 đốt.
+  //     Hai món bay ra: ×2 ĐIỂM, ×2 ĐỐT — chạm đầu vào là nhận.
+  //  2. Húc: bé lao lên húc vào lá.  3. Chạm liên tục (máy tính: phím cách) cho lá nổ tung.
+  //  4. Thu về tới 300 lá và 100.000 điểm (tuỳ né được bao nhiêu, chạm nhanh cỡ nào), rồi về lại bài,
+  //     đếm 3-2-1 và nhạc chạy tiếp từ chỗ cũ.
+  const DOMAIN_NEED = 60;
+  const DM_T = { enter: 0.85, dodge: 5.6, ram: 0.95, spam: 3.0, boom: 1.9, exit: 0.85 };
+  const LZ_WARN = 0.62, LZ_FIRE = 0.3, TAP_FULL = 24;
+  const DM = {
+    phase: '', pt: 0, pos: 0, lasers: [], next: 0, pat: 0, hits: 0, lost: 0, inv: 0, items: [], spawned: 0,
+    x2pts: false, x2dot: false, taps: 0, leaf: null, ty: 0, reward: null, flash: 0, flashCol: '#FFFFFF', fly: [],
+    bg: null, bgKey: '', traces: [],
+  };
+  const domainReady = () => !!(LOOK.skill && LOOK.skill.fx.domain && Game.sk.sup >= DOMAIN_NEED);
+  const leafR = () => Math.min(PW * 0.3, 110 * S);
+  const dmYMin = () => Math.max(H * 0.42, DM.leaf ? DM.leaf.y + leafR() * 1.1 + 34 * S : H * 0.42);
+  const dmYMax = () => H * 0.9;
+
+  function startDomain() {
+    const G = Game;
+    if (G.state !== 'play' || !domainReady()) return false;
+    G.sk.sup = 0;
+    DM.pos = G.songT - (G.song.offset || 0);
+    Sound.stopMusic();
+    G.state = 'domain';
+    document.body.classList.add('in-domain');
+    Object.assign(DM, {
+      phase: 'enter', pt: 0, lasers: [], next: 0.35, pat: 0, hits: 0, lost: 0, inv: 0, items: [], spawned: 0,
+      x2pts: false, x2dot: false, taps: 0, reward: null, flash: 1, flashCol: '#5FFFE0', fly: [],
+    });
+    DM.leaf = { x: PX0 + PW / 2, y: H * 0.2, shake: 0, crack: 0, gone: false };
+    DM.ty = Sau.headY;
+    UI.showHint(false);
+    Sound.domainEnter();
+    Sound.hum(true);
+    buzz([30, 40, 90]);
+    burstSparks(Sau.headX, Sau.headY, 30, '#5FFFE0');
+    UI.skill(G);
+    return true;
+  }
+  function dmPhase(p) {
+    DM.phase = p;
+    DM.pt = 0;
+    if (p === 'dodge') DM.ty = clamp(Sau.headY, dmYMin(), dmYMax());
+    else if (p === 'ram') { DM.lasers = []; DM.items = []; Sound.whoosh(); }
+    else if (p === 'boom') {
+      // Thưởng: né càng giỏi (mỗi lần trúng -15%) và chạm càng nhanh thì càng nhiều.
+      const dodge = Math.max(0.2, 1 - DM.hits * 0.15);
+      const spam = Math.min(1, DM.taps / TAP_FULL);
+      const f = dodge * (0.4 + 0.6 * spam);
+      const leaves = Math.max(1, Math.round(300 * f));
+      let pts = Math.round((100000 * f) / 100) * 100;
+      if (DM.x2pts) pts *= 2;
+      const dot = DM.x2dot ? Math.round(pts * 0.0003) : 0; // ×2 đốt: thêm đúng số đốt quy đổi từ điểm (100.000 điểm = 30 đốt)
+      Game.score += pts;
+      Game.bonusDot += dot;
+      Game.domLeaves = (Game.domLeaves || 0) + leaves;
+      Sau.segs += Math.round(leaves / 15);
+      DM.reward = { leaves, pts, dot, t: 0 };
+      DM.leaf.gone = true;
+      DM.flash = 1;
+      DM.flashCol = '#FFFFFF';
+      Game.shake = 0.45;
+      Sau.happy = 1;
+      Sound.boom();
+      buzz([60, 40, 120]);
+      const L = DM.leaf;
+      for (let i = 0; i < 70; i++) {
+        const a = Math.random() * TAU, sp = (180 + Math.random() * 420) * S;
+        DM.fly.push({ x: L.x, y: L.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, t: 0, home: 0.35 + Math.random() * 0.5, rot: Math.random() * 6, done: false });
+      }
+      for (let i = 0; i < 40; i++) {
+        const a = Math.random() * TAU, sp = (120 + Math.random() * 360) * S;
+        spawn(i % 2 ? 15 : 16, L.x, L.y, Math.cos(a) * sp, Math.sin(a) * sp, 0.7 + Math.random() * 0.6, (i % 2 ? 6 : 12) * S, i % 3 ? '#5FFFE0' : '#FFC24B');
+      }
+      UI.hud(Game);
+    } else if (p === 'exit') { Sound.hum(false); Sound.domainExit(); }
+  }
+  function endDomain() {
+    DM.phase = '';
+    document.body.classList.remove('in-domain');
+    DM.lasers = [];
+    DM.fly = [];
+    Game.startCount(DM.pos);
+  }
+  function domainHit() {
+    DM.hits++;
+    DM.inv = 0.5;
+    let lost = 0;
+    if (window.Wallet) Wallet.update((w) => { lost = Math.min(60, w.dot); w.dot -= lost; });
+    DM.lost += lost;
+    DM.flash = 0.9;
+    DM.flashCol = '#FF3B6B';
+    Game.shake = 0.3;
+    Sau.sad = 0.6;
+    Sound.lzHit();
+    buzz([40, 30, 60]);
+    popup('−60 đốt', Sau.headX, Sau.headY - HEAD_R * 2.4, '#FF6F8E', 22);
+  }
+  function domainTap() {
+    if (Game.state !== 'domain' || DM.phase !== 'spam') return;
+    DM.taps++;
+    const L = DM.leaf, R = leafR();
+    L.shake = 1;
+    L.crack = Math.min(1, DM.taps / TAP_FULL);
+    Sau.chew = 0.2;
+    Sau.happy = 0.5;
+    burstSparks(L.x + (Math.random() - 0.5) * R * 0.9, L.y + (Math.random() - 0.3) * R, 7, Math.random() < 0.5 ? '#5FFFE0' : '#FFC24B');
+    Sound.tap(DM.taps);
+    buzz(6);
+    if (DM.taps >= TAP_FULL) DM.pt = Math.max(DM.pt, DM_T.spam);
+  }
+  // Mỗi đợt laze: nhắm vào đầu bé hoặc rải ra, luôn chừa chỗ để né (vạch đỏ báo trước LZ_WARN giây).
+  function spawnPattern() {
+    const k = DM.pat++ % 6;
+    const hx = Sau.headX, hy = DM.ty;
+    const L = (kind, at, delay) => DM.lasers.push({ kind, at, t: -(delay || 0), hit: false });
+    const xin = (x) => clamp(x, PX0 + 20 * S, PX0 + PW - 20 * S);
+    const yin = (y) => clamp(y, dmYMin(), dmYMax());
+    if (k === 0) L('v', xin(hx));
+    else if (k === 1) L('h', yin(hy));
+    else if (k === 2) { L('v', xin(hx)); L('v', xin(hx + (hx < PX0 + PW / 2 ? 1 : -1) * PW * 0.34)); }
+    else if (k === 3) { L('v', xin(hx)); L('h', yin(hy)); }
+    else if (k === 4) { for (let i = 0; i < 3; i++) L('v', PX0 + PW * (0.18 + 0.32 * i), i * 0.16); }
+    else { L('h', yin(hy)); L('h', yin(hy + (hy < (dmYMin() + dmYMax()) / 2 ? 1 : -1) * H * 0.15)); }
+    Sound.lzWarn();
+  }
+  function spawnItem(kind) {
+    const R = leafR();
+    let x = 0, y = 0;
+    for (let i = 0; i < 8; i++) {
+      x = PX0 + PW * (0.15 + Math.random() * 0.7);
+      y = dmYMin() + Math.random() * (dmYMax() - dmYMin()) * 0.8;
+      if (Math.hypot(x - Sau.headX, y - Sau.headY) > R) break;
+    }
+    DM.items.push({ kind, x, y, t: 0, life: 2.7 });
+  }
+  function domainTick(dt) {
+    DM.pt += dt;
+    DM.inv = Math.max(0, DM.inv - dt);
+    DM.flash = Math.max(0, DM.flash - dt * 2.4);
+    if (DM.leaf) DM.leaf.shake = Math.max(0, DM.leaf.shake - dt * 5);
+    const ph = DM.phase, L = DM.leaf, R = leafR();
+    if (ph === 'dodge') {
+      if (keys.up || keys.down) DM.ty = clamp(DM.ty + (keys.down - keys.up) * H * 0.9 * dt, dmYMin(), dmYMax());
+      if (keys.left || keys.right) Sau.target = clamp(Sau.target + (keys.right - keys.left) * PW * 1.6 * dt, PX0 + 18 * S, PX0 + PW - 18 * S);
+    }
+    Sau.headY = lerp(Sau.headY, DM.ty, 1 - Math.exp(-dt * (ph === 'ram' ? 9 : 16)));
+    if (ph === 'enter') {
+      if (DM.pt >= DM_T.enter) dmPhase('dodge');
+    } else if (ph === 'dodge') {
+      DM.next -= dt;
+      if (DM.pt < DM_T.dodge - 1.0 && DM.next <= 0) { spawnPattern(); DM.next = 0.62 - Math.min(0.16, DM.pt * 0.035); }
+      if (DM.spawned === 0 && DM.pt > 1.3) { DM.spawned = 1; spawnItem('pts'); }
+      if (DM.spawned === 1 && DM.pt > 3.0) { DM.spawned = 2; spawnItem('dot'); }
+      for (const z of DM.lasers) {
+        const before = z.t;
+        z.t += dt;
+        if (before < LZ_WARN && z.t >= LZ_WARN) { Sound.lzFire(); Game.shake = Math.max(Game.shake, 0.08); }
+        const firing = z.t >= LZ_WARN && z.t < LZ_WARN + LZ_FIRE;
+        if (firing && !z.hit && DM.inv <= 0) {
+          const d = z.kind === 'v' ? Math.abs(Sau.headX - z.at) : Math.abs(Sau.headY - z.at);
+          if (d < 13 * S + HEAD_R * 0.55) { z.hit = true; domainHit(); }
+        }
+      }
+      DM.lasers = DM.lasers.filter((z) => z.t < LZ_WARN + LZ_FIRE + 0.12);
+      for (const it of DM.items) {
+        it.t += dt;
+        if (!it.got && Math.hypot(it.x - Sau.headX, it.y - Sau.headY) < HEAD_R * 1.8) {
+          it.got = true;
+          if (it.kind === 'pts') DM.x2pts = true; else DM.x2dot = true;
+          Sound.item();
+          burstSparks(it.x, it.y, 18, it.kind === 'pts' ? '#FFC24B' : '#7CE08A');
+          popup(it.kind === 'pts' ? '×2 điểm!' : '×2 đốt!', it.x, it.y - 24 * S, it.kind === 'pts' ? GOLD() : '#7CE08A', 20);
+        }
+      }
+      DM.items = DM.items.filter((it) => !it.got && it.t < it.life);
+      if (DM.pt >= DM_T.dodge && !DM.lasers.length) dmPhase('ram');
+    } else if (ph === 'ram') {
+      // lao lên húc vào mũi lá, rồi bật lại một chút
+      Sau.target = L.x;
+      DM.ty = DM.pt < 0.45 ? L.y + R * 1.12 : L.y + R * 1.3;
+      if (DM.pt >= 0.45 && !L.hitOnce) {
+        L.hitOnce = true;
+        L.shake = 1;
+        L.crack = 0.12;
+        DM.flash = 0.8;
+        DM.flashCol = '#FFFFFF';
+        Game.shake = 0.35;
+        Sound.ram();
+        buzz([50, 30, 50]);
+        burstSparks(L.x, L.y + R, 26, '#5FFFE0');
+        ring(L.x, L.y + R, '#5FFFE0');
+      }
+      if (DM.pt >= DM_T.ram) dmPhase('spam');
+    } else if (ph === 'spam') {
+      Sau.target = L.x;
+      DM.ty = L.y + R * 1.25 - Math.max(0, Sau.chew) * 30 * S;
+      if (DM.pt >= DM_T.spam) dmPhase('boom');
+    } else if (ph === 'boom') {
+      DM.ty = H * 0.62;
+      if (DM.reward) DM.reward.t += dt;
+      for (const f of DM.fly) {
+        f.t += dt;
+        f.rot += dt * 8;
+        if (f.t < f.home) { f.x += f.vx * dt; f.y += f.vy * dt; f.vx *= 1 - 2.5 * dt; f.vy *= 1 - 2.5 * dt; }
+        else {
+          const k = 1 - Math.exp(-dt * 9);
+          f.x = lerp(f.x, Sau.headX, k);
+          f.y = lerp(f.y, Sau.headY, k);
+          if (!f.done && Math.hypot(f.x - Sau.headX, f.y - Sau.headY) < HEAD_R) { f.done = true; Sau.chew = 0.12; }
+        }
+      }
+      if (DM.pt >= DM_T.boom) dmPhase('exit');
+    } else if (ph === 'exit') {
+      if (DM.pt >= DM_T.exit) endDomain();
+    }
+  }
+
+  // ----- Vẽ lãnh địa -----
+  // Nền bảng mạch vẽ sẵn một lần: xanh đen, lưới mờ, đường mạch rẽ góc 45°, chân hàn, vài con IC.
+  function domainBg() {
+    const key = W + 'x' + H + '@' + DPR;
+    if (DM.bgKey === key) return DM.bg;
+    const c = document.createElement('canvas');
+    c.width = Math.round(W * DPR);
+    c.height = Math.round(H * DPR);
+    const x = c.getContext('2d');
+    x.scale(DPR, DPR);
+    const gr = x.createRadialGradient(W / 2, H * 0.42, 0, W / 2, H * 0.42, Math.max(W, H) * 0.8);
+    gr.addColorStop(0, '#0C3036');
+    gr.addColorStop(0.55, '#061A20');
+    gr.addColorStop(1, '#02090C');
+    x.fillStyle = gr;
+    x.fillRect(0, 0, W, H);
+    const step = 26 * S;
+    x.strokeStyle = 'rgba(31,200,166,0.06)';
+    x.lineWidth = 1;
+    x.beginPath();
+    for (let gx = 0; gx < W; gx += step) { x.moveTo(gx, 0); x.lineTo(gx, H); }
+    for (let gy = 0; gy < H; gy += step) { x.moveTo(0, gy); x.lineTo(W, gy); }
+    x.stroke();
+    let seed = 7;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const dirs = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
+    DM.traces = [];
+    for (let i = 0; i < 34; i++) {
+      let px = Math.floor(rnd() * (W / step)) * step, py = Math.floor(rnd() * (H / step)) * step;
+      let d = Math.floor(rnd() * 4) * 2;
+      const pts = [[px, py]];
+      const n = 5 + Math.floor(rnd() * 9);
+      for (let j = 0; j < n; j++) {
+        if (rnd() < 0.35) d = (d + (rnd() < 0.5 ? 1 : 7)) % 8;
+        px += dirs[d][0] * step; py += dirs[d][1] * step;
+        pts.push([px, py]);
+      }
+      const gold = i % 5 === 0;
+      x.strokeStyle = gold ? 'rgba(232,184,74,0.28)' : 'rgba(31,200,166,0.26)';
+      x.lineWidth = (gold ? 2.2 : 1.6) * S;
+      x.lineJoin = 'round';
+      x.beginPath();
+      pts.forEach((p, k) => (k ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1])));
+      x.stroke();
+      x.fillStyle = '#061A20';
+      for (const p of [pts[0], pts[pts.length - 1]]) { x.beginPath(); x.arc(p[0], p[1], 3 * S, 0, TAU); x.fill(); x.stroke(); }
+      let len = 0;
+      for (let k = 1; k < pts.length; k++) len += Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]);
+      DM.traces.push({ pts, len, gold, off: rnd() });
+    }
+    for (let i = 0; i < 6; i++) {
+      const cx = rnd() * W, cy = rnd() * H, w = (30 + rnd() * 30) * S, h = (18 + rnd() * 18) * S;
+      x.fillStyle = 'rgba(8,24,28,0.95)';
+      x.fillRect(cx - w / 2, cy - h / 2, w, h);
+      x.strokeStyle = 'rgba(31,200,166,0.3)';
+      x.lineWidth = 1;
+      x.strokeRect(cx - w / 2, cy - h / 2, w, h);
+      x.fillStyle = 'rgba(232,184,74,0.35)';
+      for (let k = 0; k < 5; k++) {
+        x.fillRect(cx - w / 2 + (k + 0.5) * (w / 5) - 1.5 * S, cy - h / 2 - 4 * S, 3 * S, 4 * S);
+        x.fillRect(cx - w / 2 + (k + 0.5) * (w / 5) - 1.5 * S, cy + h / 2, 3 * S, 4 * S);
+      }
+    }
+    DM.bg = c;
+    DM.bgKey = key;
+    return c;
+  }
+  function tracePoint(tr, u) {
+    let d = u * tr.len;
+    for (let k = 1; k < tr.pts.length; k++) {
+      const a = tr.pts[k - 1], b = tr.pts[k], l = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      if (d <= l) return [lerp(a[0], b[0], d / l), lerp(a[1], b[1], d / l)];
+      d -= l;
+    }
+    return tr.pts[tr.pts.length - 1];
+  }
+  function drawDomainBg(k) {
+    g.save();
+    g.globalAlpha = k;
+    g.drawImage(domainBg(), 0, 0, W, H);
+    // xung điện chạy dọc đường mạch
+    for (const tr of DM.traces) {
+      const u = (clock * (tr.gold ? 0.22 : 0.35) + tr.off) % 1;
+      const [px, py] = tracePoint(tr, u);
+      const col = tr.gold ? '255,201,60' : '95,255,224';
+      const gl = g.createRadialGradient(px, py, 0, px, py, 9 * S);
+      gl.addColorStop(0, 'rgba(' + col + ',0.9)');
+      gl.addColorStop(1, 'rgba(' + col + ',0)');
+      g.fillStyle = gl;
+      g.beginPath(); g.arc(px, py, 9 * S, 0, TAU); g.fill();
+    }
+    // vạch quét ngang chầm chậm
+    const sy = ((clock * 0.18) % 1) * H;
+    const sc = g.createLinearGradient(0, sy - 40 * S, 0, sy + 4 * S);
+    sc.addColorStop(0, 'rgba(95,255,224,0)');
+    sc.addColorStop(1, 'rgba(95,255,224,0.12)');
+    g.fillStyle = sc;
+    g.fillRect(0, sy - 40 * S, W, 44 * S);
+    g.restore();
+  }
+  // Chiếc lá chip khổng lồ: lá treo ngược làm bằng bảng mạch, gân là đường bus vàng, giữa là con chip "mắt"
+  // (đỏ rực khi sắp bắn), nứt dần khi bị chạm, nổ tung ở cuối.
+  function drawChipLeaf() {
+    const L = DM.leaf;
+    if (!L || L.gone) return;
+    const R = leafR();
+    const sh = L.shake * 9 * S;
+    const x = L.x + (sh ? (Math.random() - 0.5) * sh : 0), y = L.y + Math.sin(clock * 1.6) * 5 * S + (sh ? (Math.random() - 0.5) * sh : 0);
+    const warn = DM.lasers.some((z) => z.t >= 0 && z.t < LZ_WARN + LZ_FIRE);
+    const leafPath = () => {
+      g.beginPath();
+      g.moveTo(0, -R);
+      g.bezierCurveTo(R * 0.98, -R * 0.78, R * 0.92, R * 0.4, 0, R * 1.08);
+      g.bezierCurveTo(-R * 0.92, R * 0.4, -R * 0.98, -R * 0.78, 0, -R);
+      g.closePath();
+    };
+    g.save();
+    g.translate(x, y);
+    const glow = g.createRadialGradient(0, 0, R * 0.4, 0, 0, R * 1.7);
+    glow.addColorStop(0, warn ? 'rgba(255,59,107,0.32)' : 'rgba(31,200,166,0.3)');
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = glow;
+    g.beginPath(); g.arc(0, 0, R * 1.7, 0, TAU); g.fill();
+    const body = g.createLinearGradient(-R, -R, R, R);
+    body.addColorStop(0, '#17695A');
+    body.addColorStop(1, '#0A3A33');
+    g.fillStyle = body;
+    leafPath(); g.fill();
+    g.save();
+    leafPath(); g.clip();
+    // gân lá là đường bus vàng, nhánh rẽ vuông góc, chân hàn ở đầu nhánh
+    g.strokeStyle = '#E8B84A';
+    g.lineCap = 'round';
+    g.lineJoin = 'round';
+    g.lineWidth = 5 * S;
+    g.beginPath(); g.moveTo(0, -R * 0.95); g.lineTo(0, R); g.stroke();
+    g.lineWidth = 2.2 * S;
+    for (let i = 0; i < 6; i++) {
+      const yy = -R * 0.7 + i * R * 0.27;
+      for (const side of [-1, 1]) {
+        const ex = side * R * (0.75 - Math.abs(i - 2) * 0.08);
+        g.beginPath();
+        g.moveTo(0, yy);
+        g.lineTo(side * R * 0.22, yy - R * 0.12);
+        g.lineTo(ex, yy - R * 0.12);
+        g.stroke();
+        g.fillStyle = '#0A3A33';
+        g.beginPath(); g.arc(ex, yy - R * 0.12, 3.4 * S, 0, TAU); g.fill(); g.stroke();
+      }
+    }
+    // linh kiện nhỏ
+    g.fillStyle = '#1C2A30';
+    for (let i = 0; i < 6; i++) g.fillRect((i % 2 ? 1 : -1) * R * 0.4 - 6 * S, -R * 0.55 + i * R * 0.24, 12 * S, 6 * S);
+    // vết nứt
+    if (L.crack > 0) {
+      g.strokeStyle = 'rgba(255,255,255,' + (0.4 + 0.5 * L.crack) + ')';
+      g.lineWidth = 2.2 * S;
+      const n = Math.ceil(L.crack * 9);
+      for (let i = 0; i < n; i++) {
+        const a = (i / 9) * TAU + 0.4;
+        let px = 0, py = 0;
+        g.beginPath(); g.moveTo(0, 0);
+        for (let j = 1; j <= 4; j++) {
+          px = Math.cos(a + (j % 2 ? 0.25 : -0.2)) * R * 0.28 * j * (0.6 + L.crack * 0.5);
+          py = Math.sin(a + (j % 2 ? 0.25 : -0.2)) * R * 0.28 * j * (0.6 + L.crack * 0.5);
+          g.lineTo(px, py);
+        }
+        g.stroke();
+      }
+    }
+    g.restore();
+    g.strokeStyle = warn ? '#FF6F8E' : '#5FFFE0';
+    g.lineWidth = 2.6 * S;
+    leafPath(); g.stroke();
+    // con chip ở giữa: chân vàng bốn phía, lõi sáng
+    const c = R * 0.26;
+    g.fillStyle = '#E8B84A';
+    for (let i = -2; i <= 2; i++) {
+      g.fillRect(i * c * 0.36 - 2 * S, -c - 6 * S, 4 * S, 6 * S);
+      g.fillRect(i * c * 0.36 - 2 * S, c, 4 * S, 6 * S);
+      g.fillRect(-c - 6 * S, i * c * 0.36 - 2 * S, 6 * S, 4 * S);
+      g.fillRect(c, i * c * 0.36 - 2 * S, 6 * S, 4 * S);
+    }
+    g.fillStyle = '#10161C';
+    g.fillRect(-c, -c, c * 2, c * 2);
+    const pulse = 0.6 + 0.4 * Math.sin(clock * (warn ? 18 : 4));
+    const core = g.createRadialGradient(0, 0, 0, 0, 0, c * 0.9);
+    core.addColorStop(0, warn ? 'rgba(255,90,120,' + pulse + ')' : 'rgba(95,255,224,' + pulse + ')');
+    core.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = core;
+    g.fillRect(-c, -c, c * 2, c * 2);
+    g.restore();
+  }
+  function drawLasers() {
+    const L = DM.leaf, R = leafR();
+    for (const z of DM.lasers) {
+      if (z.t < 0) continue;
+      const vert = z.kind === 'v';
+      const x0 = vert ? z.at : 0, y0 = vert ? L.y + R * 0.6 : z.at, x1 = vert ? z.at : W, y1 = vert ? H : z.at;
+      g.save();
+      g.lineCap = 'round';
+      if (z.t < LZ_WARN) {
+        // báo trước: vạch đỏ nhấp nháy, dày dần, hai đầu có dấu "!"
+        const a = 0.35 + 0.35 * Math.abs(Math.sin(z.t * 22));
+        g.strokeStyle = 'rgba(255,59,107,' + a + ')';
+        g.lineWidth = (2 + 10 * (z.t / LZ_WARN)) * S;
+        g.setLineDash([10 * S, 8 * S]);
+        g.lineDashOffset = -clock * 60 * S;
+        g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+        g.setLineDash([]);
+        g.fillStyle = 'rgba(255,90,120,' + (a + 0.3) + ')';
+        g.font = '800 ' + Math.round(18 * S) + 'px "Be Vietnam Pro", system-ui, sans-serif';
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        if (vert) g.fillText('!', x0, H - 24 * S); else { g.fillText('!', 14 * S, y0); g.fillText('!', W - 14 * S, y0); }
+      } else {
+        const f = 1 - (z.t - LZ_WARN) / LZ_FIRE;
+        const w = 13 * S * (0.6 + 0.4 * f);
+        g.globalAlpha = Math.max(0, Math.min(1, f * 1.4));
+        g.strokeStyle = 'rgba(255,40,110,0.35)';
+        g.lineWidth = w * 3.2;
+        g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+        g.strokeStyle = '#FF3B6B';
+        g.lineWidth = w * 1.6;
+        g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+        g.strokeStyle = '#FFFFFF';
+        g.lineWidth = w * 0.55;
+        g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+      }
+      g.restore();
+    }
+  }
+  function drawItems() {
+    for (const it of DM.items) {
+      const pts = it.kind === 'pts';
+      const blink = it.life - it.t < 0.8 ? 0.4 + 0.6 * Math.abs(Math.sin(it.t * 14)) : 1;
+      const y = it.y + Math.sin(clock * 4 + it.x) * 4 * S, w = 66 * S, h = 30 * S;
+      g.save();
+      g.globalAlpha = blink;
+      const gl = g.createRadialGradient(it.x, y, 0, it.x, y, 46 * S);
+      gl.addColorStop(0, pts ? 'rgba(255,201,60,0.45)' : 'rgba(124,224,138,0.45)');
+      gl.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = gl;
+      g.beginPath(); g.arc(it.x, y, 46 * S, 0, TAU); g.fill();
+      const bg = g.createLinearGradient(it.x, y - h / 2, it.x, y + h / 2);
+      bg.addColorStop(0, pts ? '#FFE08A' : '#A6F0B0');
+      bg.addColorStop(1, pts ? '#E8A21E' : '#2FA36B');
+      g.fillStyle = bg;
+      g.beginPath();
+      if (g.roundRect) g.roundRect(it.x - w / 2, y - h / 2, w, h, 9 * S); else g.rect(it.x - w / 2, y - h / 2, w, h);
+      g.fill();
+      g.strokeStyle = '#FFFFFF';
+      g.lineWidth = 1.6 * S;
+      g.stroke();
+      g.fillStyle = '#2B2140';
+      g.font = '800 ' + Math.round(13 * S) + 'px "Be Vietnam Pro", system-ui, sans-serif';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText(pts ? '×2 ĐIỂM' : '×2 ĐỐT', it.x, y + 0.5 * S);
+      g.restore();
+    }
+  }
+  function banner(text, y, size, color) {
+    g.save();
+    g.font = '800 ' + Math.round(size * S) + 'px "Be Vietnam Pro", system-ui, sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.lineJoin = 'round';
+    g.lineWidth = 6 * S;
+    g.strokeStyle = 'rgba(2,9,12,0.85)';
+    g.strokeText(text, W / 2, y);
+    g.fillStyle = color;
+    g.fillText(text, W / 2, y);
+    g.restore();
+  }
+  function bar(y, p, color) {
+    const w = Math.min(PW * 0.7, 260 * S), x = W / 2 - w / 2, h = 8 * S;
+    g.fillStyle = 'rgba(255,255,255,0.15)';
+    g.fillRect(x, y, w, h);
+    g.fillStyle = color;
+    g.fillRect(x, y, w * clamp(p, 0, 1), h);
+  }
+  function renderDomain(dt) {
+    const ph = DM.phase;
+    const k = ph === 'enter' ? clamp(DM.pt / 0.55, 0, 1) : ph === 'exit' ? clamp(1 - DM.pt / DM_T.exit, 0, 1) : 1;
+    if (k < 1) drawBackground(0, 0, 0);
+    drawDomainBg(k);
+    // vòng sóng loang ra khi mở / thu lại khi đóng lãnh địa
+    if (ph === 'enter' || ph === 'exit') {
+      const u = ph === 'enter' ? DM.pt / DM_T.enter : 1 - DM.pt / DM_T.exit;
+      g.save();
+      g.strokeStyle = 'rgba(95,255,224,' + (1 - Math.abs(u - 0.5) * 1.6) + ')';
+      g.lineWidth = 6 * S;
+      g.beginPath(); g.arc(Sau.headX, Sau.headY, u * Math.hypot(W, H), 0, TAU); g.stroke();
+      g.restore();
+    }
+    g.save();
+    g.globalAlpha = k;
+    drawChipLeaf();
+    drawLasers();
+    drawItems();
+    g.restore();
+    drawSau(Game.speed * 0.8, Game.pulse || 0, 0);
+    if (DM.inv > 0) {
+      g.save();
+      g.strokeStyle = 'rgba(255,59,107,' + DM.inv * 1.6 + ')';
+      g.lineWidth = 3 * S;
+      g.beginPath(); g.arc(Sau.headX, Sau.headY, HEAD_R * 1.5, 0, TAU); g.stroke();
+      g.restore();
+    }
+    for (const f of DM.fly) {
+      if (f.done) continue;
+      const sc = 0.55;
+      g.save();
+      g.translate(f.x, f.y);
+      g.rotate(f.rot);
+      g.drawImage(SPR.leaf, (-SPR.leafW * sc) / 2, -SPR.leafCY * sc, SPR.leafW * sc, SPR.leafH * sc);
+      g.restore();
+    }
+    drawParticles();
+    drawPopups(dt);
+    // chữ hướng dẫn từng pha
+    const by = H * 0.4;
+    if (ph === 'enter') banner('LÃNH ĐỊA VI MẠCH', by, 26, '#5FFFE0');
+    else if (ph === 'dodge') {
+      // chữ to chỉ hiện lúc đầu rồi mờ đi; thời gian, số lần trúng, món đã nhặt nằm sát đáy cho khỏi che chỗ né
+      if (DM.pt < 1.2) { g.save(); g.globalAlpha = clamp((1.2 - DM.pt) / 0.4, 0, 1); banner('NÉ LAZE!', H * 0.55, 28, '#FFFFFF'); g.restore(); }
+      const fy = H - 46 * S;
+      bar(fy, 1 - DM.pt / DM_T.dodge, '#5FFFE0');
+      const info = [DM.hits ? 'Trúng ' + DM.hits + ' · −' + fmtNum(DM.lost) + ' đốt' : 'Chưa trúng tia nào', DM.x2pts && '×2 ĐIỂM', DM.x2dot && '×2 ĐỐT'].filter(Boolean).join('  ·  ');
+      banner(info, fy - 16 * S, 13, DM.hits ? '#FF8FA3' : '#9BE5D5');
+    } else if (ph === 'ram') banner('HÚC!', by, 30, '#FFE08A');
+    else if (ph === 'spam') {
+      const isPc = !('ontouchstart' in window);
+      banner(isPc ? 'BẤM PHÍM CÁCH LIÊN TỤC!' : 'CHẠM LIÊN TỤC!', by, 22, '#FFFFFF');
+      bar(by + 22 * S, DM.taps / TAP_FULL, '#FFC24B');
+      banner(String(DM.taps), by + 62 * S, 34 + Math.min(14, DM.taps * 0.5), '#FFC24B');
+    } else if ((ph === 'boom' || ph === 'exit') && DM.reward) {
+      const r = DM.reward, u = clamp(r.t / 0.8, 0, 1);
+      banner('+' + Math.round(r.leaves * u) + ' lá', by - 10 * S, 30, '#9BE58A');
+      banner('+' + fmtNum(Math.round((r.pts * u) / 100) * 100) + ' điểm', by + 30 * S, 22, '#FFE08A');
+      if (r.dot) banner('+' + r.dot + ' đốt thưởng', by + 60 * S, 16, '#9BE58A');
+    }
+    if (DM.flash > 0) {
+      g.save();
+      g.globalAlpha = DM.flash * 0.55;
+      g.fillStyle = DM.flashCol;
+      g.fillRect(0, 0, W, H);
+      g.restore();
+    }
+  }
+
   // ================= Vẽ màn chơi =================
   // Kính lúp lơ lửng ngay trên đầu bé sâu, bề ngang đúng bằng vùng đớp: lá nào rơi lọt qua kính là ăn được.
   function lensGeom(k) {
@@ -2201,6 +2850,7 @@
     const ox = sh ? (Math.random() - 0.5) * sh : 0;
     const oy = sh ? (Math.random() - 0.5) * sh : 0;
     g.setTransform(DPR, 0, 0, DPR, ox * DPR, oy * DPR);
+    if (Game.state === 'domain') { renderDomain(dt); return; }
     const playing = Game.state === 'play' || Game.state === 'paused' || Game.state === 'over' || Game.state === 'down' || Game.state === 'count';
     const still = Game.state === 'paused' || Game.state === 'down' || Game.state === 'count';
     // Tốc độ thật trên màn hình (px/giây) tăng theo vòng nhanh.
@@ -2267,12 +2917,13 @@
 
   // ================= Giao diện (DOM) =================
   const SK_LEN = 2 * Math.PI * 29; // chu vi vòng nạp trên nút kỹ năng (r = 29 trong viewBox 64)
+  const SUP_LEN = 2 * Math.PI * 22; // vòng vàng mảnh phía trong: nạp Lãnh Địa Vi Mạch
   const UI = {
     els: {
       hud: $('hud'), menu: $('menu'), pause: $('pause'), result: $('result'), revive: $('revive'), hint: $('hint'), toast: $('toast'),
       score: $('score'), scoreBox: $('score').parentElement, length: $('length'), hearts: $('hearts'), combo: $('combo'), comboNum: $('combo-num'),
       progress: $('progress-fill'), songs: $('songs'), pstars: $('pstars'), speed: $('speed'), wallet: $('wallet'),
-      skill: $('skill'), skillFill: $('skill-fill'), skillIc: $('skill-ic'),
+      skill: $('skill'), skillFill: $('skill-fill'), skillIc: $('skill-ic'), skillSup: $('skill-sup'),
     },
     last: {},
     show(name) { this.els[name].hidden = false; },
@@ -2299,10 +2950,18 @@
       const el = this.els.skill, sk = LOOK.skill;
       if (el.hidden !== !sk) el.hidden = !sk;
       if (!sk) return;
-      if (this.last.skId !== sk.id) {
-        this.els.skillIc.innerHTML = Skins.skillIcon(sk.id, 28);
+      const sup = !!sk.fx.domain, supReady = sup && gm.sk.sup >= DOMAIN_NEED;
+      const icKey = sk.id + '|' + sk.iconTier + '|' + supReady;
+      if (this.last.skId !== icKey) {
+        this.els.skillIc.innerHTML = Skins.skillIcon(sk.id, 28, supReady ? 2 : sk.iconTier);
         el.style.setProperty('--sk', sk.color);
-        this.last.skId = sk.id;
+        el.classList.toggle('has-sup', sup);
+        el.classList.toggle('super', supReady);
+        this.last.skId = icKey;
+      }
+      if (sup) {
+        const sp = Math.round((gm.sk.sup / DOMAIN_NEED) * 100) / 100;
+        if (this.last.supP !== sp) { this.els.skillSup.style.strokeDashoffset = (SUP_LEN * (1 - sp)).toFixed(1); this.last.supP = sp; }
       }
       const K = gm.sk;
       const st = K.on > 0 ? 'on' : K.ready ? 'ready' : '';
@@ -2631,8 +3290,27 @@
 
   // ================= Điều khiển =================
   const SENS = 1.25;
-  let dragId = null, lastPX = 0;
+  let dragId = null, lastPX = 0, lastPY = 0;
   const lastTap = { t: 0, x: 0, y: 0 };
+  function domainPointer(e) {
+    if (DM.phase === 'spam') { domainTap(); return; }
+    dragId = e.pointerId;
+    lastPX = e.clientX;
+    lastPY = e.clientY;
+  }
+  // Pha né: kéo ngón tay để bé đi cả ngang lẫn dọc.
+  window.addEventListener('pointermove', (e) => {
+    if (Game.state !== 'domain' || e.pointerId !== dragId) return;
+    if (DM.phase === 'dodge') {
+      Sau.target = clamp(Sau.target + (e.clientX - lastPX) * SENS, PX0 + 18 * S, PX0 + PW - 18 * S);
+      DM.ty = clamp(DM.ty + (e.clientY - lastPY) * SENS, dmYMin(), dmYMax());
+    }
+    lastPX = e.clientX;
+    lastPY = e.clientY;
+  });
+  // Chạm liên tục trong lãnh địa không được phóng to màn hình hay cuộn trang.
+  document.addEventListener('touchstart', (e) => { if (Game.state === 'domain' && e.cancelable) e.preventDefault(); }, { passive: false });
+  document.addEventListener('touchend', (e) => { if (Game.state === 'domain' && e.cancelable) e.preventDefault(); }, { passive: false });
   // Màn chọn bài: chạm, vuốt, giữ lâu bé sâu có tính cách để xem bé phản ứng.
   let petId = null;
   function petSound(e) {
@@ -2643,6 +3321,7 @@
     buzz(8);
   }
   canvas.addEventListener('pointerdown', (e) => {
+    if (Game.state === 'domain') return;
     if (Game.state === 'menu' && PET) {
       if (PET.pointer('down', e.clientX - Sau.headX, e.clientY - Sau.headY, HEAD_R)) {
         Sound.unlock();
@@ -2655,7 +3334,7 @@
     // Chạm đúp (hai lần trong 0,33 giây, gần chỗ nhau) là dùng kỹ năng: chơi một tay vẫn bấm được.
     // Kéo là kéo tương đối nên hai cái chạm không làm bé sâu xê dịch.
     const now = performance.now();
-    if (now - lastTap.t < 330 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 80 * S) { lastTap.t = 0; Game.useSkill(); }
+    if (now - lastTap.t < 330 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 80 * S) { lastTap.t = 0; Game.trigger(); }
     else { lastTap.t = now; lastTap.x = e.clientX; lastTap.y = e.clientY; }
     dragId = e.pointerId;
     lastPX = e.clientX;
@@ -2678,19 +3357,25 @@
     if (petId !== null && e.pointerId === petId) { if (PET) PET.pointer('up', e.clientX - Sau.headX, e.clientY - Sau.headY, HEAD_R); petId = null; }
     if (e.pointerId === dragId) dragId = null;
   };
+  window.addEventListener('pointerup', (e) => { if (Game.state === 'domain' && e.pointerId === dragId) dragId = null; });
   canvas.addEventListener('pointerup', endDrag);
   canvas.addEventListener('pointercancel', endDrag);
 
-  const keys = { left: false, right: false };
+  const keys = { left: false, right: false, up: false, down: false };
   window.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft') keys.left = true;
     else if (e.key === 'ArrowRight') keys.right = true;
+    else if (e.key === 'ArrowUp') { keys.up = true; if (Game.state === 'domain') e.preventDefault(); }
+    else if (e.key === 'ArrowDown') { keys.down = true; if (Game.state === 'domain') e.preventDefault(); }
+    else if (e.key === ' ' && Game.state === 'domain') { e.preventDefault(); if (!e.repeat) domainTap(); }
     else if ((e.key === 'Escape' || e.key === 'p') && Game.state === 'play') Game.pause();
-    else if ((e.key === ' ' || e.key === 'k') && Game.state === 'play') { e.preventDefault(); Game.useSkill(); }
+    else if ((e.key === ' ' || e.key === 'k') && Game.state === 'play') { e.preventDefault(); Game.trigger(); }
   });
   window.addEventListener('keyup', (e) => {
     if (e.key === 'ArrowLeft') keys.left = false;
     else if (e.key === 'ArrowRight') keys.right = false;
+    else if (e.key === 'ArrowUp') keys.up = false;
+    else if (e.key === 'ArrowDown') keys.down = false;
   });
 
   // Chặn cuộn/zoom của trình duyệt khi đang chơi.
@@ -2727,7 +3412,7 @@
     const card = document.querySelector('#skillinfo .skill-card');
     card.style.setProperty('--sk', sk.color);
     card.style.setProperty('--sk-bg', sk.color + '24');
-    $('si-ic').innerHTML = Skins.skillIcon(sk.id, 38);
+    $('si-ic').innerHTML = Skins.skillIcon(sk.id, sk.iconTier ? 56 : 38, sk.iconTier);
     $('si-tier').textContent = 'Kỹ năng · ' + Skins.RARITY[sk.rarity].name + (sk.max ? ' · bậc ' + sk.level + '/' + sk.max : '');
     $('si-name').textContent = sk.breakthrough ? sk.name + ' · ' + sk.breakthrough : sk.name;
     $('si-line').textContent = sk.line;
@@ -2741,8 +3426,8 @@
   $('btn-si-close').addEventListener('click', () => { Sound.click(); $('skillinfo').hidden = true; });
   $('skillinfo').addEventListener('click', (e) => { if (e.target === $('skillinfo')) $('skillinfo').hidden = true; });
   // Nút kỹ năng: bấm xuống là dùng ngay (không chờ nhấc tay).
-  $('skill').addEventListener('pointerdown', (e) => { e.preventDefault(); Game.useSkill(); });
-  $('skill').addEventListener('click', () => Game.useSkill());
+  $('skill').addEventListener('pointerdown', (e) => { e.preventDefault(); Game.trigger(); });
+  $('skill').addEventListener('click', () => Game.trigger());
   $('btn-giveup').addEventListener('click', () => { Sound.click(); Game.giveUp(); });
 
   // Ví đốt cây trong game: xem số đốt, điểm còn dư tới 3 đốt tiếp theo, đổi nếu đủ.
@@ -2883,7 +3568,7 @@
   };
 
   // ================= Khởi động =================
-  if (DEBUG) window.__sautim = { Game, Sau, Sound };
+  if (DEBUG) window.__sautim = { Game, Sau, Sound, DM, startDomain, domainTap };
   resize();
   Sau.headY = H * 0.27;
   Sau.resetTrail(0);

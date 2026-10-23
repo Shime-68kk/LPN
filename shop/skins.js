@@ -230,7 +230,7 @@
     'bi-ngo': { name: 'Ghẹo Ma', color: '#F08A2A', burst: 11, fx: { candy: 150, score: 1.5 }, line: 'Không cho kẹo là bị ghẹo!', lv: [{ candy: 250 }, { score: 1.8 }, { candy: 400, score: 2 }] },
     'tham-tu': { name: 'Kính Lúp', color: '#D9A034', burst: 17, look: 'lens', fx: { wide: 1.45, foresight: true, guard: true }, line: 'Thám tử soi đâu trúng đó.', lv: [{ wide: 1.55 }, { wide: 1.65 }, { wide: 1.75, shield: true }] },
     'nang-tho': { name: 'Gió Thơ', color: '#F06A8A', burst: 14, fx: { vacuum: true, score: 1.5 }, line: 'Quyển sách mở ra giữa trời, gió thơ nổi lên.', lv: [{ score: 1.7 }, { score: 1.9 }, { score: 2.2 }, { score: 3, overheal: 6 }] },
-    'vi-mach': { name: 'Khoá Sóng', color: '#1FC8A6', burst: 16, look: 'waves', fx: { auto: true, wide: 1.6, perfect: true, shield: true, guard: true, score: 1.5 }, line: 'Phát sóng dò tìm, khoá đúng tần số, bắt sóng là trúng.', lv: [{ wide: 1.7 }, { score: 1.8 }, { score: 2.2 }, { score: 3, refill: 0.5 }] },
+    'vi-mach': { name: 'Khoá Sóng', color: '#1FC8A6', burst: 16, look: 'waves', fx: { auto: true, perfect: true, shield: true, guard: true, score: 1.5 }, line: 'Phát sóng dò tìm, khoá đúng tần số, bắt sóng là trúng.', lv: [{ score: 1.65 }, { score: 1.85 }, { score: 2.2 }, { score: 3, domain: true }] },
   };
   // ----- Nâng cấp kỹ năng (Tiệm Sâu): skin càng xịn càng nâng được nhiều bậc, phí không rẻ -----
   // Mỗi bậc: nạp ít lá hơn (UP_NEED), dùng lâu thêm 1 giây, và phần lv[bậc-1] của skin (chỉ số riêng mạnh lên).
@@ -251,7 +251,7 @@
   ];
   const BREAK = {
     'nang-tho': { name: 'Thơ Tràn Trang', quest: 'Tuyển Tập Thơ', line: 'Trang sách đầy thơ đến tràn ra: mỗi 6 chiếc lá vào sách thêm một nhịp tim, tim vượt lên được tới 5.' },
-    'vi-mach': { name: 'Phủ Sóng', quest: 'Phủ Sóng Toàn Quốc', line: 'Sóng phủ khắp nơi: dùng xong kỹ năng tự nạp lại sẵn một nửa, bắt sóng liên hoàn.' },
+    'vi-mach': { name: 'Lãnh Địa Vi Mạch', quest: 'Phủ Sóng Toàn Quốc', super: true, line: 'Đột phá siêu cấp: nạp đủ 60 lá rồi chạm đúp, mở ra một thế giới bảng mạch riêng. Né laze của chiếc lá chip khổng lồ, húc vào nó rồi chạm liên tục cho nổ tung, thu về tới 300 lá và 100.000 điểm (có món ×2 điểm, ×2 đốt). Trúng laze mất 60 đốt.' },
   };
 
   // Tưng Tửng: mỗi lần dùng bốc một phép của skin khác (name để báo cho người chơi biết).
@@ -284,12 +284,38 @@
     'nang-tho': '<path D d="M12 6.5C10 5 7 4.5 3 5v13.5c4-.5 7 0 9 1.5 2-1.5 5-2 9-1.5V5c-4-.5-7 0-9 1.5z"/><path d="M12 6.5V20M5.5 9h3.5M5.5 12h3.5M15 9h3.5M15 12h3.5"/>',
     'vi-mach': '<path d="M12 11.5V21M8.5 21h7M12 11.5L9.2 21M12 11.5l2.8 9.5M8.6 6.2a4.8 4.8 0 0 1 6.8 0M6 3.6a8.5 8.5 0 0 1 12 0"/><circle P cx="12" cy="9.6" r="1.7"/>',
   };
-  function skillIcon(id, size) {
+  // tier 0: biểu tượng nét thường; 1: đã nâng tối đa (Sử thi trở lên): khung đá quý lục giác ánh vàng, lấp lánh;
+  // 2: đột phá siêu cấp (Định mệnh bậc 4): đá quý tím trên vầng tia sáng xoay (xem .sk-rays trong CSS).
+  function skillIcon(id, size, tier) {
     const body = SKILL_ICONS[id];
     if (!body) return '';
     const n = size || 24;
-    return '<svg viewBox="0 0 24 24" width="' + n + '" height="' + n + '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-      + body.replace(/ D /g, ' fill="currentColor" fill-opacity=".24" ').replace(/ P /g, ' fill="currentColor" stroke="none" ') + '</svg>';
+    const paint = (b) => b.replace(/ D /g, ' fill="currentColor" fill-opacity=".24" ').replace(/ P /g, ' fill="currentColor" stroke="none" ');
+    const svg = (vb, cls, inner) => '<svg' + (cls ? ' class="' + cls + '"' : '') + ' viewBox="' + vb + '" width="' + n + '" height="' + n + '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + inner + '</svg>';
+    if (!tier) return svg('0 0 24 24', '', paint(body));
+    const c = (SKILLS[id] || {}).color || '#E2B04A';
+    // màu đậm hơn của chính màu kỹ năng (để đá quý không bị đục khi pha với màu khác)
+    const deep = '#' + [1, 3, 5].map((i) => Math.round(parseInt(c.slice(i, i + 2), 16) * 0.62).toString(16).padStart(2, '0')).join('');
+    const gid = 'skg-' + id + '-' + tier;
+    const defs = '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + c + '"/><stop offset="1" stop-color="' + (tier === 2 ? '#5B26D8' : deep) + '"/></linearGradient>'
+      + (tier === 2 ? '<linearGradient id="' + gid + 'r" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE38A"/><stop offset="1" stop-color="#FF6FB5"/></linearGradient>' : '') + '</defs>';
+    let rays = '';
+    if (tier === 2) {
+      let d = '';
+      for (let i = 0; i < 12; i++) {
+        const a0 = (i / 12) * Math.PI * 2, a1 = a0 + Math.PI / 12, a2 = a0 + Math.PI / 6;
+        d += (i ? 'L' : 'M') + (12 + Math.cos(a0) * 13.4).toFixed(2) + ' ' + (12 + Math.sin(a0) * 13.4).toFixed(2)
+          + 'L' + (12 + Math.cos(a1) * 9.6).toFixed(2) + ' ' + (12 + Math.sin(a1) * 9.6).toFixed(2)
+          + 'L' + (12 + Math.cos(a2) * 13.4).toFixed(2) + ' ' + (12 + Math.sin(a2) * 13.4).toFixed(2);
+      }
+      rays = '<g class="sk-rays"><path d="' + d + 'Z" fill="url(#' + gid + 'r)" stroke="none"/></g>';
+    }
+    const gem = '<path d="M12 1.2l9.4 5.4v10.8L12 22.8l-9.4-5.4V6.6z" fill="url(#' + gid + ')" stroke="' + (tier === 2 ? '#FFF1C9' : '#FFE7A0') + '" stroke-width="1.1"/>'
+      + '<path d="M12 1.2l9.4 5.4L12 12 2.6 6.6z" fill="#FFFFFF" fill-opacity=".2" stroke="none"/>';
+    const inner = '<g transform="translate(12 12) scale(' + (tier === 2 ? 0.52 : 0.58) + ') translate(-12 -12)" color="#FFFFFF" stroke="#FFFFFF" stroke-width="2.3">' + paint(body) + '</g>';
+    const spark = '<path class="sk-spark" d="M20.2 .4l.65 1.6 1.6.65-1.6.65-.65 1.6-.65-1.6-1.6-.65 1.6-.65z" fill="#FFF6C8" stroke="#E8A21E" stroke-width=".5"/>'
+      + (tier === 2 ? '<path class="sk-spark" d="M3.4 18.6l.5 1.2 1.2.5-1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5z" fill="#FFF6C8" stroke="#E8A21E" stroke-width=".5"/>' : '');
+    return svg(tier === 2 ? '-2.2 -2.2 28.4 28.4' : '-0.6 -0.6 25.2 25.2', 'sk-tier' + tier, defs + rays + gem + inner + spark);
   }
   function skillEffects(fx) {
     const out = [];
@@ -319,6 +345,7 @@
     if (fx.harvest) out.push('mỗi lá ăn được tặng thêm ' + fx.harvest + ' đốt cây');
     if (fx.rand) out.push('mỗi lần dùng ra phép của một skin khác, có khi siêu mạnh');
     if (fx.refill) out.push('dùng xong tự nạp lại sẵn ' + Math.round(fx.refill * 100) + '%');
+    if (fx.domain) out.push('nạp đủ 60 lá mở Lãnh Địa Vi Mạch: né laze, húc nát lá chip khổng lồ, thu về tới 300 lá và 100.000 điểm');
     return out;
   }
   // Kỹ năng của một skin, đủ số lá cần nạp và số giây theo độ hiếm.
@@ -339,6 +366,9 @@
       time: tier.time + lvl,
       breakthrough: lvl >= 4 && BREAK[item.id] ? BREAK[item.id].name : '',
     });
+    // Biểu tượng: Sử thi trở lên nâng hết bậc (Định mệnh: đủ 3 bậc) thì đổi khung đá quý; đột phá thì siêu cấp.
+    const topTier = item.rarity === 'suthi' || item.rarity === 'huyenthoai' || item.rarity === 'dinhmenh';
+    sk.iconTier = sk.breakthrough ? 2 : topTier && lvl >= Math.min(max, 3) ? 1 : 0;
     sk.effects = skillEffects(sk.fx);
     sk.how = 'Ăn đủ ' + sk.need + ' lá để nạp đầy, rồi chạm đúp màn hình (máy tính bấm phím cách). Kỹ năng kéo dài ' + sk.time + ' giây.';
     sk.text = sk.line + ' Trong ' + sk.time + ' giây: ' + sk.effects.join(', ') + '. ' + sk.how;

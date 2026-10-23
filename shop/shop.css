@@ -282,9 +282,18 @@ body.night .item .i-state.on { color: #CDB8F0; }
 .su-goal .bar { grid-column: 2 / 4; height: 5px; border-radius: 99px; background: rgba(127, 127, 127, 0.18); overflow: hidden; }
 .su-goal .bar span { display: block; height: 100%; background: var(--sk, #E2B04A); border-radius: inherit; }
 .su-note { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+.su-icon { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 12px; background: rgba(127, 127, 127, 0.08); font-size: 13px; font-weight: 700; color: var(--sk); }
+.su-icon-ic { display: grid; color: var(--sk); }
 .su-btn { min-height: 46px; font-size: 15px; }
 .su-btn:disabled { opacity: .55; }
 .su-max { margin: 0; font-size: 14px; font-weight: 700; color: var(--sk); }
+/* Biểu tượng kỹ năng đã nâng tối đa / đột phá */
+.sk-tier2 .sk-rays { transform-origin: 12px 12px; animation: sk-spin 9s linear infinite; }
+.sk-spark { transform-box: fill-box; transform-origin: center; animation: sk-twinkle 1.8s ease-in-out infinite; }
+@keyframes sk-spin { to { transform: rotate(360deg); } }
+@keyframes sk-twinkle { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.6); } }
+@media (prefers-reduced-motion: reduce) { .sk-tier2 .sk-rays, .sk-spark { animation: none; } }
+.i-sk.max { background: transparent; box-shadow: none; width: 32px; height: 32px; top: 8px; right: 8px; }
 .i-sk .lv { position: absolute; right: -5px; bottom: -5px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 99px; background: #2B2140; color: #FFF1C9; font: 800 9.5px/15px 'Be Vietnam Pro', system-ui, sans-serif; text-align: center; }
 .sheet-action { min-height: 52px; font-size: 16px; margin-top: 6px; }
 .sheet-action:disabled { opacity: .55; }
