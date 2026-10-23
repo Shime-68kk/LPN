@@ -5,18 +5,32 @@
 const START = new Date('2026-08-06T23:38:58+07:00');
 const MILESTONES = [100, 200, 300, 365, 500, 600, 700, 730, 800, 900, 1000, 1095, 1200, 1461, 1500, 1826, 2000, 2500, 3000, 3650];
 const YEARS = { 365: '1 năm', 730: '2 năm', 1095: '3 năm', 1461: '4 năm', 1826: '5 năm', 3650: '10 năm' };
+const DAY = 864e5;
 
 const now = new Date();
-// Cùng cách đếm với app: ngày đầu tiên là ngày 1, sang ngày mới đúng giờ 23:38:58.
-const days = Math.max(1, Math.floor((now - START) / 864e5) + 1);
+// Đếm đúng thời gian đã yêu: đủ bao nhiêu ngày, cộng giờ:phút:giây tính từ 23:38:58 gần nhất.
+const days = Math.max(0, Math.floor((now - START) / DAY));
+const dayStart = new Date(START.getTime() + days * DAY);
 const next = MILESTONES.find((m) => m > days) || (Math.floor(days / 1000) + 1) * 1000;
 const prev = [...MILESTONES].reverse().find((m) => m <= days) || 0;
 const left = next - days;
 const progress = Math.max(0, Math.min(1, (days - prev) / (next - prev)));
-const label = (m) => YEARS[m] || String(m);
+const label = (m) => YEARS[m] || m + ' ngày';
+const note = days === prev && prev ? 'Hôm nay tròn ' + label(prev) + ' ♥' : 'Còn ' + left + ' ngày tới ' + label(next);
 // Tim đỏ. Lưu ý: trên màn hình khoá iPhone tự tô cả ô một màu cho hợp hình nền,
 // nên tim chỉ đỏ ở ô màn hình chính và chế độ chờ (StandBy).
 const RED = new Color('#FF2D55');
+
+// Giờ:phút:giây do chính iPhone đếm từng giây (kiểu đồng hồ bấm giờ), script không phải chạy lại
+// nên không tốn pin. Script chỉ chạy lại mỗi ngày một lần, đúng 23:38:58, để tăng số ngày.
+function clock(stack, size, weight) {
+  const t = stack.addDate(dayStart);
+  t.applyTimerStyle();
+  t.font = weight === 'bold' ? Font.boldRoundedSystemFont(size) : Font.mediumRoundedSystemFont(size);
+  t.lineLimit = 1;
+  t.minimumScaleFactor = 0.6;
+  return t;
+}
 
 // Thanh tiến độ bo tròn, giống thanh pin trên màn hình khoá.
 function bar(w, h, p, bg, fg) {
@@ -68,8 +82,8 @@ function ring(size, p) {
   return dc.getImage();
 }
 
-function heart(size, color) {
-  const img = w.addImage(SFSymbol.named('heart.fill').image);
+function heart(stack, size, color) {
+  const img = stack.addImage(SFSymbol.named('heart.fill').image);
   img.imageSize = new Size(size, size);
   if (color) img.tintColor = color;
   return img;
@@ -79,17 +93,19 @@ const family = config.widgetFamily || 'accessoryRectangular';
 const w = new ListWidget();
 
 if (family === 'accessoryRectangular') {
+  // ♥ 77 ngày 10:21:05
   const top = w.addStack();
   top.centerAlignContent();
-  const h = top.addImage(SFSymbol.named('heart.fill').image);
-  h.imageSize = new Size(15, 15);
-  h.tintColor = RED;
+  heart(top, 14, RED);
   top.addSpacer(5);
   const d = top.addText(days + ' ngày');
-  d.font = Font.boldRoundedSystemFont(19);
+  d.font = Font.boldRoundedSystemFont(18);
+  d.lineLimit = 1;
   d.minimumScaleFactor = 0.7;
+  top.addSpacer(6);
+  clock(top, 18).leftAlignText();
   w.addSpacer(1);
-  const s = w.addText('Còn ' + left + ' ngày tới ' + label(next));
+  const s = w.addText(note);
   s.font = Font.mediumSystemFont(12);
   s.minimumScaleFactor = 0.7;
   s.lineLimit = 1;
@@ -97,7 +113,7 @@ if (family === 'accessoryRectangular') {
   const b = w.addImage(bar(150, 6, progress, new Color('#FFFFFF', 0.3), Color.white()));
   b.imageSize = new Size(150, 6);
 } else if (family === 'accessoryInline') {
-  w.addText('♥ Ngày thứ ' + days + ' bên nhau');
+  w.addText('♥ ' + days + ' ngày yêu nhau');
 } else if (family === 'accessoryCircular') {
   w.backgroundImage = ring(64, progress);
   w.addSpacer();
@@ -117,17 +133,22 @@ if (family === 'accessoryRectangular') {
   gr.endPoint = new Point(1, 1);
   w.backgroundGradient = gr;
   w.setPadding(14, 14, 14, 14);
-  heart(20, RED);
+  heart(w, 20, RED);
   w.addSpacer();
   const d = w.addText(String(days));
-  d.font = Font.boldRoundedSystemFont(44);
+  d.font = Font.boldRoundedSystemFont(40);
   d.textColor = Color.white();
   d.minimumScaleFactor = 0.6;
-  const s = w.addText('ngày bên nhau');
+  const row = w.addStack();
+  row.centerAlignContent();
+  const s = row.addText('ngày ');
   s.font = Font.semiboldSystemFont(14);
   s.textColor = Color.white();
+  const c = clock(row, 14);
+  c.textColor = Color.white();
+  c.leftAlignText();
   w.addSpacer(6);
-  const n = w.addText('Còn ' + left + ' ngày tới ' + label(next));
+  const n = w.addText(note);
   n.font = Font.mediumSystemFont(11);
   n.textColor = new Color('#FFFFFF', 0.85);
   n.lineLimit = 1;
@@ -137,8 +158,8 @@ if (family === 'accessoryRectangular') {
   b.imageSize = new Size(120, 5);
 }
 
-// Đổi số đúng lúc sang ngày mới.
-w.refreshAfterDate = new Date(START.getTime() + days * 864e5 + 5000);
+// Sang ngày mới (23:38:58) thì vẽ lại để tăng số ngày và đồng hồ quay về 0:00:00.
+w.refreshAfterDate = new Date(dayStart.getTime() + DAY + 2000);
 
 if (config.runsInWidget) Script.setWidget(w);
 else if (typeof w.presentAccessoryRectangular === 'function') await w.presentAccessoryRectangular();

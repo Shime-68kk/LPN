@@ -12,6 +12,27 @@
     try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df') location.replace('./'); }
     catch (e) { location.replace('./'); }
   </script>
+  <script>
+    // Ngày / đêm đoán ngay từ đầu, trước khi tải CSS, và mọi trang đoán cùng một cách (giờ mặt trời mọc / lặn
+    // trang chủ lưu lại, không có thì theo đồng hồ) để chuyển trang không bao giờ trang này tối trang kia sáng.
+    (() => {
+      const d = new Date(), h = d.getHours() + d.getMinutes() / 60, n = d.getHours() * 60 + d.getMinutes();
+      let night = h >= 18.5 || h < 5.5, s = null;
+      try { s = JSON.parse(localStorage.getItem('lpn:sky')); } catch (e) { /* bỏ qua */ }
+      if (s && s.rise && s.set) {
+        const m = (t) => { const x = new Date(t); return x.getHours() * 60 + x.getMinutes(); };
+        night = n < m(s.rise) - 30 || n > m(s.set) + 30;
+      }
+      let sky = night ? 'dem' : h < 6.5 ? 'binhminh' : h >= 17 ? 'hoanghon' : 'nang';
+      // Trời vừa xem còn mới (mưa, mây…) thì giữ, miễn là cùng ngày / đêm.
+      const wasNight = s && (s.night !== undefined ? !!s.night : s.sky === 'dem');
+      if (s && s.sky && Date.now() - s.at < 3600e3 && wasNight === night && (s.sky !== 'dem' || night)) sky = s.sky;
+      window.LPN_SKY = sky;
+      window.LPN_NIGHT = night;
+    })();
+    document.documentElement.style.background = LPN_NIGHT ? '#1D1832' : '#FFF8EF';
+    (() => { const st = document.createElement('style'); st.id = 'lpn-early'; st.textContent = 'body{background:' + (LPN_NIGHT ? '#1D1832' : '#FFF8EF') + ' !important}'; document.head.appendChild(st); })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
@@ -38,10 +59,13 @@
     }
     .lock .l-date { font-size: 15px; font-weight: 600; opacity: .9; }
     .lock .l-time { font-family: system-ui, sans-serif; font-weight: 700; font-size: 76px; line-height: 1; letter-spacing: -2px; opacity: .92; }
-    .lock .l-row { display: flex; gap: 14px; margin-top: 14px; width: 300px; max-width: 86%; }
+    .lock .l-row { display: flex; gap: 14px; margin-top: 14px; width: 310px; max-width: 90%; }
     .lock .l-box { flex: 1; display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
-    .lock .l-box b { font-size: 19px; display: flex; align-items: center; gap: 6px; }
-    .lock .l-box b svg { width: 15px; height: 15px; fill: #FFFFFF; stroke: none; }
+    .lock .l-box b { font-size: 17px; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .lock .l-box > span { white-space: nowrap; }
+    .lock .l-box.wide { flex: 1.5; min-width: 0; }
+    .lock .l-box b svg { width: 15px; height: 15px; fill: #FFFFFF; stroke: none; flex: none; }
+    .lock .l-box b .l-clock { font-weight: 500; font-variant-numeric: tabular-nums; }
     .lock .l-bar { height: 6px; border-radius: 999px; background: rgba(255, 255, 255, .3); overflow: hidden; margin-top: 3px; }
     .lock .l-bar i { display: block; height: 100%; background: #FFFFFF; border-radius: inherit; }
     .lock .l-box.dim { opacity: .55; }
@@ -56,6 +80,7 @@
   </style>
 </head>
 <body>
+  <script>document.body.classList.toggle('night', LPN_NIGHT); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
   <main class="wg">
     <header class="wg-head">
       <a class="close" href="./" aria-label="Về trang chủ"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6" /></svg></a>
@@ -70,27 +95,28 @@
       <span class="l-time" id="l-time"></span>
       <div class="l-row">
         <div class="l-box dim"><b>52%</b><span>Pin</span><span class="l-bar"><i style="width:52%"></i></span></div>
-        <div class="l-box">
-          <b><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg><span id="l-days"></span></b>
+        <div class="l-box wide">
+          <b><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg><span id="l-days"></span><span class="l-clock" id="l-clock"></span></b>
           <span id="l-next"></span>
           <span class="l-bar"><i id="l-bar"></i></span>
         </div>
       </div>
     </div>
-    <p>Ô bên phải chính là tiện ích. Số ngày tự đổi đúng lúc sang ngày mới, không cần mở app.</p>
+    <p>Ô bên phải chính là tiện ích: đủ bao nhiêu ngày, cộng giờ:phút:giây tính từ 23:38:58 đêm 6/8. Giờ, phút, giây do iPhone tự đếm từng giây như đồng hồ bấm giờ, nên lúc nào cũng đúng mà không tốn pin. Số ngày tự tăng lúc 23:38:58 mỗi tối.</p>
 
     <ol class="steps">
       <li><span>Tải app <b>Scriptable</b> (miễn phí, không quảng cáo) trên App Store: <a href="https://apps.apple.com/app/scriptable/id1405459188">mở App Store</a>.</span></li>
       <li><span>Bấm <b>Sao chép đoạn mã</b> ở dưới. Mở Scriptable, bấm dấu <b>+</b>, dán vào. Chạm tên ở trên cùng, đặt là <b>Ngày bên nhau</b>, rồi bấm <b>Done</b>.</span></li>
       <li><span>Ra màn hình khoá, giữ tay lên màn hình, chọn <b>Tuỳ chỉnh</b> → <b>Màn hình khoá</b>. Chạm vùng tiện ích dưới đồng hồ → chọn <b>Scriptable</b> → ô <b>hình chữ nhật</b>.</span></li>
       <li><span>Chạm vào ô Scriptable vừa thêm → mục <b>Script</b> chọn <b>Ngày bên nhau</b> → bấm <b>Xong</b>.</span></li>
-      <li><span>Thích thì thêm: chạm dòng ngày tháng phía trên đồng hồ → Scriptable → chọn script, sẽ có dòng <b>♥ Ngày thứ … bên nhau</b>. Màn hình chính cũng thêm được ô nhỏ màu tím hồng.</span></li>
+      <li><span>Thích thì thêm: chạm dòng ngày tháng phía trên đồng hồ → Scriptable → chọn script, sẽ có dòng <b>♥ … ngày yêu nhau</b>. Màn hình chính cũng thêm được ô nhỏ màu tím hồng.</span></li>
     </ol>
 
     <div class="code-box">
       <button class="btn primary" id="btn-copy" type="button">Sao chép đoạn mã</button>
       <pre id="code">Đang tải…</pre>
     </div>
+    <p class="note">Đã cài bản cũ rồi thì mở Scriptable, mở script <b>Ngày bên nhau</b>, xoá hết rồi dán đoạn mã mới vào là xong, không cần thêm lại tiện ích.</p>
     <p class="note">Mỗi điện thoại cài một lần. Tim đỏ hiện ở ô màn hình chính; trên màn hình khoá iPhone tự tô cả ô một màu (thường là trắng) cho hợp hình nền, không đổi được.</p>
   </main>
 
@@ -99,24 +125,30 @@
       const START = new Date('2026-08-06T23:38:58+07:00');
       const MIL = [100, 200, 300, 365, 500, 600, 700, 730, 800, 900, 1000, 1095, 1200, 1461, 1500, 1826, 2000, 2500, 3000, 3650];
       const YEARS = { 365: '1 năm', 730: '2 năm', 1095: '3 năm', 1461: '4 năm', 1826: '5 năm', 3650: '10 năm' };
-      const now = new Date();
-      const days = Math.max(1, Math.floor((now - START) / 864e5) + 1);
-      const next = MIL.find((m) => m > days) || (Math.floor(days / 1000) + 1) * 1000;
-      const prev = [...MIL].reverse().find((m) => m <= days) || 0;
-      document.getElementById('l-days').textContent = days + ' ngày';
-      document.getElementById('l-next').textContent = 'Còn ' + (next - days) + ' ngày tới ' + (YEARS[next] || next);
-      document.getElementById('l-bar').style.width = Math.round(((days - prev) / (next - prev)) * 100) + '%';
-      document.getElementById('l-time').textContent = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
-      document.getElementById('l-date').textContent = now.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' });
-      if (document.body.classList) {
-        try {
-          const s = JSON.parse(localStorage.getItem('lpn:sky'));
-          if (s && s.sky === 'dem') document.body.classList.add('night');
-        } catch (e) { /* bỏ qua */ }
+      const label = (m) => YEARS[m] || m + ' ngày';
+      const pad = (n) => String(n).padStart(2, '0');
+      // Giống widget.js: đủ bao nhiêu ngày, cộng giờ:phút:giây từ 23:38:58 gần nhất.
+      function tick() {
+        const now = new Date();
+        const ms = Math.max(0, now - START);
+        const days = Math.floor(ms / 864e5), rest = ms % 864e5;
+        const next = MIL.find((m) => m > days) || (Math.floor(days / 1000) + 1) * 1000;
+        const prev = [...MIL].reverse().find((m) => m <= days) || 0;
+        document.getElementById('l-days').textContent = days + ' ngày';
+        document.getElementById('l-clock').textContent = Math.floor(rest / 36e5) + ':' + pad(Math.floor(rest / 6e4) % 60) + ':' + pad(Math.floor(rest / 1e3) % 60);
+        document.getElementById('l-next').textContent = days === prev && prev ? 'Hôm nay tròn ' + label(prev) + ' ♥' : 'Còn ' + (next - days) + ' ngày tới ' + label(next);
+        document.getElementById('l-bar').style.width = Math.round(((days - prev) / (next - prev)) * 100) + '%';
+        document.getElementById('l-time').textContent = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
+        document.getElementById('l-date').textContent = now.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' });
       }
+      // Chạy đúng nhịp giây, ẩn trang thì nghỉ.
+      let timer = 0;
+      const run = () => { tick(); clearTimeout(timer); if (!document.hidden) timer = setTimeout(run, 1000 - (Date.now() % 1000) + 5); };
+      document.addEventListener('visibilitychange', run);
+      run();
 
       let code = '';
-      fetch('widget.js?v=3').then((r) => r.text()).then((t) => {
+      fetch('widget.js?v=4').then((r) => r.text()).then((t) => {
         code = t;
         document.getElementById('code').textContent = t;
       }).catch(() => { document.getElementById('code').textContent = 'Chưa tải được đoạn mã, thử lại sau nha.'; });
