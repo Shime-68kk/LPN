@@ -459,7 +459,8 @@
       if (skill) {
         const sk = document.createElement('span');
         sk.className = 'i-sk';
-        sk.textContent = skill.icon;
+        sk.innerHTML = Skins.skillIcon(item.id, 16);
+        sk.style.color = skill.color;
         sk.title = 'Kỹ năng ' + skill.name;
         b.appendChild(sk);
       }
@@ -480,7 +481,29 @@
     $('sheet-memory').textContent = item.memory || '';
     const skill = item.slot === 'skin' && Skins.skillOf ? Skins.skillOf(item) : null;
     $('sheet-skill').hidden = !skill;
-    if (skill) $('sheet-skill').textContent = skill.icon + ' Kỹ năng ' + skill.name + ': ' + skill.text;
+    if (skill) {
+      // Thẻ kỹ năng: biểu tượng, tên và hạng, câu giới thiệu, từng tác dụng, cách dùng.
+      const box = $('sheet-skill');
+      box.style.setProperty('--sk', skill.color);
+      const ic = document.createElement('span');
+      ic.className = 'ss-ic';
+      ic.innerHTML = Skins.skillIcon(item.id, 22);
+      const head = document.createElement('b');
+      head.textContent = 'Kỹ năng ' + skill.name;
+      const body = document.createElement('span');
+      body.className = 'ss-body';
+      const top = document.createElement('span');
+      top.append(head, ' · ' + Skins.RARITY[item.rarity].name);
+      body.append(top);
+      const line = document.createElement('span');
+      line.className = 'ss-line';
+      line.textContent = skill.line + ' Trong ' + skill.time + ' giây: ' + skill.effects.join(', ') + '.';
+      const how = document.createElement('span');
+      how.className = 'ss-how';
+      how.textContent = 'Ăn đủ ' + skill.need + ' lá để nạp, khi chơi chạm đúp màn hình để dùng.';
+      body.append(line, how);
+      box.replaceChildren(ic, body);
+    }
     const ev = item.ev && exclusive(item) ? Skins.eventById(item.ev) : null;
     $('sheet-ch').textContent = (ev ? 'Sự kiện ' + ev.name + ' · ' : '') + (item.who ? 'Bộ của ' + (item.who === 'thuy' ? 'em' : 'anh') + ' · ' : '') + (item.reward ? 'Phần thưởng phá án · ' : '') + (item.ch ? 'Kỷ niệm ở chương ' + item.ch + ' · ' : '') + SLOT_NAME[item.slot];
     updateSheetAction();

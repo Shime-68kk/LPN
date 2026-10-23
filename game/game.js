@@ -106,7 +106,13 @@
     if (ms) {
       const sk = LOOK.skill;
       ms.hidden = !sk;
-      if (sk) ms.textContent = sk.icon + ' Kỹ năng ' + sk.name + ': ăn đủ ' + sk.need + ' lá rồi chạm đúp màn hình (máy tính bấm phím cách). Trong ' + sk.time + ' giây ' + sk.effects.join(', ') + '.';
+      if (sk) {
+        ms.style.setProperty('--sk', sk.color);
+        ms.style.setProperty('--sk-bg', sk.color + '24');
+        document.getElementById('menu-skill-ic').innerHTML = Skins.skillIcon(sk.id, 22);
+        document.getElementById('menu-skill-name').textContent = sk.name;
+        ms.setAttribute('aria-label', 'Kỹ năng ' + sk.name + ', xem chi tiết');
+      }
     }
   }
   loadLook();
@@ -757,7 +763,8 @@
 
   function updateSau(dt, speed, pulse) {
     const prev = Sau.headX;
-    Sau.headX += (Sau.target - Sau.headX) * (1 - Math.exp(-dt * 26));
+    const surf = Game.state === 'play' && Game.skFx() && Game.skFx().surf;
+    Sau.headX += (Sau.target - Sau.headX) * (1 - Math.exp(-dt * (surf ? 40 : 26)));
     Sau.vx = lerp(Sau.vx, (Sau.headX - prev) / Math.max(dt, 1e-4), 1 - Math.exp(-dt * 12));
     Sau.ant = lerp(Sau.ant, clamp(-Sau.vx * 0.012, -9 * S, 9 * S), 1 - Math.exp(-dt * 9));
     Sau.chew = Math.max(0, Sau.chew - dt);
@@ -874,20 +881,24 @@
     stars: 0, starFx: [], botOn: BOT,
     score: 0, combo: 0, maxCombo: 0, hearts: 3, perfect: 0, good: 0, miss: 0,
     revives: 0, downPos: 0, count: null, pendingPos: null,
-    sk: { charge: 0, on: 0, ready: false, told: false, fx: null, hit: 0 },
+    sk: { charge: 0, on: 0, ready: false, told: false, fx: null, hit: 0, cnt: 0, net: 0, lotus: 0, label: '' },
+    vmul: 1, bonusDot: 0, bonusBanked: 0,
     endT: 0, speed: 460, lead: 1.3, shake: 0, hintT: 0, resultShown: false, pulse: 0,
 
     setup() {
       const lvl = this.diff;
       this.notes = this.map.notes
         .filter((n) => n[3] <= lvl)
-        .map((n) => ({ t: n[0], x: n[1], dur: n[2], state: 0, held: 0, eaten: [], cur: null, grow: 0, crunch: 0, vac: 0 }));
+        .map((n) => ({ t: n[0], x: n[1], x0: n[1], dur: n[2], state: 0, held: 0, eaten: [], cur: null, grow: 0, crunch: 0, vac: 0 }));
       this.beats = this.map.beats;
       this.resetNotes();
       this.score = 0; this.combo = 0; this.maxCombo = 0; this.hearts = 3; this.banked = 0; this.dotGot = 0;
       this.revives = 0; this.count = null; this.pendingPos = null;
-      this.sk = { charge: 0, on: 0, ready: false, told: false, fx: null, hit: 0 };
+      this.sk = { charge: 0, on: 0, ready: false, told: false, fx: null, hit: 0, cnt: 0, net: 0, lotus: 0, label: '' };
+      this.vmul = 1;
+      this.bonusDot = 0; this.bonusBanked = 0;
       VAC.length = 0;
+      STARS.length = 0;
       UI.count(null);
       // Kỷ lục cũ của bài này ở độ khó này; vượt qua giữa ván thì báo ngay.
       this.prevBest = ((Store.data.best[this.song.id + ':' + this.diff] || {}).score) || 0;
@@ -915,11 +926,12 @@
     // Đưa toàn bộ lá về trạng thái chưa ăn (đầu mỗi vòng).
     resetNotes() {
       for (const n of this.notes) {
-        n.state = 0; n.held = 0; n.eaten = []; n.cur = null; n.grow = 0; n.crunch = 0; n.vac = 0;
+        n.state = 0; n.held = 0; n.eaten = []; n.cur = null; n.grow = 0; n.crunch = 0; n.vac = 0; n.x = n.x0;
         n.total = 0; n.bounce = 0; n.ticks = 0;
       }
       this.holds = [];
       VAC.length = 0;
+      STARS.length = 0;
       this.beatIdx = 0;
       this.noteHead = 0;
       this.drawStart = 0;
@@ -1021,22 +1033,25 @@
       Sound.ctx.resume().then(() => { this.resync = true; this.state = 'play'; });
     },
 
-    eat(n, perfect, book) {
+    // via: ai đớp lá này — null (bé sâu), 'book' (sách Gió Thơ), 'clone' (bé phân thân), 'star' (sao băng),
+    // 'net' (lưới thổ cẩm), 'lotus' (sen đỡ). Điểm, vụn lá bung ra ở chỗ đó.
+    eat(n, perfect, via) {
       n.state = 1;
+      const fx = this.skFx(), K = this.sk;
       const mult = (1 + Math.min(4, Math.floor(this.combo / 10)) * 0.5) * this.boost();
       const pts = Math.round((perfect ? 300 : 200) * mult);
       this.score += pts;
-      this.combo++;
+      this.combo += fx && fx.combo2 ? 2 : 1;
       this.maxCombo = Math.max(this.maxCombo, this.combo);
       if (perfect) this.perfect++; else this.good++;
       Sau.segs++;
-      if (book) {
-        // Gió Thơ: lá chạm trang sách; Nàng Thơ đứng yên đọc nên không nhai, chỉ mỉm cười.
-        const b = bookPos();
+      if (via) {
+        // Không phải bé tự đớp (sách, phân thân, sao, lưới, sen): bé không nhai, chỉ mỉm cười.
+        const at = viaPos(via, n);
         Sau.happy = Math.max(Sau.happy, 0.3);
-        burstCrumbs(b.x, b.y, perfect ? 8 : 5);
-        ring(b.x, b.y, LOOK.skill ? LOOK.skill.color : '#FF8FA3');
-        popup('+' + pts, b.x + (Math.random() - 0.5) * 50 * S, b.y - bookW() * 0.95, GOLD());
+        burstCrumbs(at.x, at.y, perfect ? 8 : 5);
+        ring(at.x, at.y, LOOK.skill ? LOOK.skill.color : '#FF8FA3');
+        popup('+' + pts, at.x + (Math.random() - 0.5) * 40 * S, at.y - (via === 'book' ? bookW() * 0.95 : HEAD_R * 2), GOLD());
       } else {
         Sau.chew = 0.24;
         Sau.gulp();
@@ -1055,6 +1070,28 @@
         UI.toast('+1 tim');
         Sound.heart();
       }
+      if (fx) {
+        K.cnt++;
+        if (fx.healEvery && K.cnt % fx.healEvery === 0 && this.hearts < 3) {
+          this.hearts++;
+          popup('+1 tim', Sau.headX, Sau.headY - HEAD_R * 3, PINK(), 18);
+          burstHearts(Sau.headX, Sau.headY - HEAD_R, 4);
+          Sound.heart();
+        }
+        if (fx.overheal && K.cnt % fx.overheal === 0 && this.hearts < 5) {
+          this.hearts++;
+          popup(this.hearts > 3 ? '+1 tim thưởng' : '+1 tim', Sau.headX, Sau.headY - HEAD_R * 3, PINK(), 18);
+          burstHearts(Sau.headX, Sau.headY - HEAD_R, 5);
+          Sound.heart();
+        }
+        if (fx.harvest) {
+          this.bonusDot += fx.harvest;
+          const at = via ? viaPos(via, n) : { x: Sau.headX, y: Sau.headY };
+          popup('+' + fx.harvest + ' đốt', at.x + 26 * S, at.y - HEAD_R * 3.2, T.night ? '#9BE58A' : '#2E8B3E', 15);
+        }
+        // Sao Băng: bé tự đớp một lá thì sao bay đi đớp giùm lá kế tiếp (sao không gọi thêm sao).
+        if (fx.star && via !== 'star') launchStar(this.songT);
+      }
       this.chargeSkill();
       UI.hud(this, true);
     },
@@ -1069,7 +1106,7 @@
       if (K.charge >= sk.need) {
         K.ready = true;
         Sound.skillReady();
-        if (!K.told) { K.told = true; UI.toast(sk.icon + ' Chạm đúp để dùng ' + sk.name); }
+        if (!K.told) { K.told = true; UI.toast('Chạm đúp để dùng ' + sk.name); }
       }
     },
     useSkill() {
@@ -1078,7 +1115,12 @@
       K.ready = false;
       K.charge = 0;
       K.on = sk.time;
-      K.fx = sk.fx.rand ? Skins.SKILL_RAND[Math.floor(Math.random() * Skins.SKILL_RAND.length)] : sk.fx;
+      const pick = sk.fx.rand ? Skins.SKILL_RAND[Math.floor(Math.random() * Skins.SKILL_RAND.length)] : null;
+      K.fx = pick ? pick.fx : sk.fx;
+      K.label = pick ? pick.name : '';
+      K.cnt = 0;
+      K.net = K.fx.net || 0;
+      K.lotus = K.fx.lotus || 0;
       if (K.fx.heal && this.hearts < 3) {
         this.hearts = Math.min(3, this.hearts + K.fx.heal);
         burstHearts(Sau.headX, Sau.headY - HEAD_R, 8);
@@ -1086,7 +1128,7 @@
       }
       Sound.skill();
       buzz([12, 30, 12]);
-      UI.toast(sk.icon + ' ' + sk.name + '!');
+      UI.toast(K.label ? sk.name + ': ' + K.label + '!' : sk.name + '!');
       skillBurst(18);
       ring(Sau.headX, Sau.headY, sk.color);
       UI.hud(this);
@@ -1095,7 +1137,12 @@
     skFx() { return this.sk.on > 0 ? this.sk.fx : null; },
     // Gió Thơ đang mở sách: bé đứng yên, kéo tay cũng không đi.
     reading() { const fx = this.skFx(); return !!(fx && fx.vacuum); },
-    boost() { const fx = this.skFx(); return (fx && fx.score) || 1; },
+    // Điểm nhân: score cố định, ramp tăng dần theo số lá đã ăn trong lúc dùng (tới ×2).
+    boost() {
+      const fx = this.skFx();
+      if (!fx) return 1;
+      return (fx.score || 1) * (fx.ramp ? Math.min(2, 1 + fx.ramp * this.sk.cnt) : 1);
+    },
     // Độ hiện của hình kỹ năng 0..1 (hiện dần lúc bật, mờ dần lúc sắp tắt).
     skillK() {
       const sk = LOOK.skill, K = this.sk;
@@ -1109,9 +1156,28 @@
     },
 
     lose(n) {
+      const fx = this.skFx();
+      // Sen Đỡ: còn cánh sen thì lá rơi trượt vẫn được đỡ, tính là ăn.
+      if (fx && fx.lotus && this.sk.lotus > 0) {
+        this.sk.lotus--;
+        this.eat(n, false, 'lotus');
+        popup('Sen đỡ!', PX0 + n.x * PW, Sau.headY - HEAD_R * 2.6, PINK(), 17);
+        return;
+      }
       n.state = 2;
       this.miss++;
-      const fx = this.skFx();
+      // Ghẹo Ma: lá hụt hoá kẹo, không mất tim, không mất combo, còn được điểm.
+      if (fx && fx.candy) {
+        const px = PX0 + n.x * PW;
+        const pts = Math.round(fx.candy * (fx.score || 1));
+        this.score += pts;
+        this.sk.hit = 1;
+        for (let i = 0; i < 6; i++) spawn(12, px, Sau.headY, (Math.random() - 0.5) * 160 * S, -(60 + Math.random() * 120) * S, 0.7, 4 * S, ['#FF8A1F', '#9B5DE5', '#7CC46E', '#FF6F8E'][i % 4]);
+        popup('Kẹo nè! +' + pts, px, Sau.headY - HEAD_R * 2.4, GOLD(), 17);
+        Sound.shield();
+        UI.hud(this);
+        return;
+      }
       if (!(fx && fx.guard)) this.combo = 0;
       // Kỹ năng có khiên: lá hụt không làm mất tim.
       if (fx && fx.shield) {
@@ -1273,6 +1339,24 @@
           UI.skill(this);
         }
         if (this.botOn && K.ready) this.useSkill();
+        const fxNow = this.skFx();
+        // Mưa Chậm: lá rơi chậm lại (chỉ đổi tốc độ nhìn thấy, nhịp lá vẫn khớp nhạc), về lại từ từ.
+        this.vmul = lerp(this.vmul, fxNow && fxNow.slow ? fxNow.slow : 1, 1 - Math.exp(-dt * 4));
+        if (fxNow && (fxNow.magnet || fxNow.wind)) {
+          const hxN = (Sau.headX - PX0) / PW;
+          for (let i = this.noteHead; i < this.notes.length; i++) {
+            const n = this.notes[i];
+            const ahead = n.t - t;
+            if (ahead > 1.6) break;
+            if (n.state !== 0 || ahead < 0) continue;
+            // Húp Sụp: lá thường rơi gần miệng bị hút trượt dần về phía miệng.
+            if (fxNow.magnet && !n.dur && ahead < 0.75 && Math.abs(n.x - hxN) * PW < CATCH_R * fxNow.magnet) {
+              n.x = lerp(n.x, hxN, 1 - Math.exp(-dt * 9 * (1 - ahead / 0.75)));
+            }
+            // Gió Núi: lá (cả cành) dạt về giữa màn.
+            if (fxNow.wind) n.x = lerp(n.x, 0.5 + (n.x0 - 0.5) * (1 - fxNow.wind), 1 - Math.exp(-dt * 3));
+          }
+        }
         this.judge(t, dt);
         if (this.state === 'play') {
           const prog = clamp((t - this.firstT) / (this.lastEnd - this.firstT), 0, 1);
@@ -1319,6 +1403,7 @@
       // Mức Dễ: vùng đớp rộng hơn một chút; kính lúp đang bật thì rộng thêm.
       const R = this.catchR();
       const sfx = this.skFx();
+      const cx = sfx && sfx.clone ? cloneX() : null;
       // Gió Thơ: quyển sách giữa màn bắt mọi lá đang có trên màn, cả cành dài (state 3, n.vac = lúc bắt).
       // Lá vẫn bay tới sách đúng nhịp của nó (xem vacPos) nên tới nhịp mới tính ăn, tiếng ăn khớp nhạc.
       if (this.reading()) {
@@ -1336,7 +1421,15 @@
         const n = VAC[i];
         if (t < n.t) continue;
         VAC.splice(i, 1);
-        if (n.state === 3) this.eat(n, true, true);
+        if (n.state === 3) this.eat(n, true, 'book');
+        if (this.state !== 'play') return;
+      }
+      // Sao băng đã bay tới lá: tới nhịp của lá thì đớp giùm.
+      for (let i = STARS.length - 1; i >= 0; i--) {
+        const st = STARS[i];
+        if (t < st.n.t) continue;
+        STARS.splice(i, 1);
+        if (st.n.state === 4) this.eat(st.n, true, 'star');
         if (this.state !== 'play') return;
       }
       let anticip = 0;
@@ -1344,10 +1437,15 @@
         const n = notes[i];
         if (n.t - t > 0.4) break;
         if (n.state !== 0) continue;
-        const d = Math.abs(Sau.headX - (PX0 + n.x * PW));
+        const px = PX0 + n.x * PW;
+        let d = Math.abs(Sau.headX - px), via = null;
         if (n.t - t > 0 && d < R * 1.8) anticip = Math.max(anticip, 1 - (n.t - t) / 0.4);
+        // Phân Thân: bé đứng đối xứng cũng đớp được (lấy đứa gần lá hơn).
+        if (cx !== null && Math.abs(cx - px) < d) { d = Math.abs(cx - px); via = 'clone'; }
         if (n.t - t > EARLY) continue;
-        if (d <= R) this.eat(n, d <= PERFECT_R || !!(sfx && sfx.perfect));
+        if (d <= R) this.eat(n, d <= PERFECT_R || !!(sfx && sfx.perfect), via);
+        // Lưới Thổ Cẩm: lá tới đúng nhịp mà không ai đớp thì lưới đỡ (còn sợi thì còn đỡ).
+        else if (sfx && this.sk.net > 0 && t >= n.t) { this.sk.net--; this.eat(n, false, 'net'); }
         else if (t - n.t > LATE) this.lose(n);
         if (this.state !== 'play') return;
       }
@@ -1359,8 +1457,10 @@
       for (let i = this.holds.length - 1; i >= 0; i--) {
         const n = this.holds[i];
         const end = n.t + n.dur;
-        const inside = n.vac ? true : Math.abs(Sau.headX - (PX0 + n.x * PW)) <= R * 0.95;
-        const bx = n.vac ? bookPos().x : Sau.headX, by = n.vac ? bookPos().y - bookW() * 0.6 : Sau.headY - HEAD_R * 1.6;
+        const hx0 = PX0 + n.x * PW;
+        const byClone = cx !== null && Math.abs(cx - hx0) <= R * 0.95 && Math.abs(Sau.headX - hx0) > R * 0.95;
+        const inside = n.vac ? true : Math.abs(Sau.headX - hx0) <= R * 0.95 || byClone || !!(sfx && this.sk.net > 0);
+        const bx = n.vac ? bookPos().x : byClone ? cx : Sau.headX, by = n.vac ? bookPos().y - bookW() * 0.6 : Sau.headY - HEAD_R * 1.6;
         const now = Math.min(t, end);
         if (inside) {
           if (!n.cur) { n.cur = [now, now]; n.eaten.push(n.cur); }
@@ -1449,6 +1549,26 @@
   // ================= Hình kỹ năng =================
   // Lá (và cành dài) bị quyển sách Gió Thơ bắt, chờ tới nhịp để tính ăn.
   const VAC = [];
+  // Sao Băng: sao đang bay tới / đậu trên lá (lá state 4), tới nhịp của lá thì đớp giùm.
+  const STARS = [];
+  const vis = () => Game.speed * Game.vmul; // tốc độ lá rơi trên màn (Mưa Chậm làm chậm lại)
+  const cloneX = () => PX0 + PW - (Sau.headX - PX0);
+  // Chỗ bung điểm, vụn lá khi lá không phải do bé tự đớp.
+  function viaPos(via, n) {
+    if (via === 'book') return bookPos();
+    if (via === 'clone') return { x: cloneX(), y: Sau.headY };
+    return { x: PX0 + n.x * PW, y: Sau.headY };
+  }
+  function launchStar(t) {
+    const notes = Game.notes;
+    for (let i = Game.noteHead; i < notes.length; i++) {
+      const n = notes[i];
+      if (n.state !== 0 || n.dur > 0 || n.t < t + 0.12) continue;
+      n.state = 4;
+      STARS.push({ n, t0: t, x0: Sau.headX, y0: Sau.headY - HEAD_R });
+      return;
+    }
+  }
   const hexA = (hex, a) => { const n = parseInt(hex.slice(1, 7), 16); return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')'; };
   // Hạt của kỹ năng bung quanh đầu bé (loại hạt, màu theo từng skin); n = 1 là lấp lánh nhẹ lúc đang dùng.
   function skillBurst(n) {
@@ -1472,7 +1592,7 @@
     const s0 = Math.max(t0, tau - VAC_A);
     const s = clamp((t - s0) / Math.max(0.05, tau - s0), 0, 1);
     const e = s * s * (3 - 2 * s);
-    const yNat = Sau.headY - (tau - t) * Game.speed;
+    const yNat = Sau.headY - (tau - t) * vis();
     const sw = Math.sin(s * Math.PI) * 48 * S * (1 - e);
     const a = seed + s * 6.5;
     return { x: lerp(x, b.x, e) + Math.cos(a) * sw, y: lerp(yNat, b.y, e) + Math.sin(a) * sw * 0.45, s };
@@ -1527,9 +1647,9 @@
     g.beginPath(); g.arc(x, y, r * 0.78, Math.PI * 1.15, Math.PI * 1.4); g.stroke();
     g.restore();
   }
-  // Điểm nhân: huy hiệu "×2" bồng bềnh cạnh đầu.
-  function drawScoreBadge(k, mult) {
-    const x = Sau.headX + HEAD_R * 1.7, y = Sau.headY - HEAD_R * 1.9 + Math.sin(clock * 4) * 2 * S;
+  // Huy hiệu bồng bềnh cạnh đầu: "×1,5" (điểm), "Combo ×2"…; side -1 là bên trái.
+  function drawScoreBadge(k, mult, label, side) {
+    const x = Sau.headX + HEAD_R * 1.9 * (side || 1), y = Sau.headY - HEAD_R * 1.9 + Math.sin(clock * 4) * 2 * S;
     g.save();
     g.globalAlpha = k;
     g.font = '700 ' + Math.round(16 * S) + 'px "Be Vietnam Pro", system-ui, sans-serif';
@@ -1538,17 +1658,206 @@
     g.lineJoin = 'round';
     g.lineWidth = 4 * S;
     g.strokeStyle = 'rgba(43,33,64,0.75)';
-    const txt = '×' + String(mult).replace('.', ',');
+    const txt = label || '×' + String(mult).replace('.', ',');
     g.strokeText(txt, x, y);
     g.fillStyle = '#FFC24B';
     g.fillText(txt, x, y);
     g.restore();
   }
+
+  // Phân Thân: bé bóng mờ đứng đối xứng qua giữa màn, nối với bé thật bằng vệt chấm.
+  function drawClone(k, sk) {
+    const x = cloneX(), y = Sau.headY;
+    g.save();
+    g.globalAlpha = 0.35 * k;
+    g.strokeStyle = sk.color;
+    g.lineWidth = 2 * S;
+    g.setLineDash([2 * S, 6 * S]);
+    g.beginPath(); g.moveTo(Sau.headX, y + HEAD_R * 1.2); g.lineTo(x, y + HEAD_R * 1.2); g.stroke();
+    g.setLineDash([]);
+    const glow = g.createRadialGradient(x, y, 0, x, y, HEAD_R * 2.4);
+    glow.addColorStop(0, hexA(sk.color, 0.35 * k));
+    glow.addColorStop(1, hexA(sk.color, 0));
+    g.globalAlpha = 1;
+    g.fillStyle = glow;
+    g.beginPath(); g.arc(x, y, HEAD_R * 2.4, 0, TAU); g.fill();
+    g.globalAlpha = 0.55 * k;
+    for (let i = 3; i >= 1; i--) {
+      g.save();
+      g.translate(x + Math.sin(clock * 3 - i) * 4 * S, y + i * SEG_GAP * 0.85);
+      Skins.drawSegment(g, SEG_R * (1 - i * 0.06), LOOK.skin, i % 2, S);
+      g.restore();
+    }
+    g.restore();
+    g.save();
+    g.globalAlpha = 0.6 * k;
+    drawHead(x, y, Game.pulse || 0);
+    g.restore();
+  }
+  // Lưới Thổ Cẩm: dải lưới đỏ chỉ vàng giăng ngang hàng đớp, còn bao nhiêu sợi thì ghi ở đầu lưới.
+  function drawNet(k, sk) {
+    const K = Game.sk, left = K.net / Math.max(1, K.fx.net), y = Sau.headY + HEAD_R * 0.35, x0 = PX0 + 6 * S, x1 = PX0 + PW - 6 * S;
+    g.save();
+    g.globalAlpha = k * (0.35 + 0.65 * left);
+    g.fillStyle = hexA('#D62F45', 0.82);
+    g.fillRect(x0, y - 5 * S, x1 - x0, 10 * S);
+    g.fillStyle = '#FFC93C';
+    for (let x = x0 + 8 * S; x < x1 - 4 * S; x += 16 * S) {
+      g.beginPath(); g.moveTo(x, y - 4 * S); g.lineTo(x + 4 * S, y); g.lineTo(x, y + 4 * S); g.lineTo(x - 4 * S, y); g.closePath(); g.fill();
+    }
+    g.strokeStyle = '#2F3B85';
+    g.lineWidth = 1.6 * S;
+    g.beginPath(); g.moveTo(x0, y - 5 * S); g.lineTo(x1, y - 5 * S); g.moveTo(x0, y + 5 * S); g.lineTo(x1, y + 5 * S); g.stroke();
+    g.globalAlpha = k;
+    g.font = '700 ' + Math.round(13 * S) + 'px "Be Vietnam Pro", system-ui, sans-serif';
+    g.textAlign = 'right';
+    g.textBaseline = 'bottom';
+    g.fillStyle = T.night ? '#FFF1C9' : '#7A1E2E';
+    g.fillText('lưới ×' + K.net, x1, y - 7 * S);
+    g.restore();
+  }
+  // Sen Đỡ: đoá sen dưới cằm bé, còn mấy lần đỡ thì còn mấy cánh sáng.
+  function drawLotus(k, sk) {
+    const left = Game.sk.lotus, x = Sau.headX, y = Sau.headY + HEAD_R * 0.95;
+    g.save();
+    g.globalAlpha = k;
+    for (let i = 0; i < 5; i++) {
+      const a = -Math.PI / 2 + (i - 2) * 0.5, on = i - 1 < left && i >= 1 && i <= 3;
+      g.save();
+      g.translate(x, y);
+      g.rotate(a + Math.PI / 2);
+      g.fillStyle = on ? hexA(sk.color, 0.9) : hexA(sk.color, 0.25);
+      g.beginPath(); g.ellipse(0, -HEAD_R * 0.75, HEAD_R * 0.32, HEAD_R * 0.75, 0, 0, TAU); g.fill();
+      g.restore();
+    }
+    g.fillStyle = '#FFE08A';
+    g.beginPath(); g.arc(x, y - HEAD_R * 0.1, HEAD_R * 0.22, 0, TAU); g.fill();
+    g.restore();
+  }
+  // Mưa Chậm: chiếc ô che trên đầu bé, mấy giọt mưa lơ lửng rơi chậm.
+  function drawUmbrella(k, sk) {
+    const x = Sau.headX, y = Sau.headY - HEAD_R * 2.1, r = HEAD_R * 1.9;
+    g.save();
+    g.globalAlpha = k;
+    g.fillStyle = sk.color;
+    g.beginPath();
+    g.moveTo(x - r, y);
+    g.quadraticCurveTo(x - r, y - r * 0.95, x, y - r * 0.95);
+    g.quadraticCurveTo(x + r, y - r * 0.95, x + r, y);
+    // mép ô lượn sóng: sáu nhịp cong từ phải sang trái
+    for (let i = 3; i > -3; i--) g.quadraticCurveTo(x + ((i - 0.5) * r) / 3, y - r * 0.16, x + ((i - 1) * r) / 3, y);
+    g.closePath();
+    g.fill();
+    g.strokeStyle = 'rgba(255,255,255,0.55)';
+    g.lineWidth = 1.4 * S;
+    g.beginPath();
+    for (const f of [-0.5, 0, 0.5]) { g.moveTo(x, y - r * 0.92); g.quadraticCurveTo(x + f * r * 0.8, y - r * 0.6, x + f * r * 0.95, y - r * 0.05); }
+    g.stroke();
+    g.strokeStyle = T.night ? '#E8E0F8' : '#5A4A6E';
+    g.lineWidth = 2.2 * S;
+    g.lineCap = 'round';
+    g.beginPath(); g.moveTo(x, y - r * 0.95); g.lineTo(x, y - r * 1.15); g.stroke();
+    g.fillStyle = hexA(sk.color, 0.6);
+    for (let i = 0; i < 6; i++) {
+      const dx = (rnd01(i) - 0.5) * PW * 0.9, dy = ((clock * 0.25 + rnd01(i + 9)) % 1) * H * 0.6;
+      g.beginPath(); g.ellipse(PX0 + PW / 2 + dx, dy + 40 * S, 1.6 * S, 4 * S, 0, 0, TAU); g.fill();
+    }
+    g.restore();
+  }
+  const rnd01 = (i) => { const v = Math.sin(i * 91.7 + 3.1) * 43758.5453; return v - Math.floor(v); };
+  // Lướt Sóng: con sóng nhỏ dưới chân bé, lướt theo bé.
+  function drawSurf(k, sk) {
+    const x = Sau.headX, y = Sau.headY + HEAD_R * 1.15, w = HEAD_R * 3.2, lean = clamp(Sau.vx / (PW * 3), -1, 1);
+    g.save();
+    g.globalAlpha = 0.85 * k;
+    g.fillStyle = hexA(sk.color, 0.55);
+    g.beginPath();
+    g.moveTo(x - w, y + 8 * S);
+    for (let i = 0; i <= 20; i++) {
+      const u = i / 20, xx = x - w + u * w * 2;
+      g.lineTo(xx, y - Math.sin(u * Math.PI) * HEAD_R * 0.7 - Math.sin(u * 9 + clock * 8) * 2 * S + lean * (u - 0.5) * 10 * S);
+    }
+    g.lineTo(x + w, y + 8 * S);
+    g.closePath();
+    g.fill();
+    g.strokeStyle = 'rgba(255,255,255,0.8)';
+    g.lineWidth = 2 * S;
+    g.beginPath();
+    for (let i = 0; i <= 20; i++) {
+      const u = i / 20, xx = x - w + u * w * 2, yy = y - Math.sin(u * Math.PI) * HEAD_R * 0.7 - Math.sin(u * 9 + clock * 8) * 2 * S + lean * (u - 0.5) * 10 * S;
+      if (i) g.lineTo(xx, yy); else g.moveTo(xx, yy);
+    }
+    g.stroke();
+    g.restore();
+  }
+  // Húp Sụp: vòng xoáy hút quanh miệng, bán kính đúng bằng vùng hút.
+  function drawMagnet(k, sk) {
+    const fx = Game.sk.fx, r = CATCH_R * fx.magnet, x = Sau.headX, y = Sau.headY - HEAD_R * 0.6;
+    g.save();
+    g.lineCap = 'round';
+    for (let i = 0; i < 4; i++) {
+      const a = clock * 4 + (i * TAU) / 4, rr = r * (0.45 + 0.55 * ((clock * 0.9 + i / 4) % 1));
+      g.globalAlpha = 0.6 * k * (1 - rr / r + 0.25);
+      g.strokeStyle = sk.color;
+      g.lineWidth = 2.4 * S;
+      g.beginPath(); g.arc(x, y, rr, a, a + 1.1); g.stroke();
+    }
+    g.globalAlpha = 0.25 * k;
+    g.setLineDash([3 * S, 5 * S]);
+    g.beginPath(); g.arc(x, y, r, Math.PI, TAU); g.stroke();
+    g.setLineDash([]);
+    g.restore();
+  }
+  // Gió Núi: vệt gió thổi từ hai bên vào, một dải sáng ở giữa là chỗ lá dạt về.
+  function drawWind(k, sk) {
+    const cx = PX0 + PW / 2;
+    g.save();
+    const band = g.createLinearGradient(cx - 50 * S, 0, cx + 50 * S, 0);
+    band.addColorStop(0, hexA(sk.color, 0));
+    band.addColorStop(0.5, hexA(sk.color, 0.16 * k));
+    band.addColorStop(1, hexA(sk.color, 0));
+    g.fillStyle = band;
+    g.fillRect(cx - 50 * S, 0, 100 * S, H);
+    g.strokeStyle = T.night ? 'rgba(230,236,255,0.6)' : hexA(sk.color, 0.7);
+    g.lineWidth = 2 * S;
+    g.lineCap = 'round';
+    for (let i = 0; i < 8; i++) {
+      const p = (clock * 0.7 + i * 0.137) % 1, y = H * (0.12 + 0.075 * i);
+      g.globalAlpha = k * Math.sin(p * Math.PI) * 0.8;
+      for (const side of [-1, 1]) {
+        const x = cx + side * PW * (0.5 - 0.42 * p);
+        g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x - side * 18 * S, y - 6 * S, x - side * 38 * S, y); g.stroke();
+      }
+    }
+    g.restore();
+  }
+  // Sao Băng: sao bay từ miệng bé tới chiếc lá kế tiếp, đậu trên lá lấp lánh cho tới nhịp.
+  function drawStars() {
+    const t = Game.songT, s = SPR.starSize;
+    for (const st of STARS) {
+      // lá còn ở ngoài màn thì sao đứng chờ ở mép trên, đúng cột lá sẽ rơi
+      const n = st.n, lx = PX0 + n.x * PW, ly = Math.max(34 * S, Sau.headY - Math.max(0, n.t - t) * vis() - SPR.leafCY * 0.4);
+      const u = clamp((t - st.t0) / 0.3, 0, 1), e = 1 - (1 - u) * (1 - u);
+      const x = lerp(st.x0, lx, e), y = lerp(st.y0, ly, e) - Math.sin(u * Math.PI) * 40 * S;
+      g.save();
+      if (u < 1) {
+        g.strokeStyle = 'rgba(255,224,138,0.6)';
+        g.lineWidth = 3 * S;
+        g.lineCap = 'round';
+        g.beginPath(); g.moveTo(lerp(st.x0, x, 0.6), lerp(st.y0, y, 0.6)); g.lineTo(x, y); g.stroke();
+      }
+      const sc = 0.75 + 0.15 * Math.sin(clock * 12);
+      g.translate(x, y);
+      g.rotate(clock * 5);
+      g.drawImage(SPR.star, (-s * sc) / 2, (-s * sc) / 2, s * sc, s * sc);
+      g.restore();
+    }
+  }
   // Tự lướt (Khoá Sóng): tia sóng nối đầu bé với chiếc lá đang nhắm, có vòng ngắm trên lá.
   function drawBeam(k, sk) {
     const n = Game.holds.length ? Game.holds[0] : nextLeaf();
     if (!n) return;
-    const tx = PX0 + n.x * PW, ty = Math.max(30 * S, Sau.headY - Math.max(0, n.t - Game.songT) * Game.speed);
+    const tx = PX0 + n.x * PW, ty = Math.max(30 * S, Sau.headY - Math.max(0, n.t - Game.songT) * vis());
     g.save();
     g.globalAlpha = 0.75 * k;
     g.strokeStyle = sk.color;
@@ -1656,7 +1965,7 @@
   function drawVac(n, x, t) {
     const b = bookPos();
     if (n.dur > 0) {
-      const stepT = (24 * S) / Game.speed, pts = [];
+      const stepT = (24 * S) / vis(), pts = [];
       for (let k = 0; ; k++) {
         const tau = n.t + k * stepT;
         if (tau > n.t + n.dur + 1e-6) break;
@@ -1786,7 +2095,7 @@
     g.restore();
   }
   function drawNotes(LZ) {
-    const t = Game.songT, v = Game.speed, hy = Sau.headY;
+    const t = Game.songT, v = vis(), hy = Sau.headY;
     const notes = Game.notes;
     const below = (H - hy) / v + 0.3;
     while (Game.drawStart < notes.length && notes[Game.drawStart].t + notes[Game.drawStart].dur < t - below) Game.drawStart++;
@@ -1910,14 +2219,24 @@
       }
     } else {
       if (fx) {
+        if (fx.wind) drawWind(lk, sk);
         if (fx.wide && !LZ) drawWideRing(lk, sk);
+        if (fx.magnet) drawMagnet(lk, sk);
         if (fx.foresight) drawMarks(lk, sk);
         if (fx.auto) drawBeam(lk, sk);
+        if (fx.net && Game.sk.net > 0) drawNet(lk, sk);
+        if (fx.clone) drawClone(lk, sk);
+        if (fx.surf) drawSurf(lk, sk);
+        if (fx.lotus) drawLotus(lk, sk);
         if (sk.look === 'waves') drawWaves(lk, sk);
       }
       drawSau(wallSpeed, Game.pulse || 0, 0);
+      if (STARS.length) drawStars();
       if (fx && fx.shield) drawShield(lk, sk);
-      if (fx && fx.score > 1) drawScoreBadge(lk, fx.score);
+      if (fx && fx.slow) drawUmbrella(lk, sk);
+      if (fx && fx.combo2) drawScoreBadge(lk, 0, 'Combo ×2', -1);
+      const bst = fx ? Math.round(Game.boost() * 10) / 10 : 1;
+      if (bst > 1) drawScoreBadge(lk, bst);
       drawStarFx();
     }
     drawParticles();
@@ -1953,7 +2272,7 @@
       if (this.last.segs !== Sau.segs) { e.length.textContent = Sau.segs; this.last.segs = Sau.segs; }
       if (this.last.hearts !== gm.hearts) {
         e.hearts.replaceChildren();
-        for (let i = 0; i < 3; i++) e.hearts.appendChild(svgIcon(PATH_HEART, i < gm.hearts ? '' : 'lost'));
+        for (let i = 0; i < Math.max(3, gm.hearts); i++) e.hearts.appendChild(svgIcon(PATH_HEART, i < gm.hearts ? (i >= 3 ? 'bonus' : '') : 'lost'));
         this.last.hearts = gm.hearts;
       }
       e.combo.hidden = gm.combo < 3;
@@ -1970,7 +2289,7 @@
       if (el.hidden !== !sk) el.hidden = !sk;
       if (!sk) return;
       if (this.last.skId !== sk.id) {
-        this.els.skillIc.textContent = sk.icon;
+        this.els.skillIc.innerHTML = Skins.skillIcon(sk.id, 28);
         el.style.setProperty('--sk', sk.color);
         this.last.skId = sk.id;
       }
@@ -2073,8 +2392,8 @@
     renderSongs(songs) {
       Preview.stop(true);
       const mw = $('menu-wallet');
-      mw.textContent = walletText();
-      mw.hidden = !mw.textContent;
+      mw.hidden = !window.Wallet;
+      if (window.Wallet) $('menu-wallet-n').textContent = fmtNum(Wallet.get().dot);
       const list = this.els.songs;
       list.replaceChildren();
       for (const s of songs) {
@@ -2165,6 +2484,13 @@
 
   // Cất điểm vào ví chung; đủ 10.000 điểm là tự đổi ra 3 đốt cây. Chỉ cộng phần chưa cất.
   function bank() {
+    // Được Mùa: đốt cây thưởng cộng thẳng vào ví.
+    const extra = (Game.bonusDot || 0) - (Game.bonusBanked || 0);
+    if (extra > 0 && window.Wallet) {
+      Wallet.update((w) => { w.dot += extra; });
+      Game.bonusBanked = Game.bonusDot;
+      Game.dotGot = (Game.dotGot || 0) + extra;
+    }
     const add = Game.score - (Game.banked || 0);
     if (add <= 0 || !window.Wallet) return 0;
     Game.banked = Game.score;
@@ -2329,7 +2655,8 @@
       return;
     }
     if (e.pointerId !== dragId) return;
-    if (!Game.reading()) Sau.target = clamp(Sau.target + (e.clientX - lastPX) * SENS, PX0 + 18 * S, PX0 + PW - 18 * S);
+    const surf = (Game.skFx() && Game.skFx().surf) || 1;
+    if (!Game.reading()) Sau.target = clamp(Sau.target + (e.clientX - lastPX) * SENS * surf, PX0 + 18 * S, PX0 + PW - 18 * S);
     lastPX = e.clientX;
   });
   const endDrag = (e) => {
@@ -2378,6 +2705,26 @@
   });
   $('btn-resume').addEventListener('click', () => { Sound.click(); Game.resume(); });
   $('btn-revive').addEventListener('click', () => Game.revive());
+  // Màn chọn bài: bấm nút kỹ năng thì mở thẻ chi tiết.
+  function showSkillInfo() {
+    const sk = LOOK.skill;
+    if (!sk) return;
+    const card = document.querySelector('#skillinfo .skill-card');
+    card.style.setProperty('--sk', sk.color);
+    card.style.setProperty('--sk-bg', sk.color + '24');
+    $('si-ic').innerHTML = Skins.skillIcon(sk.id, 38);
+    $('si-tier').textContent = 'Kỹ năng · ' + Skins.RARITY[sk.rarity].name;
+    $('si-name').textContent = sk.name;
+    $('si-line').textContent = sk.line;
+    const list = $('si-list');
+    list.replaceChildren(...sk.effects.map((e) => { const li = document.createElement('li'); li.textContent = e.charAt(0).toUpperCase() + e.slice(1) + '.'; return li; }));
+    $('si-how').textContent = sk.how;
+    $('skillinfo').hidden = false;
+    $('btn-si-close').focus({ preventScroll: true });
+  }
+  $('menu-skill').addEventListener('click', () => { Sound.click(); showSkillInfo(); });
+  $('btn-si-close').addEventListener('click', () => { Sound.click(); $('skillinfo').hidden = true; });
+  $('skillinfo').addEventListener('click', (e) => { if (e.target === $('skillinfo')) $('skillinfo').hidden = true; });
   // Nút kỹ năng: bấm xuống là dùng ngay (không chờ nhấc tay).
   $('skill').addEventListener('pointerdown', (e) => { e.preventDefault(); Game.useSkill(); });
   $('skill').addEventListener('click', () => Game.useSkill());
@@ -2401,7 +2748,7 @@
     const got = Wallet.exchangeAll();
     if (got) { Sound.milestone(); UI.toast('+' + got + ' đốt cây'); }
     showWallet();
-    $('menu-wallet').textContent = walletText();
+    if (window.Wallet) $('menu-wallet-n').textContent = fmtNum(Wallet.get().dot);
   });
   $('btn-w-close').addEventListener('click', () => { Sound.click(); UI.hide('wallet'); });
   $('wallet').addEventListener('click', (e) => { if (e.target.id === 'wallet') UI.hide('wallet'); });
@@ -2495,7 +2842,7 @@
     if (!still) {
       clock += dt;
       if (Game.state === 'play' && (keys.left || keys.right) && !Game.reading()) {
-        Sau.target = clamp(Sau.target + (keys.right - keys.left) * PW * 1.6 * dt, PX0 + 18 * S, PX0 + PW - 18 * S);
+        Sau.target = clamp(Sau.target + (keys.right - keys.left) * PW * 1.6 * ((Game.skFx() && Game.skFx().surf) || 1) * dt, PX0 + 18 * S, PX0 + PW - 18 * S);
       }
       Game.update(dt);
     }

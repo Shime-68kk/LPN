@@ -45,7 +45,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" />
-  <link rel="stylesheet" href="game.css?v=16" />
+  <link rel="stylesheet" href="game.css?v=21" />
 </head>
 <body>
   <script>document.body.style.background = LPN_GAME.sky; document.body.classList.toggle('night', LPN_GAME.night); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
@@ -92,16 +92,31 @@
       <a class="icon-btn ghost" href="../home/" aria-label="Về trang chính">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
       </a>
-      <div>
-        <h1>Sâu Tím</h1>
-        <p>Ăn lá theo nhịp nhạc, lớn lên thành bướm.</p>
-        <div class="menu-links">
-          <button type="button" class="menu-wallet" id="menu-wallet" hidden></button>
-          <a class="menu-shop" href="../shop/?from=game">Tiệm Sâu<span class="menu-ev" id="menu-ev" hidden>Sự kiện</span></a>
+      <div class="sh-main">
+        <div class="menu-title">
+          <h1>Sâu Tím</h1>
+          <!-- Ví đốt cây: viên gọn ở góc phải, giống Tiệm Sâu -->
+          <button type="button" class="menu-wallet" id="menu-wallet" hidden aria-label="Ví đốt cây">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h6v18H8zM8 9h6M8 15h6M14 12c1.5-3 4-4.5 7-4.5c-.5 3-3 5-7 4.5" /></svg>
+            <b id="menu-wallet-n">0</b><span>đốt</span>
+          </button>
         </div>
-        <p class="menu-skill" id="menu-skill" hidden></p>
+        <p>Ăn lá theo nhịp nhạc, lớn lên thành bướm.</p>
       </div>
     </header>
+    <!-- Hai ô bằng nhau: Tiệm Sâu và kỹ năng của skin đang mặc (bấm để xem chi tiết) -->
+    <div class="menu-tiles">
+      <a class="m-tile shop" href="../shop/?from=game">
+        <span class="mt-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8zM9 8V6.5a3 3 0 0 1 6 0V8" /></svg></span>
+        <span class="mt-txt"><b>Tiệm Sâu</b><small id="menu-shop-sub">Skin, hộp quà</small></span>
+        <span class="menu-ev" id="menu-ev" hidden>Sự kiện</span>
+      </a>
+      <button type="button" class="m-tile mt-skill" id="menu-skill" hidden aria-label="Xem kỹ năng">
+        <span class="mt-ic" id="menu-skill-ic"></span>
+        <span class="mt-txt"><b id="menu-skill-name">Kỹ năng</b><small>Kỹ năng · xem</small></span>
+        <svg class="mt-go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+      </button>
+    </div>
     <div class="segmented" role="radiogroup" aria-label="Độ khó">
       <button type="button" role="radio" data-diff="1" aria-checked="true">Dễ</button>
       <button type="button" role="radio" data-diff="2" aria-checked="false">Vừa</button>
@@ -130,6 +145,20 @@
       <a class="btn w-story" href="../shop/?from=game">Tiệm Sâu: skin, hộp quà</a>
       <a class="btn w-story" href="../story/">Mở cốt truyện</a>
       <button type="button" class="btn" id="btn-w-close">Đóng</button>
+    </div>
+  </section>
+
+  <!-- Chi tiết kỹ năng của skin đang mặc -->
+  <section id="skillinfo" class="overlay" hidden>
+    <div class="card skill-card" role="dialog" aria-modal="true" aria-labelledby="si-name">
+      <span class="si-ic" id="si-ic"></span>
+      <p class="si-tier" id="si-tier"></p>
+      <h2 id="si-name"></h2>
+      <p class="message si-line" id="si-line"></p>
+      <ul class="si-list" id="si-list"></ul>
+      <p class="si-how" id="si-how"></p>
+      <button type="button" class="btn primary" id="btn-si-close">Đã hiểu</button>
+      <a class="btn" href="../shop/?from=game#skin">Xem skin khác</a>
     </div>
   </section>
 
@@ -182,11 +211,14 @@
 
   <script src="../home/sync.js?v=2"></script>
   <script src="../home/wallet.js?v=9"></script>
-  <script src="../shop/skins.js?v=16"></script>
-  <script src="game.js?v=28"></script>
+  <script src="../shop/skins.js?v=18"></script>
+  <script src="game.js?v=32"></script>
   <script>
     // Tiệm Sâu đang có sự kiện thì gắn nhãn lên nút.
-    if (window.Skins && Skins.activeEvent()) document.getElementById('menu-ev').hidden = false;
+    if (window.Skins && Skins.activeEvent()) {
+      document.getElementById('menu-ev').hidden = false;
+      document.getElementById('menu-shop-sub').textContent = 'Có sự kiện mới';
+    }
   </script>
 </body>
 </html>

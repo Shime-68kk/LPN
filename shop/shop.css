@@ -230,7 +230,7 @@ body.night .item .i-state.price { color: #9FE0B2; }
 .item .i-state.on { color: #8C6BC8; }
 .item .i-state.ev { color: #C2304A; }
 body.night .item .i-state.ev { color: #FF9AAE; }
-.i-sk { position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: rgba(255, 255, 255, 0.85); box-shadow: 0 1px 4px rgba(43, 33, 64, 0.18); font-size: 15px; line-height: 1; }
+.i-sk { position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: rgba(255, 255, 255, 0.9); box-shadow: 0 1px 4px rgba(43, 33, 64, 0.18); }
 body.night .i-sk { background: rgba(43, 33, 64, 0.8); }
 .i-ev { position: absolute; top: 12px; left: 12px; padding: 3px 8px; border-radius: 999px; background: linear-gradient(135deg, #2F3B85, #D62F45); color: #FFF6E6; font-size: 11px; font-weight: 700; }
 body.night .item .i-state.on { color: #CDB8F0; }
@@ -252,7 +252,13 @@ body.night .item .i-state.on { color: #CDB8F0; }
 .sheet-memory { margin: 0; font-size: 15px; line-height: 1.55; font-style: italic; color: var(--ink); }
 .sheet-ch { margin: 0; font-size: 13px; color: var(--muted); }
 /* Skin có kỹ năng trong game (Sâu Thám Tử: Kính Lúp) */
-.sheet-skill { margin: 0; padding: 10px 12px; border-radius: 14px; background: rgba(226, 176, 74, 0.16); border: 1px solid rgba(226, 176, 74, 0.45); font-size: 14px; line-height: 1.5; color: var(--ink); }
+.sheet-skill { margin: 0; padding: 10px 12px; border-radius: 14px; background: var(--surface); border: 1.5px solid var(--sk, #E2B04A); font-size: 14px; line-height: 1.5; color: var(--ink); display: flex; gap: 10px; align-items: flex-start; }
+.sheet-skill[hidden] { display: none; }
+.ss-ic { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--sk); background: rgba(127, 127, 127, 0.1); }
+.ss-body { display: flex; flex-direction: column; gap: 3px; }
+.ss-body b { color: var(--sk); }
+.ss-line { font-size: 13.5px; }
+.ss-how { font-size: 12.5px; color: var(--muted); }
 .sheet-action { min-height: 52px; font-size: 16px; margin-top: 6px; }
 .sheet-action:disabled { opacity: .55; }
 
