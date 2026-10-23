@@ -251,7 +251,7 @@
   ];
   const BREAK = {
     'nang-tho': { name: 'Thơ Tràn Trang', quest: 'Tuyển Tập Thơ', line: 'Trang sách đầy thơ đến tràn ra: mỗi 6 chiếc lá vào sách thêm một nhịp tim, tim vượt lên được tới 5.' },
-    'vi-mach': { name: 'Lãnh Địa Vi Mạch', quest: 'Phủ Sóng Toàn Quốc', super: true, line: 'Đột phá siêu cấp: nạp đủ 60 lá rồi chạm đúp, mở ra một thế giới bảng mạch riêng. Né laze của chiếc lá chip khổng lồ, húc vào nó rồi chạm liên tục cho nổ tung, thu về tới 300 lá và 100.000 điểm (có món ×2 điểm, ×2 đốt). Trúng laze mất 60 đốt.' },
+    'vi-mach': { name: 'Lãnh Địa Vi Mạch', quest: 'Phủ Sóng Toàn Quốc', super: true, line: 'Đột phá siêu cấp: nạp đủ 60 lá rồi chạm đúp, mở ra một thế giới bảng mạch riêng. Né laze của chiếc lá chip khổng lồ, húc vào nó rồi chạm liên tục cho nổ tung, thu về tới 300 lá, 300.000 điểm và 300 đốt (có món ×2 điểm, ×2 đốt). Trúng laze mất 60 đốt.' },
   };
 
   // Tưng Tửng: mỗi lần dùng bốc một phép của skin khác (name để báo cho người chơi biết).
@@ -345,7 +345,7 @@
     if (fx.harvest) out.push('mỗi lá ăn được tặng thêm ' + fx.harvest + ' đốt cây');
     if (fx.rand) out.push('mỗi lần dùng ra phép của một skin khác, có khi siêu mạnh');
     if (fx.refill) out.push('dùng xong tự nạp lại sẵn ' + Math.round(fx.refill * 100) + '%');
-    if (fx.domain) out.push('nạp đủ 60 lá mở Lãnh Địa Vi Mạch: né laze, húc nát lá chip khổng lồ, thu về tới 300 lá và 100.000 điểm');
+    if (fx.domain) out.push('nạp đủ 60 lá mở Lãnh Địa Vi Mạch: né laze, húc nát lá chip khổng lồ, thu về tới 300 lá, 300.000 điểm và 300 đốt');
     return out;
   }
   // Kỹ năng của một skin, đủ số lá cần nạp và số giây theo độ hiếm.

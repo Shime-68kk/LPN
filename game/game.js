@@ -2191,7 +2191,7 @@
   //     bé đi được cả lên xuống; chỉ tính trúng khi tia chạm vào đầu, mỗi lần trúng mất 60 đốt.
   //     Hai món bay ra: ×2 ĐIỂM, ×2 ĐỐT — chạm đầu vào là nhận.
   //  2. Húc: bé lao lên húc vào lá.  3. Chạm liên tục (máy tính: phím cách) cho lá nổ tung.
-  //  4. Thu về tới 300 lá và 100.000 điểm (tuỳ né được bao nhiêu, chạm nhanh cỡ nào), rồi về lại bài,
+  //  4. Thu về tới 300 lá, 300.000 điểm và 300 đốt (tuỳ né được bao nhiêu, chạm nhanh cỡ nào), rồi về lại bài,
   //     đếm 3-2-1 và nhạc chạy tiếp từ chỗ cũ.
   const DOMAIN_NEED = 60;
   const DM_T = { enter: 0.85, dodge: 5.6, ram: 0.95, spam: 3.0, boom: 1.9, exit: 0.85 };
@@ -2239,9 +2239,10 @@
       const spam = Math.min(1, DM.taps / TAP_FULL);
       const f = dodge * (0.4 + 0.6 * spam);
       const leaves = Math.max(1, Math.round(300 * f));
-      let pts = Math.round((100000 * f) / 100) * 100;
+      let pts = Math.round((300000 * f) / 100) * 100;
       if (DM.x2pts) pts *= 2;
-      const dot = DM.x2dot ? Math.round(pts * 0.0003) : 0; // ×2 đốt: thêm đúng số đốt quy đổi từ điểm (100.000 điểm = 30 đốt)
+      // mỗi lá thu về là 1 đốt cộng thẳng vào ví (×2 ĐỐT thì gấp đôi); điểm thì vẫn quy ra đốt như thường
+      const dot = leaves * (DM.x2dot ? 2 : 1);
       if (!TRY_DOMAIN) { Game.score += pts; Game.bonusDot += dot; }
       Game.domLeaves = (Game.domLeaves || 0) + leaves;
       Sau.segs += Math.round(leaves / 15);
@@ -2332,8 +2333,8 @@
     if (DM.leaf) DM.leaf.shake = Math.max(0, DM.leaf.shake - dt * 5);
     const ph = DM.phase, L = DM.leaf, R = leafR();
     if (ph === 'dodge') {
-      if (keys.up || keys.down) DM.ty = clamp(DM.ty + (keys.down - keys.up) * H * 0.9 * dt, dmYMin(), dmYMax());
-      if (keys.left || keys.right) Sau.target = clamp(Sau.target + (keys.right - keys.left) * PW * 1.6 * dt, PX0 + 18 * S, PX0 + PW - 18 * S);
+      if (keys.up || keys.down) DM.ty = clamp(DM.ty + (keys.down - keys.up) * H * 1.25 * dt, dmYMin(), dmYMax());
+      if (keys.left || keys.right) Sau.target = clamp(Sau.target + (keys.right - keys.left) * PW * 2.2 * dt, PX0 + 18 * S, PX0 + PW - 18 * S);
     }
     Sau.headY = lerp(Sau.headY, DM.ty, 1 - Math.exp(-dt * (ph === 'ram' ? 9 : 16)));
     if (ph === 'enter') {
@@ -2730,11 +2731,17 @@
     drawPopups(dt);
     // chữ hướng dẫn từng pha
     const by = H * 0.4;
+    if (TRY_DOMAIN) banner('Chơi thử: không trừ đốt, không cộng điểm', H - 14 * S, 11, '#9BE5D5');
     if (ph === 'enter') banner('LÃNH ĐỊA VI MẠCH', by, 26, '#5FFFE0');
-    if (TRY_DOMAIN) banner('Chơi thử: không trừ đốt, không cộng điểm', H - 18 * S, 11, '#9BE5D5');
     else if (ph === 'dodge') {
       // chữ to chỉ hiện lúc đầu rồi mờ đi; thời gian, số lần trúng, món đã nhặt nằm sát đáy cho khỏi che chỗ né
-      if (DM.pt < 1.2) { g.save(); g.globalAlpha = clamp((1.2 - DM.pt) / 0.4, 0, 1); banner('NÉ LAZE!', H * 0.55, 28, '#FFFFFF'); g.restore(); }
+      if (DM.pt < 1.6) {
+        g.save();
+        g.globalAlpha = clamp((1.6 - DM.pt) / 0.4, 0, 1);
+        banner('NÉ LAZE!', H * 0.55, 28, '#FFFFFF');
+        banner(('ontouchstart' in window) ? 'Kéo ngón tay để né, chỉ cần đầu không trúng' : 'Rê chuột (hoặc W A S D) để né, chỉ cần đầu không trúng', H * 0.55 + 30 * S, 13, '#9BE5D5');
+        g.restore();
+      }
       const fy = H - 46 * S;
       bar(fy, 1 - DM.pt / DM_T.dodge, '#5FFFE0');
       const info = [DM.hits ? 'Trúng ' + DM.hits + ' · −' + fmtNum(DM.lost) + ' đốt' : 'Chưa trúng tia nào', DM.x2pts && '×2 ĐIỂM', DM.x2dot && '×2 ĐỐT'].filter(Boolean).join('  ·  ');
@@ -2748,8 +2755,9 @@
     } else if ((ph === 'boom' || ph === 'exit') && DM.reward) {
       const r = DM.reward, u = clamp(r.t / 0.8, 0, 1);
       banner('+' + Math.round(r.leaves * u) + ' lá', by - 10 * S, 30, '#9BE58A');
-      banner('+' + fmtNum(Math.round((r.pts * u) / 100) * 100) + ' điểm', by + 30 * S, 22, '#FFE08A');
-      if (r.dot) banner('+' + r.dot + ' đốt thưởng', by + 60 * S, 16, '#9BE58A');
+      banner('+' + fmtNum(Math.round((r.pts * u) / 100) * 100) + ' điểm' + (DM.x2pts ? ' (×2)' : ''), by + 30 * S, 22, '#FFE08A');
+      banner('+' + fmtNum(Math.round(r.dot * u)) + ' đốt' + (DM.x2dot ? ' (×2)' : ''), by + 64 * S, 20, '#9BE58A');
+      if (TRY_DOMAIN) banner('(chơi thử nên không cộng vào ví)', by + 92 * S, 12, '#9BE5D5');
     }
     if (DM.flash > 0) {
       g.save();
@@ -3395,7 +3403,16 @@
   }
   // Pha né: kéo ngón tay để bé đi cả ngang lẫn dọc.
   window.addEventListener('pointermove', (e) => {
-    if (Game.state !== 'domain' || e.pointerId !== dragId) return;
+    if (Game.state !== 'domain') return;
+    // chuột: bé đi thẳng tới chỗ con trỏ, không cần giữ nút
+    if (e.pointerType === 'mouse') {
+      if (DM.phase === 'dodge') {
+        Sau.target = clamp(e.clientX, PX0 + 18 * S, PX0 + PW - 18 * S);
+        DM.ty = clamp(e.clientY, dmYMin(), dmYMax());
+      }
+      return;
+    }
+    if (e.pointerId !== dragId) return;
     if (DM.phase === 'dodge') {
       Sau.target = clamp(Sau.target + (e.clientX - lastPX) * SENS, PX0 + 18 * S, PX0 + PW - 18 * S);
       DM.ty = clamp(DM.ty + (e.clientY - lastPY) * SENS, dmYMin(), dmYMax());
@@ -3458,19 +3475,21 @@
 
   const keys = { left: false, right: false, up: false, down: false };
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft') keys.left = true;
-    else if (e.key === 'ArrowRight') keys.right = true;
-    else if (e.key === 'ArrowUp') { keys.up = true; if (Game.state === 'domain') e.preventDefault(); }
-    else if (e.key === 'ArrowDown') { keys.down = true; if (Game.state === 'domain') e.preventDefault(); }
+    const kk = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (kk === 'ArrowLeft' || (kk === 'a' && Game.state === 'domain')) keys.left = true;
+    else if (kk === 'ArrowRight' || (kk === 'd' && Game.state === 'domain')) keys.right = true;
+    else if (kk === 'ArrowUp' || (kk === 'w' && Game.state === 'domain')) { keys.up = true; if (Game.state === 'domain') e.preventDefault(); }
+    else if (kk === 'ArrowDown' || (kk === 's' && Game.state === 'domain')) { keys.down = true; if (Game.state === 'domain') e.preventDefault(); }
     else if (e.key === ' ' && Game.state === 'domain') { e.preventDefault(); if (!e.repeat) domainTap(); }
     else if ((e.key === 'Escape' || e.key === 'p') && Game.state === 'play') Game.pause();
     else if ((e.key === ' ' || e.key === 'k') && Game.state === 'play') { e.preventDefault(); Game.trigger(); }
   });
   window.addEventListener('keyup', (e) => {
-    if (e.key === 'ArrowLeft') keys.left = false;
-    else if (e.key === 'ArrowRight') keys.right = false;
-    else if (e.key === 'ArrowUp') keys.up = false;
-    else if (e.key === 'ArrowDown') keys.down = false;
+    const kk = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (kk === 'ArrowLeft' || kk === 'a') keys.left = false;
+    else if (kk === 'ArrowRight' || kk === 'd') keys.right = false;
+    else if (kk === 'ArrowUp' || kk === 'w') keys.up = false;
+    else if (kk === 'ArrowDown' || kk === 's') keys.down = false;
   });
 
   // Chặn cuộn/zoom của trình duyệt khi đang chơi.
