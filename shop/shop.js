@@ -13,7 +13,7 @@
   const BIG = (r) => r === 'suthi' || TOP(r);
   const SLOT_NAME = { skin: 'Skin', fx: 'Hiệu ứng', wing: 'Cánh bướm', bg: 'Nền' };
   const HINT = {
-    skin: 'Chạm để thử lên bé sâu. Skin chỉ để đẹp, không đổi cách chơi hay điểm.',
+    skin: 'Chạm để thử lên bé sâu. Skin để đẹp, không đổi điểm; riêng Sâu Thám Tử có thêm kỹ năng Kính Lúp trong game.',
     fx: 'Hiện ra mỗi lần bé sâu đớp lá. Chạm để xem thử.',
     wing: 'Đôi cánh khi bé sâu hoá bướm cuối bài. Chạm để xem thử.',
     bg: 'Khung cảnh phía sau khi chơi Sâu Tím, đổi luôn màu lá và cành. Chạm để xem thử.',
@@ -469,6 +469,9 @@
     $('sheet-name').textContent = item.name;
     rarityTag($('sheet-rarity'), item);
     $('sheet-memory').textContent = item.memory || '';
+    const skill = item.skill && Skins.SKILLS ? Skins.SKILLS[item.skill] : null;
+    $('sheet-skill').hidden = !skill;
+    if (skill) $('sheet-skill').textContent = '🔍 ' + skill.text;
     const ev = item.ev && exclusive(item) ? Skins.eventById(item.ev) : null;
     $('sheet-ch').textContent = (ev ? 'Sự kiện ' + ev.name + ' · ' : '') + (item.who ? 'Bộ của ' + (item.who === 'thuy' ? 'em' : 'anh') + ' · ' : '') + (item.reward ? 'Phần thưởng phá án · ' : '') + (item.ch ? 'Kỷ niệm ở chương ' + item.ch + ' · ' : '') + SLOT_NAME[item.slot];
     updateSheetAction();

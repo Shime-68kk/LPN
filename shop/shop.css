@@ -249,6 +249,8 @@ body.night .item .i-state.on { color: #CDB8F0; }
 .item-sheet h2 { margin: 4px 0 0; font-family: 'Fraunces', serif; font-weight: 600; font-size: 26px; }
 .sheet-memory { margin: 0; font-size: 15px; line-height: 1.55; font-style: italic; color: var(--ink); }
 .sheet-ch { margin: 0; font-size: 13px; color: var(--muted); }
+/* Skin có kỹ năng trong game (Sâu Thám Tử: Kính Lúp) */
+.sheet-skill { margin: 0; padding: 10px 12px; border-radius: 14px; background: rgba(226, 176, 74, 0.16); border: 1px solid rgba(226, 176, 74, 0.45); font-size: 14px; line-height: 1.5; color: var(--ink); }
 .sheet-action { min-height: 52px; font-size: 16px; margin-top: 6px; }
 .sheet-action:disabled { opacity: .55; }
 

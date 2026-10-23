@@ -159,6 +159,42 @@ body.night .score.record #score { color: #FFC24B; }
   font-weight: 600;
 }
 .combo b { font-size: 16px; font-variant-numeric: tabular-nums; }
+
+/* Nút kỹ năng (Kính Lúp của Sâu Thám Tử): vòng vàng nạp dần, đầy thì sáng và nhịp nhẹ, đang soi thì vòng hồng lùi dần */
+.skill {
+  position: fixed;
+  right: 14px;
+  bottom: calc(var(--safe-bottom) + 20px);
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(43, 33, 64, 0.55);
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  opacity: 0.85;
+}
+.skill svg { grid-area: 1 / 1; }
+.sk-ring { width: 64px; height: 64px; transform: rotate(-90deg); }
+.sk-ring circle { fill: none; stroke-width: 4; }
+.sk-track { stroke: rgba(255, 248, 239, 0.18); }
+.sk-fill { stroke: #FFC24B; stroke-linecap: round; stroke-dasharray: 182.2; stroke-dashoffset: 182.2; transition: stroke-dashoffset .25s; }
+.sk-ic { width: 28px; height: 28px; fill: none; stroke: rgba(255, 248, 239, 0.65); stroke-width: 2.4; stroke-linecap: round; }
+.skill.ready { opacity: 1; background: var(--violet); animation: sk-ready 1.2s ease-out infinite; }
+.skill.ready .sk-ic { stroke: #FFE39A; }
+.skill.on { opacity: 1; background: rgba(43, 33, 64, 0.72); }
+.skill.on .sk-fill { stroke: #FF8FA3; transition: none; }
+.skill.on .sk-ic { stroke: #FF8FA3; }
+@keyframes sk-ready {
+  0% { box-shadow: 0 0 0 0 rgba(255, 194, 75, 0.65); transform: scale(1); }
+  45% { transform: scale(1.07); }
+  100% { box-shadow: 0 0 0 16px rgba(255, 194, 75, 0); transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) { .skill.ready { animation: none; box-shadow: 0 0 0 4px rgba(255, 194, 75, 0.5); } }
 .combo.bump { animation: bump .18s ease-out; }
 @keyframes bump { 50% { transform: scale(1.12); } }
 
@@ -450,6 +486,7 @@ body.night .stars svg { fill: #3A3166; }
 .menu-wallet { display: inline-flex; align-items: center; min-height: 32px; padding: 0; border: 0; background: none; cursor: pointer; }
 .menu-wallet:empty { display: none; }
 .menu-links { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.sheet-head .menu-skill { margin: 10px 0 0; font-size: 13px; line-height: 1.45; color: var(--muted); }
 .menu-shop {
   display: inline-flex;
   align-items: center;

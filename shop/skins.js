@@ -148,7 +148,7 @@
     { id: 'tham-tu', slot: 'skin', name: 'Sâu Thám Tử', rarity: 'huyenthoai', price: 0, reward: 'vlts', ch: 13,
       memory: 'Thám tử Thủy phá vụ án đầu tiên: vạch lá, tìm ra Sâu Tím, mở hộp quà bằng đúng giờ em nhận lời.',
       pal: { body: '#D2B07F', body2: '#C49F6C', head: '#B79CF0', feet: '#6E4426', ant: '#6B4FA0', antTip: '#FF8FA3', mark: '#6E4426', cocoon: '#E6D2AE', cocoonLine: '#C49F6C' },
-      acc: 'detective', pattern: 'coat', mark: 'ques', antLen: 2.05 },
+      acc: 'detective', pattern: 'coat', mark: 'ques', antLen: 2.05, skill: 'lens' },
     // Bộ Thám Tử: có Sâu Thám Tử là tự có cả bộ (wallet.js tự thêm, kể cả máy đã phá án từ trước).
     { id: 'manh-moi', slot: 'fx', name: 'Manh Mối', rarity: 'suthi', price: 0, reward: 'vlts', ch: 13,
       memory: 'Lá nào vạch ra cũng có manh mối: dấu chân bé xíu, dấu hỏi to đùng, và chiếc kính lúp soi tới tận Sâu Tím.',
@@ -187,6 +187,16 @@
       memory: 'Một ăng-ten ở Hà Nội, một khung cửa sổ có sách ở Thái Nguyên. Sóng đi bao xa cũng tìm về đúng một người.',
       bg: { kind: 'twofreq', theme: { night: true, cloud: '#2B2560', mote: null, stars: false, rain: false } } },
   ];
+
+  // ================= Kỹ năng trong game =================
+  // Skin thường chỉ để đẹp. Riêng vài skin đặc biệt có kỹ năng (anh Quang muốn Sâu Thám Tử có Kính Lúp).
+  // need: số lá ăn được để nạp đầy; time: số giây kính lúp bật; wide: vùng đớp rộng thêm bao nhiêu lần.
+  const SKILLS = {
+    lens: {
+      id: 'lens', name: 'Kính Lúp', need: 20, time: 6, wide: 1.4, ahead: 2.4, marks: 3,
+      text: 'Kỹ năng Kính Lúp: ăn đủ 20 lá thì nút kính lúp sáng. Chạm để soi 6 giây: lá rơi qua kính lúp phóng to và đớp dễ hơn, dấu chân chỉ chỗ 3 lá sắp rơi.',
+    },
+  };
 
   // ================= Sự kiện =================
   // Trong thời gian sự kiện, món có ev chỉ ra từ Vòng quay; chưa tới ngày thì ẩn hẳn;
@@ -2960,7 +2970,11 @@
       x.beginPath(); x.arc(fx, fy, 0.5 * u, 0, TAU); x.fill();
     }
     x.globalAlpha = 1;
-    // kính lúp: trong mặt kính là bản sáng của cảnh
+    // kính lúp: trong mặt kính là bản sáng của cảnh (game đang bật kính lúp kỹ năng thì cái này mờ đi)
+    const qa = 1 - Math.min(1, o.quiet || 0);
+    if (qa < 0.02) return;
+    x.save();
+    x.globalAlpha = qa;
     const R = 14 * u;
     const [lx, ly] = caseLens(W, H, t);
     if (st.lit) {
@@ -2999,7 +3013,7 @@
     if (near > 0) {
       const k = Math.min(1, near * 2.2), bob = Math.sin(t * 6) * 0.5 * u;
       const bx = G.worm.x + 0.6 * u, by = G.worm.y - 7.2 * u + bob;
-      x.globalAlpha = k;
+      x.globalAlpha = k * qa;
       x.fillStyle = '#FFFFFF';
       x.beginPath(); x.arc(bx, by, 2.6 * u * (0.6 + 0.4 * k), 0, TAU); x.fill();
       x.fillStyle = '#E0408A';
@@ -3007,8 +3021,8 @@
       x.textAlign = 'center';
       x.textBaseline = 'middle';
       x.fillText('!', bx, by + 0.2 * u);
-      x.globalAlpha = 1;
     }
+    x.restore();
   }
 
   function drawBackdrop(x, item, o) {
@@ -3043,7 +3057,7 @@
       st.bats = null;
     }
     x.drawImage(st.cache, 0, 0, o.W, o.H);
-    const live = { W: o.W, H: o.H, t: o.t || 0, dt: o.dt || 0, speed: o.speed || 0, night };
+    const live = { W: o.W, H: o.H, t: o.t || 0, dt: o.dt || 0, speed: o.speed || 0, night, quiet: o.quiet || 0 };
     if (kind === 'sapa') liveSapa(x, live, st);
     else if (kind === 'twofreq') liveTwoFreq(x, live, st);
     else if (kind === 'case') liveCase(x, live, st);
@@ -3138,6 +3152,6 @@
   window.Skins = {
     ITEMS, RARITY, DEFAULT, BASE, EVENTS, get, byKey, palette, eventById, activeEvent, visibleEvents, itemState, startOf, isPreview, makePet,
     drawSegment, drawHead, drawCocoon, drawButterfly, eatBurst, stepParticle, drawParticle, drawPreview, heartPath,
-    drawBackdrop, backdropTop,
+    drawBackdrop, backdropTop, SKILLS,
   };
 })();
