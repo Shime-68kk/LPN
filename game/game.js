@@ -18,7 +18,11 @@
   const PATH_PLAY = 'M8 5v14l11-7z';
   let touched = false;
   const buzz = (ms) => { if (touched && navigator.vibrate) navigator.vibrate(ms); };
-  document.addEventListener('pointerdown', () => { touched = true; }, { capture: true, passive: true });
+  document.addEventListener('pointerdown', () => {
+    touched = true;
+    // Đang đếm ngược hồi sinh mà âm thanh bị tắt: chạm là bật lại (iPhone chỉ cho bật khi có chạm).
+    if (typeof Game !== 'undefined' && Game.state === 'count' && Sound.ctx && Sound.ctx.state !== 'running') Sound.ctx.resume().catch(() => {});
+  }, { capture: true, passive: true });
 
   function svgIcon(d, cls) {
     const s = document.createElementNS(SVG_NS, 'svg');
@@ -1125,10 +1129,11 @@
       Sound.miss();
       buzz(30);
       UI.hud(this);
-      // Đã đủ 3 sao thì hết tim vẫn là thắng: sâu hoá bướm. Chưa đủ thì mời hồi sinh (còn lượt).
+      // Hết tim: còn lượt thì luôn mời hồi sinh (kể cả khi đã đủ 3 sao, để chơi tiếp vòng nhanh kiếm điểm).
+      // Hết lượt: đủ 3 sao thì vẫn là thắng (sâu hoá bướm), chưa đủ thì thua.
       if (this.hearts <= 0) {
-        if (this.stars >= 3) this.finish();
-        else if (this.revives < REVIVE.length) this.down();
+        if (this.revives < REVIVE.length) this.down();
+        else if (this.stars >= 3) this.finish();
         else this.gameOver();
       }
     },
@@ -1186,6 +1191,13 @@
     countTick() {
       const c = this.count;
       if (!c) return;
+      // Âm thanh chưa chạy lại (iPhone vừa có cuộc gọi, Siri…): đồng hồ âm thanh đứng yên nên đếm mãi không xong.
+      // Thử bật lại mỗi nửa giây; chạm màn hình cũng bật lại (xem pointerdown ở dưới).
+      if (Sound.ctx.state !== 'running') {
+        const t = performance.now();
+        if (!c.kick || t - c.kick > 500) { c.kick = t; Sound.ctx.resume().catch(() => {}); }
+        return;
+      }
       const now = Sound.now();
       const k = Math.floor((now - c.t0) / c.beat);
       if (k >= 0 && k < 3 && k !== c.shown) {
@@ -1217,6 +1229,8 @@
     giveUp() {
       if (this.state !== 'down') return;
       UI.hide('revive');
+      // Đã đủ 3 sao: không hồi sinh thì hoá bướm (vẫn là thắng).
+      if (this.stars >= 3) { const go = () => { if (this.state === 'down') this.finish(); }; Sound.ctx.resume().then(go, go); setTimeout(go, 600); return; }
       Sound.stopMusic();
       Sound.ctx.resume();
       this.gameOver(true);
@@ -1304,6 +1318,7 @@
       const notes = this.notes;
       // Mức Dễ: vùng đớp rộng hơn một chút; kính lúp đang bật thì rộng thêm.
       const R = this.catchR();
+      const sfx = this.skFx();
       // Gió Thơ: quyển sách giữa màn bắt mọi lá đang có trên màn, cả cành dài (state 3, n.vac = lúc bắt).
       // Lá vẫn bay tới sách đúng nhịp của nó (xem vacPos) nên tới nhịp mới tính ăn, tiếng ăn khớp nhạc.
       if (this.reading()) {
@@ -1332,7 +1347,7 @@
         const d = Math.abs(Sau.headX - (PX0 + n.x * PW));
         if (n.t - t > 0 && d < R * 1.8) anticip = Math.max(anticip, 1 - (n.t - t) / 0.4);
         if (n.t - t > EARLY) continue;
-        if (d <= R) this.eat(n, d <= PERFECT_R);
+        if (d <= R) this.eat(n, d <= PERFECT_R || !!(sfx && sfx.perfect));
         else if (t - n.t > LATE) this.lose(n);
         if (this.state !== 'play') return;
       }
@@ -1990,7 +2005,10 @@
       box.replaceChildren();
       for (let k = 0; k < step.hearts; k++) box.appendChild(svgIcon(PATH_HEART));
       $('rv-title').textContent = i === REVIVE.length - 1 ? 'Cơ hội cuối cùng!' : 'Hết tim rồi!';
-      $('rv-msg').textContent = 'Dùng ' + step.dot + ' đốt cây để hồi sinh với ' + step.hearts + ' tim, chơi tiếp từ chỗ vừa rồi nha?';
+      $('rv-msg').textContent = gm.stars >= 3
+        ? 'Đủ 3 sao rồi, hoá bướm luôn cũng được. Hay dùng ' + step.dot + ' đốt cây hồi sinh với ' + step.hearts + ' tim, chơi tiếp kiếm thêm điểm?'
+        : 'Dùng ' + step.dot + ' đốt cây để hồi sinh với ' + step.hearts + ' tim, chơi tiếp từ chỗ vừa rồi nha?';
+      $('btn-giveup').textContent = gm.stars >= 3 ? 'Thôi, hoá bướm luôn' : 'Thôi, xem kết quả';
       const steps = $('rv-steps');
       steps.replaceChildren();
       REVIVE.forEach((r, j) => {

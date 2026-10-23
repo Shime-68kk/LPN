@@ -200,6 +200,7 @@
   };
   // fx: wide (vùng đớp rộng ×), shield (hụt không mất tim), guard (hụt không mất combo), heal (+tim, 3 = đầy),
   // score (điểm ×), foresight (dấu chân chỉ lá sắp rơi), auto (tự lướt tới lá), vacuum (hút hết lá vào),
+  // perfect (lá nào đớp được cũng tính Hoàn hảo),
   // rand (mỗi lần một phép ngẫu nhiên). look: hình riêng (lens: kính lúp, book: quyển sách, waves: sóng).
   // burst: loại hạt bung ra khi dùng (xem drawParticle).
   const SKILLS = {
@@ -224,7 +225,7 @@
     'bi-ngo': { name: 'Ghẹo Ma', icon: '🎃', color: '#FF9A3C', burst: 11, fx: { shield: true, score: 2 }, line: 'Không cho kẹo là bị ghẹo, mà ghẹo thì được điểm.' },
     'tham-tu': { name: 'Kính Lúp', icon: '🔍', color: '#E2B04A', burst: 17, look: 'lens', fx: { wide: 1.45, foresight: true, guard: true }, line: 'Thám tử soi đâu trúng đó, lá rơi chỗ nào cũng biết trước.' },
     'nang-tho': { name: 'Gió Thơ', icon: '📖', color: '#FF8FA3', burst: 14, look: 'book', fx: { vacuum: true, score: 1.5 }, line: 'Quyển sách mở ra giữa trời, gió thơ cuốn mọi chiếc lá vào trang sách, Nàng Thơ chỉ việc đứng yên.' },
-    'vi-mach': { name: 'Khoá Sóng', icon: '📡', color: '#38E8C6', burst: 16, look: 'waves', fx: { auto: true, wide: 1.5, shield: true }, line: 'Phát sóng dò tìm, khoá đúng tần số từng chiếc lá.' },
+    'vi-mach': { name: 'Khoá Sóng', icon: '📡', color: '#38E8C6', burst: 16, look: 'waves', fx: { auto: true, wide: 1.6, perfect: true, shield: true, guard: true, score: 1.5 }, line: 'Phát sóng dò tìm, khoá đúng tần số từng chiếc lá, bắt sóng là trúng.' },
   };
   // Tưng Tửng: mỗi lần dùng bốc một phép trong này.
   const SKILL_RAND = [
@@ -236,6 +237,7 @@
     if (fx.auto) out.push('bé tự lướt tới từng chiếc lá');
     if (fx.wide) out.push('vùng đớp rộng hơn ' + Math.round((fx.wide - 1) * 100) + '%');
     if (fx.foresight) out.push('dấu chân chỉ chỗ 3 lá sắp rơi');
+    if (fx.perfect) out.push('lá nào đớp được cũng tính điểm tối đa');
     if (fx.shield) out.push('hụt lá không mất tim');
     if (fx.guard) out.push('hụt lá không mất combo');
     if (fx.heal) out.push(fx.heal >= 3 ? 'hồi đầy tim' : 'được thêm ' + fx.heal + ' tim');
