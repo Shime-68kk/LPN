@@ -113,7 +113,7 @@
       </a>
       <button type="button" class="m-tile mt-skill" id="menu-skill" hidden aria-label="Xem kỹ năng">
         <span class="mt-ic" id="menu-skill-ic"></span>
-        <span class="mt-txt"><b id="menu-skill-name">Kỹ năng</b><small>Kỹ năng · xem</small></span>
+        <span class="mt-txt"><b id="menu-skill-name">Kỹ năng</b><small id="menu-skill-sub">Kỹ năng · xem</small></span>
         <svg class="mt-go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
       </button>
     </div>
@@ -158,7 +158,7 @@
       <ul class="si-list" id="si-list"></ul>
       <p class="si-how" id="si-how"></p>
       <button type="button" class="btn primary" id="btn-si-close">Đã hiểu</button>
-      <a class="btn" href="../shop/?from=game#skin">Xem skin khác</a>
+      <a class="btn" href="../shop/?from=game#skin">Nâng cấp, đổi skin ở Tiệm Sâu</a>
     </div>
   </section>
 
@@ -209,10 +209,10 @@
     </div>
   </section>
 
-  <script src="../home/sync.js?v=2"></script>
-  <script src="../home/wallet.js?v=9"></script>
-  <script src="../shop/skins.js?v=18"></script>
-  <script src="game.js?v=32"></script>
+  <script src="../home/sync.js?v=3"></script>
+  <script src="../home/wallet.js?v=10"></script>
+  <script src="../shop/skins.js?v=19"></script>
+  <script src="game.js?v=33"></script>
   <script>
     // Tiệm Sâu đang có sự kiện thì gắn nhãn lên nút.
     if (window.Skins && Skins.activeEvent()) {

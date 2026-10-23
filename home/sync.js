@@ -28,6 +28,21 @@
   }
 
   const union = (a, b) => Object.assign({}, b || {}, a || {});
+  // Bậc nâng cấp kỹ năng: lấy bậc cao hơn của hai máy.
+  const maxMap = (a, b) => {
+    const out = Object.assign({}, b || {});
+    for (const [k, v] of Object.entries(a || {})) out[k] = Math.max(v || 0, out[k] || 0);
+    return out;
+  };
+  // Tiến độ thử thách đột phá: số lần, combo lấy cao hơn; bài đã đạt thì gộp.
+  const questMerge = (a, b) => {
+    const out = {};
+    for (const k of new Set([...Object.keys(a || {}), ...Object.keys(b || {})])) {
+      const x = (a || {})[k] || {}, y = (b || {})[k] || {};
+      out[k] = { uses: Math.max(x.uses || 0, y.uses || 0), combo: Math.max(x.combo || 0, y.combo || 0), hard: union(x.hard, y.hard) };
+    }
+    return out;
+  };
   // Gộp hai bản: đồ đã có, chương đã đọc, kỷ lục… thì cộng dồn; số đốt thì lấy bản sửa sau cùng.
   function merge(local, remote, first) {
     const out = {};
@@ -38,6 +53,8 @@
       out.wallet = Object.assign({}, base, {
         owned: union(lw.owned, rw.owned),
         grants: union(lw.grants, rw.grants),
+        up: maxMap(lw.up, rw.up),
+        quest: questMerge(lw.quest, rw.quest),
         gift: !!(lw.gift || rw.gift),
         giftSeen: !!(lw.giftSeen || rw.giftSeen),
         migrated: !!(lw.migrated || rw.migrated),

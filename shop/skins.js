@@ -209,29 +209,51 @@
   //   vacuum (quyển sách hút mọi lá), rand (mỗi lần một phép). look: hình riêng (lens, waves).
   // burst: loại hạt bung ra khi dùng (xem drawParticle).
   const SKILLS = {
-    'tim': { name: 'Măm Măm', color: '#9F7FE8', burst: 0, fx: { wide: 1.3 }, line: 'Há miệng thật to, lá lệch một chút vẫn đớp trúng.' },
-    'bac-ha': { name: 'Mát Lạnh', color: '#3FBF95', burst: 4, fx: { combo2: true, guard: true }, line: 'Bình tĩnh như bạc hà, combo cứ thế tăng vù vù.' },
-    'dao': { name: 'Má Đào', color: '#F2788F', burst: 1, fx: { healEvery: 4 }, line: 'Ăn ngoan là má hồng, má hồng là khoẻ.' },
-    'chanh': { name: 'Chua Lè', color: '#D9B81E', burst: 6, fx: { score: 1.6 }, line: 'Chua chua mà điểm lại ngọt.' },
-    'bien': { name: 'Lướt Sóng', color: '#3AA8D8', burst: 2, fx: { surf: 1.8 }, line: 'Cưỡi sóng mà đi, nhanh như cá.' },
-    'cacao': { name: 'Ngọt Dần', color: '#A86B3C', burst: 12, fx: { ramp: 0.12 }, line: 'Miếng sau ngọt hơn miếng trước.' },
-    'lim-dim': { name: 'Ngủ Gật', color: '#7F8CDB', burst: 5, fx: { shield: true }, line: 'Ngủ gật mà vẫn bình an.' },
-    'mi-tom': { name: 'Húp Sụp', color: '#E8A21E', burst: 10, fx: { magnet: 2.6 }, line: 'Húp một hơi là sạch bát, sợi nào cũng trôi tuột vào miệng.' },
-    'at-do-hoi': { name: 'Tưng Tửng', color: '#F27A2E', burst: 8, fx: { rand: true }, line: 'Không ai biết lần này bé sẽ làm gì.' },
-    'ngay-mua': { name: 'Mưa Chậm', color: '#5F8FE0', burst: 2, fx: { slow: 0.5 }, line: 'Ngày mưa, mọi thứ chậm lại một nhịp.' },
-    'sinh-nhat': { name: 'Thổi Nến', color: '#F06A8A', burst: 8, fx: { heal: 3, score: 1.3 }, line: 'Thổi nến, ước một điều thật to.' },
-    'lua-chin': { name: 'Được Mùa', color: '#D99A1E', burst: 10, fx: { harvest: 1 }, line: 'Lúa chín vàng đồng, mùa này bội thu.' },
-    'phu-thuy': { name: 'Phân Thân', color: '#9B62F0', burst: 6, fx: { clone: true }, line: 'Một câu thần chú, hai bé cùng đớp.' },
-    'sen-hong': { name: 'Sen Đỡ', color: '#EE6FA3', burst: 4, fx: { lotus: 3, guard: true }, line: 'Sen nở giữa đầm, thơm cả một vùng.' },
-    'sa-pa': { name: 'Gió Núi', color: '#6E9BE0', burst: 5, fx: { wind: 0.65 }, line: 'Gió núi Sa Pa lồng lộng, mây trôi lưng chừng trời.' },
-    'dem-sao': { name: 'Sao Băng', color: '#E8B830', burst: 6, fx: { star: true }, line: 'Ước một điều khi sao băng bay qua.' },
-    'be-hong': { name: 'Cưng Chiều', color: '#F0507A', burst: 1, fx: { overheal: 2 }, line: 'Được cưng chiều thì chẳng sợ gì.' },
-    'tho-cam': { name: 'Lưới Thổ Cẩm', color: '#D62F45', burst: 9, fx: { net: 14 }, line: 'Từng sợi chỉ đỏ, sợi chỉ vàng dệt nên tấm lưới.' },
-    'bi-ngo': { name: 'Ghẹo Ma', color: '#F08A2A', burst: 11, fx: { candy: 150, score: 1.5 }, line: 'Không cho kẹo là bị ghẹo!' },
-    'tham-tu': { name: 'Kính Lúp', color: '#D9A034', burst: 17, look: 'lens', fx: { wide: 1.45, foresight: true, guard: true }, line: 'Thám tử soi đâu trúng đó.' },
-    'nang-tho': { name: 'Gió Thơ', color: '#F06A8A', burst: 14, fx: { vacuum: true, score: 1.5 }, line: 'Quyển sách mở ra giữa trời, gió thơ nổi lên.' },
-    'vi-mach': { name: 'Khoá Sóng', color: '#1FC8A6', burst: 16, look: 'waves', fx: { auto: true, wide: 1.6, perfect: true, shield: true, guard: true, score: 1.5 }, line: 'Phát sóng dò tìm, khoá đúng tần số, bắt sóng là trúng.' },
+    'tim': { name: 'Măm Măm', color: '#9F7FE8', burst: 0, fx: { wide: 1.3 }, line: 'Há miệng thật to, lá lệch một chút vẫn đớp trúng.', lv: [{ wide: 1.42 }] },
+    'bac-ha': { name: 'Mát Lạnh', color: '#3FBF95', burst: 4, fx: { combo2: true, guard: true }, line: 'Bình tĩnh như bạc hà, combo cứ thế tăng vù vù.', lv: [{ score: 1.2 }] },
+    'dao': { name: 'Má Đào', color: '#F2788F', burst: 1, fx: { healEvery: 4 }, line: 'Ăn ngoan là má hồng, má hồng là khoẻ.', lv: [{ healEvery: 3 }] },
+    'chanh': { name: 'Chua Lè', color: '#D9B81E', burst: 6, fx: { score: 1.6 }, line: 'Chua chua mà điểm lại ngọt.', lv: [{ score: 1.85 }] },
+    'bien': { name: 'Lướt Sóng', color: '#3AA8D8', burst: 2, fx: { surf: 1.8 }, line: 'Cưỡi sóng mà đi, nhanh như cá.', lv: [{ surf: 2.1 }] },
+    'cacao': { name: 'Ngọt Dần', color: '#A86B3C', burst: 12, fx: { ramp: 0.12 }, line: 'Miếng sau ngọt hơn miếng trước.', lv: [{ ramp: 0.17 }] },
+    'lim-dim': { name: 'Ngủ Gật', color: '#7F8CDB', burst: 5, fx: { shield: true }, line: 'Ngủ gật mà vẫn bình an.', lv: [{ guard: true }] },
+    'mi-tom': { name: 'Húp Sụp', color: '#E8A21E', burst: 10, fx: { magnet: 2.6 }, line: 'Húp một hơi là sạch bát, sợi nào cũng trôi tuột vào miệng.', lv: [{ magnet: 3.2 }] },
+    'at-do-hoi': { name: 'Tưng Tửng', color: '#F27A2E', burst: 8, fx: { rand: true }, line: 'Không ai biết lần này bé sẽ làm gì.', lv: [{}, { score: 1.3 }] },
+    'ngay-mua': { name: 'Mưa Chậm', color: '#5F8FE0', burst: 2, fx: { slow: 0.5 }, line: 'Ngày mưa, mọi thứ chậm lại một nhịp.', lv: [{ slow: 0.42 }, { slow: 0.35, guard: true }] },
+    'sinh-nhat': { name: 'Thổi Nến', color: '#F06A8A', burst: 8, fx: { heal: 3, score: 1.3 }, line: 'Thổi nến, ước một điều thật to.', lv: [{ score: 1.5 }, { score: 1.8 }] },
+    'lua-chin': { name: 'Được Mùa', color: '#D99A1E', burst: 10, fx: { harvest: 1 }, line: 'Lúa chín vàng đồng, mùa này bội thu.', lv: [{}, { harvest: 2 }] },
+    'phu-thuy': { name: 'Phân Thân', color: '#9B62F0', burst: 6, fx: { clone: true }, line: 'Một câu thần chú, hai bé cùng đớp.', lv: [{}, { guard: true }] },
+    'sen-hong': { name: 'Sen Đỡ', color: '#EE6FA3', burst: 4, fx: { lotus: 3, guard: true }, line: 'Sen nở giữa đầm, thơm cả một vùng.', lv: [{ lotus: 4 }, { lotus: 5 }, { lotus: 6, shield: true }] },
+    'sa-pa': { name: 'Gió Núi', color: '#6E9BE0', burst: 5, fx: { wind: 0.65 }, line: 'Gió núi Sa Pa lồng lộng, mây trôi lưng chừng trời.', lv: [{ wind: 0.75 }, { wind: 0.85 }, { wind: 0.92, guard: true }] },
+    'dem-sao': { name: 'Sao Băng', color: '#E8B830', burst: 6, fx: { star: true }, line: 'Ước một điều khi sao băng bay qua.', lv: [{}, { score: 1.3 }, { star2: true, score: 1.5 }] },
+    'be-hong': { name: 'Cưng Chiều', color: '#F0507A', burst: 1, fx: { overheal: 2 }, line: 'Được cưng chiều thì chẳng sợ gì.', lv: [{}, { heal: 1 }, { overheal: 1 }] },
+    'tho-cam': { name: 'Lưới Thổ Cẩm', color: '#D62F45', burst: 9, fx: { net: 14 }, line: 'Từng sợi chỉ đỏ, sợi chỉ vàng dệt nên tấm lưới.', lv: [{ net: 18 }, { net: 22 }, { net: 28, guard: true }] },
+    'bi-ngo': { name: 'Ghẹo Ma', color: '#F08A2A', burst: 11, fx: { candy: 150, score: 1.5 }, line: 'Không cho kẹo là bị ghẹo!', lv: [{ candy: 250 }, { score: 1.8 }, { candy: 400, score: 2 }] },
+    'tham-tu': { name: 'Kính Lúp', color: '#D9A034', burst: 17, look: 'lens', fx: { wide: 1.45, foresight: true, guard: true }, line: 'Thám tử soi đâu trúng đó.', lv: [{ wide: 1.55 }, { wide: 1.65 }, { wide: 1.75, shield: true }] },
+    'nang-tho': { name: 'Gió Thơ', color: '#F06A8A', burst: 14, fx: { vacuum: true, score: 1.5 }, line: 'Quyển sách mở ra giữa trời, gió thơ nổi lên.', lv: [{ score: 1.7 }, { score: 1.9 }, { score: 2.2 }, { score: 3, overheal: 6 }] },
+    'vi-mach': { name: 'Khoá Sóng', color: '#1FC8A6', burst: 16, look: 'waves', fx: { auto: true, wide: 1.6, perfect: true, shield: true, guard: true, score: 1.5 }, line: 'Phát sóng dò tìm, khoá đúng tần số, bắt sóng là trúng.', lv: [{ wide: 1.7 }, { score: 1.8 }, { score: 2.2 }, { score: 3, refill: 0.5 }] },
   };
+  // ----- Nâng cấp kỹ năng (Tiệm Sâu): skin càng xịn càng nâng được nhiều bậc, phí không rẻ -----
+  // Mỗi bậc: nạp ít lá hơn (UP_NEED), dùng lâu thêm 1 giây, và phần lv[bậc-1] của skin (chỉ số riêng mạnh lên).
+  // Định mệnh có bậc 4 là Đột phá: nâng xong 3 bậc mới mở thử thách, xong thử thách mới đột phá được.
+  const UP_COST = {
+    thuong: [300],
+    hiem: [500, 1000],
+    suthi: [900, 1800, 3000],
+    huyenthoai: [1200, 2500, 4000],
+    dinhmenh: [1500, 3000, 5000, 6000],
+  };
+  const UP_NEED = [1, 0.88, 0.78, 0.7, 0.6];
+  // Thử thách đột phá: chỉ tính khi đang mặc đúng skin đó và kỹ năng đã ở bậc 3.
+  const BREAK_GOALS = [
+    { id: 'uses', need: 40, text: 'Dùng kỹ năng 40 lần' },
+    { id: 'combo', need: 150, text: 'Đạt combo 150 trong một ván' },
+    { id: 'hard', need: 3, text: 'Đủ 3 sao ở 3 bài khác nhau, mức Vừa, không hồi sinh' },
+  ];
+  const BREAK = {
+    'nang-tho': { name: 'Thơ Tràn Trang', quest: 'Tuyển Tập Thơ', line: 'Trang sách đầy thơ đến tràn ra: mỗi 6 chiếc lá vào sách thêm một nhịp tim, tim vượt lên được tới 5.' },
+    'vi-mach': { name: 'Phủ Sóng', quest: 'Phủ Sóng Toàn Quốc', line: 'Sóng phủ khắp nơi: dùng xong kỹ năng tự nạp lại sẵn một nửa, bắt sóng liên hoàn.' },
+  };
+
   // Tưng Tửng: mỗi lần dùng bốc một phép của skin khác (name để báo cho người chơi biết).
   const SKILL_RAND = [
     { name: 'Húp Sụp', fx: { magnet: 3 } }, { name: 'Mưa Chậm', fx: { slow: 0.45 } }, { name: 'Phân Thân', fx: { clone: true } },
@@ -274,12 +296,12 @@
     const pct = (m) => Math.round((m - 1) * 100) + '%';
     if (fx.vacuum) out.push('quyển sách hút mọi chiếc lá, cả cành lá dài, bé chỉ việc đứng yên');
     if (fx.auto) out.push('bé tự lướt tới từng chiếc lá');
-    if (fx.magnet) out.push('lá rơi gần bị hút trượt vào miệng');
-    if (fx.wind) out.push('gió thổi lá dạt về giữa màn');
+    if (fx.magnet) out.push('lá rơi trong vùng rộng gấp ' + String(fx.magnet).replace('.', ',') + ' lần miệng bị hút trượt vào miệng');
+    if (fx.wind) out.push('gió thổi lá dạt ' + Math.round(fx.wind * 100) + '% về giữa màn');
     if (fx.slow) out.push('lá rơi chậm lại ' + Math.round((1 - fx.slow) * 100) + '%, nhìn rõ dễ đớp');
     if (fx.surf) out.push('bé lướt nhanh hơn ' + pct(fx.surf));
     if (fx.clone) out.push('hiện thêm một bé phân thân đứng đối xứng, đớp giúp');
-    if (fx.star) out.push('ăn một lá là sao băng bay đi đớp giùm lá kế tiếp');
+    if (fx.star) out.push(fx.star2 ? 'ăn một lá là hai ngôi sao băng bay đi đớp giùm hai lá kế tiếp' : 'ăn một lá là sao băng bay đi đớp giùm lá kế tiếp');
     if (fx.wide) out.push('miệng đớp rộng hơn ' + pct(fx.wide));
     if (fx.foresight) out.push('dấu chân chỉ chỗ 3 lá sắp rơi');
     if (fx.net) out.push('lưới thổ cẩm giăng ngang đỡ ' + fx.net + ' lá rơi trượt');
@@ -291,19 +313,32 @@
     if (fx.combo2) out.push('mỗi lá tính 2 combo');
     if (fx.heal) out.push(fx.heal >= 3 ? 'hồi đầy tim' : 'được thêm ' + fx.heal + ' tim');
     if (fx.healEvery) out.push('cứ ' + fx.healEvery + ' lá ăn được thêm 1 tim');
-    if (fx.overheal) out.push('cứ ' + fx.overheal + ' lá ăn được thêm 1 tim, tim vượt lên được tới 5');
+    if (fx.overheal) out.push((fx.overheal === 1 ? 'mỗi lá' : 'cứ ' + fx.overheal + ' lá') + ' ăn được thêm 1 tim, tim vượt lên được tới 5');
     if (fx.score) out.push('điểm ×' + String(fx.score).replace('.', ','));
-    if (fx.ramp) out.push('càng ăn điểm càng tăng, tới ×2');
+    if (fx.ramp) out.push('càng ăn điểm càng tăng (mỗi lá thêm ' + Math.round(fx.ramp * 100) + '%), tới ×2');
     if (fx.harvest) out.push('mỗi lá ăn được tặng thêm ' + fx.harvest + ' đốt cây');
     if (fx.rand) out.push('mỗi lần dùng ra phép của một skin khác, có khi siêu mạnh');
+    if (fx.refill) out.push('dùng xong tự nạp lại sẵn ' + Math.round(fx.refill * 100) + '%');
     return out;
   }
   // Kỹ năng của một skin, đủ số lá cần nạp và số giây theo độ hiếm.
-  function skillOf(item) {
+  // Số bậc nâng cấp tối đa của skin (theo độ hiếm).
+  const skillMax = (item) => (item && SKILLS[item.id] ? (UP_COST[item.rarity] || []).length : 0);
+  // level: bậc nâng cấp (0 = chưa nâng). Gộp các phần lv của từng bậc vào fx gốc.
+  function skillOf(item, level) {
     const base = item && SKILLS[item.id];
     if (!base) return null;
     const tier = SKILL_TIER[item.rarity] || SKILL_TIER.thuong;
-    const sk = Object.assign({ id: item.id, rarity: item.rarity, need: tier.need, time: tier.time }, base);
+    const max = skillMax(item);
+    const lvl = Math.max(0, Math.min(max, Math.floor(level || 0)));
+    let fx = Object.assign({}, base.fx);
+    for (let i = 0; i < lvl; i++) fx = Object.assign(fx, (base.lv || [])[i] || {});
+    const sk = Object.assign({ id: item.id, rarity: item.rarity }, base, {
+      fx, level: lvl, max,
+      need: Math.max(6, Math.round(tier.need * UP_NEED[lvl])),
+      time: tier.time + lvl,
+      breakthrough: lvl >= 4 && BREAK[item.id] ? BREAK[item.id].name : '',
+    });
     sk.effects = skillEffects(sk.fx);
     sk.how = 'Ăn đủ ' + sk.need + ' lá để nạp đầy, rồi chạm đúp màn hình (máy tính bấm phím cách). Kỹ năng kéo dài ' + sk.time + ' giây.';
     sk.text = sk.line + ' Trong ' + sk.time + ' giây: ' + sk.effects.join(', ') + '. ' + sk.how;
@@ -3264,6 +3299,6 @@
   window.Skins = {
     ITEMS, RARITY, DEFAULT, BASE, EVENTS, get, byKey, palette, eventById, activeEvent, visibleEvents, itemState, startOf, isPreview, makePet,
     drawSegment, drawHead, drawCocoon, drawButterfly, eatBurst, stepParticle, drawParticle, drawPreview, heartPath,
-    drawBackdrop, backdropTop, SKILLS, SKILL_RAND, skillOf, skillIcon, skillEffects,
+    drawBackdrop, backdropTop, SKILLS, SKILL_RAND, skillOf, skillIcon, skillEffects, skillMax, UP_COST, BREAK, BREAK_GOALS,
   };
 })();

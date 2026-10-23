@@ -101,7 +101,7 @@
     // skin có tính cách (Nàng Thơ, Vi Mạch): ở màn chọn bài chạm, vuốt được
     PET = Skins.makePet ? Skins.makePet(LOOK.skin, (window.Sync && window.Sync.who) || null) : null;
     // Kỹ năng riêng của skin (xem SKILLS trong skins.js)
-    LOOK.skill = Skins.skillOf ? Skins.skillOf(LOOK.skin) : null;
+    LOOK.skill = Skins.skillOf ? Skins.skillOf(LOOK.skin, window.Wallet ? Wallet.skillLevel(LOOK.skin.id) : 0) : null;
     const ms = document.getElementById('menu-skill');
     if (ms) {
       const sk = LOOK.skill;
@@ -111,6 +111,7 @@
         ms.style.setProperty('--sk-bg', sk.color + '24');
         document.getElementById('menu-skill-ic').innerHTML = Skins.skillIcon(sk.id, 22);
         document.getElementById('menu-skill-name').textContent = sk.name;
+        document.getElementById('menu-skill-sub').textContent = sk.breakthrough ? 'Đột phá · ' + sk.breakthrough : sk.level ? 'Kỹ năng · bậc ' + sk.level + '/' + sk.max : 'Kỹ năng · xem';
         ms.setAttribute('aria-label', 'Kỹ năng ' + sk.name + ', xem chi tiết');
       }
     }
@@ -1090,7 +1091,7 @@
           popup('+' + fx.harvest + ' đốt', at.x + 26 * S, at.y - HEAD_R * 3.2, T.night ? '#9BE58A' : '#2E8B3E', 15);
         }
         // Sao Băng: bé tự đớp một lá thì sao bay đi đớp giùm lá kế tiếp (sao không gọi thêm sao).
-        if (fx.star && via !== 'star') launchStar(this.songT);
+        if (fx.star && via !== 'star') { launchStar(this.songT); if (fx.star2) launchStar(this.songT); }
       }
       this.chargeSkill();
       UI.hud(this, true);
@@ -1128,10 +1129,18 @@
       }
       Sound.skill();
       buzz([12, 30, 12]);
+      this.quest((q) => { q.uses = (q.uses || 0) + 1; });
       UI.toast(K.label ? sk.name + ': ' + K.label + '!' : sk.name + '!');
       skillBurst(18);
       ring(Sau.headX, Sau.headY, sk.color);
       UI.hud(this);
+    },
+    // Thử thách đột phá: chỉ tính khi đang mặc skin có đột phá và kỹ năng đã đủ 3 bậc (chưa đột phá).
+    questOn() { const sk = LOOK.skill; return !!(sk && window.Wallet && Skins.BREAK && Skins.BREAK[sk.id] && sk.level === sk.max - 1); },
+    quest(fn) {
+      if (!this.questOn()) return;
+      const id = LOOK.skill.id;
+      Wallet.update((w) => { const q = w.quest[id] || (w.quest[id] = { uses: 0, combo: 0, hard: {} }); q.hard = q.hard || {}; fn(q); });
     },
     // Hiệu ứng đang bật (null nếu không dùng kỹ năng).
     skFx() { return this.sk.on > 0 ? this.sk.fx : null; },
@@ -1332,6 +1341,8 @@
         const K = this.sk;
         if (K.on > 0) {
           K.on = Math.max(0, K.on - dt);
+          // Phủ Sóng: dùng xong tự nạp lại sẵn một phần
+          if (K.on === 0 && K.fx && K.fx.refill && LOOK.skill) K.charge = Math.round(LOOK.skill.need * K.fx.refill);
           K.hit = Math.max(0, K.hit - dt * 2.5);
           // Khoá Sóng: tự lướt tới lá
           if (K.fx && K.fx.auto) this.bot();
@@ -2470,6 +2481,10 @@
         Store.save();
       }
       $('res-best').hidden = !isBest;
+      gm.quest((q) => {
+        q.combo = Math.max(q.combo || 0, gm.maxCombo);
+        if (gm.diff === 2 && stars >= 3 && !gm.revives) q.hard[gm.song.id] = 1;
+      });
       bank();
       const left = window.Wallet ? Wallet.get().points : 0;
       $('res-wallet').textContent = (gm.score
@@ -2713,8 +2728,8 @@
     card.style.setProperty('--sk', sk.color);
     card.style.setProperty('--sk-bg', sk.color + '24');
     $('si-ic').innerHTML = Skins.skillIcon(sk.id, 38);
-    $('si-tier').textContent = 'Kỹ năng · ' + Skins.RARITY[sk.rarity].name;
-    $('si-name').textContent = sk.name;
+    $('si-tier').textContent = 'Kỹ năng · ' + Skins.RARITY[sk.rarity].name + (sk.max ? ' · bậc ' + sk.level + '/' + sk.max : '');
+    $('si-name').textContent = sk.breakthrough ? sk.name + ' · ' + sk.breakthrough : sk.name;
     $('si-line').textContent = sk.line;
     const list = $('si-list');
     list.replaceChildren(...sk.effects.map((e) => { const li = document.createElement('li'); li.textContent = e.charAt(0).toUpperCase() + e.slice(1) + '.'; return li; }));

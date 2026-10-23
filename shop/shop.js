@@ -125,7 +125,7 @@
   }
 
   // ================= Trạng thái =================
-  const UI = { tab: 'box', trying: null, sheet: null, reveal: null, revealCtx: 'single', confirmBuy: 0, qty: 1 };
+  const UI = { tab: 'box', trying: null, sheet: null, reveal: null, revealCtx: 'single', confirmBuy: 0, confirmUp: 0, qty: 1 };
   try { UI.qty = Math.max(1, Math.min(MAX_QTY, parseInt(sessionStorage.getItem('lpn:boxQty'), 10) || 1)); } catch (e) { /* bỏ qua */ }
   const look = () => {
     const eq = Wallet.equipped();
@@ -454,14 +454,20 @@
         badge.textContent = Skins.eventById(item.ev).short;
         b.appendChild(badge);
       }
-      // Skin nào cũng có kỹ năng riêng: biểu tượng ở góc phải thẻ.
-      const skill = item.slot === 'skin' && Skins.skillOf ? Skins.skillOf(item) : null;
+      // Skin nào cũng có kỹ năng riêng: biểu tượng ở góc phải thẻ, đã nâng cấp thì ghi bậc.
+      const skill = item.slot === 'skin' && Skins.skillOf ? Skins.skillOf(item, Wallet.skillLevel(item.id, w)) : null;
       if (skill) {
         const sk = document.createElement('span');
         sk.className = 'i-sk';
         sk.innerHTML = Skins.skillIcon(item.id, 16);
         sk.style.color = skill.color;
-        sk.title = 'Kỹ năng ' + skill.name;
+        sk.title = 'Kỹ năng ' + skill.name + (skill.level ? ', bậc ' + skill.level : '');
+        if (skill.level) {
+          const lv = document.createElement('i');
+          lv.className = 'lv';
+          lv.textContent = skill.level;
+          sk.appendChild(lv);
+        }
         b.appendChild(sk);
       }
       b.setAttribute('aria-label', item.name + ', ' + Skins.RARITY[item.rarity].name + ', ' + state.textContent);
@@ -479,7 +485,7 @@
     $('sheet-name').textContent = item.name;
     rarityTag($('sheet-rarity'), item);
     $('sheet-memory').textContent = item.memory || '';
-    const skill = item.slot === 'skin' && Skins.skillOf ? Skins.skillOf(item) : null;
+    const skill = item.slot === 'skin' && Skins.skillOf ? Skins.skillOf(item, Wallet.skillLevel(item.id)) : null;
     $('sheet-skill').hidden = !skill;
     if (skill) {
       // Thẻ kỹ năng: biểu tượng, tên và hạng, câu giới thiệu, từng tác dụng, cách dùng.
@@ -504,6 +510,8 @@
       body.append(line, how);
       box.replaceChildren(ic, body);
     }
+    UI.confirmUp = 0;
+    renderUpgrade(item);
     const ev = item.ev && exclusive(item) ? Skins.eventById(item.ev) : null;
     $('sheet-ch').textContent = (ev ? 'Sự kiện ' + ev.name + ' · ' : '') + (item.who ? 'Bộ của ' + (item.who === 'thuy' ? 'em' : 'anh') + ' · ' : '') + (item.reward ? 'Phần thưởng phá án · ' : '') + (item.ch ? 'Kỷ niệm ở chương ' + item.ch + ' · ' : '') + SLOT_NAME[item.slot];
     updateSheetAction();
@@ -511,6 +519,119 @@
     $('sheet-backdrop').hidden = false;
     updateStageTag();
   }
+  // ----- Nâng cấp kỹ năng -----
+  // Bậc tiếp theo: nạp, thời gian, và các tác dụng mới/đổi. Bậc đột phá (Định mệnh) cần xong thử thách.
+  function questProgress(id, w) {
+    const q = (w.quest || {})[id] || {};
+    return Skins.BREAK_GOALS.map((gl) => {
+      const v = gl.id === 'uses' ? q.uses || 0 : gl.id === 'combo' ? q.combo || 0 : Object.keys(q.hard || {}).length;
+      return { goal: gl, v: Math.min(v, gl.need), done: v >= gl.need };
+    });
+  }
+  function renderUpgrade(item) {
+    const box = $('sheet-up');
+    const max = item.slot === 'skin' && Skins.skillMax ? Skins.skillMax(item) : 0;
+    box.hidden = !max;
+    if (!max) return;
+    const w = Wallet.get();
+    const owned = Wallet.owns(item.slot, item.id, w);
+    const lvl = Wallet.skillLevel(item.id, w);
+    const cur = Skins.skillOf(item, lvl), next = lvl < max ? Skins.skillOf(item, lvl + 1) : null;
+    box.style.setProperty('--sk', cur.color);
+    const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+    const parts = [];
+    // đầu mục: chấm bậc (bậc đột phá hình thoi)
+    const head = el('div', 'su-head');
+    const pips = el('span', 'su-pips');
+    for (let i = 1; i <= max; i++) {
+      const p = el('i', (i <= lvl ? 'on' : '') + (i === 4 && Skins.BREAK[item.id] ? ' brk' : ''));
+      pips.appendChild(p);
+    }
+    pips.append(' bậc ' + lvl + '/' + max);
+    head.append(el('b', '', 'Nâng cấp kỹ năng'), pips);
+    parts.push(head);
+    if (!next) {
+      parts.push(el('p', 'su-max', cur.breakthrough ? 'Đã đột phá: ' + cur.breakthrough + ' ✓' : 'Đã nâng tối đa ✓'));
+      box.replaceChildren(...parts);
+      return;
+    }
+    const brk = next.breakthrough && Skins.BREAK[item.id];
+    const title = el('p', 'su-title');
+    if (brk) { title.append('Đột phá: '); title.appendChild(el('em', '', brk.name)); }
+    else title.append('Bậc ' + (lvl + 1) + ' sẽ có:');
+    parts.push(title);
+    if (brk) parts.push(el('p', 'su-line', brk.line));
+    const list = el('ul', 'su-list');
+    const li = (label, a, b) => { const x = el('li'); x.append(label + ': ' + a + ' → '); x.appendChild(el('b', '', b)); return x; };
+    if (next.need !== cur.need) list.appendChild(li('Nạp đầy', cur.need + ' lá', next.need + ' lá'));
+    if (next.time !== cur.time) list.appendChild(li('Thời gian', cur.time + ' giây', next.time + ' giây'));
+    for (const e of next.effects) if (!cur.effects.includes(e)) list.appendChild(el('li', '', e.charAt(0).toUpperCase() + e.slice(1)));
+    parts.push(list);
+    const cost = Skins.UP_COST[item.rarity][lvl];
+    let ready = owned;
+    if (brk) {
+      const prog = questProgress(item.id, w);
+      parts.push(el('p', 'su-note', 'Thử thách "' + brk.quest + '" (chỉ tính khi đang mặc skin này):'));
+      for (const p of prog) {
+        const row = el('div', 'su-goal' + (p.done ? ' done' : ''));
+        row.append(el('span', 'ck', p.done ? '✓' : ''), el('span', '', p.goal.text), el('span', 'num', p.v + '/' + p.goal.need));
+        const bar = el('span', 'bar');
+        const fill = el('span');
+        fill.style.width = Math.round((p.v / p.goal.need) * 100) + '%';
+        bar.appendChild(fill);
+        row.appendChild(bar);
+        parts.push(row);
+      }
+      ready = ready && prog.every((p) => p.done);
+    }
+    const btn = el('button', 'btn primary su-btn');
+    btn.type = 'button';
+    if (!owned) { btn.disabled = true; btn.textContent = 'Có skin này rồi mới nâng cấp được'; }
+    else if (brk && !ready) { btn.disabled = true; btn.textContent = 'Xong thử thách để đột phá · ' + fmt(cost) + ' đốt'; }
+    else if (w.dot < cost) { btn.disabled = true; btn.textContent = 'Còn thiếu ' + fmt(cost - w.dot) + ' đốt'; }
+    else btn.textContent = UI.confirmUp > Date.now()
+      ? 'Bấm lần nữa để ' + (brk ? 'đột phá' : 'nâng') + ' · ' + fmt(cost) + ' đốt'
+      : (brk ? 'Đột phá' : 'Nâng lên bậc ' + (lvl + 1)) + ' · ' + fmt(cost) + ' đốt';
+    btn.addEventListener('click', () => upgradeSkill(item));
+    parts.push(btn);
+    box.replaceChildren(...parts);
+  }
+  function upgradeSkill(item) {
+    const w = Wallet.get();
+    const max = Skins.skillMax(item), lvl = Wallet.skillLevel(item.id, w);
+    if (lvl >= max || !Wallet.owns(item.slot, item.id, w)) return;
+    const cost = Skins.UP_COST[item.rarity][lvl];
+    const brk = lvl + 1 === 4 && Skins.BREAK[item.id];
+    if (brk && !questProgress(item.id, w).every((p) => p.done)) { SFX.no(); return; }
+    if (w.dot < cost) { SFX.no(); return; }
+    // Bấm hai lần mới nâng, tránh lỡ tay (phí không rẻ).
+    if (UI.confirmUp < Date.now()) {
+      UI.confirmUp = Date.now() + 3000;
+      SFX.click();
+      renderUpgrade(item);
+      setTimeout(() => { if (UI.sheet === item) renderUpgrade(item); }, 3050);
+      return;
+    }
+    UI.confirmUp = 0;
+    const ok = Wallet.update((v) => {
+      if (v.dot < cost || Wallet.skillLevel(item.id, v) !== lvl) return false;
+      v.dot -= cost;
+      v.up[item.id] = lvl + 1;
+    });
+    if (!ok) { SFX.no(); return; }
+    const sk = Skins.skillOf(item, lvl + 1);
+    if (brk) { SFX.destiny(); flash('dinhmenh'); buzz([40, 50, 40, 50, 120]); }
+    else { SFX.legend(); flash(item.rarity); buzz([30, 40, 60]); }
+    celebrate(item);
+    const [cx, cy] = centerOf($('sheet-up'));
+    fxBurst(cx, cy, brk ? 'dinhmenh' : item.rarity, brk ? 1.3 : 1);
+    fxConfetti(cx, cy, brk ? 'dinhmenh' : item.rarity);
+    toast(brk ? 'Đột phá: ' + sk.breakthrough + '!' : 'Kỹ năng ' + sk.name + ' lên bậc ' + sk.level + '!');
+    bumpDot();
+    renderAll();
+    openSheet(item);
+  }
+
   function closeSheet() {
     UI.sheet = null;
     UI.trying = null;

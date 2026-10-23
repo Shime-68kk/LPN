@@ -36,6 +36,10 @@
       grants: v.grants && typeof v.grants === 'object' ? v.grants : {},
       // Sự kiện: { sapa: { spins, pity } } — số lượt đã quay và số lượt chưa ra Huyền thoại.
       ev: v.ev && typeof v.ev === 'object' ? v.ev : {},
+      // Bậc nâng cấp kỹ năng của từng skin: { 'nang-tho': 3 }.
+      up: v.up && typeof v.up === 'object' ? v.up : {},
+      // Thử thách đột phá (skin Định mệnh): { 'nang-tho': { uses, combo, hard: { bài: 1 } } }.
+      quest: v.quest && typeof v.quest === 'object' ? v.quest : {},
       updatedAt: v.updatedAt || 0,
     };
   };
@@ -148,6 +152,7 @@
       return !!(w || read()).owned[slot + ':' + id];
     },
     equipped() { return read().equip; },
+    skillLevel(id, w) { return Math.max(0, Math.floor(((w || read()).up || {})[id] || 0)); },
     equip(slot, id) {
       return this.update((w) => {
         if (!this.owns(slot, id, w)) return false;
