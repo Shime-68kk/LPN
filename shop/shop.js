@@ -13,7 +13,7 @@
   const BIG = (r) => r === 'suthi' || TOP(r);
   const SLOT_NAME = { skin: 'Skin', fx: 'Hiệu ứng', wing: 'Cánh bướm', bg: 'Nền' };
   const HINT = {
-    skin: 'Chạm để thử lên bé sâu. Skin để đẹp, không đổi điểm; riêng Sâu Thám Tử có thêm kỹ năng Kính Lúp trong game.',
+    skin: 'Chạm để thử lên bé sâu. Mỗi skin có một kỹ năng riêng khi chơi (chạm đúp màn hình để dùng), skin càng hiếm kỹ năng càng mạnh.',
     fx: 'Hiện ra mỗi lần bé sâu đớp lá. Chạm để xem thử.',
     wing: 'Đôi cánh khi bé sâu hoá bướm cuối bài. Chạm để xem thử.',
     bg: 'Khung cảnh phía sau khi chơi Sâu Tím, đổi luôn màu lá và cành. Chạm để xem thử.',
@@ -454,6 +454,15 @@
         badge.textContent = Skins.eventById(item.ev).short;
         b.appendChild(badge);
       }
+      // Skin nào cũng có kỹ năng riêng: biểu tượng ở góc phải thẻ.
+      const skill = item.slot === 'skin' && Skins.skillOf ? Skins.skillOf(item) : null;
+      if (skill) {
+        const sk = document.createElement('span');
+        sk.className = 'i-sk';
+        sk.textContent = skill.icon;
+        sk.title = 'Kỹ năng ' + skill.name;
+        b.appendChild(sk);
+      }
       b.setAttribute('aria-label', item.name + ', ' + Skins.RARITY[item.rarity].name + ', ' + state.textContent);
       b.addEventListener('click', () => { SFX.click(); openSheet(item); });
       grid.appendChild(b);
@@ -469,9 +478,9 @@
     $('sheet-name').textContent = item.name;
     rarityTag($('sheet-rarity'), item);
     $('sheet-memory').textContent = item.memory || '';
-    const skill = item.skill && Skins.SKILLS ? Skins.SKILLS[item.skill] : null;
+    const skill = item.slot === 'skin' && Skins.skillOf ? Skins.skillOf(item) : null;
     $('sheet-skill').hidden = !skill;
-    if (skill) $('sheet-skill').textContent = '🔍 ' + skill.text;
+    if (skill) $('sheet-skill').textContent = skill.icon + ' Kỹ năng ' + skill.name + ': ' + skill.text;
     const ev = item.ev && exclusive(item) ? Skins.eventById(item.ev) : null;
     $('sheet-ch').textContent = (ev ? 'Sự kiện ' + ev.name + ' · ' : '') + (item.who ? 'Bộ của ' + (item.who === 'thuy' ? 'em' : 'anh') + ' · ' : '') + (item.reward ? 'Phần thưởng phá án · ' : '') + (item.ch ? 'Kỷ niệm ở chương ' + item.ch + ' · ' : '') + SLOT_NAME[item.slot];
     updateSheetAction();

@@ -230,6 +230,8 @@ body.night .item .i-state.price { color: #9FE0B2; }
 .item .i-state.on { color: #8C6BC8; }
 .item .i-state.ev { color: #C2304A; }
 body.night .item .i-state.ev { color: #FF9AAE; }
+.i-sk { position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: rgba(255, 255, 255, 0.85); box-shadow: 0 1px 4px rgba(43, 33, 64, 0.18); font-size: 15px; line-height: 1; }
+body.night .i-sk { background: rgba(43, 33, 64, 0.8); }
 .i-ev { position: absolute; top: 12px; left: 12px; padding: 3px 8px; border-radius: 999px; background: linear-gradient(135deg, #2F3B85, #D62F45); color: #FFF6E6; font-size: 11px; font-weight: 700; }
 body.night .item .i-state.on { color: #CDB8F0; }
 .item:not(.owned) canvas { filter: saturate(.85); }

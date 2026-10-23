@@ -148,7 +148,7 @@
     { id: 'tham-tu', slot: 'skin', name: 'Sâu Thám Tử', rarity: 'huyenthoai', price: 0, reward: 'vlts', ch: 13,
       memory: 'Thám tử Thủy phá vụ án đầu tiên: vạch lá, tìm ra Sâu Tím, mở hộp quà bằng đúng giờ em nhận lời.',
       pal: { body: '#D2B07F', body2: '#C49F6C', head: '#B79CF0', feet: '#6E4426', ant: '#6B4FA0', antTip: '#FF8FA3', mark: '#6E4426', cocoon: '#E6D2AE', cocoonLine: '#C49F6C' },
-      acc: 'detective', pattern: 'coat', mark: 'ques', antLen: 2.05, skill: 'lens' },
+      acc: 'detective', pattern: 'coat', mark: 'ques', antLen: 2.05 },
     // Bộ Thám Tử: có Sâu Thám Tử là tự có cả bộ (wallet.js tự thêm, kể cả máy đã phá án từ trước).
     { id: 'manh-moi', slot: 'fx', name: 'Manh Mối', rarity: 'suthi', price: 0, reward: 'vlts', ch: 13,
       memory: 'Lá nào vạch ra cũng có manh mối: dấu chân bé xíu, dấu hỏi to đùng, và chiếc kính lúp soi tới tận Sâu Tím.',
@@ -189,14 +189,70 @@
   ];
 
   // ================= Kỹ năng trong game =================
-  // Skin thường chỉ để đẹp. Riêng vài skin đặc biệt có kỹ năng (anh Quang muốn Sâu Thám Tử có Kính Lúp).
-  // need: số lá ăn được để nạp đầy; time: số giây kính lúp bật; wide: vùng đớp rộng thêm bao nhiêu lần.
-  const SKILLS = {
-    lens: {
-      id: 'lens', name: 'Kính Lúp', need: 20, time: 6, wide: 1.4, ahead: 2.4, marks: 3,
-      text: 'Kỹ năng Kính Lúp: ăn đủ 20 lá thì nút kính lúp sáng. Chạm để soi 6 giây: lá rơi qua kính lúp phóng to và đớp dễ hơn, dấu chân chỉ chỗ 3 lá sắp rơi.',
-    },
+  // Mỗi skin có một kỹ năng riêng (anh Quang muốn vậy): ăn lá để nạp, đầy thì chạm đúp màn hình
+  // (hoặc phím cách, hoặc nút tròn) để dùng. Skin càng hiếm thì nạp càng nhanh, dùng càng lâu, phép càng mạnh.
+  const SKILL_TIER = {
+    thuong: { need: 30, time: 5 },
+    hiem: { need: 26, time: 6 },
+    suthi: { need: 23, time: 7 },
+    huyenthoai: { need: 20, time: 7 },
+    dinhmenh: { need: 18, time: 8 },
   };
+  // fx: wide (vùng đớp rộng ×), shield (hụt không mất tim), guard (hụt không mất combo), heal (+tim, 3 = đầy),
+  // score (điểm ×), foresight (dấu chân chỉ lá sắp rơi), auto (tự lướt tới lá), vacuum (hút hết lá vào),
+  // rand (mỗi lần một phép ngẫu nhiên). look: hình riêng (lens: kính lúp, book: quyển sách, waves: sóng).
+  // burst: loại hạt bung ra khi dùng (xem drawParticle).
+  const SKILLS = {
+    'tim': { name: 'Măm Măm', icon: '🍃', color: '#B79CF0', burst: 0, fx: { wide: 1.25 }, line: 'Há miệng thật to, lá rơi lệch một chút vẫn đớp trúng.' },
+    'bac-ha': { name: 'Mát Lạnh', icon: '🌿', color: '#7FD8B5', burst: 4, fx: { guard: true }, line: 'Bình tĩnh như bạc hà, lỡ hụt lá cũng không sao.' },
+    'dao': { name: 'Má Đào', icon: '🍑', color: '#FF9FB0', burst: 1, fx: { heal: 1 }, line: 'Đỏ mặt một cái là khoẻ lại liền.' },
+    'chanh': { name: 'Chua Lè', icon: '🍋', color: '#E8D84A', burst: 6, fx: { score: 1.5 }, line: 'Chua chua mà điểm lại ngọt.' },
+    'bien': { name: 'Sóng Vỗ', icon: '🌊', color: '#5FC2E8', burst: 2, fx: { wide: 1.25 }, line: 'Sóng biển đẩy lá về phía bé.' },
+    'cacao': { name: 'Ngọt Lịm', icon: '🍫', color: '#C08A5A', burst: 12, fx: { wide: 1.15, score: 1.2 }, line: 'Một miếng cacao, có sức ăn thêm.' },
+    'lim-dim': { name: 'Ngủ Gật', icon: '💤', color: '#A9B4E8', burst: 5, fx: { shield: true }, line: 'Ngủ gật mà vẫn bình an.' },
+    'mi-tom': { name: 'Húp Sụp', icon: '🍜', color: '#F2C14E', burst: 10, fx: { wide: 1.3 }, line: 'Húp một hơi, lá gần đó trôi tuột vào miệng.' },
+    'at-do-hoi': { name: 'Tưng Tửng', icon: '🤪', color: '#FF8A3D', burst: 8, fx: { rand: true }, line: 'Không ai biết lần này bé sẽ làm gì.' },
+    'ngay-mua': { name: 'Ô Che Mưa', icon: '☂️', color: '#7FA7E8', burst: 2, fx: { shield: true, wide: 1.15 }, line: 'Bật ô lên, mưa lá cỡ nào cũng che được.' },
+    'sinh-nhat': { name: 'Thổi Nến', icon: '🎂', color: '#FF8FA3', burst: 8, fx: { heal: 3, score: 1.3 }, line: 'Thổi nến, ước một điều thật to.' },
+    'lua-chin': { name: 'Được Mùa', icon: '🌾', color: '#F2C14E', burst: 10, fx: { score: 2 }, line: 'Lúa chín vàng đồng, gặt mỏi tay.' },
+    'phu-thuy': { name: 'Phép Lạ', icon: '🪄', color: '#B07CFF', burst: 6, fx: { wide: 1.35, guard: true }, line: 'Vẩy đũa phép một cái, lá ngoan ngoãn bay vào.' },
+    'sen-hong': { name: 'Sen Nở', icon: '🪷', color: '#FF8FB8', burst: 4, fx: { heal: 1, shield: true }, line: 'Sen nở giữa đầm, thơm cả một vùng.' },
+    'sa-pa': { name: 'Mây Núi', icon: '⛰️', color: '#A7C7F0', burst: 5, fx: { wide: 1.4, guard: true }, line: 'Biển mây đỡ từng chiếc lá rơi.' },
+    'dem-sao': { name: 'Sao Băng', icon: '🌠', color: '#FFE08A', burst: 6, fx: { foresight: true, score: 1.5 }, line: 'Ước một điều khi sao băng: thấy trước lá rơi chỗ nào.' },
+    'be-hong': { name: 'Bé Cưng', icon: '💗', color: '#FF6F8E', burst: 1, fx: { heal: 1, shield: true, wide: 1.3 }, line: 'Được cưng nên chẳng sợ gì.' },
+    'tho-cam': { name: 'Sợi Chỉ Đỏ', icon: '🧶', color: '#D62F45', burst: 9, fx: { wide: 1.5, guard: true, score: 1.3 }, line: 'Sợi chỉ đỏ kéo lá về đúng chỗ.' },
+    'bi-ngo': { name: 'Ghẹo Ma', icon: '🎃', color: '#FF9A3C', burst: 11, fx: { shield: true, score: 2 }, line: 'Không cho kẹo là bị ghẹo, mà ghẹo thì được điểm.' },
+    'tham-tu': { name: 'Kính Lúp', icon: '🔍', color: '#E2B04A', burst: 17, look: 'lens', fx: { wide: 1.45, foresight: true, guard: true }, line: 'Thám tử soi đâu trúng đó, lá rơi chỗ nào cũng biết trước.' },
+    'nang-tho': { name: 'Gió Thơ', icon: '📖', color: '#FF8FA3', burst: 14, look: 'book', fx: { vacuum: true, score: 1.5 }, line: 'Quyển sách mở ra, gió thơ cuốn hết lá vào trang sách.' },
+    'vi-mach': { name: 'Khoá Sóng', icon: '📡', color: '#38E8C6', burst: 16, look: 'waves', fx: { auto: true, wide: 1.5, shield: true }, line: 'Phát sóng dò tìm, khoá đúng tần số từng chiếc lá.' },
+  };
+  // Tưng Tửng: mỗi lần dùng bốc một phép trong này.
+  const SKILL_RAND = [
+    { wide: 1.6 }, { shield: true, guard: true }, { score: 2.5 }, { heal: 2 }, { auto: true }, { foresight: true, wide: 1.3 },
+  ];
+  function skillEffects(fx) {
+    const out = [];
+    if (fx.vacuum) out.push('lá nào rơi xuống cũng bị hút thẳng vào miệng');
+    if (fx.auto) out.push('bé tự lướt tới từng chiếc lá');
+    if (fx.wide) out.push('vùng đớp rộng hơn ' + Math.round((fx.wide - 1) * 100) + '%');
+    if (fx.foresight) out.push('dấu chân chỉ chỗ 3 lá sắp rơi');
+    if (fx.shield) out.push('hụt lá không mất tim');
+    if (fx.guard) out.push('hụt lá không mất combo');
+    if (fx.heal) out.push(fx.heal >= 3 ? 'hồi đầy tim' : 'được thêm ' + fx.heal + ' tim');
+    if (fx.score) out.push('điểm ×' + String(fx.score).replace('.', ','));
+    if (fx.rand) out.push('mỗi lần ra một phép ngẫu nhiên, có khi siêu mạnh');
+    return out;
+  }
+  // Kỹ năng của một skin, đủ số lá cần nạp và số giây theo độ hiếm.
+  function skillOf(item) {
+    const base = item && SKILLS[item.id];
+    if (!base) return null;
+    const tier = SKILL_TIER[item.rarity] || SKILL_TIER.thuong;
+    const sk = Object.assign({ id: item.id, rarity: item.rarity, need: tier.need, time: tier.time }, base);
+    sk.effects = skillEffects(sk.fx);
+    sk.text = sk.line + ' Ăn đủ ' + sk.need + ' lá để nạp, rồi chạm đúp màn hình: trong ' + sk.time + ' giây ' + sk.effects.join(', ') + '.';
+    return sk;
+  }
 
   // ================= Sự kiện =================
   // Trong thời gian sự kiện, món có ev chỉ ra từ Vòng quay; chưa tới ngày thì ẩn hẳn;
@@ -3152,6 +3208,6 @@
   window.Skins = {
     ITEMS, RARITY, DEFAULT, BASE, EVENTS, get, byKey, palette, eventById, activeEvent, visibleEvents, itemState, startOf, isPreview, makePet,
     drawSegment, drawHead, drawCocoon, drawButterfly, eatBurst, stepParticle, drawParticle, drawPreview, heartPath,
-    drawBackdrop, backdropTop, SKILLS,
+    drawBackdrop, backdropTop, SKILLS, SKILL_RAND, skillOf,
   };
 })();
