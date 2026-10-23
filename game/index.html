@@ -32,8 +32,10 @@
       const w = SKY[q] ? q : LPN_NIGHT ? 'dem' : SKY[LPN_SKY] ? LPN_SKY : 'nang';
       let bg = null;
       try { bg = (JSON.parse(localStorage.getItem('lpn:wallet')) || {}).equip.bg; } catch (e) { /* bỏ qua */ }
-      // Nền mua ở Tiệm Sâu (xem backdropTop trong skins.js): Lâu Đài luôn là đêm, Sa Pa theo ngày / đêm.
+      // Nền mua ở Tiệm Sâu (xem backdropTop trong skins.js): Lâu Đài, Hai Tần Số, Vạch Lá luôn là đêm, Sa Pa theo ngày / đêm.
       if (bg === 'nen-lau-dai') return { sky: '#120A26', night: true, w };
+      if (bg === 'nen-hai-tan-so') return { sky: '#0B0C2A', night: true, w };
+      if (bg === 'nen-vach-la') return { sky: '#120D2E', night: true, w };
       if (bg === 'nen-sapa') return { sky: w === 'dem' ? '#121738' : '#86BCEB', night: w === 'dem', w };
       return { sky: SKY[w], night: w === 'dem', w };
     })();
@@ -173,8 +175,8 @@
   </section>
 
   <script src="../home/sync.js?v=2"></script>
-  <script src="../home/wallet.js?v=8"></script>
-  <script src="../shop/skins.js?v=11"></script>
+  <script src="../home/wallet.js?v=9"></script>
+  <script src="../shop/skins.js?v=12"></script>
   <script src="game.js?v=24"></script>
   <script>
     // Tiệm Sâu đang có sự kiện thì gắn nhãn lên nút.

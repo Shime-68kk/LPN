@@ -149,6 +149,16 @@
       memory: 'Thám tử Thủy phá vụ án đầu tiên: vạch lá, tìm ra Sâu Tím, mở hộp quà bằng đúng giờ em nhận lời.',
       pal: { body: '#D2B07F', body2: '#C49F6C', head: '#B79CF0', feet: '#6E4426', ant: '#6B4FA0', antTip: '#FF8FA3', mark: '#6E4426', cocoon: '#E6D2AE', cocoonLine: '#C49F6C' },
       acc: 'detective', pattern: 'coat', mark: 'ques', antLen: 2.05 },
+    // Bộ Thám Tử: có Sâu Thám Tử là tự có cả bộ (wallet.js tự thêm, kể cả máy đã phá án từ trước).
+    { id: 'manh-moi', slot: 'fx', name: 'Manh Mối', rarity: 'suthi', price: 0, reward: 'vlts', ch: 13,
+      memory: 'Lá nào vạch ra cũng có manh mối: dấu chân bé xíu, dấu hỏi to đùng, và chiếc kính lúp soi tới tận Sâu Tím.',
+      fx: { kind: 'clue', colors: ['#7A5CC8', '#B47D4A', '#FF6F8E'] } },
+    { id: 'canh-tham-tu', slot: 'wing', name: 'Cánh Thám Tử', rarity: 'huyenthoai', price: 0, reward: 'vlts', ch: 13,
+      memory: 'Hoá bướm rồi vẫn đội mũ thám tử: đôi cánh vải dạ kẻ ô, khuy hồng, kính lúp giắt bên cánh. Vụ án khép lại, chuyện mình thì mở ra.',
+      wing: { top: '#C08A55', bottom: '#94603A', pattern: 'tweed', mark: 'lens', markColor: '#E2B04A', spot: '#FF8FA3', body: '#4A2E1C', hat: 'detective' } },
+    { id: 'nen-vach-la', slot: 'bg', name: 'Nền Vạch Lá', rarity: 'suthi', price: 0, reward: 'vlts', ch: 13,
+      memory: 'Đồi chè Thái Nguyên lúc nửa đêm. Kính lúp lia tới đâu, lá sáng tới đó. Kiên nhẫn chút, thế nào cũng thấy Sâu Tím trốn trong lá.',
+      bg: { kind: 'case', theme: { night: true, cloud: '#2A2352', mote: null, stars: false, rain: false } } },
 
     // ---------- Định Mệnh (độc quyền, mở hộp): bộ của em (Sư phạm Văn) và bộ của anh (Điện tử Viễn thông) ----------
     // who: bộ này "là" của ai; mỗi máy được tặng skin của chính mình, còn lại phải mở Hộp Định Mệnh.
@@ -424,6 +434,22 @@
       x.quadraticCurveTo(cx, cy - s * 0.02, cx, cy + s * 0.26);
       x.stroke();
       x.beginPath(); x.arc(cx, cy + s * 0.7, s * 0.17, 0, TAU); x.fill();
+    } else if (kind === 'lens') {
+      // kính lúp: vành vàng, mặt kính xanh nhạt có vệt sáng và trái tim nhỏ, cán gỗ chéo xuống
+      x.strokeStyle = '#5A3A22';
+      x.lineWidth = s * 0.36;
+      x.lineCap = 'round';
+      x.beginPath(); x.moveTo(cx + s * 0.5, cy + s * 0.5); x.lineTo(cx + s * 1.15, cy + s * 1.15); x.stroke();
+      x.fillStyle = 'rgba(214,238,255,0.88)';
+      x.beginPath(); x.arc(cx, cy, s * 0.68, 0, TAU); x.fill();
+      x.strokeStyle = color;
+      x.lineWidth = s * 0.22;
+      x.beginPath(); x.arc(cx, cy, s * 0.68, 0, TAU); x.stroke();
+      x.fillStyle = '#FF6F8E';
+      heartPath(x, cx + s * 0.06, cy + s * 0.08, s * 0.28); x.fill();
+      x.strokeStyle = 'rgba(255,255,255,0.95)';
+      x.lineWidth = s * 0.12;
+      x.beginPath(); x.arc(cx, cy, s * 0.44, Math.PI * 1.1, Math.PI * 1.48); x.stroke();
     } else if (kind === 'grain') {
       // hai hạt lúa chụm lại
       for (const a of [-0.5, 0.5]) { x.beginPath(); x.ellipse(cx + a * s * 0.62, cy, s * 0.3, s * 0.62, a, 0, TAU); x.fill(); }
@@ -1500,6 +1526,30 @@
         x.lineWidth = 0.9 * S;
         x.beginPath(); x.moveTo(-R * 1.1, y0 + H * 0.3); x.quadraticCurveTo(0, y0 - H * 0.3, R * 1.1, y0 + H * 0.3); x.stroke();
       }
+    } else if (kind === 'tweed') {
+      // vải dạ kẻ ô của áo thám tử: sọc nâu đậm, chỉ vàng mảnh, một sợi hồng, mép khâu chỉ
+      const step = R * (top ? 0.42 : 0.5);
+      x.fillStyle = 'rgba(90,54,30,0.3)';
+      for (let k = -6; k <= 6; k++) {
+        x.fillRect(k * step - step * 0.18, -H * 1.3, step * 0.36, H * 2.6);
+        x.fillRect(-R * 1.3, k * step - step * 0.18, R * 2.6, step * 0.36);
+      }
+      x.strokeStyle = 'rgba(255,226,170,0.45)';
+      x.lineWidth = 0.7 * S;
+      x.beginPath();
+      for (let k = -6; k <= 6; k++) {
+        x.moveTo(k * step + step * 0.5, -H * 1.3); x.lineTo(k * step + step * 0.5, H * 1.3);
+        x.moveTo(-R * 1.3, k * step + step * 0.5); x.lineTo(R * 1.3, k * step + step * 0.5);
+      }
+      x.stroke();
+      x.strokeStyle = 'rgba(255,143,163,0.6)';
+      x.lineWidth = 0.9 * S;
+      x.beginPath(); x.moveTo(-step * 1.5, -H * 1.3); x.lineTo(-step * 1.5, H * 1.3); x.moveTo(-R * 1.3, step * 1.5); x.lineTo(R * 1.3, step * 1.5); x.stroke();
+      x.setLineDash([1.6 * S, 1.4 * S]);
+      x.strokeStyle = 'rgba(255,236,200,0.8)';
+      x.lineWidth = 0.8 * S;
+      x.beginPath(); x.ellipse(0, 0, R * 0.84, H * 0.8, 0, 0, TAU); x.stroke();
+      x.setLineDash([]);
     }
     x.restore();
   }
@@ -1703,6 +1753,43 @@
     }
     butterflyBody(x, w.body, w.pulse, S);
   }
+  // Mũ thám tử tí hon (kẻ ô, vành nâu, nơ trên đỉnh) đội trên đầu bướm; râu chui ra từ mũ.
+  function butterflyHat(x, S) {
+    const r = 8 * S;
+    x.save();
+    x.translate(0, -21 * S);
+    const crown = () => {
+      x.beginPath();
+      x.moveTo(-r * 1.1, -r * 0.3);
+      x.bezierCurveTo(-r * 1.1, -r * 1.55, r * 1.1, -r * 1.55, r * 1.1, -r * 0.3);
+      x.closePath();
+    };
+    x.fillStyle = '#B47D4A';
+    crown(); x.fill();
+    x.save();
+    crown(); x.clip();
+    x.strokeStyle = 'rgba(110,68,38,0.55)';
+    x.lineWidth = 0.9 * S;
+    x.beginPath();
+    for (const yy of [-0.66, -1.0]) { x.moveTo(-r * 1.2, yy * r); x.lineTo(r * 1.2, yy * r); }
+    for (const xx of [-0.55, 0, 0.55]) { x.moveTo(xx * r, -r * 1.6); x.lineTo(xx * r, -r * 0.3); }
+    x.stroke();
+    x.restore();
+    x.strokeStyle = '#6E4426';
+    x.lineWidth = 0.8 * S;
+    crown(); x.stroke();
+    x.fillStyle = '#A06A3A';
+    for (const side of [-1, 1]) {
+      x.beginPath(); x.ellipse(side * r * 1.08, -r * 0.3, r * 0.18, r * 0.34, side * 0.3, 0, TAU); x.fill(); x.stroke();
+    }
+    x.fillStyle = '#6E4426';
+    x.fillRect(-r * 1.16, -r * 0.44, r * 2.32, r * 0.22);
+    x.fillStyle = '#8A5A33';
+    for (const side of [-1, 1]) {
+      x.beginPath(); x.ellipse(side * r * 0.24, -r * 1.24, r * 0.26, r * 0.15, side * 0.4, 0, TAU); x.fill();
+    }
+    x.restore();
+  }
   function drawButterfly(x, wingItem, S, t) {
     const w = wingItem.wing;
     if (w.shape === 'bat') { drawBat(x, w, S, t); return; }
@@ -1742,6 +1829,7 @@
     x.fillStyle = w.body;
     x.beginPath(); x.ellipse(0, 2 * S, 5 * S, 19 * S, 0, 0, TAU); x.fill();
     x.beginPath(); x.arc(0, -20 * S, 7 * S, 0, TAU); x.fill();
+    if (w.hat === 'detective') butterflyHat(x, S);
     x.strokeStyle = w.body;
     x.lineWidth = 2 * S;
     x.lineCap = 'round';
@@ -1757,7 +1845,8 @@
   // ================= Hạt hiệu ứng khi ăn lá =================
   // Trả về danh sách hạt {kind, vx, vy, life, size, color}; game và tiệm tự nhân với S và vị trí.
   // kind: 0 vụn lá, 1 tim, 4 cánh hoa, 5 mây, 6 sao, 7 nốt nhạc, 8 pháo giấy, 9 hoa văn trám, 10 hạt lúa,
-  // 11 dơi, 12 kẹo, 13 trang giấy, 14 chữ, 15 tia điện, 16 số 0 / 1 (3 là vòng sáng loang ra).
+  // 11 dơi, 12 kẹo, 13 trang giấy, 14 chữ, 15 tia điện, 16 số 0 / 1, 17 kính lúp, 18 dấu chân, 19 dấu hỏi
+  // (3 là vòng sáng loang ra).
   const VAN_GLYPHS = ['ơ', 'thơ', 'ư', 'ê', 'yêu', 'ô', 'ă', '♡', 'đ', 'em'];
   function eatBurst(fxItem, n, S, leafColors) {
     const fx = fxItem.fx;
@@ -1784,6 +1873,12 @@
         else if (i % 2) out.push({ kind: 15, vx: Math.cos(a) * sp * 0.95, vy: Math.sin(a) * sp * 0.95, life: 0.32 + Math.random() * 0.22, size: (4.5 + Math.random() * 3) * S, color: i % 4 === 1 ? '#FFE27A' : '#5FFFE0' });
         else out.push({ kind: 16, vx: (Math.random() - 0.5) * 70 * S, vy: -(70 + Math.random() * 80) * S, life: 0.6 + Math.random() * 0.3, size: (9 + Math.random() * 4) * S, color: c });
       }
+      else if (fx.kind === 'clue') {
+        // manh mối: dấu hỏi bay lên, dấu chân in xuống rồi mờ, thỉnh thoảng một chiếc kính lúp xoay xoay
+        if (i % 4 === 0) out.push({ kind: 17, vx: Math.cos(a) * sp * 0.55, vy: Math.sin(a) * sp * 0.55, life: 0.8 + Math.random() * 0.3, size: (4.4 + Math.random() * 1.4) * S, color: '#E2B04A' });
+        else if (i % 2) out.push({ kind: 19, vx: (Math.random() - 0.5) * 80 * S, vy: -(60 + Math.random() * 80) * S, life: 0.75 + Math.random() * 0.35, size: (11 + Math.random() * 5) * S, color: c });
+        else out.push({ kind: 18, vx: Math.cos(a) * sp * 0.7, vy: Math.sin(a) * sp * 0.7, life: 0.7 + Math.random() * 0.3, size: (2.6 + Math.random() * 1.2) * S, color: '#8A5A33' });
+      }
       else if (fx.kind === 'candy') out.push({ kind: 12, vx: Math.cos(a) * sp * 0.85, vy: Math.sin(a) * sp * 0.85, life: 0.65 + Math.random() * 0.35, size: (3.4 + Math.random() * 1.6) * S, color: c });
       else out.push({ kind: 8, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.55 + Math.random() * 0.35, size: (2.4 + Math.random() * 2) * S, color: c });
     }
@@ -1806,6 +1901,9 @@
     else if (p.kind === 14) { p.vx = p.vx * (1 - 1.2 * dt) + Math.sin(p.life * 5) * 18 * S * dt; p.vy *= 1 - 0.8 * dt; }
     else if (p.kind === 15) { p.vx *= 1 - 3 * dt; p.vy *= 1 - 3 * dt; }
     else if (p.kind === 16) { p.vx = Math.sin(p.life * 6) * 20 * S; }
+    else if (p.kind === 17) { p.vx *= 1 - 2.2 * dt; p.vy = p.vy * (1 - 2.2 * dt) + 90 * S * dt; p.rot += p.vr * dt * 0.8; }
+    else if (p.kind === 18) { p.vx *= 1 - 5 * dt; p.vy *= 1 - 5 * dt; }
+    else if (p.kind === 19) { p.vx = Math.sin(p.life * 5) * 26 * S; }
   }
   function drawParticle(x, p, S) {
     const k = p.life / p.max;
@@ -1886,6 +1984,40 @@
       x.lineWidth = Math.max(1, s * 0.32);
       x.lineJoin = 'round';
       x.beginPath(); x.moveTo(-s, -s * 0.5); x.lineTo(-s * 0.1, -s * 0.15); x.lineTo(-s * 0.35, s * 0.25); x.lineTo(s, s * 0.6); x.stroke();
+      x.restore();
+    } else if (p.kind === 17) {
+      // kính lúp nhỏ: mặt kính xanh nhạt, vành vàng, cán gỗ, có vệt sáng
+      const s = p.size;
+      x.save(); x.translate(p.x, p.y); x.rotate(p.rot);
+      x.strokeStyle = '#5A3A22';
+      x.lineWidth = s * 0.42;
+      x.lineCap = 'round';
+      x.beginPath(); x.moveTo(s * 0.62, s * 0.62); x.lineTo(s * 1.45, s * 1.45); x.stroke();
+      x.fillStyle = 'rgba(200,232,255,0.7)';
+      x.beginPath(); x.arc(0, 0, s * 0.82, 0, TAU); x.fill();
+      x.strokeStyle = p.color;
+      x.lineWidth = s * 0.26;
+      x.beginPath(); x.arc(0, 0, s * 0.82, 0, TAU); x.stroke();
+      x.strokeStyle = 'rgba(255,255,255,0.9)';
+      x.lineWidth = s * 0.16;
+      x.beginPath(); x.arc(0, 0, s * 0.5, Math.PI * 1.1, Math.PI * 1.45); x.stroke();
+      x.restore();
+    } else if (p.kind === 18) {
+      // một cặp dấu chân bé xíu (in xuống rồi mờ dần)
+      const s = p.size;
+      x.save(); x.translate(p.x, p.y); x.rotate(p.rot);
+      for (const [ox, oy] of [[-s * 0.75, s * 0.5], [s * 0.75, -s * 0.5]]) {
+        x.beginPath(); x.ellipse(ox, oy, s * 0.42, s * 0.7, 0, 0, TAU); x.fill();
+        x.beginPath(); x.arc(ox, oy - s * 1.05, s * 0.26, 0, TAU); x.fill();
+      }
+      x.restore();
+    } else if (p.kind === 19) {
+      x.save(); x.translate(p.x, p.y); x.rotate(Math.sin((p.max - p.life) * 7 + (p.g || 0)) * 0.22);
+      x.font = 'italic 700 ' + Math.round(p.size) + 'px Fraunces, Georgia, serif';
+      x.textAlign = 'center';
+      x.textBaseline = 'middle';
+      const gi = p.g !== undefined ? p.g : Math.floor(p.max * 997);
+      x.fillText(gi % 5 === 4 ? '!' : '?', 0, 0);
       x.restore();
     } else if (p.kind === 12) {
       // viên kẹo gói giấy xoắn hai đầu
@@ -2632,6 +2764,253 @@
     x.beginPath(); x.arc(G.hx, wn.y + wn.h / 2, 14 * u, 0, TAU); x.fill();
   }
 
+  // ----- Vạch Lá: đồi chè Thái Nguyên lúc nửa đêm, kính lúp lia tới đâu lá sáng tới đó -----
+  // Vẽ sẵn hai bản cùng một cảnh: bản tối và bản được soi sáng (có dấu chân, dấu hỏi và Sâu Tím trốn trong lá);
+  // mỗi khung hình chỉ cắt bản sáng theo mặt kính lúp.
+  const CASE = {
+    dark: { sky: ['#120D2E', '#2B2058', '#4A3473'], far: '#241C4C', hill: ['#1A302E', '#1D3933', '#21433A'], row: ['#213D38', '#26493F', '#2C5646'], leaf: '#14282A', vein: 'rgba(0,0,0,0)', mist: 'rgba(150,140,230,0.12)' },
+    lit: { sky: ['#2E2A6A', '#5A4A9A', '#8A6FB0'], far: '#4A3F86', hill: ['#3E7854', '#478A58', '#529C5E'], row: ['#5A9C60', '#68AF68', '#7DC470'], leaf: '#3F8C50', vein: 'rgba(200,240,170,0.75)', mist: 'rgba(255,240,200,0.16)' },
+  };
+  function caseGeom(W, H) {
+    const u = Math.min(W, H) / 100;
+    const fA = (xn) => H * (0.585 - 0.06 * Math.sin(xn * 3.1 + 0.8) - 0.025 * Math.sin(xn * 7.3 + 2));
+    const fB = (xn) => H * (0.68 - 0.05 * Math.sin(xn * 2.6 + 2.4) - 0.018 * Math.sin(xn * 9.1));
+    const fC = (xn) => H * (0.8 - 0.04 * Math.sin(xn * 3.4 + 4.1));
+    return { u, fA, fB, fC, worm: { x: W * 0.66, y: fC(0.66) + 3 * u }, lamp: { x: W * 0.28, y: fB(0.28) - 9 * u } };
+  }
+  // Đường kính lúp đi (lúc t nhỏ thì đang soi đúng chỗ Sâu Tím, để ảnh thu nhỏ trong tiệm thấy luôn).
+  const caseLens = (W, H, t) => [W * (0.5 + 0.33 * Math.sin(t * 0.21 + 0.44)), H * (0.72 + 0.08 * Math.sin(t * 0.34 + 1.47))];
+  function caseHill(x, W, H, f, col, rowCol, gap, lit, u) {
+    x.fillStyle = col;
+    x.beginPath();
+    x.moveTo(0, H);
+    for (let i = 0; i <= 60; i++) x.lineTo((i / 60) * W, f(i / 60));
+    x.lineTo(W, H);
+    x.closePath();
+    x.fill();
+    // luống chè chạy song song theo sườn đồi, xa thì mảnh, gần thì dày
+    const rows = Math.ceil((H * 0.5) / gap);
+    x.strokeStyle = rowCol;
+    x.lineWidth = gap * 0.56;
+    x.lineCap = 'round';
+    x.lineJoin = 'round';
+    for (let k = 1; k <= rows; k++) {
+      x.beginPath();
+      for (let i = 0; i <= 60; i++) {
+        const xn = i / 60, y = f(xn) + k * gap * (0.9 + 0.25 * xn);
+        if (i) x.lineTo(xn * W, y); else x.moveTo(xn * W, y);
+      }
+      x.stroke();
+    }
+    // bản sáng: thấy rõ từng bụi chè lô nhô trên luống
+    if (!lit) return;
+    x.fillStyle = 'rgba(190,235,150,0.35)';
+    for (let k = 1; k <= rows; k++) {
+      for (let px = (k % 2) * u * 1.5; px < W; px += u * 3) {
+        const xn = px / W, y = f(xn) + k * gap * (0.9 + 0.25 * xn) - gap * 0.2;
+        x.beginPath(); x.arc(px, y, gap * 0.2, Math.PI, TAU); x.fill();
+      }
+    }
+  }
+  // Lá chè to ở tiền cảnh (gân lá chỉ thấy ở bản sáng).
+  function caseLeaf(x, cx, cy, len, ang, col, vein) {
+    x.save();
+    x.translate(cx, cy);
+    x.rotate(ang);
+    x.fillStyle = col;
+    x.beginPath();
+    x.moveTo(0, 0);
+    x.quadraticCurveTo(len * 0.5, -len * 0.34, len, 0);
+    x.quadraticCurveTo(len * 0.5, len * 0.34, 0, 0);
+    x.fill();
+    x.strokeStyle = 'rgba(0,0,0,0.18)';
+    x.lineWidth = Math.max(1, len * 0.02);
+    x.stroke();
+    x.strokeStyle = vein;
+    x.lineWidth = Math.max(1, len * 0.03);
+    x.beginPath();
+    x.moveTo(len * 0.04, 0); x.lineTo(len * 0.94, 0);
+    for (let i = 1; i <= 4; i++) {
+      const vx = len * i * 0.19;
+      x.moveTo(vx, 0); x.lineTo(vx + len * 0.1, -len * 0.12);
+      x.moveTo(vx, 0); x.lineTo(vx + len * 0.1, len * 0.12);
+    }
+    x.stroke();
+    x.restore();
+  }
+  // Sâu Tím trốn trong lá: ba đốt tím, đầu ló ra, má hồng; lá chè che bớt thân.
+  function caseWorm(x, wx, wy, u) {
+    const r = 2.8 * u;
+    x.fillStyle = '#9677DE';
+    for (let k = 3; k >= 1; k--) { x.beginPath(); x.arc(wx - k * r * 1.25, wy + k * r * 0.22, r * (1 - k * 0.08), 0, TAU); x.fill(); }
+    x.strokeStyle = '#6B4FA0';
+    x.lineWidth = 0.5 * u;
+    x.lineCap = 'round';
+    for (const side of [-1, 1]) {
+      x.beginPath(); x.moveTo(wx + side * r * 0.4, wy - r * 0.9); x.quadraticCurveTo(wx + side * r * 0.7, wy - r * 1.8, wx + side * r * 1.1, wy - r * 1.9); x.stroke();
+      x.fillStyle = '#FF8FA3';
+      x.beginPath(); x.arc(wx + side * r * 1.1, wy - r * 1.9, 0.6 * u, 0, TAU); x.fill();
+    }
+    x.fillStyle = '#B79CF0';
+    x.beginPath(); x.arc(wx, wy, r * 1.15, 0, TAU); x.fill();
+    x.fillStyle = '#2A1F3D';
+    x.beginPath(); x.arc(wx - r * 0.42, wy - r * 0.1, r * 0.2, 0, TAU); x.arc(wx + r * 0.42, wy - r * 0.1, r * 0.2, 0, TAU); x.fill();
+    x.fillStyle = '#FFFFFF';
+    x.beginPath(); x.arc(wx - r * 0.36, wy - r * 0.18, r * 0.07, 0, TAU); x.arc(wx + r * 0.48, wy - r * 0.18, r * 0.07, 0, TAU); x.fill();
+    x.fillStyle = 'rgba(255,111,142,0.6)';
+    x.beginPath(); x.arc(wx - r * 0.72, wy + r * 0.3, r * 0.22, 0, TAU); x.arc(wx + r * 0.72, wy + r * 0.3, r * 0.22, 0, TAU); x.fill();
+    caseLeaf(x, wx - r * 3.4, wy + r * 1.7, r * 4.4, -0.3, '#2F7D45', 'rgba(170,225,140,0.55)');
+  }
+  function paintCase(x, W, H, lit) {
+    const C = lit ? CASE.lit : CASE.dark;
+    const G = caseGeom(W, H), u = G.u;
+    const sky = x.createLinearGradient(0, 0, 0, H * 0.8);
+    sky.addColorStop(0, C.sky[0]); sky.addColorStop(0.6, C.sky[1]); sky.addColorStop(1, C.sky[2]);
+    x.fillStyle = sky;
+    x.fillRect(0, 0, W, H);
+    for (let i = 0; i < 70; i++) {
+      x.fillStyle = 'rgba(255,244,214,' + (0.25 + rnd(i + 600) * 0.6) + ')';
+      x.beginPath(); x.arc(rnd(i + 610) * W, rnd(i + 620) * H * 0.5, (0.25 + rnd(i + 630) * 0.5) * u * 0.5, 0, TAU); x.fill();
+    }
+    // trăng rằm
+    const mx = W * 0.2, my = H * 0.14, mr = 5 * u;
+    const mg = x.createRadialGradient(mx, my, mr * 0.8, mx, my, mr * 3.2);
+    mg.addColorStop(0, 'rgba(255,241,201,0.32)'); mg.addColorStop(1, 'rgba(255,241,201,0)');
+    x.fillStyle = mg;
+    x.beginPath(); x.arc(mx, my, mr * 3.2, 0, TAU); x.fill();
+    x.fillStyle = '#FFF1C9';
+    x.beginPath(); x.arc(mx, my, mr, 0, TAU); x.fill();
+    x.fillStyle = 'rgba(220,200,160,0.35)';
+    x.beginPath(); x.arc(mx - mr * 0.3, my - mr * 0.2, mr * 0.22, 0, TAU); x.arc(mx + mr * 0.35, my + mr * 0.25, mr * 0.16, 0, TAU); x.fill();
+    // núi xa, rồi ba lớp đồi chè
+    x.fillStyle = C.far;
+    x.beginPath();
+    x.moveTo(0, H);
+    for (let i = 0; i <= 60; i++) { const xn = i / 60; x.lineTo(xn * W, H * (0.5 - 0.07 * Math.sin(xn * 4.2 + 1.1) - 0.03 * Math.sin(xn * 11))); }
+    x.lineTo(W, H);
+    x.closePath();
+    x.fill();
+    mist(x, W, H * 0.55, H * 0.05, C.mist);
+    caseHill(x, W, H, G.fA, C.hill[0], C.row[0], 2.4 * u, lit, u);
+    mist(x, W, H * 0.66, H * 0.04, C.mist);
+    caseHill(x, W, H, G.fB, C.hill[1], C.row[1], 3.1 * u, lit, u);
+    // cột đèn lồng bên luống chè
+    x.strokeStyle = lit ? '#6E4426' : '#1A1530';
+    x.lineWidth = 0.7 * u;
+    x.beginPath(); x.moveTo(G.lamp.x, G.fB(0.28) + u); x.lineTo(G.lamp.x, G.lamp.y); x.lineTo(G.lamp.x + 2.4 * u, G.lamp.y); x.stroke();
+    x.fillStyle = '#FFD27A';
+    x.fillRect(G.lamp.x + 1.6 * u, G.lamp.y + 0.4 * u, 1.8 * u, 2.4 * u);
+    caseHill(x, W, H, G.fC, C.hill[2], C.row[2], 4 * u, lit, u);
+    if (lit) {
+      // dấu chân dẫn tới chỗ Sâu Tím trốn
+      x.fillStyle = 'rgba(96,60,34,0.7)';
+      for (let i = 0; i < 9; i++) {
+        const q = i / 9;
+        const px = W * (0.12 + 0.5 * q), py = H * 0.97 - (H * 0.97 - G.worm.y - 2 * u) * Math.pow(q, 0.8) + (i % 2 ? 1.1 : -1.1) * u;
+        x.beginPath(); x.ellipse(px, py, 0.7 * u, 1.1 * u, -0.9, 0, TAU); x.fill();
+        x.beginPath(); x.arc(px + 0.9 * u, py - 0.8 * u, 0.4 * u, 0, TAU); x.fill();
+      }
+      x.fillStyle = 'rgba(255,248,220,0.55)';
+      x.font = 'italic 700 ' + Math.round(6 * u) + 'px Fraunces, Georgia, serif';
+      x.textAlign = 'center';
+      x.textBaseline = 'middle';
+      x.fillText('?', W * 0.34, G.fB(0.34) + 6 * u);
+      x.fillText('?', W * 0.88, G.fC(0.88) + 7 * u);
+      x.fillStyle = '#FF6F8E';
+      heartPath(x, G.worm.x + 4.6 * u, G.worm.y - 4.4 * u, 1.3 * u); x.fill();
+      caseWorm(x, G.worm.x, G.worm.y, u);
+    } else {
+      // trong bóng tối chỉ thấy hai đốm mắt lấp lánh
+      x.fillStyle = 'rgba(255,255,255,0.55)';
+      x.beginPath(); x.arc(G.worm.x - u, G.worm.y - 0.2 * u, 0.45 * u, 0, TAU); x.arc(G.worm.x + u, G.worm.y - 0.2 * u, 0.45 * u, 0, TAU); x.fill();
+    }
+    // lá chè to ở hai góc dưới
+    const L = Math.max(W, H) * 0.16;
+    caseLeaf(x, -L * 0.1, H * 0.96, L, -0.55, C.leaf, C.vein);
+    caseLeaf(x, -L * 0.15, H * 1.02, L * 0.8, -0.15, C.leaf, C.vein);
+    caseLeaf(x, W + L * 0.1, H * 0.95, L, Math.PI + 0.6, C.leaf, C.vein);
+    caseLeaf(x, W + L * 0.12, H * 1.03, L * 0.85, Math.PI + 0.2, C.leaf, C.vein);
+  }
+  function liveCase(x, o, st) {
+    const { W, H, t } = o;
+    const G = caseGeom(W, H), u = G.u;
+    // sao lấp lánh
+    for (let i = 0; i < 8; i++) {
+      x.globalAlpha = 0.3 + 0.7 * Math.abs(Math.sin(t * (0.7 + rnd(i + 640)) + i * 2.1));
+      x.fillStyle = '#FFF4D6';
+      starPath(x, rnd(i + 650) * W, rnd(i + 660) * H * 0.45, 1.2 * u, 0.45 * u);
+      x.fill();
+    }
+    x.globalAlpha = 1;
+    // đèn lồng lập loè
+    const fl = 0.75 + 0.25 * Math.sin(t * 9) * Math.sin(t * 3.7);
+    const lg = x.createRadialGradient(G.lamp.x + 2.5 * u, G.lamp.y + 1.6 * u, 0, G.lamp.x + 2.5 * u, G.lamp.y + 1.6 * u, 9 * u);
+    lg.addColorStop(0, 'rgba(255,200,110,' + 0.45 * fl + ')'); lg.addColorStop(1, 'rgba(255,200,110,0)');
+    x.fillStyle = lg;
+    x.beginPath(); x.arc(G.lamp.x + 2.5 * u, G.lamp.y + 1.6 * u, 9 * u, 0, TAU); x.fill();
+    // đom đóm
+    for (let i = 0; i < 9; i++) {
+      const fx = (rnd(i + 700) * W + Math.sin(t * (0.3 + rnd(i + 710) * 0.4) + i) * 8 * u + W) % W;
+      const fy = H * (0.55 + rnd(i + 720) * 0.35) + Math.sin(t * (0.5 + rnd(i + 730)) + i * 2) * 3 * u;
+      const a = Math.max(0, Math.sin(t * (1.2 + rnd(i + 740)) + i * 1.7));
+      x.globalAlpha = a * 0.35;
+      x.fillStyle = '#E8FF8A';
+      x.beginPath(); x.arc(fx, fy, 1.6 * u, 0, TAU); x.fill();
+      x.globalAlpha = a;
+      x.beginPath(); x.arc(fx, fy, 0.5 * u, 0, TAU); x.fill();
+    }
+    x.globalAlpha = 1;
+    // kính lúp: trong mặt kính là bản sáng của cảnh
+    const R = 14 * u;
+    const [lx, ly] = caseLens(W, H, t);
+    if (st.lit) {
+      x.save();
+      x.beginPath(); x.arc(lx, ly, R, 0, TAU); x.clip();
+      x.drawImage(st.lit, 0, 0, W, H);
+      const wg = x.createRadialGradient(lx - R * 0.3, ly - R * 0.3, 0, lx, ly, R);
+      wg.addColorStop(0, 'rgba(255,240,200,0.22)'); wg.addColorStop(1, 'rgba(255,240,200,0)');
+      x.fillStyle = wg;
+      x.fillRect(lx - R, ly - R, R * 2, R * 2);
+      x.restore();
+    }
+    const ha = Math.PI / 4;
+    const h0 = [lx + Math.cos(ha) * R * 1.02, ly + Math.sin(ha) * R * 1.02], h1 = [lx + Math.cos(ha) * R * 1.9, ly + Math.sin(ha) * R * 1.9];
+    x.lineCap = 'round';
+    x.strokeStyle = '#3A2414';
+    x.lineWidth = 3.6 * u;
+    x.beginPath(); x.moveTo(h0[0], h0[1]); x.lineTo(h1[0], h1[1]); x.stroke();
+    x.strokeStyle = '#7A4E2C';
+    x.lineWidth = 2.4 * u;
+    x.beginPath(); x.moveTo(h0[0], h0[1]); x.lineTo(h1[0], h1[1]); x.stroke();
+    x.strokeStyle = 'rgba(0,0,0,0.28)';
+    x.lineWidth = 1.2 * u;
+    x.beginPath(); x.arc(lx, ly, R + 1.4 * u, 0, TAU); x.stroke();
+    x.strokeStyle = '#D9A441';
+    x.lineWidth = 1.7 * u;
+    x.beginPath(); x.arc(lx, ly, R + 0.5 * u, 0, TAU); x.stroke();
+    x.strokeStyle = '#FFE39A';
+    x.lineWidth = 0.4 * u;
+    x.beginPath(); x.arc(lx, ly, R + 0.9 * u, Math.PI * 1.05, Math.PI * 1.6); x.stroke();
+    x.strokeStyle = 'rgba(255,255,255,0.55)';
+    x.lineWidth = 0.9 * u;
+    x.beginPath(); x.arc(lx, ly, R * 0.72, Math.PI * 1.08, Math.PI * 1.42); x.stroke();
+    // soi trúng Sâu Tím: dấu chấm than bật lên
+    const d = Math.hypot(lx - G.worm.x, ly - G.worm.y), near = 1 - d / (R * 0.8);
+    if (near > 0) {
+      const k = Math.min(1, near * 2.2), bob = Math.sin(t * 6) * 0.5 * u;
+      const bx = G.worm.x + 0.6 * u, by = G.worm.y - 7.2 * u + bob;
+      x.globalAlpha = k;
+      x.fillStyle = '#FFFFFF';
+      x.beginPath(); x.arc(bx, by, 2.6 * u * (0.6 + 0.4 * k), 0, TAU); x.fill();
+      x.fillStyle = '#E0408A';
+      x.font = '700 ' + Math.round(3.6 * u * (0.6 + 0.4 * k)) + 'px Fraunces, Georgia, serif';
+      x.textAlign = 'center';
+      x.textBaseline = 'middle';
+      x.fillText('!', bx, by + 0.2 * u);
+      x.globalAlpha = 1;
+    }
+  }
+
   function drawBackdrop(x, item, o) {
     const kind = item.bg && item.bg.kind;
     if (!kind || kind === 'weather') return false;
@@ -2646,7 +3025,18 @@
       cx.scale(o.dpr, o.dpr);
       if (kind === 'sapa') paintSapa(cx, o.W, o.H, night);
       else if (kind === 'twofreq') paintTwoFreq(cx, o.W, o.H);
+      else if (kind === 'case') paintCase(cx, o.W, o.H, false);
       else paintCastle(cx, o.W, o.H);
+      st.lit = null;
+      if (kind === 'case') {
+        const c2 = document.createElement('canvas');
+        c2.width = c.width;
+        c2.height = c.height;
+        const lx = c2.getContext('2d');
+        lx.scale(o.dpr, o.dpr);
+        paintCase(lx, o.W, o.H, true);
+        st.lit = c2;
+      }
       st.key = key;
       st.cache = c;
       st.clouds = null;
@@ -2656,6 +3046,7 @@
     const live = { W: o.W, H: o.H, t: o.t || 0, dt: o.dt || 0, speed: o.speed || 0, night };
     if (kind === 'sapa') liveSapa(x, live, st);
     else if (kind === 'twofreq') liveTwoFreq(x, live, st);
+    else if (kind === 'case') liveCase(x, live, st);
     else liveCastle(x, live, st);
     return true;
   }
@@ -2665,6 +3056,7 @@
     if (kind === 'sapa') return night ? SAPA.night.sky[0] : SAPA.day.sky[0];
     if (kind === 'castle') return '#120A26';
     if (kind === 'twofreq') return '#0B0C2A';
+    if (kind === 'case') return '#120D2E';
     return null;
   }
 

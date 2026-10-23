@@ -9,6 +9,9 @@
   // Quà tặng một lần cho mỗi máy mở link.
   const GIFT_DOT = 1200;
   const DEFAULT_EQUIP = { skin: 'tim', fx: 'la', wing: 'canh-tim', bg: 'troi' };
+  // Bộ đi kèm phần thưởng: có skin là tự có cả bộ (phá án xong có Sâu Thám Tử thì có luôn hiệu ứng, cánh, nền).
+  const REWARD_SETS = { 'skin:tham-tu': ['fx:manh-moi', 'wing:canh-tham-tu', 'bg:nen-vach-la'] };
+  const SET_NOTICE = 'lpn:setGift';
 
   const read = () => {
     let v = null;
@@ -36,7 +39,25 @@
       updatedAt: v.updatedAt || 0,
     };
   };
+  // Thêm các món còn thiếu của bộ; máy nào vừa được thêm thì nhớ để Tiệm Sâu báo một lần.
+  const fillSets = (w) => {
+    const got = [];
+    for (const [k, list] of Object.entries(REWARD_SETS)) {
+      if (!w.owned[k]) continue;
+      let added = false;
+      for (const it of list) if (!w.owned[it]) { w.owned[it] = Date.now(); added = true; }
+      if (added) got.push(k);
+    }
+    if (got.length) {
+      try {
+        const old = JSON.parse(localStorage.getItem(SET_NOTICE)) || [];
+        localStorage.setItem(SET_NOTICE, JSON.stringify([...new Set(old.concat(got))]));
+      } catch (e) { /* bỏ qua */ }
+    }
+    return got.length > 0;
+  };
   const write = (w) => {
+    fillSets(w);
     w.updatedAt = Date.now();
     try { localStorage.setItem(KEY, JSON.stringify(w)); } catch (e) { /* bỏ qua */ }
     if (window.Sync) window.Sync.dirty();
@@ -63,6 +84,7 @@
       w.migrated = true;
     }
     if (!w.gift) { w.dot += GIFT_DOT; w.gift = true; }
+    fillSets(w);
     convert(w);
     if (JSON.stringify(w) !== before) write(w);
   })();
@@ -72,7 +94,17 @@
     PACK_DOT,
     GIFT_DOT,
     DEFAULT_EQUIP,
+    REWARD_SETS,
     get: read,
+    // Bộ phần thưởng vừa nhận mà chưa báo (Tiệm Sâu lấy ra để hiện màn tặng quà).
+    takeSetNotice() {
+      let list = [];
+      try { list = JSON.parse(localStorage.getItem(SET_NOTICE)) || []; localStorage.removeItem(SET_NOTICE); } catch (e) { /* bỏ qua */ }
+      return list;
+    },
+    hasSetNotice() {
+      try { return (JSON.parse(localStorage.getItem(SET_NOTICE)) || []).length > 0; } catch (e) { return false; }
+    },
     // Sửa ví trong một lần đọc/ghi; fn trả false thì không ghi.
     update(fn) {
       const w = read();

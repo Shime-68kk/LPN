@@ -1498,6 +1498,37 @@
     if (!(skin && playCut(skin))) toast('Đã mặc ' + set.name + ' ✨');
   }
 
+  // ================= Bộ phần thưởng: có skin là có cả bộ (wallet.js tự thêm) =================
+  const REWARD_SET_NAME = { 'skin:tham-tu': 'Bộ Thám Tử' };
+  function rewardSet(skinKey) {
+    const items = [skinKey].concat((Wallet.REWARD_SETS || {})[skinKey] || []).map(Skins.byKey).filter(Boolean);
+    return { set: { name: REWARD_SET_NAME[skinKey] || 'trọn bộ' }, items };
+  }
+  function showSetGift(skinKey) {
+    const rs = rewardSet(skinKey);
+    if (rs.items.length < 2) return;
+    const extra = rs.items.slice(1);
+    const wing = extra.find((i) => i.slot === 'wing') || extra[0];
+    UI.setGift = rs;
+    flash('huyenthoai');
+    SFX.legend();
+    buzz([30, 40, 80]);
+    setTimeout(() => {
+      showReveal({ item: wing, rar: wing.rarity }, 'set', true);
+      $('reveal-name').textContent = 'Trọn ' + rs.set.name + '!';
+      const names = extra.map((i) => (i.slot === 'fx' ? 'hiệu ứng ' : '') + i.name);
+      $('reveal-memory').textContent = 'Quà phá án tặng thêm, đi cùng ' + rs.items[0].name + ': ' + names.slice(0, -1).join(', ') + ' và ' + names[names.length - 1] + '. Đã vào tủ đồ của em.';
+      $('reveal-use').hidden = true;
+      const again = $('reveal-again');
+      again.textContent = 'Mặc cả bộ ✨';
+      again.hidden = false;
+      const [cx, cy] = centerOf($('reveal-art'));
+      fxBurst(cx, cy, 'huyenthoai', 1.2);
+      fxConfetti(cx, cy, 'huyenthoai');
+    }, 380);
+    renderAll();
+  }
+
   // ================= Sự kiện mở hộp: Định Mệnh =================
   // Máy nào được tặng skin "của mình"; skin của người kia, hiệu ứng và cánh của cả hai bộ phải mở hộp.
   const meWho = () => (window.Sync && window.Sync.who) || null;
@@ -2201,6 +2232,7 @@
     const ctx = UI.revealCtx;
     closeReveal();
     if (ctx === 'gift') return;
+    if (ctx === 'set') { if (UI.setGift) wearSet(UI.setGift.set, UI.setGift.items); return; }
     if (ctx === 'wheel') spin(1);
     else { UI.qty = 1; openBox(); }
   });
@@ -2332,4 +2364,9 @@
     setTimeout(openFree, 650);
   } else if (window.Sync && !window.Sync.who && !later) setTimeout(openWho, 700);
   else if (firstLook) setTimeout(openSplash, 600);
+  else {
+    // Vừa nhận bộ phần thưởng (vd. Bộ Thám Tử) thì báo một lần.
+    const sets = Wallet.takeSetNotice ? Wallet.takeSetNotice() : [];
+    if (sets.length) setTimeout(() => showSetGift(sets[0]), 900);
+  }
 })();

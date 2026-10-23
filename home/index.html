@@ -315,19 +315,25 @@
   <script src="sync.js?v=2"></script>
   <script src="diary.js?v=1"></script>
   <script src="home.js?v=13"></script>
-  <script src="../shop/skins.js?v=11"></script>
+  <script src="../shop/skins.js?v=12"></script>
   <script>
     // Tiệm Sâu đang có sự kiện thì gắn nhãn lên ô; máy này chưa xem thì nhãn nhấp nháy.
     (() => {
       const evs = window.Skins ? Skins.visibleEvents().filter((e) => Date.now() >= Skins.startOf(e)) : [];
-      if (!evs.length) return;
+      // Bộ phần thưởng chưa nhận / chưa báo (vd. có Sâu Thám Tử mà chưa có Bộ Thám Tử): cũng là quà.
+      let setGift = false;
+      try {
+        const owned = (JSON.parse(localStorage.getItem('lpn:wallet')) || {}).owned || {};
+        setGift = (JSON.parse(localStorage.getItem('lpn:setGift')) || []).length > 0 || (!!owned['skin:tham-tu'] && !owned['wing:canh-tham-tu']);
+      } catch (e) { /* bỏ qua */ }
+      if (!evs.length && !setGift) return;
       let seen = {};
       try { seen = JSON.parse(localStorage.getItem('lpn:evSeen')) || {}; } catch (e) { /* bỏ qua */ }
       const b = document.getElementById('shop-badge');
       b.hidden = false;
-      b.classList.toggle('new', evs.some((e) => !seen[e.id]));
+      b.classList.toggle('new', setGift || evs.some((e) => !seen[e.id]));
       // sự kiện có quà tặng mà chưa xem thì ghi "Quà"
-      if (evs.some((e) => e.gift && !seen[e.id])) b.textContent = 'Quà 🎁';
+      if (setGift || evs.some((e) => e.gift && !seen[e.id])) b.textContent = 'Quà 🎁';
     })();
   </script>
 </body>
