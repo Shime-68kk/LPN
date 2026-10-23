@@ -223,7 +223,7 @@
     'tho-cam': { name: 'Sợi Chỉ Đỏ', icon: '🧶', color: '#D62F45', burst: 9, fx: { wide: 1.5, guard: true, score: 1.3 }, line: 'Sợi chỉ đỏ kéo lá về đúng chỗ.' },
     'bi-ngo': { name: 'Ghẹo Ma', icon: '🎃', color: '#FF9A3C', burst: 11, fx: { shield: true, score: 2 }, line: 'Không cho kẹo là bị ghẹo, mà ghẹo thì được điểm.' },
     'tham-tu': { name: 'Kính Lúp', icon: '🔍', color: '#E2B04A', burst: 17, look: 'lens', fx: { wide: 1.45, foresight: true, guard: true }, line: 'Thám tử soi đâu trúng đó, lá rơi chỗ nào cũng biết trước.' },
-    'nang-tho': { name: 'Gió Thơ', icon: '📖', color: '#FF8FA3', burst: 14, look: 'book', fx: { vacuum: true, score: 1.5 }, line: 'Quyển sách mở ra, gió thơ cuốn hết lá vào trang sách.' },
+    'nang-tho': { name: 'Gió Thơ', icon: '📖', color: '#FF8FA3', burst: 14, look: 'book', fx: { vacuum: true, score: 1.5 }, line: 'Quyển sách mở ra giữa trời, gió thơ cuốn mọi chiếc lá vào trang sách, Nàng Thơ chỉ việc đứng yên.' },
     'vi-mach': { name: 'Khoá Sóng', icon: '📡', color: '#38E8C6', burst: 16, look: 'waves', fx: { auto: true, wide: 1.5, shield: true }, line: 'Phát sóng dò tìm, khoá đúng tần số từng chiếc lá.' },
   };
   // Tưng Tửng: mỗi lần dùng bốc một phép trong này.
@@ -232,7 +232,7 @@
   ];
   function skillEffects(fx) {
     const out = [];
-    if (fx.vacuum) out.push('lá nào rơi xuống cũng bị hút thẳng vào miệng');
+    if (fx.vacuum) out.push('mọi chiếc lá, cả cành lá dài, tự bay vào quyển sách');
     if (fx.auto) out.push('bé tự lướt tới từng chiếc lá');
     if (fx.wide) out.push('vùng đớp rộng hơn ' + Math.round((fx.wide - 1) * 100) + '%');
     if (fx.foresight) out.push('dấu chân chỉ chỗ 3 lá sắp rơi');

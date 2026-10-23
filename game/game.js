@@ -877,13 +877,13 @@
       const lvl = this.diff;
       this.notes = this.map.notes
         .filter((n) => n[3] <= lvl)
-        .map((n) => ({ t: n[0], x: n[1], dur: n[2], state: 0, held: 0, eaten: [], cur: null, grow: 0, crunch: 0 }));
+        .map((n) => ({ t: n[0], x: n[1], dur: n[2], state: 0, held: 0, eaten: [], cur: null, grow: 0, crunch: 0, vac: 0 }));
       this.beats = this.map.beats;
       this.resetNotes();
       this.score = 0; this.combo = 0; this.maxCombo = 0; this.hearts = 3; this.banked = 0; this.dotGot = 0;
       this.revives = 0; this.count = null; this.pendingPos = null;
       this.sk = { charge: 0, on: 0, ready: false, told: false, fx: null, hit: 0 };
-      FLY.length = 0;
+      VAC.length = 0;
       UI.count(null);
       // Kỷ lục cũ của bài này ở độ khó này; vượt qua giữa ván thì báo ngay.
       this.prevBest = ((Store.data.best[this.song.id + ':' + this.diff] || {}).score) || 0;
@@ -911,11 +911,11 @@
     // Đưa toàn bộ lá về trạng thái chưa ăn (đầu mỗi vòng).
     resetNotes() {
       for (const n of this.notes) {
-        n.state = 0; n.held = 0; n.eaten = []; n.cur = null; n.grow = 0; n.crunch = 0;
+        n.state = 0; n.held = 0; n.eaten = []; n.cur = null; n.grow = 0; n.crunch = 0; n.vac = 0;
         n.total = 0; n.bounce = 0; n.ticks = 0;
       }
       this.holds = [];
-      FLY.length = 0;
+      VAC.length = 0;
       this.beatIdx = 0;
       this.noteHead = 0;
       this.drawStart = 0;
@@ -1017,7 +1017,7 @@
       Sound.ctx.resume().then(() => { this.resync = true; this.state = 'play'; });
     },
 
-    eat(n, perfect) {
+    eat(n, perfect, book) {
       n.state = 1;
       const mult = (1 + Math.min(4, Math.floor(this.combo / 10)) * 0.5) * this.boost();
       const pts = Math.round((perfect ? 300 : 200) * mult);
@@ -1026,13 +1026,22 @@
       this.maxCombo = Math.max(this.maxCombo, this.combo);
       if (perfect) this.perfect++; else this.good++;
       Sau.segs++;
-      Sau.chew = 0.24;
-      Sau.gulp();
-      if (perfect) Sau.happy = 0.35;
-      const px = PX0 + n.x * PW;
-      burstCrumbs(px, Sau.headY - HEAD_R * 0.6, perfect ? 9 : 6);
-      if (perfect) ring(Sau.headX, Sau.headY, T.night ? '#8C6BC8' : '#D9C9F2');
-      popup('+' + pts, Sau.headX, Sau.headY - HEAD_R * 2.2, this.boost() > 1 ? GOLD() : T.night ? '#FFF1C9' : '#3B2A4A');
+      if (book) {
+        // Gió Thơ: lá chạm trang sách; Nàng Thơ đứng yên đọc nên không nhai, chỉ mỉm cười.
+        const b = bookPos();
+        Sau.happy = Math.max(Sau.happy, 0.3);
+        burstCrumbs(b.x, b.y, perfect ? 8 : 5);
+        ring(b.x, b.y, LOOK.skill ? LOOK.skill.color : '#FF8FA3');
+        popup('+' + pts, b.x + (Math.random() - 0.5) * 50 * S, b.y - bookW() * 0.95, GOLD());
+      } else {
+        Sau.chew = 0.24;
+        Sau.gulp();
+        if (perfect) Sau.happy = 0.35;
+        const px = PX0 + n.x * PW;
+        burstCrumbs(px, Sau.headY - HEAD_R * 0.6, perfect ? 9 : 6);
+        if (perfect) ring(Sau.headX, Sau.headY, T.night ? '#8C6BC8' : '#D9C9F2');
+        popup('+' + pts, Sau.headX, Sau.headY - HEAD_R * 2.2, this.boost() > 1 ? GOLD() : T.night ? '#FFF1C9' : '#3B2A4A');
+      }
       Sound.eat(this.combo, perfect);
       buzz(8);
       if (n.dur > 0) { n.cur = [this.songT, this.songT]; n.eaten.push(n.cur); this.holds.push(n); }
@@ -1080,6 +1089,8 @@
     },
     // Hiệu ứng đang bật (null nếu không dùng kỹ năng).
     skFx() { return this.sk.on > 0 ? this.sk.fx : null; },
+    // Gió Thơ đang mở sách: bé đứng yên, kéo tay cũng không đi.
+    reading() { const fx = this.skFx(); return !!(fx && fx.vacuum); },
     boost() { const fx = this.skFx(); return (fx && fx.score) || 1; },
     // Độ hiện của hình kỹ năng 0..1 (hiện dần lúc bật, mờ dần lúc sắp tắt).
     skillK() {
@@ -1236,14 +1247,15 @@
         }
         const grow = easeInOut(clamp((Sau.segs - 4) / 60, 0, 1));
         Sau.headY = lerp(Sau.headY, H * (0.74 - 0.16 * grow), 1 - Math.exp(-dt * 3));
-        if (this.botOn) this.bot();
+        if (this.botOn && !this.reading()) this.bot();
+        if (this.reading()) Sau.target = Sau.headX;
         const K = this.sk;
         if (K.on > 0) {
           K.on = Math.max(0, K.on - dt);
           K.hit = Math.max(0, K.hit - dt * 2.5);
-          // tự lướt tới lá (Khoá Sóng), hoặc tới cành dài khi đang hút lá (Gió Thơ)
-          if (K.fx && (K.fx.auto || K.fx.vacuum)) this.bot();
-          if (Math.random() < dt * 7) skillBurst(1);
+          // Khoá Sóng: tự lướt tới lá
+          if (K.fx && K.fx.auto) this.bot();
+          if (Math.random() < dt * 7) { if (K.fx && K.fx.vacuum) bookSpark(); else skillBurst(1); }
           UI.skill(this);
         }
         if (this.botOn && K.ready) this.useSkill();
@@ -1292,23 +1304,24 @@
       const notes = this.notes;
       // Mức Dễ: vùng đớp rộng hơn một chút; kính lúp đang bật thì rộng thêm.
       const R = this.catchR();
-      // Gió Thơ: lá thường sắp rơi tới bị hút bay vào quyển sách (state 3), tới đúng nhịp của lá mới tính ăn
-      // để tiếng ăn vẫn khớp nhạc; cành dài thì bé tự lướt tới ăn như thường.
-      const sfx = this.skFx();
-      if (sfx && sfx.vacuum) {
+      // Gió Thơ: quyển sách giữa màn bắt mọi lá đang có trên màn, cả cành dài (state 3, n.vac = lúc bắt).
+      // Lá vẫn bay tới sách đúng nhịp của nó (xem vacPos) nên tới nhịp mới tính ăn, tiếng ăn khớp nhạc.
+      if (this.reading()) {
+        const lead = Sau.headY / this.speed + 0.3;
         for (let i = this.noteHead; i < notes.length; i++) {
           const n = notes[i];
-          if (n.t - t > 0.5) break;
-          if (n.state !== 0 || n.dur > 0) continue;
+          if (n.t - t > lead) break;
+          if (n.state !== 0) continue;
           n.state = 3;
-          FLY.push({ n, t0: t, x: PX0 + n.x * PW, y: Sau.headY - Math.max(0, n.t - t) * this.speed });
+          n.vac = t;
+          VAC.push(n);
         }
       }
-      for (let i = FLY.length - 1; i >= 0; i--) {
-        if (t < FLY[i].n.t) continue;
-        const n = FLY[i].n;
-        FLY.splice(i, 1);
-        if (n.state === 3) this.eat(n, true);
+      for (let i = VAC.length - 1; i >= 0; i--) {
+        const n = VAC[i];
+        if (t < n.t) continue;
+        VAC.splice(i, 1);
+        if (n.state === 3) this.eat(n, true, true);
         if (this.state !== 'play') return;
       }
       let anticip = 0;
@@ -1331,7 +1344,8 @@
       for (let i = this.holds.length - 1; i >= 0; i--) {
         const n = this.holds[i];
         const end = n.t + n.dur;
-        const inside = Math.abs(Sau.headX - (PX0 + n.x * PW)) <= R * 0.95;
+        const inside = n.vac ? true : Math.abs(Sau.headX - (PX0 + n.x * PW)) <= R * 0.95;
+        const bx = n.vac ? bookPos().x : Sau.headX, by = n.vac ? bookPos().y - bookW() * 0.6 : Sau.headY - HEAD_R * 1.6;
         const now = Math.min(t, end);
         if (inside) {
           if (!n.cur) { n.cur = [now, now]; n.eaten.push(n.cur); }
@@ -1339,8 +1353,8 @@
           n.held += dt;
           n.grow += dt;
           n.crunch += dt;
-          Sau.chew = Math.max(Sau.chew, 0.1);
-          if (n.grow >= beatLen) { n.grow -= beatLen; Sau.segs++; Sau.gulp(); }
+          if (!n.vac) Sau.chew = Math.max(Sau.chew, 0.1);
+          if (n.grow >= beatLen) { n.grow -= beatLen; Sau.segs++; if (!n.vac) Sau.gulp(); }
           if (n.crunch >= 0.12) {
             // Mỗi miếng cắn trên cành dài: điểm nhỏ nảy lên, cộng dồn vào bong bóng tổng.
             n.crunch = 0;
@@ -1348,10 +1362,10 @@
             n.total = (n.total || 0) + pts;
             n.bounce = 1;
             this.score += pts;
-            popup('+' + pts, Sau.headX + (Math.random() - 0.5) * 50 * S, Sau.headY - HEAD_R * 1.6,
+            popup('+' + pts, bx + (Math.random() - 0.5) * 50 * S, by,
               (n.ticks = (n.ticks || 0) + 1) % 2 ? GOLD() : PINK(), 14, (Math.random() - 0.5) * 70 * S);
             Sound.bite((now - n.t) / Math.max(0.01, n.dur));
-            burstCrumbs(Sau.headX, Sau.headY - HEAD_R * 0.6, 2);
+            burstCrumbs(bx, n.vac ? bookPos().y : Sau.headY - HEAD_R * 0.6, 2);
             UI.hud(this);
           }
         } else {
@@ -1363,11 +1377,12 @@
           const bonus = Math.round(ratio * 400 * this.boost());
           this.score += bonus;
           const total = (n.total || 0) + bonus;
-          if (total > 0) popup('+' + total.toLocaleString('vi-VN'), Sau.headX, Sau.headY - HEAD_R * 4, GOLD(), 26);
+          const ex = n.vac ? bookPos().x : Sau.headX, ey = n.vac ? bookPos().y - bookW() * 1.3 : Sau.headY - HEAD_R * 4;
+          if (total > 0) popup('+' + total.toLocaleString('vi-VN'), ex, ey, GOLD(), 26);
           if (ratio > 0.8) {
-            popup('Ngon!', Sau.headX, Sau.headY - HEAD_R * 5.4, PINK(), 20);
-            burstHearts(Sau.headX, Sau.headY - HEAD_R, 4);
-            burstSparks(Sau.headX, Sau.headY - HEAD_R * 2.5, 10, '#FFC24B');
+            popup(n.vac ? 'Thơ quá!' : 'Ngon!', ex, ey - HEAD_R * 1.4, PINK(), 20);
+            burstHearts(ex, n.vac ? bookPos().y : Sau.headY - HEAD_R, 4);
+            burstSparks(ex, n.vac ? bookPos().y : Sau.headY - HEAD_R * 2.5, 10, '#FFC24B');
             Sau.happy = 0.4;
           }
           this.holds.splice(i, 1);
@@ -1417,8 +1432,8 @@
   };
 
   // ================= Hình kỹ năng =================
-  // Lá bị Gió Thơ hút: bay vào quyển sách, tới đúng nhịp của lá thì mới tính ăn (tiếng ăn vẫn khớp nhạc).
-  const FLY = [];
+  // Lá (và cành dài) bị quyển sách Gió Thơ bắt, chờ tới nhịp để tính ăn.
+  const VAC = [];
   const hexA = (hex, a) => { const n = parseInt(hex.slice(1, 7), 16); return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')'; };
   // Hạt của kỹ năng bung quanh đầu bé (loại hạt, màu theo từng skin); n = 1 là lấp lánh nhẹ lúc đang dùng.
   function skillBurst(n) {
@@ -1432,7 +1447,28 @@
       spawn(sk.burst, x, Sau.headY - HEAD_R * (n > 1 ? 0.6 : 0.1), Math.cos(a) * sp, Math.sin(a) * sp, 0.6 + Math.random() * 0.5, size * S, i % 3 ? sk.color : '#FFF1C9');
     }
   }
-  const bookPos = () => ({ x: Sau.headX, y: Sau.headY - HEAD_R * 2.7 });
+  // Quyển sách Gió Thơ mở ra giữa màn chơi.
+  const bookPos = () => ({ x: PX0 + PW / 2, y: H * 0.4 });
+  const bookW = () => Math.min(PW * 0.2, 92 * S);
+  // Vị trí một chiếc lá đang bị hút: rơi như thường, tới VAC_A giây cuối trước nhịp của nó thì xoáy dần
+  // về quyển sách và chạm trang đúng nhịp (s: 0 = chưa hút, 1 = đã vào sách).
+  const VAC_A = 0.9;
+  function vacPos(x, tau, t0, t, b, seed) {
+    const s0 = Math.max(t0, tau - VAC_A);
+    const s = clamp((t - s0) / Math.max(0.05, tau - s0), 0, 1);
+    const e = s * s * (3 - 2 * s);
+    const yNat = Sau.headY - (tau - t) * Game.speed;
+    const sw = Math.sin(s * Math.PI) * 48 * S * (1 - e);
+    const a = seed + s * 6.5;
+    return { x: lerp(x, b.x, e) + Math.cos(a) * sw, y: lerp(yNat, b.y, e) + Math.sin(a) * sw * 0.45, s };
+  }
+  // Chữ, trang giấy bay lên từ quyển sách.
+  function bookSpark() {
+    const b = bookPos(), w = bookW(), sk = LOOK.skill;
+    const kind = Math.random() < 0.6 ? 14 : 13;
+    spawn(kind, b.x + (Math.random() - 0.5) * w * 1.4, b.y - w * 0.3, (Math.random() - 0.5) * 50 * S, -(40 + Math.random() * 50) * S,
+      0.9 + Math.random() * 0.5, (kind === 14 ? 13 : 4) * S, kind === 13 ? '#FFFBF2' : (sk ? sk.color : '#FF8FA3'));
+  }
   function nextLeaf() {
     const t = Game.songT;
     for (let i = Game.noteHead; i < Game.notes.length; i++) {
@@ -1531,63 +1567,118 @@
     }
     g.restore();
   }
-  // Quyển sách (Nàng Thơ): mở trên đầu bé, gió xoáy quanh, dải lụa đánh dấu trang.
+  // Quyển sách (Nàng Thơ): mở ra giữa màn, quầng sáng, gió xoáy hút vào, trang lật phần phật, dải lụa đánh dấu.
   function drawBook(k, sk) {
-    const b = bookPos(), w = HEAD_R * 1.5 * (0.7 + 0.3 * k), h = HEAD_R * 1.15;
+    const b = bookPos(), w = bookW() * (0.75 + 0.25 * k), h = w * 0.78;
     g.save();
     g.globalAlpha = k;
-    const gl = g.createRadialGradient(b.x, b.y, 0, b.x, b.y, w * 2.3);
-    gl.addColorStop(0, hexA(sk.color, 0.38));
+    const gl = g.createRadialGradient(b.x, b.y, 0, b.x, b.y, w * 2.6);
+    gl.addColorStop(0, hexA(sk.color, 0.42));
+    gl.addColorStop(0.5, hexA(sk.color, 0.14));
     gl.addColorStop(1, hexA(sk.color, 0));
     g.fillStyle = gl;
-    g.beginPath(); g.arc(b.x, b.y, w * 2.3, 0, TAU); g.fill();
-    g.strokeStyle = hexA(sk.color, 0.55);
-    g.lineWidth = 2 * S;
+    g.beginPath(); g.arc(b.x, b.y, w * 2.6, 0, TAU); g.fill();
+    // gió xoáy: các vệt cong quay vào tâm sách
     g.lineCap = 'round';
-    for (let i = 0; i < 3; i++) {
-      const a = clock * 3.2 + (i * TAU) / 3;
-      g.beginPath(); g.arc(b.x, b.y, w * (1.45 + 0.15 * i), a, a + 0.9); g.stroke();
+    for (let i = 0; i < 5; i++) {
+      const a = -clock * 2.6 + (i * TAU) / 5, r = w * (1.25 + 0.22 * ((i * 3) % 5));
+      g.strokeStyle = hexA(i % 2 ? '#FFFFFF' : sk.color, 0.45);
+      g.lineWidth = (2.6 - 0.3 * i) * S;
+      g.beginPath(); g.arc(b.x, b.y, r, a, a + 0.9); g.stroke();
     }
+    // bìa sách
+    g.fillStyle = '#B8405E';
+    g.beginPath();
+    g.moveTo(b.x - w * 1.06, b.y - h * 0.5); g.lineTo(b.x + w * 1.06, b.y - h * 0.5);
+    g.lineTo(b.x + w * 1.06, b.y + h * 0.56); g.quadraticCurveTo(b.x, b.y + h * 0.4, b.x - w * 1.06, b.y + h * 0.56);
+    g.closePath();
+    g.fill();
     g.fillStyle = '#D6455E';
-    g.fillRect(b.x - 2 * S, b.y + h * 0.3, 4 * S, h * 0.75);
+    g.fillRect(b.x - 2.5 * S, b.y + h * 0.3, 5 * S, h * 0.85);
+    // hai trang mở
     for (const side of [-1, 1]) {
-      const flap = Math.sin(clock * 9 + side) * h * 0.06;
       g.fillStyle = '#FFFBF2';
       g.strokeStyle = '#D9B26A';
       g.lineWidth = 1.4 * S;
       g.beginPath();
-      g.moveTo(b.x, b.y - h * 0.32);
-      g.quadraticCurveTo(b.x + side * w * 0.5, b.y - h * 0.62 + flap, b.x + side * w, b.y - h * 0.46 + flap);
-      g.lineTo(b.x + side * w, b.y + h * 0.42 + flap);
-      g.quadraticCurveTo(b.x + side * w * 0.5, b.y + h * 0.26, b.x, b.y + h * 0.52);
+      g.moveTo(b.x, b.y - h * 0.36);
+      g.quadraticCurveTo(b.x + side * w * 0.5, b.y - h * 0.62, b.x + side * w, b.y - h * 0.46);
+      g.lineTo(b.x + side * w, b.y + h * 0.44);
+      g.quadraticCurveTo(b.x + side * w * 0.5, b.y + h * 0.28, b.x, b.y + h * 0.5);
       g.closePath();
       g.fill();
       g.stroke();
-      g.strokeStyle = 'rgba(122,90,138,0.5)';
-      g.lineWidth = 1.2 * S;
+      g.strokeStyle = 'rgba(122,90,138,0.45)';
+      g.lineWidth = 1.3 * S;
       g.beginPath();
-      for (let j = 0; j < 3; j++) {
-        const yy = b.y - h * 0.18 + j * h * 0.22;
-        g.moveTo(b.x + side * w * 0.18, yy); g.lineTo(b.x + side * w * 0.8, yy - h * 0.06);
+      for (let j = 0; j < 4; j++) {
+        const yy = b.y - h * 0.22 + j * h * 0.17;
+        g.moveTo(b.x + side * w * 0.14, yy); g.lineTo(b.x + side * w * (j === 3 ? 0.55 : 0.84), yy - h * 0.05);
       }
       g.stroke();
     }
+    // trang đang lật từ phải sang trái
+    const ph = (clock * 1.5) % 1, cx = Math.cos(ph * Math.PI);
+    g.fillStyle = 'rgba(255,244,224,0.92)';
+    g.strokeStyle = '#D9B26A';
+    g.beginPath();
+    g.moveTo(b.x, b.y - h * 0.36);
+    g.quadraticCurveTo(b.x + cx * w * 0.5, b.y - h * (0.62 + 0.25 * Math.sin(ph * Math.PI)), b.x + cx * w, b.y - h * 0.46);
+    g.lineTo(b.x + cx * w, b.y + h * 0.44);
+    g.quadraticCurveTo(b.x + cx * w * 0.5, b.y + h * 0.28, b.x, b.y + h * 0.5);
+    g.closePath();
+    g.fill();
+    g.stroke();
+    // tâm sách sáng lên nơi lá bay vào
+    const core = g.createRadialGradient(b.x, b.y, 0, b.x, b.y, w * 0.5);
+    core.addColorStop(0, 'rgba(255,255,255,' + (0.55 + 0.25 * (Game.pulse || 0)) + ')');
+    core.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = core;
+    g.beginPath(); g.arc(b.x, b.y, w * 0.5, 0, TAU); g.fill();
     g.restore();
   }
-  // Lá đang bay vào sách: cong lên một chút, xoay và nhỏ dần.
-  function drawFly() {
-    const b = bookPos(), t = Game.songT;
-    for (const f of FLY) {
-      const u = clamp((t - f.t0) / Math.max(0.05, f.n.t - f.t0), 0, 1), e = u * u;
-      const x = lerp(f.x, b.x, e), y = lerp(f.y, b.y, e) - Math.sin(u * Math.PI) * 26 * S;
-      const sc = 1 - 0.7 * u;
-      g.save();
-      g.globalAlpha = 1 - 0.3 * u;
-      g.translate(x, y);
-      g.rotate(u * 7);
-      g.drawImage(SPR.leaf, (-SPR.leafW * sc) / 2, -SPR.leafCY * sc, SPR.leafW * sc, SPR.leafH * sc);
-      g.restore();
+  // Lá đang bị hút: lá thường xoáy vào sách và nhỏ dần; cành dài thành một dải lá nối đuôi lượn vào sách.
+  function drawVac(n, x, t) {
+    const b = bookPos();
+    if (n.dur > 0) {
+      const stepT = (24 * S) / Game.speed, pts = [];
+      for (let k = 0; ; k++) {
+        const tau = n.t + k * stepT;
+        if (tau > n.t + n.dur + 1e-6) break;
+        if (tau <= t) continue;
+        const p = vacPos(x, tau, n.vac, t, b, n.x * 9 + k * 0.32);
+        if (p.s === 0 && p.y < -40 * S) break;
+        pts.push(p);
+      }
+      if (!pts.length) return;
+      g.lineCap = 'round';
+      g.lineJoin = 'round';
+      g.strokeStyle = T.stem;
+      g.lineWidth = 5 * S;
+      g.beginPath();
+      g.moveTo(pts[0].x, pts[0].y);
+      for (const p of pts) g.lineTo(p.x, p.y);
+      g.stroke();
+      const lw = SPR.leafW * 0.55, lh = SPR.leafH * 0.55;
+      pts.forEach((p, k) => {
+        const sc = 1 - 0.6 * p.s;
+        g.save();
+        g.translate(p.x, p.y);
+        g.rotate((k % 2 ? 0.9 : -0.9) + p.s * 6);
+        g.drawImage(SPR.leaf, (-lw * sc) / 2, -SPR.leafCY * 0.55 * sc, lw * sc, lh * sc);
+        g.restore();
+      });
+      return;
     }
+    if (n.state === 1) return;
+    const p = vacPos(x, n.t, n.vac, t, b, n.x * 9);
+    if (p.s >= 1) return;
+    const sc = 1 - 0.65 * p.s;
+    g.save();
+    g.translate(p.x, p.y);
+    g.rotate(p.s * 7);
+    g.drawImage(SPR.leaf, (-SPR.leafW * sc) / 2, -SPR.leafCY * sc, SPR.leafW * sc, SPR.leafH * sc);
+    g.restore();
   }
 
   // ================= Vẽ màn chơi =================
@@ -1690,6 +1781,7 @@
       const ahead = n.t - t;
       if (ahead > hy / v + 0.3) break;
       const x = PX0 + n.x * PW;
+      if (n.vac) { drawVac(n, x, t); continue; }
       const yBottom = hy - ahead * v;
       if (n.dur > 0) drawStalk(n, x, yBottom, t, v, hy);
       if (n.state === 1 || n.state === 3) continue;
@@ -1784,6 +1876,8 @@
     const fx = lk > 0 ? Game.sk.fx : null;
     const LZ = fx && sk.look === 'lens' ? lensGeom(lk) : null;
     if (LZ) drawLensBack(LZ);
+    const bookK = playing && sk && sk.fx.vacuum ? Math.max(lk, VAC.length ? 0.85 : 0) : 0;
+    if (bookK > 0) drawBook(bookK, sk);
     if (playing) drawNotes(LZ);
     if (LZ) drawLensFront(LZ);
     if (Game.state === 'ending') {
@@ -1808,8 +1902,6 @@
       }
       drawSau(wallSpeed, Game.pulse || 0, 0);
       if (fx && fx.shield) drawShield(lk, sk);
-      if (fx && fx.vacuum) drawBook(lk, sk);
-      if (playing && FLY.length) drawFly();
       if (fx && fx.score > 1) drawScoreBadge(lk, fx.score);
       drawStarFx();
     }
@@ -2215,11 +2307,11 @@
     if (petId !== null && e.pointerId === petId && PET) { PET.pointer('move', e.clientX - Sau.headX, e.clientY - Sau.headY, HEAD_R); return; }
     if (Game.state !== 'play') return;
     if (e.pointerType === 'mouse' && dragId === null) {
-      Sau.target = clamp(e.clientX, PX0 + 18 * S, PX0 + PW - 18 * S);
+      if (!Game.reading()) Sau.target = clamp(e.clientX, PX0 + 18 * S, PX0 + PW - 18 * S);
       return;
     }
     if (e.pointerId !== dragId) return;
-    Sau.target = clamp(Sau.target + (e.clientX - lastPX) * SENS, PX0 + 18 * S, PX0 + PW - 18 * S);
+    if (!Game.reading()) Sau.target = clamp(Sau.target + (e.clientX - lastPX) * SENS, PX0 + 18 * S, PX0 + PW - 18 * S);
     lastPX = e.clientX;
   });
   const endDrag = (e) => {
@@ -2384,7 +2476,7 @@
     const still = Game.state === 'paused' || Game.state === 'down' || Game.state === 'count';
     if (!still) {
       clock += dt;
-      if (Game.state === 'play' && (keys.left || keys.right)) {
+      if (Game.state === 'play' && (keys.left || keys.right) && !Game.reading()) {
         Sau.target = clamp(Sau.target + (keys.right - keys.left) * PW * 1.6 * dt, PX0 + 18 * S, PX0 + PW - 18 * S);
       }
       Game.update(dt);
