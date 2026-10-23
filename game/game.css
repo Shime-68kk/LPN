@@ -543,7 +543,7 @@ body.night .menu-wallet b { color: #9FE0B2; }
 .mt-ic { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; }
 .mt-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .mt-txt b { font-size: 15px; font-weight: 700; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mt-txt small { font-size: 12px; line-height: 1.2; color: var(--muted); }
+.mt-txt small { font-size: 12px; line-height: 1.2; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mt-go { flex: none; margin-left: auto; width: 16px; height: 16px; fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .m-tile.shop { background: #FF8FA3; border-color: transparent; color: #2B2140; }
 .m-tile.shop .mt-ic { background: rgba(255, 255, 255, 0.5); }

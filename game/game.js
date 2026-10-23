@@ -89,9 +89,15 @@
   // Skin đổi hình, và mỗi skin có một kỹ năng riêng khi chơi (skin càng hiếm kỹ năng càng mạnh).
   const LOOK = {};
   let PET = null;
+  // Quà dùng thử (bảng cập nhật ở trang chủ ghi lpn:trial): mặc tạm một skin ở bậc kỹ năng cao nhất trong vài ván.
+  const TRIAL_KEY = 'lpn:trial';
+  const trialGet = () => { try { return JSON.parse(localStorage.getItem(TRIAL_KEY)); } catch (e) { return null; } };
+  const trialSet = (t) => { try { localStorage.setItem(TRIAL_KEY, JSON.stringify(t)); } catch (e) { /* bỏ qua */ } };
+  const trialNow = () => { const t = trialGet(); return t && t.left > 0 && Skins.byKey('skin:' + t.skin) ? t : null; };
   function loadLook() {
     const eq = window.Wallet ? Wallet.equipped() : {};
-    LOOK.skin = Skins.get('skin', eq.skin);
+    LOOK.trial = trialNow();
+    LOOK.skin = Skins.get('skin', LOOK.trial ? LOOK.trial.skin : eq.skin);
     LOOK.fx = Skins.get('fx', eq.fx);
     LOOK.wing = Skins.get('wing', eq.wing);
     LOOK.bg = Skins.get('bg', eq.bg);
@@ -105,7 +111,7 @@
     // skin có tính cách (Nàng Thơ, Vi Mạch): ở màn chọn bài chạm, vuốt được
     PET = Skins.makePet ? Skins.makePet(LOOK.skin, (window.Sync && window.Sync.who) || null) : null;
     // Kỹ năng riêng của skin (xem SKILLS trong skins.js)
-    LOOK.skill = Skins.skillOf ? Skins.skillOf(LOOK.skin, window.Wallet ? Wallet.skillLevel(LOOK.skin.id) : 0) : null;
+    LOOK.skill = Skins.skillOf ? Skins.skillOf(LOOK.skin, LOOK.trial ? LOOK.trial.level : window.Wallet ? Wallet.skillLevel(LOOK.skin.id) : 0) : null;
     if (TRY_DOMAIN && LOOK.skill) LOOK.skill = Object.assign({}, LOOK.skill, { fx: Object.assign({}, LOOK.skill.fx, { domain: true }) });
     const ms = document.getElementById('menu-skill');
     if (ms) {
@@ -116,7 +122,8 @@
         ms.style.setProperty('--sk-bg', sk.color + '24');
         document.getElementById('menu-skill-ic').innerHTML = Skins.skillIcon(sk.id, sk.iconTier ? 30 : 22, sk.iconTier);
         document.getElementById('menu-skill-name').textContent = sk.name;
-        document.getElementById('menu-skill-sub').textContent = sk.breakthrough ? 'Đột phá · ' + sk.breakthrough : sk.level ? 'Kỹ năng · bậc ' + sk.level + '/' + sk.max : 'Kỹ năng · xem';
+        document.getElementById('menu-skill-sub').textContent = LOOK.trial ? 'Dùng thử · còn ' + LOOK.trial.left + ' ván'
+          : sk.breakthrough ? 'Đột phá · ' + sk.breakthrough : sk.level ? 'Kỹ năng · bậc ' + sk.level + '/' + sk.max : 'Kỹ năng · xem';
         ms.setAttribute('aria-label', 'Kỹ năng ' + sk.name + ', xem chi tiết');
       }
     }
@@ -1094,7 +1101,14 @@
     },
 
     begin() {
+      loadLook();
+      const tr = LOOK.trial;
+      if (tr) { tr.left--; trialSet(tr); }
       this.setup();
+      if (tr && LOOK.skill && LOOK.skill.fx.domain) {
+        this.sk.sup = Math.max(this.sk.sup, Math.round(DOMAIN_NEED / 2));
+        setTimeout(() => UI.toast('Dùng thử ' + LOOK.skin.name + ' tối đa! Đủ 60 lá chạm đúp mở Lãnh Địa'), 1200);
+      }
       Sound.stopMusic();
       // ?debug=1&skip=80: bỏ qua 80 giây đầu để thử nhanh đoạn cuối.
       const skip = DEBUG ? Number(params.get('skip')) || 0 : 0;
@@ -3387,6 +3401,14 @@
     UI.hide('result');
     UI.hide('hud');
     UI.showHint(false);
+    const wasTrial = !!LOOK.trial;
+    loadLook();
+    const t = trialGet();
+    if (wasTrial && !LOOK.trial && t && !t.told) {
+      t.told = true;
+      trialSet(t);
+      setTimeout(() => UI.toast('Hết lượt dùng thử. Nâng cấp ở Tiệm Sâu nhé!'), 400);
+    }
     UI.renderSongs(SONGS);
     UI.els.menu.classList.remove('away');
   }
