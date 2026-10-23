@@ -11,6 +11,8 @@
   const params = new URLSearchParams(location.search);
   const BOT = params.get('bot') === '1';
   const DEBUG = params.get('debug') === '1';
+  // ?thu=lanhdia: chơi thử Lãnh Địa Vi Mạch với skin nào cũng được, nạp sẵn đầy; không trừ đốt, không cộng điểm.
+  const TRY_DOMAIN = params.get('thu') === 'lanhdia';
   const REDUCED_MOTION = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   const SVG_NS = 'http://www.w3.org/2000/svg';
   const PATH_STAR = 'M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5l-5.3 2.9 1.2-6-4.5-4.1 6-.7z';
@@ -104,6 +106,7 @@
     PET = Skins.makePet ? Skins.makePet(LOOK.skin, (window.Sync && window.Sync.who) || null) : null;
     // Kỹ năng riêng của skin (xem SKILLS trong skins.js)
     LOOK.skill = Skins.skillOf ? Skins.skillOf(LOOK.skin, window.Wallet ? Wallet.skillLevel(LOOK.skin.id) : 0) : null;
+    if (TRY_DOMAIN && LOOK.skill) LOOK.skill = Object.assign({}, LOOK.skill, { fx: Object.assign({}, LOOK.skill.fx, { domain: true }) });
     const ms = document.getElementById('menu-skill');
     if (ms) {
       const sk = LOOK.skill;
@@ -956,7 +959,7 @@
       this.resetNotes();
       this.score = 0; this.combo = 0; this.maxCombo = 0; this.hearts = 3; this.banked = 0; this.dotGot = 0;
       this.revives = 0; this.count = null; this.pendingPos = null;
-      this.sk = { charge: 0, on: 0, ready: false, told: false, fx: null, hit: 0, cnt: 0, net: 0, lotus: 0, label: '', sup: 0 };
+      this.sk = { charge: 0, on: 0, ready: false, told: false, fx: null, hit: 0, cnt: 0, net: 0, lotus: 0, label: '', sup: TRY_DOMAIN ? DOMAIN_NEED : 0 };
       this.vmul = 1;
       this.bonusDot = 0; this.bonusBanked = 0;
       VAC.length = 0;
@@ -2148,8 +2151,7 @@
       let pts = Math.round((100000 * f) / 100) * 100;
       if (DM.x2pts) pts *= 2;
       const dot = DM.x2dot ? Math.round(pts * 0.0003) : 0; // ×2 đốt: thêm đúng số đốt quy đổi từ điểm (100.000 điểm = 30 đốt)
-      Game.score += pts;
-      Game.bonusDot += dot;
+      if (!TRY_DOMAIN) { Game.score += pts; Game.bonusDot += dot; }
       Game.domLeaves = (Game.domLeaves || 0) + leaves;
       Sau.segs += Math.round(leaves / 15);
       DM.reward = { leaves, pts, dot, t: 0 };
@@ -2183,7 +2185,8 @@
     DM.hits++;
     DM.inv = 0.5;
     let lost = 0;
-    if (window.Wallet) Wallet.update((w) => { lost = Math.min(60, w.dot); w.dot -= lost; });
+    if (window.Wallet && !TRY_DOMAIN) Wallet.update((w) => { lost = Math.min(60, w.dot); w.dot -= lost; });
+    else lost = 60;
     DM.lost += lost;
     DM.flash = 0.9;
     DM.flashCol = '#FF3B6B';
@@ -2637,6 +2640,7 @@
     // chữ hướng dẫn từng pha
     const by = H * 0.4;
     if (ph === 'enter') banner('LÃNH ĐỊA VI MẠCH', by, 26, '#5FFFE0');
+    if (TRY_DOMAIN) banner('Chơi thử: không trừ đốt, không cộng điểm', H - 18 * S, 11, '#9BE5D5');
     else if (ph === 'dodge') {
       // chữ to chỉ hiện lúc đầu rồi mờ đi; thời gian, số lần trúng, món đã nhặt nằm sát đáy cho khỏi che chỗ né
       if (DM.pt < 1.2) { g.save(); g.globalAlpha = clamp((1.2 - DM.pt) / 0.4, 0, 1); banner('NÉ LAZE!', H * 0.55, 28, '#FFFFFF'); g.restore(); }
