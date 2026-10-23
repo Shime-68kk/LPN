@@ -150,6 +150,10 @@
       this.eatBus = ctx.createGain();
       this.eatBus.gain.value = Store.data.eatVol / 70;
       this.eatBus.connect(this.sfx);
+      // Lãnh Địa Vi Mạch: nhạc nền riêng và tiếng laze là tín hiệu để né, nên đi thẳng ra loa (như tiếng đếm 3-2-1).
+      this.dsfx = ctx.createGain();
+      this.dsfx.gain.value = 0.8;
+      this.dsfx.connect(this.master);
       const nb = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.5), ctx.sampleRate);
       const ch = nb.getChannelData(0);
       for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
@@ -309,7 +313,7 @@
 
     tone(f, dur, type, vol, slide, delay, bus) {
       const ctx = this.ctx;
-      if (!ctx || !Store.data.sfx) return;
+      if (!ctx || (!Store.data.sfx && bus !== this.dsfx)) return;
       const t = ctx.currentTime + (delay || 0);
       const o = ctx.createOscillator();
       o.type = type;
@@ -327,7 +331,7 @@
 
     noise(dur, f, q, vol, delay, bus) {
       const ctx = this.ctx;
-      if (!ctx || !Store.data.sfx) return;
+      if (!ctx || (!Store.data.sfx && bus !== this.dsfx)) return;
       const t = ctx.currentTime + (delay || 0);
       const s = ctx.createBufferSource();
       s.buffer = this.noiseBuf;
@@ -400,63 +404,150 @@
     },
     // ----- Lãnh Địa Vi Mạch -----
     superReady() {
-      this.arp([7, 9, 12, 14, 16], 0.05, 'square', 0.06, 0.2);
-      this.tone(this.freq(19), 0.5, 'sine', 0.13, null, 0.26);
+      this.arp([7, 9, 12, 14, 16], 0.05, 'square', 0.1, 0.2);
+      this.tone(this.freq(19), 0.5, 'sine', 0.18, null, 0.26);
     },
-    domainEnter() {
-      this.tone(70, 0.9, 'sawtooth', 0.14, 880);
-      this.noise(0.8, 1800, 0.6, 0.12);
-      this.arp([0, 7, 12, 19, 24], 0.06, 'square', 0.05, 0.25);
+    // một nốt hẹn đúng giờ t (giờ đồng hồ âm thanh), đi qua kênh lãnh địa
+    dnote(t, f, dur, type, vol, slide, dest) {
+      const ctx = this.ctx;
+      const o = ctx.createOscillator();
+      o.type = type;
+      o.frequency.setValueAtTime(f, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g);
+      g.connect(dest || this.dm.bus);
+      o.start(t);
+      o.stop(t + dur + 0.02);
     },
-    // tiếng ù bảng mạch suốt lúc ở trong lãnh địa
-    hum(on) {
+    dhit(t, dur, f, q, vol, dest) {
+      const ctx = this.ctx;
+      const src = ctx.createBufferSource();
+      src.buffer = this.noiseBuf;
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = f;
+      bp.Q.value = q;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(bp); bp.connect(g); g.connect(dest || this.dm.bus);
+      src.start(t, Math.random() * 0.3, dur + 0.02);
+    },
+    // Nhạc nền của lãnh địa: điện tử 140 nhịp/phút, giọng La thứ. Kick mỗi phách, hi-hat nhịp lẻ, snare phách 2 và 4,
+    // bass móc qua lọc, arp chip; pha chạm liên tục thì dồn dập hơn, lúc nổ thì ngân một hợp âm lớn.
+    dmusic(on) {
       const ctx = this.ctx;
       if (!ctx) return;
       if (on) {
-        if (this.humNodes || !Store.data.sfx) return;
-        const t = ctx.currentTime;
-        const gn = ctx.createGain();
-        gn.gain.setValueAtTime(0.0001, t);
-        gn.gain.exponentialRampToValueAtTime(0.08, t + 0.6);
+        if (this.dm) return;
+        const bus = ctx.createGain();
+        const t0 = ctx.currentTime;
+        bus.gain.setValueAtTime(0.0001, t0);
+        bus.gain.exponentialRampToValueAtTime(0.85, t0 + 0.5);
+        bus.connect(this.master);
         const lp = ctx.createBiquadFilter();
         lp.type = 'lowpass';
-        lp.frequency.value = 520;
-        const o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), lfo = ctx.createOscillator(), lg = ctx.createGain();
-        o1.type = o2.type = 'sawtooth';
-        o1.frequency.value = 55;
-        o2.frequency.value = 55.8;
-        lfo.frequency.value = 2;
-        lg.gain.value = 260;
-        lfo.connect(lg); lg.connect(lp.frequency);
-        o1.connect(lp); o2.connect(lp); lp.connect(gn); gn.connect(this.sfx);
-        o1.start(t); o2.start(t); lfo.start(t);
-        this.humNodes = { gn, o1, o2, lfo };
-      } else if (this.humNodes) {
-        const { gn, o1, o2, lfo } = this.humNodes, t = ctx.currentTime;
-        gn.gain.cancelScheduledValues(t);
-        gn.gain.setValueAtTime(Math.max(0.0001, gn.gain.value), t);
-        gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
-        for (const o of [o1, o2, lfo]) o.stop(t + 0.45);
-        this.humNodes = null;
+        lp.frequency.value = 1400;
+        lp.Q.value = 6;
+        lp.connect(bus);
+        const dm = { bus, lp, step: 0, next: t0 + 0.08, timer: 0 };
+        this.dm = dm;
+        const spb = 60 / 140 / 4;
+        const BASS = [0, 0, 12, 0, 10, 0, 12, 7, 0, 0, 12, 0, 15, 12, 10, 7];
+        const ARP = [12, 15, 19, 24, 19, 15, 12, 7];
+        const hz = (base, semi) => base * Math.pow(2, semi / 12);
+        const tick = () => {
+          while (dm.next < ctx.currentTime + 0.14) {
+            const st = dm.step, t = dm.next, ph = DM.phase;
+            const hot = ph === 'spam';
+            if (ph !== 'boom' && ph !== 'exit') {
+              if (st % 4 === 0) { this.dnote(t, 170, 0.16, 'sine', 0.9, 48); this.dhit(t, 0.02, 2500, 1.5, 0.35); }
+              if (st % 2 === 1 || (hot && st % 1 === 0)) this.dhit(t, 0.035, 9000, 1.2, hot ? 0.16 : 0.22);
+              if (st % 8 === 4 || (hot && st % 4 === 2)) { this.dhit(t, 0.14, 1900, 0.8, 0.45); this.dnote(t, 210, 0.08, 'triangle', 0.25, 160); }
+              this.dnote(t, hz(110, BASS[st % 16]), 0.12, 'sawtooth', 0.32, null, lp);
+              const a = ARP[(st + (st >> 4)) % 8] + (hot ? 12 : 0) + ((st >> 5) % 2 ? 3 : 0);
+              this.dnote(t, hz(220, a), 0.08, 'square', hot ? 0.11 : 0.08);
+              // lọc của bass mở dần theo nhịp cho có "thở"
+              lp.frequency.setTargetAtTime(900 + 900 * ((st % 16) / 16), t, 0.05);
+            }
+            dm.step++;
+            dm.next += spb;
+          }
+        };
+        tick();
+        dm.timer = setInterval(tick, 25);
+      } else if (this.dm) {
+        const dm = this.dm, t = ctx.currentTime;
+        clearInterval(dm.timer);
+        dm.bus.gain.cancelScheduledValues(t);
+        dm.bus.gain.setValueAtTime(Math.max(0.0001, dm.bus.gain.value), t);
+        dm.bus.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+        setTimeout(() => { try { dm.bus.disconnect(); } catch (e) { /* bỏ qua */ } }, 700);
+        this.dm = null;
       }
     },
-    lzWarn() { this.tone(1500, 0.05, 'square', 0.05); this.tone(1500, 0.05, 'square', 0.05, null, 0.09); },
-    lzFire() { this.tone(2400, 0.28, 'sawtooth', 0.08, 260); this.noise(0.18, 5000, 0.8, 0.07); },
-    lzHit() { this.tone(110, 0.3, 'square', 0.18, 60); this.noise(0.25, 600, 0.7, 0.2); },
-    item() { this.arp([12, 16, 19, 24], 0.04, 'triangle', 0.16, 0.2); },
-    whoosh() { this.noise(0.45, 900, 0.5, 0.16); this.tone(200, 0.45, 'triangle', 0.08, 900); },
-    ram() { this.noise(0.4, 300, 0.6, 0.35); this.tone(140, 0.45, 'sine', 0.3, 38); },
+    // giữ tên cũ: hum(true/false) bật / tắt nhạc nền lãnh địa
+    hum(on) { this.dmusic(on); },
+    domainEnter() {
+      const b = this.dsfx;
+      this.tone(120, 0.9, 'sawtooth', 0.3, 1600, 0, b);
+      this.noise(0.9, 2400, 0.5, 0.35, 0, b);
+      [0, 7, 12, 19, 24].forEach((s2, i) => this.tone(220 * Math.pow(2, s2 / 12), 0.25, 'square', 0.14, null, 0.15 + i * 0.07, b));
+    },
+    lzWarn() {
+      const b = this.dsfx;
+      this.tone(1480, 0.06, 'square', 0.18, null, 0, b);
+      this.tone(1480, 0.06, 'square', 0.18, null, 0.1, b);
+    },
+    lzFire() {
+      const b = this.dsfx;
+      this.tone(2600, 0.3, 'sawtooth', 0.3, 320, 0, b);
+      this.tone(1300, 0.3, 'square', 0.12, 160, 0, b);
+      this.noise(0.22, 5000, 0.7, 0.3, 0, b);
+    },
+    lzHit() {
+      const b = this.dsfx;
+      this.tone(330, 0.32, 'square', 0.45, 110, 0, b);
+      this.noise(0.3, 1200, 0.6, 0.5, 0, b);
+    },
+    item() {
+      const b = this.dsfx;
+      [12, 16, 19, 24, 28].forEach((s2, i) => this.tone(220 * Math.pow(2, s2 / 12), 0.18, 'triangle', 0.35, null, i * 0.045, b));
+    },
+    whoosh() {
+      const b = this.dsfx;
+      this.noise(0.5, 1500, 0.5, 0.45, 0, b);
+      this.tone(300, 0.5, 'triangle', 0.25, 1400, 0, b);
+    },
+    ram() {
+      const b = this.dsfx;
+      this.noise(0.45, 700, 0.6, 0.8, 0, b);
+      this.tone(220, 0.45, 'square', 0.4, 60, 0, b);
+      this.noise(0.6, 6500, 0.8, 0.3, 0.02, b);
+    },
     tap(n) {
-      const f = 300 + Math.min(1, n / 24) * 900;
-      this.tone(f, 0.06, 'square', 0.07, f * 1.4);
-      this.noise(0.04, 3000, 1.2, 0.06);
+      const b = this.dsfx, f = 380 + Math.min(1, n / 24) * 1100;
+      this.tone(f, 0.07, 'square', 0.24, f * 1.4, 0, b);
+      this.noise(0.05, 3200, 1.2, 0.22, 0, b);
     },
     boom() {
-      this.noise(1.1, 220, 0.5, 0.45);
-      this.tone(90, 1.0, 'sine', 0.35, 30);
-      this.arp([12, 16, 19, 24, 28, 31], 0.06, 'triangle', 0.14, 0.4);
+      const b = this.dsfx;
+      this.noise(1.2, 900, 0.5, 0.9, 0, b);
+      this.noise(1.6, 6500, 0.7, 0.4, 0, b);
+      this.tone(260, 1.0, 'sawtooth', 0.4, 45, 0, b);
+      // hợp âm La thứ ngân dài, rồi chuỗi lấp lánh
+      for (const f of [440, 523.25, 659.25, 880]) this.tone(f, 1.6, 'triangle', 0.16, null, 0.05, b);
+      [12, 15, 19, 24, 27, 31].forEach((s2, i) => this.tone(440 * Math.pow(2, s2 / 12), 0.3, 'square', 0.1, null, 0.3 + i * 0.06, b));
     },
-    domainExit() { this.tone(900, 0.6, 'sawtooth', 0.09, 80); this.noise(0.5, 1200, 0.6, 0.08); },
+    domainExit() {
+      const b = this.dsfx;
+      this.tone(1600, 0.65, 'sawtooth', 0.25, 120, 0, b);
+      this.noise(0.6, 1500, 0.6, 0.3, 0, b);
+    },
     // Đếm ngược hồi sinh: ba tiếng tách ở 3, 2, 1 và một tiếng cao, ngân hơn lúc vào nhạc.
     // Đi thẳng ra loa (không qua nút tắt âm hiệu ứng) vì đây là nhịp để vào lại bài.
     countTicks(t0, beat) {
