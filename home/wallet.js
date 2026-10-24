@@ -40,6 +40,8 @@
       up: v.up && typeof v.up === 'object' ? v.up : {},
       // Thử thách đột phá (skin Định mệnh): { 'nang-tho': { uses, combo, hard: { bài: 1 } } }.
       quest: v.quest && typeof v.quest === 'object' ? v.quest : {},
+      // Số ván đã dùng kỹ năng skin độc quyền (bậc tối đa) trong tuần: { id: thứ Hai đầu tuần, used: { 'vi-mach': 1 } }.
+      week: v.week && typeof v.week === 'object' ? v.week : {},
       updatedAt: v.updatedAt || 0,
     };
   };
@@ -66,6 +68,12 @@
     try { localStorage.setItem(KEY, JSON.stringify(w)); } catch (e) { /* bỏ qua */ }
     if (window.Sync) window.Sync.dirty();
     return w;
+  };
+  // Tuần tính từ 0 giờ thứ Hai giờ Việt Nam; mã tuần là ngày thứ Hai đó, vd. '2026-10-19'.
+  const weekId = (t) => {
+    const d = new Date((t || Date.now()) + 7 * 3600e3);
+    d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+    return d.toISOString().slice(0, 10);
   };
   // Đủ gói nào thì đổi luôn gói đó, không cần bấm đổi tay.
   const convert = (w) => {
@@ -153,6 +161,18 @@
     },
     equipped() { return read().equip; },
     skillLevel(id, w) { return Math.max(0, Math.floor(((w || read()).up || {})[id] || 0)); },
+    weekId,
+    // Số ván tuần này đã dùng kỹ năng của skin id (tuần cũ thì coi như 0).
+    weekUsed(id, w) {
+      const wk = (w || read()).week;
+      return wk.id === weekId() ? Math.max(0, Math.floor((wk.used || {})[id] || 0)) : 0;
+    },
+    useWeek(id) {
+      return this.update((w) => {
+        if (w.week.id !== weekId()) w.week = { id: weekId(), used: {} };
+        w.week.used = Object.assign({}, w.week.used, { [id]: this.weekUsed(id, w) + 1 });
+      });
+    },
     equip(slot, id) {
       return this.update((w) => {
         if (!this.owns(slot, id, w)) return false;

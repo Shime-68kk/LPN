@@ -454,7 +454,7 @@
         badge.textContent = Skins.eventById(item.ev).short;
         b.appendChild(badge);
       }
-      // Skin nào cũng có kỹ năng riêng: biểu tượng ở góc phải thẻ, đã nâng cấp thì ghi bậc.
+      // Skin độc quyền có kỹ năng riêng: biểu tượng ở góc phải thẻ, đã nâng cấp thì ghi bậc.
       const skill = item.slot === 'skin' && Skins.skillOf ? Skins.skillOf(item, Wallet.skillLevel(item.id, w)) : null;
       if (skill) {
         const sk = document.createElement('span');
@@ -506,7 +506,8 @@
       line.textContent = skill.line + ' Trong ' + skill.time + ' giây: ' + skill.effects.join(', ') + '.';
       const how = document.createElement('span');
       how.className = 'ss-how';
-      how.textContent = 'Ăn đủ ' + skill.need + ' lá để nạp, khi chơi chạm đúp màn hình để dùng.';
+      how.textContent = 'Ăn đủ ' + skill.need + ' lá để nạp, khi chơi chạm đúp màn hình để dùng.'
+        + (skill.weekly ? ' Đã nâng tối đa: mỗi tuần dùng được ' + Skins.WEEK_USES + ' ván, đầu ván game hỏi có dùng không.' : ' Chưa nâng tối đa thì dùng thoải mái.');
       body.append(line, how);
       box.replaceChildren(ic, body);
     }
@@ -552,6 +553,8 @@
     parts.push(head);
     if (!next) {
       parts.push(el('p', 'su-max', cur.breakthrough ? 'Đã đột phá: ' + cur.breakthrough + ' ✓' : 'Đã nâng tối đa ✓'));
+      const left = Math.max(0, Skins.WEEK_USES - Wallet.weekUsed(item.id, w));
+      parts.push(el('p', 'su-note', 'Tuần này còn ' + left + '/' + Skins.WEEK_USES + ' ván dùng kỹ năng. Sang thứ Hai có lại đủ.'));
       box.replaceChildren(...parts);
       return;
     }

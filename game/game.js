@@ -86,9 +86,11 @@
   let T = THEMES[weather];
 
   // ================= Đồ đang mặc (Tiệm Sâu) =================
-  // Skin đổi hình, và mỗi skin có một kỹ năng riêng khi chơi (skin càng hiếm kỹ năng càng mạnh).
+  // Skin đổi hình; chỉ skin độc quyền (Định mệnh) có kỹ năng khi chơi.
   const LOOK = {};
   let PET = null;
+  // Skin độc quyền (đã nâng tối đa) người chơi chọn dùng kỹ năng trong ván này; null là chơi thường.
+  let PICK = null;
   // Quà dùng thử (bảng cập nhật ở trang chủ ghi lpn:trial): mặc tạm một skin ở bậc kỹ năng cao nhất trong vài ván.
   const TRIAL_KEY = 'lpn:trial';
   const trialGet = () => { try { return JSON.parse(localStorage.getItem(TRIAL_KEY)); } catch (e) { return null; } };
@@ -96,8 +98,11 @@
   const trialNow = () => { const t = trialGet(); return t && t.left > 0 && Skins.byKey('skin:' + t.skin) ? t : null; };
   function loadLook() {
     const eq = window.Wallet ? Wallet.equipped() : {};
+    const was = LOOK.skin;
     LOOK.trial = trialNow();
-    LOOK.skin = Skins.get('skin', LOOK.trial ? LOOK.trial.skin : eq.skin);
+    LOOK.skin = Skins.get('skin', LOOK.trial ? LOOK.trial.skin : PICK || eq.skin);
+    // Đổi skin giữa chừng (chọn bé độc quyền cho ván này, hết vé dùng thử): vẽ lại thân bé.
+    if (was && was !== LOOK.skin) buildSprites();
     LOOK.fx = Skins.get('fx', eq.fx);
     LOOK.wing = Skins.get('wing', eq.wing);
     LOOK.bg = Skins.get('bg', eq.bg);
@@ -110,24 +115,41 @@
     document.body.style.background = T.sky;
     // skin có tính cách (Nàng Thơ, Vi Mạch): ở màn chọn bài chạm, vuốt được
     PET = Skins.makePet ? Skins.makePet(LOOK.skin, (window.Sync && window.Sync.who) || null) : null;
-    // Kỹ năng riêng của skin (xem SKILLS trong skins.js)
-    LOOK.skill = Skins.skillOf ? Skins.skillOf(LOOK.skin, LOOK.trial ? LOOK.trial.level : window.Wallet ? Wallet.skillLevel(LOOK.skin.id) : 0) : null;
-    if (TRY_DOMAIN && LOOK.skill) LOOK.skill = Object.assign({}, LOOK.skill, { fx: Object.assign({}, LOOK.skill.fx, { domain: true }) });
+    // Kỹ năng riêng của skin (xem SKILLS trong skins.js). Bậc tối đa thì chỉ có ở ván đã chọn dùng.
+    const own = Skins.skillOf ? Skins.skillOf(LOOK.skin, LOOK.trial ? LOOK.trial.level : window.Wallet ? Wallet.skillLevel(LOOK.skin.id) : 0) : null;
+    LOOK.skill = own && own.weekly && !LOOK.trial && PICK !== LOOK.skin.id ? null : own;
+    // Chơi thử Lãnh Địa: skin nào cũng mượn kỹ năng Vi Mạch bậc tối đa.
+    if (TRY_DOMAIN) LOOK.skill = Skins.skillOf(Skins.byKey('skin:vi-mach'), 4);
+    // Nút kỹ năng ở màn chọn bài: kỹ năng skin đang mặc; mặc skin thường thì hiện bé độc quyền đã nâng tối đa (nếu có).
+    const picks = weeklyPicks();
+    const sk = LOOK.tile = LOOK.skill || own || (picks[0] && picks[0].sk);
     const ms = document.getElementById('menu-skill');
     if (ms) {
-      const sk = LOOK.skill;
       ms.hidden = !sk;
       if (sk) {
+        const left = weekLeft(sk.id);
         ms.style.setProperty('--sk', sk.color);
         ms.style.setProperty('--sk-bg', sk.color + '24');
         document.getElementById('menu-skill-ic').innerHTML = Skins.skillIcon(sk.id, sk.iconTier ? 30 : 22, sk.iconTier);
         document.getElementById('menu-skill-name').textContent = sk.name;
         document.getElementById('menu-skill-sub').textContent = LOOK.trial ? 'Dùng thử · còn ' + LOOK.trial.left + ' ván'
-          : sk.breakthrough ? 'Đột phá · ' + sk.breakthrough : sk.level ? 'Kỹ năng · bậc ' + sk.level + '/' + sk.max : 'Kỹ năng · xem';
+          : sk.weekly ? (left ? 'Tuần này còn ' + left + '/' + Skins.WEEK_USES + ' ván' : 'Hết lượt tuần này')
+            : sk.level ? 'Kỹ năng · bậc ' + sk.level + '/' + sk.max : 'Kỹ năng · xem';
         ms.setAttribute('aria-label', 'Kỹ năng ' + sk.name + ', xem chi tiết');
       }
     }
   }
+  // Skin độc quyền đã có và đã nâng tối đa (mỗi tuần dùng kỹ năng được Skins.WEEK_USES ván), skin đang mặc đứng đầu.
+  function weeklyPicks() {
+    if (!window.Wallet || !Skins.skillOf) return [];
+    const w = Wallet.get();
+    return Skins.ITEMS
+      .filter((it) => it.slot === 'skin' && Wallet.owns('skin', it.id, w))
+      .map((it) => ({ item: it, sk: Skins.skillOf(it, Wallet.skillLevel(it.id, w)) }))
+      .filter((p) => p.sk && p.sk.weekly)
+      .sort((a, b) => (b.item.id === w.equip.skin) - (a.item.id === w.equip.skin));
+  }
+  const weekLeft = (id) => (window.Wallet ? Math.max(0, Skins.WEEK_USES - Wallet.weekUsed(id)) : 0);
   loadLook();
 
   // ================= Âm thanh (Web Audio) =================
@@ -1104,6 +1126,12 @@
       loadLook();
       const tr = LOOK.trial;
       if (tr) { tr.left--; trialSet(tr); }
+      // Ván đã chọn dùng kỹ năng độc quyền: trừ một lượt của tuần.
+      else if (PICK && LOOK.skill && LOOK.skill.weekly && window.Wallet) {
+        Wallet.useWeek(PICK);
+        const left = weekLeft(PICK), name = LOOK.skill.breakthrough || LOOK.skill.name;
+        setTimeout(() => UI.toast(name + ' · tuần này còn ' + left + '/' + Skins.WEEK_USES + ' ván'), 1200);
+      }
       this.setup();
       if (tr && LOOK.skill && LOOK.skill.fx.domain) {
         this.sk.sup = Math.max(this.sk.sup, Math.round(DOMAIN_NEED / 2));
@@ -3351,9 +3379,13 @@
   let SONGS = [];
   let loadingBtn = null;
 
-  async function startSong(song, btn) {
+  function startSong(song, btn) {
     if (loadingBtn) return;
     Preview.stop(true);
+    askPick(() => loadSong(song, btn));
+  }
+  async function loadSong(song, btn) {
+    if (loadingBtn) return;
     Sound.unlock();
     Sound.click();
     loadingBtn = btn || null;
@@ -3380,14 +3412,52 @@
   }
 
   function restart() {
-    bank();
-    UI.hide('pause');
-    UI.hide('result');
-    Sound.unlock();
-    Sound.stopMusic();
-    if (Sound.ctx.state !== 'running') Sound.ctx.resume();
-    UI.show('hud');
-    Game.begin();
+    askPick(() => {
+      bank();
+      UI.hide('pause');
+      UI.hide('result');
+      Sound.unlock();
+      Sound.stopMusic();
+      if (Sound.ctx.state !== 'running') Sound.ctx.resume();
+      UI.show('hud');
+      Game.begin();
+    });
+  }
+
+  // Đầu mỗi ván: có bé độc quyền đã nâng tối đa còn lượt trong tuần thì hỏi ván này có dùng kỹ năng không.
+  // Chọn bé nào thì ván đó mặc bé ấy; chạm ra ngoài bảng là thôi, chưa vào ván.
+  function askPick(go) {
+    PICK = null;
+    const picks = TRY_DOMAIN || trialNow() ? [] : weeklyPicks();
+    if (!picks.some((p) => weekLeft(p.item.id) > 0)) { go(); return; }
+    const done = (id) => { PICK = id; $('pick').hidden = true; go(); };
+    $('pick-list').replaceChildren(...picks.map((p) => {
+      const left = weekLeft(p.item.id), sk = p.sk;
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pick-opt';
+      b.disabled = !left;
+      b.style.setProperty('--sk', sk.color);
+      b.style.setProperty('--sk-bg', sk.color + '24');
+      const ic = document.createElement('span');
+      ic.className = 'mt-ic';
+      ic.innerHTML = Skins.skillIcon(sk.id, sk.iconTier ? 30 : 22, sk.iconTier);
+      const txt = document.createElement('span');
+      txt.className = 'mt-txt';
+      const name = document.createElement('b');
+      name.textContent = p.item.name;
+      const sub = document.createElement('small');
+      sub.textContent = (sk.breakthrough || sk.name) + ' · ' + (left ? 'còn ' + left + '/' + Skins.WEEK_USES + ' ván' : 'hết lượt, thứ Hai có lại');
+      txt.append(name, sub);
+      b.append(ic, txt);
+      b.addEventListener('click', () => { Sound.click(); done(p.item.id); });
+      return b;
+    }));
+    $('pick-msg').textContent = 'Bé độc quyền đã nâng tối đa, mỗi tuần mỗi bé dùng phép được ' + Skins.WEEK_USES + ' ván. Ván này chọn bé nào?';
+    $('btn-pick-no').onclick = () => { Sound.click(); done(null); };
+    $('pick').hidden = false;
+    const first = $('pick-list').querySelector('button:not(:disabled)');
+    if (first) first.focus({ preventScroll: true });
   }
 
   function toMenu() {
@@ -3402,6 +3472,7 @@
     UI.hide('hud');
     UI.showHint(false);
     const wasTrial = !!LOOK.trial;
+    PICK = null;
     loadLook();
     const t = trialGet();
     if (wasTrial && !LOOK.trial && t && !t.told) {
@@ -3543,7 +3614,7 @@
   $('btn-revive').addEventListener('click', () => Game.revive());
   // Màn chọn bài: bấm nút kỹ năng thì mở thẻ chi tiết.
   function showSkillInfo() {
-    const sk = LOOK.skill;
+    const sk = LOOK.tile;
     if (!sk) return;
     const card = document.querySelector('#skillinfo .skill-card');
     card.style.setProperty('--sk', sk.color);
@@ -3554,13 +3625,14 @@
     $('si-line').textContent = sk.line;
     const list = $('si-list');
     list.replaceChildren(...sk.effects.map((e) => { const li = document.createElement('li'); li.textContent = e.charAt(0).toUpperCase() + e.slice(1) + '.'; return li; }));
-    $('si-how').textContent = sk.how;
+    $('si-how').textContent = sk.how + (sk.weekly && !LOOK.trial ? ' Tuần này còn ' + weekLeft(sk.id) + '/' + Skins.WEEK_USES + ' ván.' : '');
     $('skillinfo').hidden = false;
     $('btn-si-close').focus({ preventScroll: true });
   }
   $('menu-skill').addEventListener('click', () => { Sound.click(); showSkillInfo(); });
   $('btn-si-close').addEventListener('click', () => { Sound.click(); $('skillinfo').hidden = true; });
   $('skillinfo').addEventListener('click', (e) => { if (e.target === $('skillinfo')) $('skillinfo').hidden = true; });
+  $('pick').addEventListener('click', (e) => { if (e.target === $('pick')) $('pick').hidden = true; });
   // Nút kỹ năng: bấm xuống là dùng ngay (không chờ nhấc tay).
   $('skill').addEventListener('pointerdown', (e) => { e.preventDefault(); Game.trigger(); });
   $('skill').addEventListener('click', () => Game.trigger());

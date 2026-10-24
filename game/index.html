@@ -45,7 +45,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" />
-  <link rel="stylesheet" href="game.css?v=24" />
+  <link rel="stylesheet" href="game.css?v=25" />
 </head>
 <body>
   <script>document.body.style.background = LPN_GAME.sky; document.body.classList.toggle('night', LPN_GAME.night); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
@@ -158,7 +158,7 @@
       <ul class="si-list" id="si-list"></ul>
       <p class="si-how" id="si-how"></p>
       <button type="button" class="btn primary" id="btn-si-close">Đã hiểu</button>
-      <a class="btn" href="../shop/?from=game#skin">Nâng cấp, đổi skin ở Tiệm Sâu</a>
+      <a class="btn" href="../shop/?from=game#skin">Nâng cấp ở Tiệm Sâu</a>
     </div>
   </section>
 
@@ -209,10 +209,21 @@
     </div>
   </section>
 
-  <script src="../home/sync.js?v=3"></script>
-  <script src="../home/wallet.js?v=10"></script>
-  <script src="../shop/skins.js?v=21"></script>
-  <script src="game.js?v=42"></script>
+  <!-- Đầu ván: skin độc quyền đã nâng tối đa, mỗi tuần dùng kỹ năng được vài ván; hỏi ván này có dùng không.
+       Đặt sau cùng để nằm trên bảng Tạm dừng, Kết quả khi bấm Chơi lại. -->
+  <section id="pick" class="overlay" hidden>
+    <div class="card pick-card" role="dialog" aria-modal="true" aria-labelledby="pick-title">
+      <h2 id="pick-title">Dùng phép độc quyền?</h2>
+      <p class="message" id="pick-msg"></p>
+      <div class="pick-list" id="pick-list"></div>
+      <button type="button" class="btn" id="btn-pick-no">Không, chơi bình thường</button>
+    </div>
+  </section>
+
+  <script src="../home/sync.js?v=4"></script>
+  <script src="../home/wallet.js?v=11"></script>
+  <script src="../shop/skins.js?v=22"></script>
+  <script src="game.js?v=43"></script>
   <script>
     // Tiệm Sâu đang có sự kiện thì gắn nhãn lên nút.
     if (window.Skins && Skins.activeEvent()) {

@@ -550,6 +550,8 @@ body.night .menu-wallet b { color: #9FE0B2; }
 .m-tile.shop .mt-ic svg { width: 20px; height: 20px; fill: none; stroke: #2B2140; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .m-tile.shop small { color: rgba(43, 33, 64, 0.75); }
 .m-tile.shop .menu-ev { position: absolute; top: -8px; right: 10px; margin: 0; }
+/* Không có bé độc quyền thì nút Tiệm Sâu chiếm cả hàng. */
+.menu-tiles:has(.mt-skill[hidden]) .m-tile.shop { grid-column: 1 / -1; }
 .m-tile.mt-skill { border-color: var(--sk, var(--line)); }
 .m-tile.mt-skill .mt-ic { color: var(--sk); background: var(--sk-bg); }
 .skill-card a.btn { display: flex; align-items: center; justify-content: center; color: var(--ink); text-decoration: none; }
@@ -560,6 +562,26 @@ body.night .menu-wallet b { color: #9FE0B2; }
 .si-list { margin: 2px 0 8px; padding: 0; list-style: none; text-align: left; display: grid; gap: 7px; }
 .si-list li { position: relative; padding-left: 18px; font-size: 14px; line-height: 1.45; color: var(--ink); }
 .si-list li::before { content: ''; position: absolute; left: 3px; top: 0.5em; width: 7px; height: 7px; border-radius: 50%; background: var(--sk); }
+/* Đầu ván: chọn bé độc quyền dùng phép */
+.pick-list { display: grid; gap: 8px; margin: 0 0 2px; }
+.pick-opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 8px 14px;
+  border: 1.5px solid var(--sk);
+  border-radius: 18px;
+  background: var(--sk-bg);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.pick-opt:active { transform: scale(0.98); }
+.pick-opt:disabled { opacity: 0.5; cursor: default; transform: none; }
+.pick-opt .mt-ic { width: 40px; height: 40px; color: var(--sk); background: var(--surface); }
+.pick-opt .mt-txt small { color: var(--ink); opacity: 0.75; }
 .si-how { margin: 0 0 6px; font-size: 13px; line-height: 1.5; color: var(--muted); }
 .hearts svg.bonus { fill: #FFC24B; stroke: #C98A12; }
 

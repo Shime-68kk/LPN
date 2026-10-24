@@ -1,10 +1,11 @@
-// Bảng giới thiệu bản cập nhật "Kỹ năng skin" (giấy kem như các trang khác, hình bé sâu thật, lời nhắn ngắn):
-// mỗi bé sâu có một kỹ năng, nâng cấp ở Tiệm Sâu, đột phá; kèm vé dùng thử Sâu Vi Mạch bậc tối đa (có Lãnh Địa) 3 ván.
+// Bảng giới thiệu bản cập nhật "Phép độc quyền" (giấy kem như các trang khác, hình bé sâu thật, lời nhắn ngắn):
+// chỉ Sâu Nàng Thơ và Sâu Vi Mạch còn kỹ năng; nâng tối đa rồi thì mỗi tuần mỗi bé 3 ván. Kèm vé dùng thử
+// Sâu Vi Mạch bậc tối đa (có Lãnh Địa) 3 ván nếu chưa nhận và chưa tự nâng tối đa.
 // Hiện sau màn khoá, khi không có thông báo chương mới đang mở. Bấm "Để sau" thì nửa ngày sau nhắc lại
 // (tối đa 3 lần); đã bấm dùng thử hoặc xem Tiệm Sâu thì thôi.
 'use strict';
 (() => {
-  const KEY = 'lpn:upd:skills1';
+  const KEY = 'lpn:upd:skills2';
   const TRIAL_KEY = 'lpn:trial';
   const $ = (id) => document.getElementById(id);
   const load = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
@@ -15,9 +16,9 @@
   const st = load(KEY) || { n: 0, at: 0, done: false };
   if (st.done || st.n >= 3 || Date.now() - st.at < 12 * 3600e3) return;
 
-  // Hai biểu tượng nhỏ cạnh lời nhắn: kỹ năng nâng tối đa (đá quý) và đột phá siêu cấp.
-  $('upd-ic-up').style.color = Skins.SKILLS['tho-cam'].color;
-  $('upd-ic-up').innerHTML = Skins.skillIcon('tho-cam', 34, 1);
+  // Hai biểu tượng nhỏ cạnh lời nhắn: kỹ năng Nàng Thơ (đá quý) và Vi Mạch đột phá siêu cấp.
+  $('upd-ic-up').style.color = Skins.SKILLS['nang-tho'].color;
+  $('upd-ic-up').innerHTML = Skins.skillIcon('nang-tho', 34, 1);
   $('upd-ic-brk').style.color = Skins.SKILLS['vi-mach'].color;
   $('upd-ic-brk').innerHTML = Skins.skillIcon('vi-mach', 34, 2);
 
@@ -37,6 +38,13 @@
     raf = requestAnimationFrame(draw);
   }
 
+  // Đã nhận vé, hoặc Vi Mạch của máy này đã nâng tối đa, thì thôi vé dùng thử.
+  const given = (load(TRIAL_KEY) || {}).given;
+  const maxed = (((load('lpn:wallet') || {}).up || {})['vi-mach'] || 0) >= 4;
+  const offer = !given && !maxed;
+  $('upd-ticket').hidden = !offer;
+  if (!offer) $('upd-try').textContent = 'Vào chơi thôi';
+
   function close(done) {
     box.hidden = true;
     cancelAnimationFrame(raf);
@@ -44,8 +52,7 @@
   }
   $('upd-try').addEventListener('click', () => {
     // Quà dùng thử: 3 ván Sâu Vi Mạch bậc tối đa (game đọc lpn:trial). Đã nhận rồi thì không cộng thêm.
-    const tr = load(TRIAL_KEY);
-    if (!tr || !tr.given) save(TRIAL_KEY, { skin: 'vi-mach', level: 4, left: 3, given: Date.now() });
+    if (offer) save(TRIAL_KEY, { skin: 'vi-mach', level: 4, left: 3, given: Date.now() });
     close(true);
   });
   $('upd-shop').addEventListener('click', () => close(true));

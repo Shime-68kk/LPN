@@ -189,8 +189,10 @@
   ];
 
   // ================= Kỹ năng trong game =================
-  // Mỗi skin có một kỹ năng riêng (anh Quang muốn vậy): ăn lá để nạp, đầy thì chạm đúp màn hình
-  // (hoặc phím cách, hoặc nút tròn) để dùng. Skin càng hiếm thì nạp càng nhanh, dùng càng lâu, phép càng mạnh.
+  // Chỉ skin độc quyền (Định mệnh) có kỹ năng: ăn lá để nạp, đầy thì chạm đúp màn hình
+  // (hoặc phím cách, hoặc nút tròn) để dùng. Chưa nâng tối đa thì dùng thoải mái để làm thử thách;
+  // nâng tối đa rồi thì mỗi tuần mỗi bé chỉ dùng được WEEK_USES ván, đầu ván game hỏi có dùng không.
+  // Kỹ năng của các skin khác vẫn để trong bảng dưới nhưng đã tắt (anh Quang muốn game tập trung vào truyện).
   const SKILL_TIER = {
     thuong: { need: 30, time: 5 },
     hiem: { need: 26, time: 6 },
@@ -348,13 +350,15 @@
     if (fx.domain) out.push('nạp đủ 60 lá mở Lãnh Địa Vi Mạch: né laze, húc nát lá chip khổng lồ, thu về tới 300 lá, 300.000 điểm và 300 đốt');
     return out;
   }
-  // Kỹ năng của một skin, đủ số lá cần nạp và số giây theo độ hiếm.
+  const WEEK_USES = 3;
+  const hasSkill = (item) => !!(item && item.rarity === 'dinhmenh' && SKILLS[item.id]);
   // Số bậc nâng cấp tối đa của skin (theo độ hiếm).
-  const skillMax = (item) => (item && SKILLS[item.id] ? (UP_COST[item.rarity] || []).length : 0);
+  const skillMax = (item) => (hasSkill(item) ? (UP_COST[item.rarity] || []).length : 0);
+  // Kỹ năng của một skin, đủ số lá cần nạp và số giây theo độ hiếm.
   // level: bậc nâng cấp (0 = chưa nâng). Gộp các phần lv của từng bậc vào fx gốc.
   function skillOf(item, level) {
-    const base = item && SKILLS[item.id];
-    if (!base) return null;
+    if (!hasSkill(item)) return null;
+    const base = SKILLS[item.id];
     const tier = SKILL_TIER[item.rarity] || SKILL_TIER.thuong;
     const max = skillMax(item);
     const lvl = Math.max(0, Math.min(max, Math.floor(level || 0)));
@@ -365,12 +369,13 @@
       need: Math.max(6, Math.round(tier.need * UP_NEED[lvl])),
       time: tier.time + lvl,
       breakthrough: lvl >= 4 && BREAK[item.id] ? BREAK[item.id].name : '',
+      weekly: lvl >= max,
     });
-    // Biểu tượng: Sử thi trở lên nâng hết bậc (Định mệnh: đủ 3 bậc) thì đổi khung đá quý; đột phá thì siêu cấp.
-    const topTier = item.rarity === 'suthi' || item.rarity === 'huyenthoai' || item.rarity === 'dinhmenh';
-    sk.iconTier = sk.breakthrough ? 2 : topTier && lvl >= Math.min(max, 3) ? 1 : 0;
+    // Biểu tượng: đủ 3 bậc thì đổi khung đá quý; đột phá thì siêu cấp.
+    sk.iconTier = sk.breakthrough ? 2 : lvl >= 3 ? 1 : 0;
     sk.effects = skillEffects(sk.fx);
-    sk.how = 'Ăn đủ ' + sk.need + ' lá để nạp đầy, rồi chạm đúp màn hình (máy tính bấm phím cách). Kỹ năng kéo dài ' + sk.time + ' giây.';
+    sk.how = 'Ăn đủ ' + sk.need + ' lá để nạp đầy, rồi chạm đúp màn hình (máy tính bấm phím cách). Kỹ năng kéo dài ' + sk.time + ' giây.'
+      + (sk.weekly ? ' Đã nâng tối đa nên mỗi tuần dùng được ' + WEEK_USES + ' ván, đầu ván chọn có dùng hay không.' : '');
     sk.text = sk.line + ' Trong ' + sk.time + ' giây: ' + sk.effects.join(', ') + '. ' + sk.how;
     return sk;
   }
@@ -3329,6 +3334,6 @@
   window.Skins = {
     ITEMS, RARITY, DEFAULT, BASE, EVENTS, get, byKey, palette, eventById, activeEvent, visibleEvents, itemState, startOf, isPreview, makePet,
     drawSegment, drawHead, drawCocoon, drawButterfly, eatBurst, stepParticle, drawParticle, drawPreview, heartPath,
-    drawBackdrop, backdropTop, SKILLS, SKILL_RAND, skillOf, skillIcon, skillEffects, skillMax, UP_COST, BREAK, BREAK_GOALS,
+    drawBackdrop, backdropTop, SKILLS, SKILL_RAND, skillOf, skillIcon, skillEffects, skillMax, UP_COST, BREAK, BREAK_GOALS, WEEK_USES,
   };
 })();

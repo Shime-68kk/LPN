@@ -43,6 +43,12 @@
     }
     return out;
   };
+  // Lượt dùng kỹ năng độc quyền trong tuần: cùng tuần thì lấy số ván cao hơn, khác tuần thì lấy tuần mới.
+  const weekMerge = (a, b) => {
+    const x = a || {}, y = b || {};
+    if (x.id !== y.id) return (x.id || '') > (y.id || '') ? x : y;
+    return { id: x.id, used: maxMap(x.used, y.used) };
+  };
   // Gộp hai bản: đồ đã có, chương đã đọc, kỷ lục… thì cộng dồn; số đốt thì lấy bản sửa sau cùng.
   function merge(local, remote, first) {
     const out = {};
@@ -55,6 +61,7 @@
         grants: union(lw.grants, rw.grants),
         up: maxMap(lw.up, rw.up),
         quest: questMerge(lw.quest, rw.quest),
+        week: weekMerge(lw.week, rw.week),
         gift: !!(lw.gift || rw.gift),
         giftSeen: !!(lw.giftSeen || rw.giftSeen),
         migrated: !!(lw.migrated || rw.migrated),
