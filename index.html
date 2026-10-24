@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Yêu Lệ Thủy</title>
+  <!-- Cổng vào duy nhất ở gốc: không có giao diện, chỉ chuyển trang.
+       Web hiện tại nằm ở home/ (cùng game/, shop/, story/); web cũ nằm ở legacy/ (xem README.md). -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#29224E" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Yêu Lệ Thủy" />
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="assets/img/icon-192.png" />
+  <script>
+    (() => {
+      // Nền theo ngày / đêm như mọi trang, để chuyển sang home/ không chớp sáng.
+      const h = new Date().getHours();
+      document.documentElement.style.background = h >= 18 || h < 6 ? '#1D1832' : '#FFF8EF';
+      // Link GitHub Pages cũ: sang domain Cloudflare. Chạy trên máy (localhost) thì bỏ qua.
+      const TARGET = 'https://lpn.luongquang060804.workers.dev';
+      const host = location.hostname;
+      const local = host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || location.protocol === 'file:';
+      if (!local && !location.href.startsWith(TARGET)) {
+        location.replace(TARGET + location.search + location.hash);
+        return;
+      }
+      // Link cũ có ?cu=1 (giao diện cũ) thì mở web cũ ở legacy/, còn lại vào web hiện tại.
+      location.replace((/[?&]cu=1/.test(location.search) ? 'legacy/' : 'home/') + location.hash);
+    })();
+  </script>
+</head>
+<body></body>
+</html>

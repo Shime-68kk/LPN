@@ -2,17 +2,17 @@
 # Tạo ảnh thu nhỏ WebP cho album và ảnh bìa nhạc (cần ffmpeg có libwebp).
 # Chạy từ thư mục gốc dự án:  bash tools/make_thumbs.sh
 set -euo pipefail
-out=style/thumbs
+out=assets/thumbs
 mkdir -p "$out"
 
-for f in style/img/Anh\ \(*\).jpg; do
+for f in assets/img/Anh\ \(*\).jpg; do
   n=$(basename "$f" .jpg | tr -dc '0-9')
   ffmpeg -v error -y -i "$f" \
     -vf "scale=360:360:force_original_aspect_ratio=increase,crop=360:360" \
     -c:v libwebp -quality 72 "$out/anh-$n.webp"
 done
 
-for f in style/sound/Anh\ \(*\).jpg; do
+for f in assets/sound/Anh\ \(*\).jpg; do
   n=$(basename "$f" .jpg | tr -dc '0-9')
   ffmpeg -v error -y -i "$f" \
     -vf "scale=160:160:force_original_aspect_ratio=increase,crop=160:160" \
@@ -20,7 +20,7 @@ for f in style/sound/Anh\ \(*\).jpg; do
 done
 
 # Bìa tạm cho bài "chờ chút..." lấy từ ảnh album số 14.
-ffmpeg -v error -y -i "style/img/Anh (14).jpg" \
+ffmpeg -v error -y -i "assets/img/Anh (14).jpg" \
   -vf "scale=160:160:force_original_aspect_ratio=increase,crop=160:160" \
   -c:v libwebp -quality 75 "$out/cover-7.webp"
 

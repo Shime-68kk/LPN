@@ -405,7 +405,7 @@
     letterLoaded = true;
     const box = $('letter');
     box.textContent = 'Đang mở thư…';
-    fetch('../style/letter.txt')
+    fetch('../assets/letter.txt')
       .then((r) => r.text())
       .then((text) => {
         box.textContent = text.trim();
@@ -419,8 +419,8 @@
 
   // ================= Album =================
   const PHOTOS = Array.from({ length: 18 }, (_, i) => ({
-    thumb: '../style/thumbs/anh-' + (i + 1) + '.webp',
-    full: '../style/img/Anh (' + (i + 1) + ').jpg',
+    thumb: '../assets/thumbs/anh-' + (i + 1) + '.webp',
+    full: '../assets/img/Anh (' + (i + 1) + ').jpg',
   }));
   let albumDone = false;
   function renderAlbum() {

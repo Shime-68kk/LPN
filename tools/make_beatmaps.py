@@ -138,7 +138,7 @@ def chroma(mag):
 
 def build(song):
     sid, title, fname, cover = song[:4]
-    path = ROOT / "style" / "sound" / fname
+    path = ROOT / "assets" / "sound" / fname
     y = load_audio(path)
     duration = len(y) / SR
     mag = stft_mag(y)
@@ -290,8 +290,8 @@ def main():
         entry = {
             "id": sid,
             "title": title,
-            "src": f"../style/sound/{fname}",
-            "cover": f"../style/thumbs/cover-{cover.strip('Anh ().jpg')}.webp",
+            "src": f"../assets/sound/{fname}",
+            "cover": f"../assets/thumbs/cover-{cover.strip('Anh ().jpg')}.webp",
             "map": f"beatmaps/{sid}.json",
             "bpm": data["bpm"],
             "preview": PREVIEW_AT.get(sid, data.get("preview", data["start"])),

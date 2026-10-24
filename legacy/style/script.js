@@ -2,7 +2,7 @@
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js")
+      .register("../service-worker.js")
       .then((reg) => {
         console.log("✅ PWA Service Worker đã đăng ký thành công:", reg.scope);
       })
@@ -115,7 +115,7 @@ function sendDiscordNotification(timeString) {
 const heartsContainer=document["body"],imageFiles=Array["from"]( {
 'length':0x12
 }
-,(_0x4ee15e,_0x5c96d8)=>"style/img/Anh ("+(_0x5c96d8+0x1)+').jpg');
+,(_0x4ee15e,_0x5c96d8)=>"../assets/img/Anh ("+(_0x5c96d8+0x1)+').jpg');
 let letterText=[];
 async function loadLetter() {
 const _0x178f31= {
@@ -126,7 +126,7 @@ return _0x1d57f3(_0x5a1f48);
 }
 ;
 try {
-const _0x2fec4f=await _0x178f31["CTevf"](fetch,"style/letter.txt"),_0x2739ab=await _0x2fec4f['text']();
+const _0x2fec4f=await _0x178f31["CTevf"](fetch,"../assets/letter.txt"),_0x2739ab=await _0x2fec4f['text']();
 letterText=_0x2739ab['split'](/\n\s*\n/)["map"](_0x22ac78=>_0x22ac78["trim"]())["filter"](_0x3e16f3=>_0x3e16f3!=='');
 }
 catch(_0x305229) {
@@ -135,22 +135,22 @@ console["error"](_0x178f31["mtCfz"],_0x305229),letterText=[_0x178f31["thdbK"]];
 }
 loadLetter();
 const songs=[ {
-'title':"Ai Ngoài Anh",'cover':"style/sound/Anh (1).jpg",'src':"style/sound/Ai Ngoài Anh.mp3"
+'title':"Ai Ngoài Anh",'cover':"../assets/sound/Anh (1).jpg",'src':"../assets/sound/Ai Ngoài Anh.mp3"
 }
 , {
-'title':'In Love x Có Đôi Điều','cover':"style/sound/Anh (2).jpg",'src':"style/sound/In Love x Có Đôi Điều.mp3"
+'title':'In Love x Có Đôi Điều','cover':"../assets/sound/Anh (2).jpg",'src':"../assets/sound/In Love x Có Đôi Điều.mp3"
 }
 , {
-'title':'Track 06 x Nơi Này Có Anh','cover':'style/sound/Anh (3).jpg','src':"style/sound/Track 06 x Nơi Này Có Anh.mp3"
+'title':'Track 06 x Nơi Này Có Anh','cover':'../assets/sound/Anh (3).jpg','src':"../assets/sound/Track 06 x Nơi Này Có Anh.mp3"
 }
 , {
-'title':'Lỡ Say Bye Là Bye','cover':"style/sound/Anh (4).jpg",'src':"style/sound/Lỡ Say Bye Là Bye.mp3"
+'title':'Lỡ Say Bye Là Bye','cover':"../assets/sound/Anh (4).jpg",'src':"../assets/sound/Lỡ Say Bye Là Bye.mp3"
 }
 , {
-'title':"MISSING YOU",'cover':"style/sound/Anh (5).jpg",'src':"style/sound/MISSING YOU.mp3"
+'title':"MISSING YOU",'cover':"../assets/sound/Anh (5).jpg",'src':"../assets/sound/MISSING YOU.mp3"
 }
 , {
-'title':"Anh Là Ai ?",'cover':"style/sound/Anh (6).jpg",'src':"style/sound/Anh là ai.mp3"
+'title':"Anh Là Ai ?",'cover':"../assets/sound/Anh (6).jpg",'src':"../assets/sound/Anh là ai.mp3"
 }
 ];
 function createHeart() {
