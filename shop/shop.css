@@ -788,6 +788,10 @@ body.night .item .i-state.on { color: #CDB8F0; }
 .cut-cap b { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 600; }
 .cut-poem .cut-cap b { color: #7A3B52; }
 .cut-signal .cut-cap b { color: #E6FFF9; }
+.cut-sk { font-size: 14px; font-weight: 600; }
+.cut-sk:empty { display: none; }
+.cut-poem .cut-sk { color: #8A4A5E; }
+.cut-signal .cut-sk { color: #BFFCEF; text-shadow: 0 1px 6px #06121A; }
 .cut-tap { font-size: 12px; font-weight: 600; opacity: 0; transition: opacity .4s; }
 .cut-tap.on { opacity: .7; }
 .cut-poem .cut-tap { color: #7A5A4A; }

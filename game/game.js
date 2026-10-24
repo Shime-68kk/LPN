@@ -3447,13 +3447,12 @@
       const name = document.createElement('b');
       name.textContent = p.item.name;
       const sub = document.createElement('small');
-      sub.textContent = (sk.breakthrough || sk.name) + ' · ' + (left ? 'còn ' + left + '/' + Skins.WEEK_USES + ' ván' : 'hết lượt, thứ Hai có lại');
+      sub.textContent = (sk.breakthrough || sk.name) + ' · ' + (left ? 'còn ' + left + '/' + Skins.WEEK_USES + ' ván tuần này' : 'hết lượt, thứ Hai có lại');
       txt.append(name, sub);
       b.append(ic, txt);
       b.addEventListener('click', () => { Sound.click(); done(p.item.id); });
       return b;
     }));
-    $('pick-msg').textContent = 'Bé độc quyền đã nâng tối đa, mỗi tuần mỗi bé dùng phép được ' + Skins.WEEK_USES + ' ván. Ván này chọn bé nào?';
     $('btn-pick-no').onclick = () => { Sound.click(); done(null); };
     $('pick').hidden = false;
     const first = $('pick-list').querySelector('button:not(:disabled)');
@@ -3625,7 +3624,7 @@
     $('si-line').textContent = sk.line;
     const list = $('si-list');
     list.replaceChildren(...sk.effects.map((e) => { const li = document.createElement('li'); li.textContent = e.charAt(0).toUpperCase() + e.slice(1) + '.'; return li; }));
-    $('si-how').textContent = sk.how + (sk.weekly && !LOOK.trial ? ' Tuần này còn ' + weekLeft(sk.id) + '/' + Skins.WEEK_USES + ' ván.' : '');
+    $('si-how').textContent = sk.how + (sk.weekly && !LOOK.trial ? ' Tuần này còn ' + weekLeft(sk.id) + '.' : '');
     $('skillinfo').hidden = false;
     $('btn-si-close').focus({ preventScroll: true });
   }

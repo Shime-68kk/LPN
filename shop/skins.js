@@ -375,7 +375,7 @@
     sk.iconTier = sk.breakthrough ? 2 : lvl >= 3 ? 1 : 0;
     sk.effects = skillEffects(sk.fx);
     sk.how = 'Ăn đủ ' + sk.need + ' lá để nạp đầy, rồi chạm đúp màn hình (máy tính bấm phím cách). Kỹ năng kéo dài ' + sk.time + ' giây.'
-      + (sk.weekly ? ' Đã nâng tối đa nên mỗi tuần dùng được ' + WEEK_USES + ' ván, đầu ván chọn có dùng hay không.' : '');
+      + (sk.weekly ? ' Đã max: dùng ' + WEEK_USES + ' ván mỗi tuần.' : '');
     sk.text = sk.line + ' Trong ' + sk.time + ' giây: ' + sk.effects.join(', ') + '. ' + sk.how;
     return sk;
   }

@@ -507,7 +507,7 @@
       const how = document.createElement('span');
       how.className = 'ss-how';
       how.textContent = 'Ăn đủ ' + skill.need + ' lá để nạp, khi chơi chạm đúp màn hình để dùng.'
-        + (skill.weekly ? ' Đã nâng tối đa: mỗi tuần dùng được ' + Skins.WEEK_USES + ' ván, đầu ván game hỏi có dùng không.' : ' Chưa nâng tối đa thì dùng thoải mái.');
+        + (skill.weekly ? ' Đã max: dùng ' + Skins.WEEK_USES + ' ván mỗi tuần.' : '');
       body.append(line, how);
       box.replaceChildren(ic, body);
     }
@@ -554,7 +554,7 @@
     if (!next) {
       parts.push(el('p', 'su-max', cur.breakthrough ? 'Đã đột phá: ' + cur.breakthrough + ' ✓' : 'Đã nâng tối đa ✓'));
       const left = Math.max(0, Skins.WEEK_USES - Wallet.weekUsed(item.id, w));
-      parts.push(el('p', 'su-note', 'Tuần này còn ' + left + '/' + Skins.WEEK_USES + ' ván dùng kỹ năng. Sang thứ Hai có lại đủ.'));
+      parts.push(el('p', 'su-note', 'Tuần này còn ' + left + '/' + Skins.WEEK_USES + ' ván, thứ Hai có lại.'));
       box.replaceChildren(...parts);
       return;
     }
@@ -1953,6 +1953,10 @@
     const el = $('cut');
     el.className = 'cut cut-' + kind;
     $('cut-name').textContent = item.name;
+    // Một dòng ngắn về phép của bé (đã nâng tối đa thì ghi số ván mỗi tuần).
+    const sk = Skins.skillOf(item, Wallet.skillLevel(item.id));
+    $('cut-sk').textContent = !sk ? '' : sk.weekly ? (sk.breakthrough || sk.name) + ' · dùng ' + Skins.WEEK_USES + ' ván mỗi tuần'
+      : 'Phép ' + sk.name + ' · đầy vòng thì chạm đúp';
     el.hidden = false;
     SFX[kind]();
     buzz(20);
