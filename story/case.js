@@ -264,7 +264,7 @@
     $('cover-replay').hidden = !solved;
     const next = firstOpen();
     if (!read) {
-      $('cover-note').textContent = 'Hồ sơ này mở ra ở cuối chương 13. Đọc chương trước để biết Sâu Tím trốn đi thế nào nha.';
+      $('cover-note').textContent = 'Hồ sơ này mở ra ở cuối chương 11. Đọc chương trước để biết Sâu Tím trốn đi thế nào nha.';
     } else if (solved) {
       $('cover-note').textContent = 'Hồ sơ đã khép lại. Thủ phạm đã bị bắt, quà đã vào túi thám tử.';
       $('cover-go').textContent = 'Xem biên bản kết án';

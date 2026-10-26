@@ -76,7 +76,7 @@ body[data-weather="dem"] {
 ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
 
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; overscroll-behavior-y: none; }
 body {
   margin: 0;
   min-height: 100vh;
@@ -162,8 +162,9 @@ body[data-weather="mua"] .l-heart { opacity: 0; }
 @keyframes twinkle { 50% { opacity: .7; } }
 
 /* ===== Thanh trên ===== */
+/* Ghim ở trên cùng: kéo trang đến đâu cũng bấm được thời tiết và nút khoá (đổi tài khoản). */
 .topbar {
-  position: absolute;
+  position: fixed;
   top: calc(var(--safe-top) + 14px);
   left: 16px;
   right: 16px;
@@ -183,7 +184,9 @@ body[data-weather="mua"] .l-heart { opacity: 0; }
   gap: 8px;
   font-weight: 600;
   font-size: 14px;
-  -webkit-backdrop-filter: none;
+  box-shadow: 0 4px 14px rgba(29, 24, 50, .12);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
 /* ===== Phần nội dung ===== */

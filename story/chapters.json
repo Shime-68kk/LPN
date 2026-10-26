@@ -353,7 +353,6 @@
     },
     {
       "id": "c12",
-      "no": 12,
       "title": "Chờ chút…",
       "cost": 0,
       "anyOrder": true,
@@ -389,7 +388,6 @@
     },
     {
       "id": "c13",
-      "no": 13,
       "title": "Mất một bé sâu, thêm một thám tử",
       "cost": 0,
       "anyOrder": true,
@@ -397,7 +395,7 @@
       "cast": ["thuy"],
       "case": { "id": "vlts2", "page": "case.html", "title": "Vạch Lá Tìm Sâu", "steps": 4,
         "announce": {"key": "vlts2", "kicker": "Hồ sơ mật · Mở lại", "title": "Hồ sơ được mở lại!", "text": "Vụ án Vạch Lá Tìm Sâu vừa có thêm manh mối mới: một tấm ảnh Sâu Tím đánh rơi đêm 6/8. Thám tử Thủy điều tra lại từ đầu nhé?", "ok": "Điều tra lại", "later": "Để sau"} },
-      "announce": {"title": "Đã có chương truyện mới!", "text": "Chương 13 · Mất một bé sâu, thêm một thám tử. Bé Sâu Tím vừa mất tích, để lại một phong thư gửi đích danh em. Thám tử Thủy đã sẵn sàng chưa?", "ok": "Sẵn sàng!", "later": "Chờ em chút"},
+      "announce": {"title": "Đã có chương truyện mới!", "text": "Chương 11 · Mất một bé sâu, thêm một thám tử. Bé Sâu Tím vừa mất tích, để lại một phong thư gửi đích danh em. Thám tử Thủy đã sẵn sàng chưa?", "ok": "Sẵn sàng!", "later": "Chờ em chút"},
       "lines": [
         { "who": "none", "text": "Ngoại truyện · Vườn Lá" },
         { "who": "ke", "text": "Có một khu vườn chỉ có trong điện thoại của hai đứa. Ở đó, ngày nào bé Sâu Tím cũng ăn lá theo nhạc, ăn đến tròn cả bụng." },
@@ -441,7 +439,6 @@
     },
     {
       "id": "c14",
-      "no": 14,
       "title": "Những ngày đi mượn",
       "cost": 240,
       "scene": "dem",
@@ -487,7 +484,6 @@
     },
     {
       "id": "c15",
-      "no": 15,
       "title": "Nhẹ đi một người",
       "cost": 260,
       "scene": "hoanghon",
@@ -530,7 +526,6 @@
     },
     {
       "id": "c16",
-      "no": 16,
       "title": "Thứ không chụp lại được",
       "cost": 280,
       "scene": "nang",
@@ -582,7 +577,6 @@
     },
     {
       "id": "c17",
-      "no": 17,
       "title": "Sóng sinh ra để chở văn",
       "cost": 290,
       "scene": "dem",
@@ -625,7 +619,6 @@
     },
     {
       "id": "c18",
-      "no": 18,
       "title": "Nửa câu em chưa nói",
       "cost": 300,
       "releaseAt": "2026-10-26T20:00:00+07:00",
