@@ -583,6 +583,18 @@ html.need-lock body { overflow: hidden; }
 }
 .pad button:active { background: var(--t-music); transform: scale(.94); }
 .pad svg { width: 26px; height: 26px; }
+.dots[hidden], .pad[hidden] { display: none; }
+.lock-who { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.lock-who[hidden] { display: none; }
+.lock-who button {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 16px 8px; border: 2px solid var(--line); border-radius: 20px;
+  background: var(--surface); color: var(--ink); font: inherit;
+}
+.lock-who button b { font-size: 16px; }
+.lock-who button small { min-height: 16px; font-size: 12px; color: var(--muted); }
+.lock-who button.on { border-color: #8C6BC8; }
+.lock-who button:disabled { opacity: .5; }
 
 /* ===== Nhật ký ===== */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

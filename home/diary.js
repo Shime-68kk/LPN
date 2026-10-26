@@ -46,7 +46,9 @@
   };
   const safeImage = (src) => typeof src === 'string' && (src.startsWith('data:image/') || src.startsWith('https://'));
 
-  // ===== Thông báo (giống trang cũ) =====
+  // ===== Thông báo =====
+  // Chỉ báo khi có điều muốn người kia đọc: trang nhật ký mới và bình luận. Sửa, xoá, thả cảm xúc thì thôi
+  // (anh Quang thấy báo nhiều quá, như bị theo dõi).
   function discord(content) {
     fetch(DISCORD_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content }) })
       .catch(() => {});
@@ -188,7 +190,6 @@
         if (!id) return;
         try {
           await api('diary/' + id, 'PUT', entry);
-          discord('📝 **Một trang nhật ký tình yêu vừa được chỉnh sửa!** 💕\n' + (text ? '📝 *"' + text + '"*\n' : ''));
         } catch (err) { this.saveError(err); }
         return;
       }
@@ -230,7 +231,6 @@
       if (!entry.id) return;
       try {
         await api('diary/' + entry.id, 'DELETE');
-        discord('🗑️ **Một trang nhật ký tình yêu vừa được xóa.**');
       } catch (err) { this.saveError(err); }
     },
 
@@ -245,7 +245,6 @@
         if (prev && entry.reactions[prev]) entry.reactions[prev] = Math.max(0, entry.reactions[prev] - 1);
         entry.reactions[emoji] = (entry.reactions[emoji] || 0) + 1;
         myReaction.set(entry.id, entry.timestamp, emoji);
-        discord('💖 **Lệ Thủy vừa thả cảm xúc [' + emoji + '] vào một trang nhật ký!** 📝');
       }
       this.pickerFor = null;
       cache.write(this.entries);

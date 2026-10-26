@@ -6,8 +6,6 @@
   // 100.000 điểm = 30 đốt cây; đổi theo từng gói 10.000 điểm = 3 đốt, phần lẻ để dành ván sau.
   const PACK_POINTS = 10000;
   const PACK_DOT = 3;
-  // Quà tặng một lần cho mỗi máy mở link.
-  const GIFT_DOT = 1200;
   const DEFAULT_EQUIP = { skin: 'tim', fx: 'la', wing: 'canh-tim', bg: 'troi' };
   // Bộ đi kèm phần thưởng: có skin là tự có cả bộ (phá án xong có Sâu Thám Tử thì có luôn hiệu ứng, cánh, nền).
   const REWARD_SETS = { 'skin:tham-tu': ['fx:manh-moi', 'wing:canh-tham-tu', 'bg:nen-vach-la'] };
@@ -95,7 +93,6 @@
       } catch (e) { /* bỏ qua */ }
       w.migrated = true;
     }
-    if (!w.gift) { w.dot += GIFT_DOT; w.gift = true; }
     fillSets(w);
     convert(w);
     if (JSON.stringify(w) !== before) write(w);
@@ -104,7 +101,6 @@
   window.Wallet = {
     PACK_POINTS,
     PACK_DOT,
-    GIFT_DOT,
     DEFAULT_EQUIP,
     REWARD_SETS,
     get: read,
@@ -138,14 +134,6 @@
       const got = convert(w);
       write(w);
       return got;
-    },
-    // Quà chưa báo cho người dùng thì báo một lần.
-    takeGiftNotice() {
-      const w = read();
-      if (!w.gift || w.giftSeen) return 0;
-      w.giftSeen = true;
-      write(w);
-      return GIFT_DOT;
     },
     spend(dot) {
       const w = read();

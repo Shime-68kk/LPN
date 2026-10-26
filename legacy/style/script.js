@@ -18,7 +18,8 @@ let audioPlayer = null;
 let isPlaying = false;
 
 // Cấu hình Discord Webhook URL để nhận thông báo thời gian thật khi bấm nút đồng ý
-const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1534358624040910971/Cbckwdq-vB9yQmYaqNcHHFAbEVKfOdxe4G4NpF6q3kJDLmAopR92o-QP66dddtZe-Gg8";
+// Trang "hồi ức": mở xem lại kỷ niệm không gửi thông báo nào (Discord, email).
+const DISCORD_WEBHOOK_URL = "";
 
 // Cấu hình Firebase Database URL để đồng bộ nhật ký giữa các thiết bị
 const FIREBASE_DB_URL = "https://yeult-diary-default-rtdb.asia-southeast1.firebasedatabase.app/"; // Hãy thay thế bằng link database Firebase của bạn
@@ -32,7 +33,7 @@ const EMAILJS_CONFIG = {
 };
 
 // Kích hoạt gửi email thông báo tự động
-const ENABLE_EMAIL_NOTIFICATIONS = true;
+const ENABLE_EMAIL_NOTIFICATIONS = false;
 
 // Gửi email thông báo tự động đến hộp thư của Lệ Thủy
 async function sendEmailToLeThuy({ title, message, author }) {

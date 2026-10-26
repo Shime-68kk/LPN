@@ -42,7 +42,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="home.css?v=20" />
+  <link rel="stylesheet" href="home.css?v=21" />
 </head>
 <body data-weather="nang">
   <script>document.body.dataset.weather = LPN_SKY; document.body.classList.toggle('night', LPN_NIGHT); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
@@ -311,12 +311,17 @@
         <span></span><button type="button" data-k="0">0</button>
         <button type="button" data-k="del" aria-label="Xoá"><svg viewBox="0 0 24 24"><path d="M9 6h11a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-6-6zM12 10l4 4M16 10l-4 4" /></svg></button>
       </div>
+      <!-- Mở khoá xong: chọn ai đang dùng máy này (đổi được tài khoản ngay ở đây) -->
+      <div class="lock-who" id="lock-who" hidden>
+        <button type="button" data-who="thuy"><b>Lệ Thủy</b><small></small></button>
+        <button type="button" data-who="quang"><b>Anh Quang</b><small></small></button>
+      </div>
     </div>
   </div>
 
-  <script src="sync.js?v=4"></script>
-  <script src="diary.js?v=1"></script>
-  <script src="home.js?v=14"></script>
+  <script src="sync.js?v=5"></script>
+  <script src="diary.js?v=2"></script>
+  <script src="home.js?v=15"></script>
   <script src="../shop/skins.js?v=23"></script>
   <script>
     // Tiệm Sâu đang có sự kiện thì gắn nhãn lên ô; máy này chưa xem thì nhãn nhấp nháy.

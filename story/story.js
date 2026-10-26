@@ -648,9 +648,6 @@
         if (st.state === 'current' || st.state === 'done') play(wi);
         else if (st.state === 'buy') openBuy(wi);
       }
-      // Quà tặng một lần: báo cho em biết vừa có thêm đốt cây.
-      const gift = Wallet.takeGiftNotice();
-      if (gift) dialog('Quà của anh 🎁', 'Anh tặng em ' + fmt(gift) + ' đốt cây để mở cốt truyện nè. Đọc từ từ thôi nha.', 'Cảm ơn anh!', closeDialog, true);
     })
     .catch(() => { $('map-sub').textContent = 'Chưa tải được cốt truyện, em thử lại sau nha.'; });
 })();

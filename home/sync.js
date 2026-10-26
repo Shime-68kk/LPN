@@ -9,6 +9,8 @@
   const WHO_KEY = 'lpn:who';
   const META_KEY = 'lpn:sync';
   const GRANT_KEY = 'lpn:grantNotice'; // quà đốt vừa nhận, chờ báo cho người dùng
+  // Dữ liệu riêng của người đang dùng máy (xoá khi đổi người; kỷ lục game nằm trong sautim:v1.best).
+  const PERSONAL = ['lpn:wallet', 'lpn:story', 'lpn:songs', GRANT_KEY, 'lpn:setGift', 'lpn:trial'];
   const WHO = { thuy: 'Lệ Thủy', quang: 'Anh Quang' };
 
   const load = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
@@ -143,6 +145,35 @@
       save(META_KEY, meta);
       this.who = who;
       return this.pull();
+    },
+
+    // Đổi người dùng máy này (chọn sau khi mở khoá ở trang chủ). Lưu bản của người cũ lên Firebase,
+    // xoá dữ liệu riêng của người đó trên máy, rồi lấy bản của người mới về, không trộn hai người vào nhau.
+    // Cần có mạng: tải bản mới hoặc lưu bản cũ không được thì không đổi gì, trả về false.
+    async switchTo(who) {
+      if (!WHO[who] || who === this.who) return true;
+      if (!this.who) return this.setWho(who);
+      let remote;
+      try {
+        const res = await fetch(url(who), { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        remote = (await res.json()) || {};
+      } catch (e) { return false; }
+      clearTimeout(this.timer);
+      this.pending = false;
+      if (!(await this.push())) return false;
+      for (const k of PERSONAL) { try { localStorage.removeItem(k); } catch (e) { /* bỏ qua */ } }
+      const game = load('sautim:v1') || {};
+      delete game.best;
+      save('sautim:v1', game);
+      try { localStorage.setItem(WHO_KEY, who); } catch (e) { /* bỏ qua */ }
+      this.who = who;
+      const data = merge(snapshot(), remote, true);
+      claimGrants(data.wallet, remote.grants);
+      apply(data);
+      save(META_KEY, Object.assign(load(META_KEY) || {}, { first: false }));
+      await this.push(data);
+      return true;
     },
 
     // Kéo bản sao lưu về, gộp với máy, rồi đẩy bản gộp lên.

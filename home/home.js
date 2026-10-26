@@ -570,11 +570,10 @@
         try { localStorage.setItem('lpn:unlock', LOCK_HASH); } catch (e) { /* bỏ qua */ }
         $('lock-msg').textContent = '';
         setTimeout(() => {
-          document.documentElement.classList.remove('need-lock');
           dots.classList.remove('ok');
           this.pin = '';
           this.draw();
-          setTimeout(() => News.show(), 400);
+          this.askWho();
         }, 280);
       } else {
         $('lock-msg').textContent = 'Sai rồi, thử lại nha';
@@ -585,6 +584,40 @@
       }
     },
   };
+  // Sau khi mở khoá: hỏi ai đang dùng máy. Chọn người kia thì đổi tài khoản (sync.js) rồi tải lại trang.
+  Lock.askWho = function () {
+    const S = window.Sync;
+    if (!S) { this.done(); return; }
+    $('lock-title').textContent = 'Ai đang dùng máy này?';
+    $('lock-dots').hidden = true;
+    $('lock-pad').hidden = true;
+    for (const b of $('lock-who').children) {
+      b.classList.toggle('on', b.dataset.who === S.who);
+      b.querySelector('small').textContent = b.dataset.who === S.who ? 'đang dùng' : '';
+      b.disabled = false;
+    }
+    $('lock-who').hidden = false;
+  };
+  Lock.done = function () {
+    $('lock-title').textContent = 'Nhập mật khẩu nha';
+    $('lock-dots').hidden = false;
+    $('lock-pad').hidden = false;
+    $('lock-who').hidden = true;
+    $('lock-msg').textContent = '';
+    document.documentElement.classList.remove('need-lock');
+    setTimeout(() => News.show(), 400);
+  };
+  $('lock-who').addEventListener('click', async (e) => {
+    const b = e.target.closest('button');
+    const S = window.Sync;
+    if (!b || !S) return;
+    if (b.dataset.who === S.who) { Lock.done(); return; }
+    for (const x of $('lock-who').children) x.disabled = true;
+    $('lock-msg').textContent = 'Đang chuyển sang ' + S.WHO[b.dataset.who] + '…';
+    if (await S.switchTo(b.dataset.who)) { location.reload(); return; }
+    $('lock-msg').textContent = 'Cần có mạng để chuyển, thử lại nha';
+    for (const x of $('lock-who').children) x.disabled = false;
+  });
   $('lock-pad').addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (b) Lock.press(b.dataset.k);
