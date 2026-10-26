@@ -531,14 +531,17 @@
     v.querySelector('.v-close').addEventListener('click', () => Viewer.hide());
     v.querySelector('.v-prev').addEventListener('click', () => Viewer.step(-1));
     v.querySelector('.v-next').addEventListener('click', () => Viewer.step(1));
-    let x0 = null;
-    v.addEventListener('pointerdown', (e) => { x0 = e.clientX; });
+    // Vuốt ngang để sang ảnh khác; chạm vào vùng tối ngoài ảnh (không phải vuốt) để thoát, như Facebook.
+    let x0 = null, swiped = false;
+    v.addEventListener('pointerdown', (e) => { x0 = e.clientX; swiped = false; });
     v.addEventListener('pointerup', (e) => {
       if (x0 === null) return;
       const dx = e.clientX - x0;
       x0 = null;
+      swiped = Math.abs(dx) > 10;
       if (Math.abs(dx) > 50) Viewer.step(dx < 0 ? 1 : -1);
     });
+    v.addEventListener('click', (e) => { if (e.target === v && !swiped) Viewer.hide(); });
   })();
 
   // ================= Màn khoá =================
