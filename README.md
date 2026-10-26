@@ -63,7 +63,7 @@ Nhật ký nằm ở `diary/`, chung với web cũ. Bài mới ghi thêm `author
 Có chương mới, skin mới, sự kiện mới thì app gửi thông báo về tận máy (Web Push), kể cả iPhone đã thêm app ra màn hình chính (iOS 16.4 trở lên).
 
 - Trong app: trang Cốt truyện có nút "Báo cho em khi có chương mới". Bấm và cho phép thì địa chỉ nhận của máy được lưu ở `lpn/players/{ai}/push`.
-- Nhật ký: có bài mới hay bình luận mới thì người kia nhận thông báo, gửi qua worker `tools/push-worker/` (deploy riêng, cách cài trong README của thư mục đó).
+- Nhật ký: có bài mới hay bình luận mới thì người kia nhận thông báo, gửi qua worker `tools/push-worker/` (deploy riêng: `cd tools/push-worker && npx wrangler deploy`).
 - Gửi từ máy tính: `node tools/push.mjs thuy "Có chương mới cho em" "Chương 14 · …" "story/?play=c14"` (người nhận: `thuy`, `quang` hoặc `ca-hai`).
 - Khoá bí mật VAPID nằm ở `~/.config/lpn-push/vapid.json` trên máy gửi, không có trong repo. Khoá công khai nằm trong `home/push.js`.
 

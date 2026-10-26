@@ -1,0 +1,7 @@
+{
+  "name": "lpn-push",
+  "main": "worker.js",
+  "account_id": "77bc773ec9a587aa94012f88ef766f62",
+  "compatibility_date": "2026-08-31",
+  "workers_dev": true
+}
