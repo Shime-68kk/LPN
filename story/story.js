@@ -89,10 +89,12 @@
   }
 
   const chNo = (i) => CHAPTERS[i].no || i + 1;
-  // Số giây còn lại tới giờ mở chương (openAt), 0 nếu đã mở.
+  // Số giây còn lại tới giờ mở chương (openAt), 0 nếu đã mở. early cũng cho máy một người mở sớm hơn.
   const waitLeft = (i) => {
     if (OPEN_ALL) return 0;
-    const at = CHAPTERS[i] && CHAPTERS[i].openAt ? Date.parse(CHAPTERS[i].openAt) : 0;
+    const ch = CHAPTERS[i];
+    let at = ch && ch.openAt ? Date.parse(ch.openAt) : 0;
+    if (at && ch.early && ch.early[WHO]) at = Math.min(at, Date.parse(ch.early[WHO]));
     return at ? Math.max(0, Math.ceil((at - Date.now()) / 1000)) : 0;
   };
   const clock = (sec) => {
