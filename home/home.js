@@ -761,6 +761,8 @@
   Weather.refresh(false);
   Fresh.diary();
   Fresh.album();
+  // App đang mở sẵn: mỗi phút xem người kia có viết gì mới không (chỉ đọc một con số nhỏ).
+  setInterval(() => { if (!document.hidden) Fresh.diary(); }, 60 * 1000);
   // Đã cho phép vị trí từ trước thì tự dùng, không hỏi lại.
   if (navigator.permissions && navigator.permissions.query && !store.get('lpn:loc')) {
     navigator.permissions.query({ name: 'geolocation' }).then((p) => { if (p.state === 'granted') Weather.locate(); }).catch(() => {});
