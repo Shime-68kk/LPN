@@ -79,12 +79,12 @@
     const ch = CHAPTERS[i];
     if (save.done[ch.id]) return { state: 'done', note: 'Đã xong' };
     if (OPEN_ALL) return { state: 'current', note: 'Đọc thử' };
+    // Chưa tới giờ mở (openAt): hiện sẵn trên bản đồ với đồng hồ đếm ngược, chưa bấm được.
+    if (waitLeft(i) > 0) return { state: 'locked', note: 'Mở sau ' + clock(waitLeft(i)), wait: true };
     // anyOrder: chương đặc biệt (vd. chương hôm nay) đọc được không cần xong chương trước.
     const ready = i === 0 || ch.anyOrder || save.done[CHAPTERS[i - 1].id];
     if (!isOpen(i)) return { state: ready ? 'buy' : 'locked', note: 'Cần ' + ch.cost + ' đốt cây' };
     if (!ready) return { state: 'locked', note: 'Chờ chương trước' };
-    // Chương có giờ mở: bấm vào lần đầu mới biết là đang đếm ngược.
-    if (waitLeft(i) > 0 && save.peek && save.peek[ch.id]) return { state: 'current', note: 'Mở sau ' + clock(waitLeft(i)), wait: true };
     return { state: 'current', note: 'Đang chờ em' };
   }
 
