@@ -1080,6 +1080,7 @@
       this.score = 0; this.combo = 0; this.maxCombo = 0; this.hearts = 3; this.banked = 0; this.dotGot = 0;
       this.revives = 0; this.count = null; this.pendingPos = null;
       this.sk = { charge: 0, on: 0, ready: false, told: false, fx: null, hit: 0, cnt: 0, net: 0, lotus: 0, label: '', sup: TRY_DOMAIN ? DOMAIN_NEED : 0 };
+      this.grace = 0; this.graceHit = 0;
       this.vmul = 1;
       this.bonusDot = 0; this.bonusBanked = 0;
       VAC.length = 0;
@@ -1396,6 +1397,15 @@
         UI.hud(this);
         return;
       }
+      // Khiên tạm (vừa thoát lãnh địa, hết kỹ năng, hồi sinh, chơi tiếp): lá hụt không mất tim, không mất combo.
+      if (this.grace > 0) {
+        this.graceHit = 1;
+        Sound.shield();
+        buzz(12);
+        popup('Khiên đỡ rồi!', Sau.headX, Sau.headY - HEAD_R * 2.4, '#7FD8FF', 18);
+        UI.hud(this);
+        return;
+      }
       if (!(fx && fx.guard)) this.combo = 0;
       // Kỹ năng có khiên: lá hụt không làm mất tim.
       if (fx && fx.shield) {
@@ -1493,6 +1503,8 @@
         this.count = null;
         this.resync = true;
         this.state = 'play';
+        // Vừa được chơi lại (sau lãnh địa, hồi sinh, tạm dừng): khiên tạm để kịp nhìn và lùi tay.
+        this.grace = GRACE;
         UI.count(0, c.beat);
         setTimeout(() => { if (!this.count) UI.count(null); }, Math.round(c.beat * 900));
       }
@@ -1548,8 +1560,12 @@
         if (this.botOn && !this.reading()) this.bot();
         if (this.reading()) Sau.target = Sau.headX;
         const K = this.sk;
+        if (this.grace > 0) this.grace = Math.max(0, this.grace - dt);
+        this.graceHit = Math.max(0, (this.graceHit || 0) - dt * 2.5);
         if (K.on > 0) {
           K.on = Math.max(0, K.on - dt);
+          // Kỹ năng vừa hết (bé thôi tự lướt, sách gấp lại…): khiên tạm để người chơi kịp cầm lại.
+          if (K.on === 0) this.grace = GRACE;
           // Phủ Sóng: dùng xong tự nạp lại sẵn một phần
           if (K.on === 0 && K.fx && K.fx.refill && LOOK.skill) K.charge = Math.round(LOOK.skill.need * K.fx.refill);
           K.hit = Math.max(0, K.hit - dt * 2.5);
@@ -1851,8 +1867,8 @@
     g.restore();
   }
   // Khiên: bong bóng trong suốt quanh đầu, đỡ một lá hụt thì loé sáng.
-  function drawShield(k, sk) {
-    const hit = Game.sk.hit, r = HEAD_R * 1.9 * (1 + 0.08 * hit), x = Sau.headX, y = Sau.headY - HEAD_R * 0.2;
+  function drawShield(k, sk, hitOverride) {
+    const hit = hitOverride === undefined ? Game.sk.hit : hitOverride, r = HEAD_R * 1.9 * (1 + 0.08 * hit), x = Sau.headX, y = Sau.headY - HEAD_R * 0.2;
     g.save();
     const gr = g.createRadialGradient(x - r * 0.3, y - r * 0.35, r * 0.1, x, y, r);
     gr.addColorStop(0, 'rgba(255,255,255,' + 0.2 * k + ')');
@@ -1867,6 +1883,20 @@
     g.lineWidth = 2.4 * S;
     g.lineCap = 'round';
     g.beginPath(); g.arc(x, y, r * 0.78, Math.PI * 1.15, Math.PI * 1.4); g.stroke();
+    g.restore();
+  }
+  // Khiên tạm: bong bóng xanh nhạt, vòng ngoài là thời gian còn lại, nửa giây cuối nhấp nháy báo sắp hết.
+  const GRACE_LOOK = { color: '#7FD8FF' };
+  function drawGrace() {
+    const t = Game.grace;
+    const k = t < 0.5 && !REDUCED_MOTION ? (Math.sin(clock * 28) > 0 ? 0.9 : 0.35) : Math.min(1, (GRACE - t) / 0.15, t / 0.15 + 0.35);
+    drawShield(k, GRACE_LOOK, Game.graceHit || 0);
+    const r = HEAD_R * 1.9 * 1.14, x = Sau.headX, y = Sau.headY - HEAD_R * 0.2;
+    g.save();
+    g.strokeStyle = hexA(GRACE_LOOK.color, 0.9 * k);
+    g.lineWidth = 3 * S;
+    g.lineCap = 'round';
+    g.beginPath(); g.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + TAU * (t / GRACE)); g.stroke();
     g.restore();
   }
   // Huy hiệu bồng bềnh cạnh đầu: "×1,5" (điểm), "Combo ×2"…; side -1 là bên trái.
@@ -2236,6 +2266,8 @@
   //  4. Thu về tới 300 lá, 300.000 điểm và 300 đốt (tuỳ né được bao nhiêu, chạm nhanh cỡ nào), rồi về lại bài,
   //     đếm 3-2-1 và nhạc chạy tiếp từ chỗ cũ.
   const DOMAIN_NEED = 60;
+  // Khiên tạm (giây) mỗi khi người chơi vừa lấy lại quyền điều khiển: hết đếm 3-2-1, hết kỹ năng.
+  const GRACE = 1.8;
   const DM_T = { enter: 0.85, dodge: 5.6, ram: 0.95, spam: 3.0, boom: 1.9, exit: 0.85 };
   const LZ_WARN = 0.62, LZ_FIRE = 0.3, TAP_FULL = 24;
   const DM = {
@@ -3039,6 +3071,7 @@
       drawSau(wallSpeed, Game.pulse || 0, 0);
       if (STARS.length) drawStars();
       if (fx && fx.shield) drawShield(lk, sk);
+      else if (Game.grace > 0 && Game.state === 'play') drawGrace();
       if (fx && fx.slow) drawUmbrella(lk, sk);
       if (fx && fx.combo2) drawScoreBadge(lk, 0, 'Combo ×2', -1);
       const bst = fx ? Math.round(Game.boost() * 10) / 10 : 1;
