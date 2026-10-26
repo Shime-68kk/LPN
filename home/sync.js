@@ -53,14 +53,20 @@
     if (x.id !== y.id) return (x.id || '') > (y.id || '') ? x : y;
     return { id: x.id, used: maxMap(x.used, y.used) };
   };
-  // Gộp hai bản: đồ đã có, chương đã đọc, kỷ lục… thì cộng dồn; số đốt thì lấy bản sửa sau cùng.
-  function merge(local, remote, first) {
+  // Gộp hai bản: đồ đã có, chương đã đọc, kỷ lục… thì cộng dồn.
+  // Số đốt và điểm: lấy bản trên Firebase cộng phần máy này đã tiêu / kiếm thêm kể từ lần khớp cuối (synced).
+  // Không lấy "bản sửa sau cùng": một máy để lâu không mở (hay app ngoài màn hình chính, bộ nhớ riêng với Safari)
+  // còn số đốt cũ, chơi một ván là đè mất đốt thật và quà đã nhận (26/10 ví Thủy tụt từ hơn 8.000 xuống 130).
+  // Lần đầu nối máy, hay máy chưa có mốc khớp: tin hẳn bản trên Firebase.
+  function merge(local, remote, first, synced) {
     const out = {};
     const lw = local.wallet, rw = remote.wallet;
     if (lw && rw) {
-      // Lần đầu nối máy này với bản sao lưu: tin bản sao lưu (máy mới chỉ có quà tặng).
       const base = first || (rw.updatedAt || 0) > (lw.updatedAt || 0) ? rw : lw;
+      const delta = (k) => (!first && synced ? (lw[k] || 0) - (synced[k] || 0) : 0);
       out.wallet = Object.assign({}, base, {
+        dot: Math.max(0, (rw.dot || 0) + delta('dot')),
+        points: Math.max(0, (rw.points || 0) + delta('points')),
         owned: union(lw.owned, rw.owned),
         grants: union(lw.grants, rw.grants),
         up: maxMap(lw.up, rw.up),
@@ -166,14 +172,14 @@
       } catch (e) { return false; }
       clearTimeout(this.timer);
       this.pending = false;
-      if (!(await this.push())) return false;
+      if (!(await this.merge()).ok) return false;
       for (const k of PERSONAL) { try { localStorage.removeItem(k); } catch (e) { /* bỏ qua */ } }
       const game = load('sautim:v1') || {};
       delete game.best;
       save('sautim:v1', game);
       try { localStorage.setItem(WHO_KEY, who); } catch (e) { /* bỏ qua */ }
       this.who = who;
-      const data = merge(snapshot(), remote, true);
+      const data = merge(snapshot(), remote, true, null);
       claimGrants(data.wallet, remote.grants);
       apply(data);
       save(META_KEY, Object.assign(load(META_KEY) || {}, { first: false }));
@@ -181,29 +187,35 @@
       return true;
     },
 
-    // Kéo bản sao lưu về, gộp với máy, rồi đẩy bản gộp lên.
-    async pull() {
-      if (PREVIEW) return false;
-      if (!this.who) { this.setStatus('nowho'); return false; }
-      this.setStatus('syncing');
+    // Kéo bản sao lưu về, gộp với máy, rồi đẩy bản gộp lên. Trả về { ok, changed }.
+    async merge() {
+      if (PREVIEW || !this.who) return { ok: false };
       let remote;
       try {
         const res = await fetch(url(this.who), { cache: 'no-store' });
-        if (res.status === 401 || res.status === 403) { this.setStatus('denied'); return false; }
+        if (res.status === 401 || res.status === 403) { this.setStatus('denied'); return { ok: false }; }
         if (!res.ok) throw new Error('HTTP ' + res.status);
         remote = (await res.json()) || {};
-      } catch (e) { this.setStatus('offline'); return false; }
+      } catch (e) { this.setStatus('offline'); return { ok: false }; }
       const meta = load(META_KEY) || {};
       const local = snapshot();
-      const merged = merge(local, remote, !!meta.first && !!remote.wallet);
+      const merged = merge(local, remote, !!meta.first || !remote.wallet || !meta.synced, meta.synced);
       claimGrants(merged.wallet, remote.grants);
       const changed = stable(merged) !== stable(local);
       if (changed) apply(merged);
       meta.first = false;
+      // Máy giờ đã tính trên nền bản Firebase vừa đọc; đẩy lên lỗi thì phần chênh vẫn còn để lần sau gộp tiếp.
+      if (remote.wallet) meta.synced = { dot: remote.wallet.dot || 0, points: remote.wallet.points || 0 };
       save(META_KEY, meta);
-      const ok = await this.push(merged);
-      if (changed) this.changed();
-      return ok;
+      return { ok: await this.push(merged), changed };
+    },
+    async pull() {
+      if (PREVIEW) return false;
+      if (!this.who) { this.setStatus('nowho'); return false; }
+      this.setStatus('syncing');
+      const r = await this.merge();
+      if (r.changed) this.changed();
+      return r.ok;
     },
 
     async push(data, keepalive) {
@@ -221,7 +233,10 @@
         if (res.status === 401 || res.status === 403) { this.setStatus('denied'); return false; }
         if (!res.ok) throw new Error('HTTP ' + res.status);
         this.lastAt = Date.now();
-        save(META_KEY, Object.assign(load(META_KEY) || {}, { lastAt: this.lastAt }));
+        const meta = Object.assign(load(META_KEY) || {}, { lastAt: this.lastAt });
+        // Mốc khớp: số đốt / điểm Firebase đang giữ đúng bằng của máy này.
+        if (body.wallet) meta.synced = { dot: body.wallet.dot || 0, points: body.wallet.points || 0 };
+        save(META_KEY, meta);
         this.setStatus('ok');
         return true;
       } catch (e) { if (!keepalive) this.setStatus('offline'); return false; }
@@ -232,13 +247,17 @@
       if (!this.who || this.status === 'denied') return;
       this.pending = true;
       clearTimeout(this.timer);
-      this.timer = setTimeout(() => { this.pending = false; this.push(); }, 1500);
+      // Đọc lại Firebase rồi mới ghi, để không đè thay đổi từ máy khác.
+      this.timer = setTimeout(() => { this.pending = false; this.merge(); }, 1500);
     },
+    // Sắp rời trang: không kịp đọc lại Firebase, nên chỉ lưu tạm phần không phải ví; ví gộp ở lần mở sau.
     flush() {
       if (!this.pending || !this.who) return;
       clearTimeout(this.timer);
       this.pending = false;
-      this.push(null, true);
+      const data = snapshot();
+      delete data.wallet;
+      this.push(data, true);
     },
 
     // Bản gộp khác máy: trang nào có hàm làm mới thì gọi, không thì tải lại trang một lần.
