@@ -650,6 +650,8 @@ html.need-lock body { overflow: hidden; }
   font: 700 16px/1 'Fraunces', serif;
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--av-ring, transparent);
 }
+.d-av { position: relative; overflow: hidden; }
+.d-av img { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 .d-av.sm { width: 30px; height: 30px; font-size: 13px; box-shadow: none; }
 .d-av svg { width: 18px; height: 18px; fill: #FF8FA3; stroke: none; }
 .d-av.sm svg { width: 14px; height: 14px; }
