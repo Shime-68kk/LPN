@@ -70,8 +70,8 @@
   };
 
   // ================= Bản đồ =================
-  // TẠM THỜI mở hết chương để đọc thử. Nhớ đổi lại false trước khi đưa lên GitHub.
-  const OPEN_ALL = false;
+  // Đọc thử mọi chương không tốn đốt: thêm ?thu=1, chỉ có tác dụng khi chạy ở máy (server local), không có trên web thật.
+  const OPEN_ALL = /[?&]thu=1/.test(location.search) && !location.hostname.endsWith('workers.dev');
   const isOpen = (i) => OPEN_ALL || !CHAPTERS[i].cost || !!save.open[CHAPTERS[i].id];
   // Chương mở lần lượt: xong chương trước mới được dùng đốt cây mở chương sau.
   function status(i) {
