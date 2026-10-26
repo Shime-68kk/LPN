@@ -6,7 +6,7 @@
   const $ = (id) => document.getElementById(id);
   const ANNIVERSARY = '2026-08-06T23:38:58';
   // Nhạc chỉ để làm nền (sau này còn ghép video có tiếng), nên để nhỏ.
-  const SONG = { src: '../assets/sound/In Love x Có Đôi Điều.mp3', start: 55.3, vol: 0.32 };
+  const SONG = { src: '../assets/sound/In Love x Có Đôi Điều.mp3', start: 55.3, vol: 0.2 };
   const DUR = 4600;
   // Kịch bản clip. t: title | kb (ảnh trôi chậm) | duo | trio | pola; fx: cách chuyển vào cảnh (fade, flash, burn, glitch).
   // Sau này thêm video: { t: 'video', src, from, to, cap } (chừa sẵn trong build()).
@@ -33,18 +33,20 @@
   const days = Math.floor((now - new Date(ANNIVERSARY)) / 864e5) + 1;
 
   // ===== Hạt phim trên cả trang, nhiễu trên màn TV =====
-  function noiseCanvas(cv, w, h, every) {
+  // Nhiễu TV chỉ vẽ khi đang hiện (when), hạt phim vẽ ở độ phân giải thấp: máy yếu vẫn chạy mượt.
+  function noiseCanvas(cv, w, h, every, when) {
     const x = cv.getContext('2d');
     cv.width = w; cv.height = h;
     const data = x.createImageData(w, h);
     return setInterval(() => {
+      if (when && !when()) return;
       const d = data.data;
       for (let i = 0; i < d.length; i += 4) { const v = Math.random() * 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
       x.putImageData(data, 0, 0);
     }, every);
   }
-  noiseCanvas($('grain'), Math.ceil(innerWidth / 2), Math.ceil(innerHeight / 2), 90);
-  noiseCanvas($('static'), 240, 160, 50);
+  noiseCanvas($('grain'), Math.ceil(innerWidth / 3), Math.ceil(innerHeight / 3), 120);
+  noiseCanvas($('static'), 200, 140, 60, () => $('static').classList.contains('on') || $('static').classList.contains('soft'));
 
   // ===== Lấy sẵn ảnh =====
   const all = [...new Set(SHOTS.flatMap((s) => s.n || []))];
@@ -89,6 +91,8 @@
     on() { if (!ac) return; const t = ac.currentTime; tone(t, 0.6, 70, 40, 0.5); tone(t, 1.6, 7600, 7400, 0.015); noise(t + 0.05, 1.1, 'highpass', 1500, 0.4, 0.22); },
     glitch() { if (!ac) return; noise(ac.currentTime, 0.32, 'highpass', 900, 0.5, 0.12); },
     off() { if (!ac) return; const t = ac.currentTime; tone(t, 0.6, 520, 60, 0.18, 'triangle'); noise(t + 0.55, 0.05, 'bandpass', 2000, 1, 0.6); },
+    // Chập điện: tiếng rè rẹt của TV cũ không chịu lên
+    zap(k) { if (!ac) return; const t = ac.currentTime; tone(t, 0.25 + 0.15 * k, 110, 90, 0.12 + 0.05 * k, 'sawtooth'); noise(t, 0.3 + 0.2 * k, 'bandpass', 3200, 0.7, 0.25); noise(t + 0.18, 0.12, 'bandpass', 900, 1, 0.3); },
   };
 
   // ===== Nhạc nền =====
@@ -225,7 +229,45 @@
     for (const id of ['end-1', 'end-2', 'end-go', 'end-again']) { await sleep(1300); $(id).classList.add('on'); }
   }
 
-  $('power').addEventListener('click', () => { ready.then(powerOn); });
+  // TV cũ "dở chứng": hai lần đầu bấm chỉ rung, chập chờn rồi tắt; lần thứ ba mới chịu lên.
+  let presses = 0, failing = false;
+  const HINTS = ['Bấm công tắc để bật', 'Ơ… chưa lên. Bấm lại thử?', 'Sắp được rồi, bấm thêm lần nữa!'];
+  async function sputter(k) {
+    failing = true;
+    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; } }
+    sfx.click();
+    sfx.zap(k);
+    const body = tv.querySelector('.tv-body');
+    body.classList.remove('shake', 'shake2');
+    void body.offsetWidth;
+    body.classList.add(k > 1 ? 'shake2' : 'shake');
+    $('led').classList.add('blink');
+    $('static').classList.add('on');
+    if (k > 1) $('crt-line').classList.add('on');
+    await sleep(k > 1 ? 420 : 140);
+    $('static').classList.remove('on');
+    if (k > 1) {
+      $('crt-line').classList.remove('on');
+      void $('crt-line').offsetWidth;
+      $('crt-line').classList.add('off');
+      await sleep(700);
+      $('crt-line').classList.remove('off');
+    }
+    await sleep(300);
+    $('led').classList.remove('blink');
+    $('hint').textContent = HINTS[k];
+    failing = false;
+  }
+  $('power').addEventListener('click', () => {
+    if (started || failing) return;
+    presses++;
+    if (presses < 3) { sputter(presses); return; }
+    const body = tv.querySelector('.tv-body');
+    body.classList.remove('shake', 'shake2');
+    void body.offsetWidth;
+    body.classList.add('shake');
+    ready.then(powerOn);
+  });
   $('end-again').addEventListener('click', () => location.reload());
   $('end-go').addEventListener('click', (e) => {
     e.preventDefault();

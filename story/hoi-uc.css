@@ -89,6 +89,16 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .power:active { transform: scale(.92); }
 .tv:not(.on) .power { animation: call 1.8s ease-in-out infinite; }
 @keyframes call { 50% { box-shadow: 0 0 0 3px #120B06, 0 0 22px 6px rgba(255, 190, 110, .45); } }
+.tv-body.shake { animation: shake .5s cubic-bezier(.36, .07, .19, .97); }
+.tv-body.shake2 { animation: shake 0.85s cubic-bezier(.36, .07, .19, .97); }
+@keyframes shake {
+  10%, 90% { transform: translate(-1px, 1px) rotate(-.4deg); }
+  20%, 80% { transform: translate(3px, -1px) rotate(.6deg); }
+  30%, 50%, 70% { transform: translate(-5px, 2px) rotate(-1deg); }
+  40%, 60% { transform: translate(5px, -2px) rotate(1deg); }
+}
+.led.blink { animation: blink .12s steps(2) infinite; }
+@keyframes blink { 50% { background: #FF3B3B; box-shadow: 0 0 8px 2px rgba(255, 60, 60, .8); } }
 .led { position: absolute; right: -16%; top: -16%; width: 22%; aspect-ratio: 1; border-radius: 50%; background: #5A1414; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .6); }
 .tv.on .led { background: #FF3B3B; box-shadow: 0 0 8px 2px rgba(255, 60, 60, .8); }
 .hint { margin: 2.5vh 0 0; font-size: 14px; letter-spacing: .06em; color: rgba(246, 238, 223, .6); animation: hint 2.4s ease-in-out infinite; transition: opacity .6s; }
