@@ -42,7 +42,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="home.css?v=23" />
+  <link rel="stylesheet" href="home.css?v=24" />
 </head>
 <body data-weather="nang">
   <script>document.body.dataset.weather = LPN_SKY; document.body.classList.toggle('night', LPN_NIGHT); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
@@ -253,9 +253,13 @@
       <button class="close" type="button" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
     </header>
     <div class="d-scroll">
-      <div class="d-compose">
-        <label class="sr-only" for="diary-text">Viết nhật ký</label>
-        <textarea id="diary-text" rows="3" placeholder="Hôm nay của tụi mình thế nào…"></textarea>
+      <!-- Ô viết bài: avatar người đang dùng máy, chữ, ảnh -->
+      <div class="d-compose" id="diary-compose">
+        <div class="d-compose-top">
+          <span id="diary-me"></span>
+          <label class="sr-only" for="diary-text">Viết nhật ký</label>
+          <textarea id="diary-text" rows="1" placeholder="Hôm nay của tụi mình thế nào…"></textarea>
+        </div>
         <div class="d-preview" id="diary-preview" hidden>
           <img id="diary-preview-img" alt="Ảnh sắp đăng" />
           <button type="button" id="diary-photo-remove" aria-label="Bỏ ảnh"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
@@ -264,12 +268,13 @@
           <label class="d-photo">
             <input type="file" id="diary-photo" accept="image/*" />
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM9 8a2 2 0 1 0 0 4a2 2 0 1 0 0-4M3 17l5-5 4 4 3-3 6 6" /></svg>
-            <span>Thêm ảnh</span>
+            <span>Ảnh</span>
           </label>
           <button type="button" class="btn ghost" id="diary-cancel" hidden>Huỷ</button>
-          <button type="button" class="btn primary" id="diary-save">Ghi sổ</button>
+          <button type="button" class="btn primary" id="diary-save" disabled>Đăng</button>
         </div>
       </div>
+      <p class="d-readonly" id="diary-readonly" hidden>Mở khoá và chọn tài khoản để viết bài, thả tim và bình luận nha.</p>
       <p class="d-status" id="diary-status" role="status" hidden></p>
       <div class="d-list" id="diary-list"></div>
     </div>
@@ -335,8 +340,8 @@
 
   <script src="sync.js?v=6"></script>
   <script src="push.js?v=1"></script>
-  <script src="diary.js?v=2"></script>
-  <script src="home.js?v=17"></script>
+  <script src="diary.js?v=3"></script>
+  <script src="home.js?v=18"></script>
   <script src="../shop/skins.js?v=24"></script>
   <script>
     // Tiệm Sâu đang có sự kiện thì gắn nhãn lên ô; máy này chưa xem thì nhãn nhấp nháy.

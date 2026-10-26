@@ -442,10 +442,13 @@
     });
   }
 
+  // Xem ảnh lớn: ảnh album, hoặc ảnh trong nhật ký (diary.js truyền danh sách { thumb, full } riêng).
   const Viewer = {
     open: false,
     i: 0,
-    show(i) {
+    list: null,
+    show(i, list) {
+      this.list = list || PHOTOS;
       this.i = i;
       this.open = true;
       $('viewer').hidden = false;
@@ -458,20 +461,25 @@
       if (!fromHistory && history.state && history.state.viewer) history.back();
     },
     step(d) {
-      this.i = (this.i + d + PHOTOS.length) % PHOTOS.length;
+      const L = this.list;
+      if (L.length < 2) return;
+      this.i = (this.i + d + L.length) % L.length;
       this.draw();
     },
     draw() {
+      const L = this.list;
       const img = $('viewer-img');
-      img.src = PHOTOS[this.i].thumb;
+      img.src = L[this.i].thumb;
       const full = new Image();
       const want = this.i;
       full.onload = () => { if (want === this.i) img.src = full.src; };
-      full.src = PHOTOS[this.i].full;
-      new Image().src = PHOTOS[(this.i + 1) % PHOTOS.length].full;
-      $('viewer-count').textContent = this.i + 1 + ' / ' + PHOTOS.length;
+      full.src = L[this.i].full;
+      new Image().src = L[(this.i + 1) % L.length].full;
+      $('viewer-count').textContent = L.length > 1 ? this.i + 1 + ' / ' + L.length : '';
+      $('viewer').classList.toggle('single', L.length < 2);
     },
   };
+  window.Viewer = Viewer;
   (() => {
     const v = $('viewer');
     v.querySelector('.v-close').addEventListener('click', () => Viewer.hide());
@@ -713,4 +721,9 @@
     navigator.permissions.query({ name: 'geolocation' }).then((p) => { if (p.state === 'granted') Weather.locate(); }).catch(() => {});
   }
   setInterval(() => Weather.refresh(false), WEATHER_TTL);
+  // Chạm vào thông báo nhật ký (home/?mo=nhat-ky): mở thẳng bảng nhật ký, mở khoá xong là thấy.
+  if (new URLSearchParams(location.search).get('mo') === 'nhat-ky') {
+    history.replaceState(null, '', location.pathname);
+    Panels.show('diary');
+  }
 })();

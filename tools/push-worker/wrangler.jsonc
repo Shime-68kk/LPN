@@ -1,0 +1,8 @@
+// Worker gửi thông báo nhật ký, deploy riêng (không qua Workers Builds của trang chính).
+//   cd tools/push-worker && npx wrangler deploy
+{
+  "name": "lpn-push",
+  "main": "worker.js",
+  "compatibility_date": "2026-08-31",
+  "workers_dev": true
+}

@@ -599,14 +599,42 @@ html.need-lock body { overflow: hidden; }
 .lock-who button.on { border-color: #8C6BC8; }
 .lock-who button:disabled { opacity: .5; }
 
-/* ===== Nhật ký ===== */
+/* ===== Nhật ký: mạng xã hội nhỏ của hai người ===== */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.d-scroll { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 8px; }
-.d-compose { padding: 12px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+.btn.primary { min-height: 44px; padding: 0 20px; background: var(--card); border-color: var(--card); color: var(--card-ink); }
+.btn.ghost { min-height: 44px; padding: 0 16px; }
+.d-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 12px; margin: 0 -8px; padding: 0 8px 8px; }
+
+/* Avatar: chữ cái đầu trên nền màu riêng của mỗi người; bài chung là trái tim */
+.d-av {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font: 700 16px/1 'Fraunces', serif;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--av-ring, transparent);
+}
+.d-av.sm { width: 30px; height: 30px; font-size: 13px; box-shadow: none; }
+.d-av svg { width: 18px; height: 18px; fill: #FF8FA3; stroke: none; }
+.d-av.sm svg { width: 14px; height: 14px; }
+.av-quang { background: linear-gradient(135deg, #7DA7F0, #8C6BC8); --av-ring: #A9B8F2; }
+.av-thuy { background: linear-gradient(135deg, #FF9FB2, #FFB98A); --av-ring: #FFB0C0; }
+.av-both { background: var(--t-letter); --av-ring: #FFD0D9; }
+
+/* Ô viết bài */
+.d-compose { padding: 12px; border-radius: 22px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; transition: border-color .2s; }
+.d-compose:focus-within, .d-compose.editing { border-color: #C9B3EC; }
+.d-compose[hidden] { display: none; }
+.d-compose-top { display: flex; align-items: flex-start; gap: 10px; }
 .d-compose textarea {
-  width: 100%;
-  min-height: 84px;
-  resize: vertical;
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 9px 0 0;
+  resize: none;
   border: 0;
   outline: none;
   background: transparent;
@@ -614,10 +642,10 @@ html.need-lock body { overflow: hidden; }
   font: 16px/1.5 'Be Vietnam Pro', system-ui, sans-serif;
 }
 .d-compose textarea::placeholder { color: var(--muted); }
-.d-compose-row { display: flex; align-items: center; gap: 8px; }
+.d-compose-row { display: flex; align-items: center; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
 .d-photo {
   position: relative;
-  min-height: 44px;
+  min-height: 40px;
   padding: 0 14px;
   margin-right: auto;
   border-radius: 999px;
@@ -633,16 +661,18 @@ html.need-lock body { overflow: hidden; }
 .d-photo input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .d-photo:focus-within { outline: 2px solid var(--pink); outline-offset: 2px; }
 .d-photo svg { width: 18px; height: 18px; }
-.btn.primary { min-height: 44px; padding: 0 20px; background: var(--card); border-color: var(--card); color: var(--card-ink); }
-.btn.ghost { min-height: 44px; padding: 0 16px; }
-.d-preview { position: relative; width: 120px; }
-.d-preview img { width: 120px; height: 120px; border-radius: 14px; object-fit: cover; display: block; }
+.d-compose .btn { min-height: 40px; }
+.d-compose .btn[hidden] { display: none; }
+.d-compose .btn.primary:disabled { opacity: .4; }
+.d-preview { position: relative; }
+.d-preview[hidden] { display: none; }
+.d-preview img { width: 100%; max-height: 300px; border-radius: 16px; object-fit: cover; display: block; }
 .d-preview button {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 32px;
-  height: 32px;
+  top: 8px;
+  right: 8px;
+  width: 34px;
+  height: 34px;
   border: 0;
   border-radius: 999px;
   background: rgba(29, 24, 50, 0.7);
@@ -651,15 +681,22 @@ html.need-lock body { overflow: hidden; }
   place-items: center;
 }
 .d-preview svg { width: 16px; height: 16px; }
+.d-readonly { margin: 0; padding: 12px 14px; border-radius: 16px; border: 1px dashed var(--line); color: var(--muted); font-size: 13px; line-height: 1.5; text-align: center; }
+.d-readonly[hidden] { display: none; }
 .d-status { margin: 0; padding: 10px 14px; border-radius: 14px; background: var(--t-music); color: var(--t-music-ink); font-size: 13px; line-height: 1.5; }
 .d-status.error { background: var(--t-letter); color: var(--t-letter-ink); }
-.d-list { display: flex; flex-direction: column; gap: 10px; }
+.d-status[hidden] { display: none; }
+
+/* Bài đăng */
+.d-list { display: flex; flex-direction: column; gap: 12px; }
 .d-empty { margin: 16px 0; text-align: center; color: var(--muted); font-size: 14px; }
-.d-empty.small { margin: 4px 0; font-size: 13px; }
-.d-card { padding: 14px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
-.d-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.d-date { font-size: 12px; font-weight: 500; color: var(--muted); }
-.d-actions { display: flex; gap: 2px; }
+.d-card { position: relative; padding: 14px 14px 12px; border-radius: 22px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+.d-card.fresh { animation: d-in .4s cubic-bezier(.2, .8, .2, 1); }
+@keyframes d-in { from { opacity: 0; transform: translateY(-10px) scale(.98); } }
+.d-head { position: relative; display: flex; align-items: center; gap: 10px; }
+.d-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.d-name { font-size: 15px; }
+.d-time { font-size: 12px; color: var(--muted); }
 .d-icon {
   width: 40px;
   height: 40px;
@@ -670,68 +707,132 @@ html.need-lock body { overflow: hidden; }
   display: grid;
   place-items: center;
 }
-.d-icon svg { width: 18px; height: 18px; }
-.d-icon.small { width: 32px; height: 32px; margin: -6px -6px -6px auto; }
-.d-icon.small svg { width: 14px; height: 14px; }
-.d-text { margin: 0; font-size: 15px; line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; }
-.d-img { width: 100%; max-height: 360px; object-fit: cover; border-radius: 14px; }
-.d-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.d-badge, .d-chip {
-  min-height: 36px;
-  padding: 0 12px;
-  border-radius: 999px;
+.d-icon svg { width: 20px; height: 20px; }
+.d-more { margin: -6px -8px -6px 0; }
+.d-more svg { stroke-width: 3.2; }
+.d-menu {
+  position: absolute;
+  top: 38px;
+  right: -4px;
+  z-index: 3;
+  min-width: 190px;
+  padding: 6px;
+  border-radius: 16px;
+  background: var(--surface);
   border: 1px solid var(--line);
-  background: var(--bg);
+  box-shadow: 0 10px 28px rgba(29, 24, 50, 0.18);
+  display: flex;
+  flex-direction: column;
+  animation: pop-in .16s ease-out;
+  transform-origin: top right;
+}
+.d-menu button {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 600 14px 'Be Vietnam Pro', system-ui, sans-serif;
+  text-align: left;
+}
+.d-menu button:active { background: var(--bg); }
+.d-menu button.danger { color: var(--accent-ink); }
+.d-menu svg { width: 18px; height: 18px; }
+.d-text { margin: 0; font-size: 15px; line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; }
+.d-text.clamp { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.d-seemore { align-self: flex-start; margin-top: -6px; padding: 0; border: 0; background: none; color: var(--muted); font: 600 14px 'Be Vietnam Pro', system-ui, sans-serif; }
+
+/* Ảnh tràn hết bề ngang thẻ, như Instagram */
+.d-media { position: relative; margin: 0 -14px; background: var(--bg); cursor: zoom-in; -webkit-tap-highlight-color: transparent; }
+.d-media img { width: 100%; max-height: 460px; object-fit: cover; display: block; user-select: none; -webkit-user-drag: none; }
+.d-burst { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; opacity: 0; }
+.d-burst svg { width: 96px; height: 96px; fill: #fff; stroke: none; filter: drop-shadow(0 4px 16px rgba(194, 58, 92, .5)); }
+.d-burst.go { animation: d-burst .8s ease-out; }
+@keyframes d-burst { 0% { opacity: 0; transform: scale(.3); } 15% { opacity: 1; transform: scale(1.15); } 30% { transform: scale(.95); } 45% { transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: scale(1.05); } }
+
+/* Hàng nút tim / bình luận / cảm xúc */
+.d-acts { position: relative; display: flex; align-items: center; gap: 2px; margin: -2px -8px -4px; }
+.d-act {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
+  justify-content: center;
+  gap: 5px;
+  font: 600 14px 'Be Vietnam Pro', system-ui, sans-serif;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
-.d-badge.mine { border-color: #FF8FA3; background: var(--t-letter); color: var(--t-letter-ink); }
-.d-chip { color: var(--muted); }
-.d-chip svg { width: 16px; height: 16px; }
-.d-react { position: relative; }
+.d-act svg { width: 26px; height: 26px; stroke-width: 1.8; }
+.d-act:disabled { opacity: .45; }
+.d-like.on svg { fill: #F0436A; stroke: #F0436A; animation: d-pop .35s ease-out; }
+.d-like .d-mine { font-size: 24px; line-height: 1; animation: d-pop .35s ease-out; }
+@keyframes d-pop { 40% { transform: scale(1.3); } }
 .d-picker {
   position: absolute;
-  bottom: calc(100% + 6px);
-  left: 0;
+  bottom: calc(100% + 4px);
+  left: 4px;
   z-index: 2;
   padding: 4px;
   border-radius: 999px;
   background: var(--surface);
   border: 1px solid var(--line);
-  box-shadow: 0 6px 18px rgba(29, 24, 50, 0.16);
+  box-shadow: 0 8px 22px rgba(29, 24, 50, 0.18);
   display: flex;
   gap: 2px;
   animation: pop-in .18s ease-out;
+  transform-origin: bottom left;
 }
+.d-picker[hidden] { display: none; }
 @keyframes pop-in { from { transform: scale(.8); opacity: 0; } }
-.d-picker button { width: 40px; height: 40px; border: 0; border-radius: 999px; background: transparent; font-size: 22px; }
-.d-picker button:active { transform: scale(1.2); }
-.d-comments { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; border-top: 1px solid var(--line); }
-.d-comment { padding: 8px 12px; border-radius: 14px; background: var(--bg); }
-.d-comment-top { display: flex; align-items: center; gap: 8px; font-size: 13px; }
-.d-comment-time { font-size: 11px; color: var(--muted); }
-.d-comment p { margin: 2px 0 0; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
-.d-form { display: flex; align-items: center; gap: 6px; }
-.d-who { display: flex; padding: 3px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); }
-.d-who button { min-height: 36px; padding: 0 10px; border: 0; border-radius: 999px; background: transparent; font-size: 13px; font-weight: 600; color: var(--muted); }
-.d-who button[aria-checked="true"] { background: var(--card); color: var(--card-ink); }
-.d-form input {
+.d-picker button { width: 44px; height: 44px; border: 0; border-radius: 999px; background: transparent; font-size: 26px; transition: transform .12s; }
+.d-picker button.on { background: var(--t-letter); }
+.d-picker button:active { transform: scale(1.3) translateY(-4px); }
+.d-summary { display: flex; align-items: center; gap: 8px; margin-top: -4px; font-size: 13px; font-weight: 600; }
+.d-emojis { display: flex; }
+.d-emojis i { width: 22px; height: 22px; margin-right: -5px; border-radius: 999px; background: var(--surface); box-shadow: 0 0 0 2px var(--surface); display: grid; place-items: center; font-style: normal; font-size: 15px; }
+.d-emojis i:last-child { margin-right: 0; }
+
+/* Bình luận: bong bóng chat như Facebook */
+.d-thread { display: flex; flex-direction: column; gap: 8px; }
+.d-viewall { align-self: flex-start; padding: 0; border: 0; background: none; color: var(--muted); font: 600 13px 'Be Vietnam Pro', system-ui, sans-serif; }
+.d-c { display: flex; align-items: flex-start; gap: 8px; }
+.d-c-body { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.d-bubble { max-width: 100%; padding: 7px 12px 8px; border-radius: 18px; background: var(--bg); }
+.d-bubble b { font-size: 13px; }
+.d-bubble p { margin: 1px 0 0; font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; white-space: pre-line; }
+.d-c-meta { display: flex; gap: 12px; padding-left: 12px; font-size: 12px; color: var(--muted); }
+.d-c-meta button { padding: 0; border: 0; background: none; color: var(--muted); font: 600 12px 'Be Vietnam Pro', system-ui, sans-serif; }
+.d-reply { display: flex; align-items: center; gap: 8px; }
+.d-reply input {
   flex: 1;
   min-width: 0;
-  min-height: 42px;
-  padding: 0 12px;
+  min-height: 40px;
+  padding: 0 14px;
   border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--bg);
   color: var(--ink);
   font: 16px 'Be Vietnam Pro', system-ui, sans-serif;
+  outline: none;
 }
-.d-send { width: 42px; height: 42px; flex: none; border: 0; border-radius: 999px; background: var(--pink); color: #2B2140; display: grid; place-items: center; }
+.d-reply input:focus { border-color: #C9B3EC; }
+.d-reply input::placeholder { color: var(--muted); }
+.d-send { width: 40px; height: 40px; flex: none; border: 0; border-radius: 999px; background: var(--pink); color: #2B2140; display: grid; place-items: center; transition: opacity .15s, transform .15s; }
+.d-send:disabled { opacity: .35; }
 .d-send svg { width: 18px; height: 18px; }
-.d-more { width: 100%; }
+.d-older { width: 100%; }
+.viewer.single .v-prev, .viewer.single .v-next { display: none; }
 
 /* ===== Thông báo chương mới ===== */
 .news {
