@@ -1,158 +1,162 @@
-/* Hồi ức: phòng tối, hạt phim, vệt sáng hở phim, cuốn sổ ảnh lật quanh gáy, khung ngắm máy ảnh cũ. */
+/* Hồi ức: phòng tối, chiếc TV gỗ đời cũ. Bật lên thì tiến sát vào màn hình CRT (sọc quét, nhiễu, kính cong)
+   và chiếu một đoạn clip dựng từ ảnh: trôi chậm, ghép đôi, ghép ba, polaroid, phụ đề, chuyển cảnh kiểu băng VHS. */
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --night: #0E0B16;
-  --paper: #F6EEDF;
-  --paper-2: #EADFCB;
-  --ink: #3A2B3F;
-  --stamp: #FF8A2A;
-  --cover-a: #5B3A7A;
-  --cover-b: #2E1C44;
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --night: #0B0910;
+  --cream: #F6EEDF;
   --gold: #E9C77B;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; }
-body {
-  background: var(--night);
-  color: #F3E9DA;
-  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-user-select: none;
-  user-select: none;
-}
+body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam Pro', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
 [hidden] { display: none !important; }
+.link { border: 0; background: none; color: rgba(246, 238, 223, .55); font: inherit; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; padding: 8px; cursor: pointer; }
+.grain { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: .06; mix-blend-mode: overlay; z-index: 50; }
 
-/* ===== Hạt phim + vệt sáng ===== */
-.grain { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: .07; mix-blend-mode: overlay; z-index: 30; }
-.leak { position: fixed; pointer-events: none; z-index: 29; border-radius: 50%; filter: blur(60px); mix-blend-mode: screen; opacity: 0; }
-.leak-a { width: 70vmax; height: 70vmax; left: -35vmax; top: -20vmax; background: radial-gradient(circle, rgba(255, 128, 60, .7), rgba(255, 60, 120, 0) 65%); }
-.leak-b { width: 60vmax; height: 60vmax; right: -30vmax; bottom: -25vmax; background: radial-gradient(circle, rgba(255, 70, 140, .55), rgba(255, 170, 80, 0) 65%); }
-body.playing .leak-a { animation: leak-a 11s ease-in-out infinite; }
-body.playing .leak-b { animation: leak-b 13s ease-in-out infinite 2s; }
-@keyframes leak-a { 0%, 100% { opacity: 0; transform: translate(0, 0); } 30% { opacity: .55; } 60% { opacity: .15; transform: translate(18vmax, 10vmax); } }
-@keyframes leak-b { 0%, 100% { opacity: 0; transform: translate(0, 0); } 40% { opacity: .45; } 70% { opacity: .1; transform: translate(-14vmax, -12vmax); } }
+/* ===== Xoay ngang ===== */
+.rotate { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; text-align: center; padding: 0 30px; }
+.rotate p { margin: 0; font-family: 'Fraunces', serif; font-size: 20px; }
+.phone-ic { width: 46px; height: 78px; border: 3px solid var(--cream); border-radius: 10px; position: relative; animation: turn 2.6s ease-in-out infinite; }
+.phone-ic i { position: absolute; left: 50%; bottom: 5px; width: 10px; height: 3px; margin-left: -5px; border-radius: 2px; background: var(--cream); }
+@keyframes turn { 0%, 25% { transform: rotate(0); } 55%, 85% { transform: rotate(-90deg); } 100% { transform: rotate(0); } }
 
-/* ===== Mở đầu ===== */
-.start { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; z-index: 10; transition: opacity .8s; }
-.start.out { opacity: 0; pointer-events: none; }
-.start-kicker { margin: 0; font-family: 'Dancing Script', cursive; font-size: 40px; font-weight: 700; color: var(--gold); text-shadow: 0 0 24px rgba(233, 199, 123, .35); }
-.shutter { position: relative; width: 92px; height: 92px; border: 0; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #F4F1EC, #A9A39B 55%, #6E6862); box-shadow: 0 10px 30px rgba(0, 0, 0, .6), inset 0 -4px 8px rgba(0, 0, 0, .35); cursor: pointer; }
-.shutter-ring { position: absolute; inset: 9px; border-radius: 50%; border: 2px solid rgba(40, 32, 30, .35); }
-.shutter-dot { position: absolute; inset: 24px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #FF7A86, #C2263D); box-shadow: 0 0 18px rgba(255, 80, 110, .55); animation: breathe 2.2s ease-in-out infinite; }
-.shutter:disabled { opacity: .5; }
-.shutter:active { transform: scale(.94); }
-@keyframes breathe { 50% { transform: scale(.88); box-shadow: 0 0 6px rgba(255, 80, 110, .3); } }
-.start-hint { margin: 0; font-size: 14px; color: rgba(243, 233, 218, .65); letter-spacing: .04em; }
-
-/* ===== Những dòng mở đầu ===== */
-.lines { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 0 28px; text-align: center; z-index: 10; }
-.lines p { margin: 0; font-family: 'Fraunces', serif; font-size: 23px; line-height: 1.4; opacity: 0; transform: translateY(10px); transition: opacity 1.2s, transform 1.2s; }
-.lines p.on { opacity: 1; transform: none; }
-.lines p.soft { font-family: 'Dancing Script', cursive; font-size: 30px; color: var(--gold); }
-.lines.out p { opacity: 0; transition-duration: .8s; }
-
-/* ===== Cuốn sổ ===== */
-.stage { position: fixed; inset: 0; display: grid; place-items: center; perspective: 1800px; z-index: 5; padding: calc(var(--safe-top) + 56px) 0 calc(var(--safe-bottom) + 56px); }
-.book {
-  position: relative;
-  width: min(88vw, 420px, calc((100vh - var(--safe-top) - var(--safe-bottom) - 130px) * .66));
-  aspect-ratio: 2 / 3;
-  transform-style: preserve-3d;
-  animation: book-in 1.6s cubic-bezier(.2, .8, .2, 1) both;
-  cursor: pointer;
-}
-@keyframes book-in { from { opacity: 0; transform: translateY(40px) rotateX(18deg) scale(.86); } }
-.book::before { /* gáy sổ và độ dày trang */
-  content: ''; position: absolute; inset: 6px -6px -6px 6px; border-radius: 4px 14px 14px 4px;
-  background: repeating-linear-gradient(90deg, #E2D5BE 0 1px, #F1E7D6 1px 3px); box-shadow: 0 30px 60px rgba(0, 0, 0, .55);
-}
-.book.closing { animation: book-out 1.8s ease-in forwards; }
-@keyframes book-out { to { opacity: 0; transform: translateY(-12px) scale(.9); filter: blur(2px); } }
-
-.page {
-  position: absolute; inset: 0;
-  transform-origin: left center;
-  transform-style: preserve-3d;
-  transition: transform 1.35s cubic-bezier(.55, .05, .3, 1), opacity .5s ease 1s;
-}
-.page.turned { transform: rotateY(-176deg); opacity: 0; }
-.face { position: absolute; inset: 0; border-radius: 3px 12px 12px 3px; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-.face.back { transform: rotateY(180deg); background: var(--paper-2); }
-.face.front::after { /* bóng tối dần khi trang đang lật */
-  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, .35)); transition: opacity .7s;
-}
-.page.turning .face.front::after { opacity: 1; }
-
-/* Bìa */
-.cover .front {
+/* ===== Phòng và TV ===== */
+.room {
+  position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  padding: calc(var(--safe-top) + 12px) calc(var(--safe-right) + 12px) calc(var(--safe-bottom) + 12px) calc(var(--safe-left) + 12px);
   background:
-    radial-gradient(120% 80% at 30% 20%, rgba(255, 255, 255, .12), rgba(255, 255, 255, 0) 60%),
-    repeating-linear-gradient(45deg, rgba(255, 255, 255, .025) 0 2px, rgba(0, 0, 0, .03) 2px 4px),
-    linear-gradient(160deg, var(--cover-a), var(--cover-b));
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-  box-shadow: inset 6px 0 10px rgba(0, 0, 0, .35);
+    radial-gradient(60% 70% at 50% 35%, rgba(255, 196, 120, .12), rgba(0, 0, 0, 0) 70%),
+    linear-gradient(180deg, #120E17 0%, #0B0910 62%, #1A120D 62.2%, #0E0A08 100%);
 }
-.cover .front::before { content: ''; position: absolute; inset: 14px; border: 1px solid rgba(233, 199, 123, .5); border-radius: 2px 8px 8px 2px; }
-.cover h1 { margin: 0; font-family: 'Dancing Script', cursive; font-size: 54px; font-weight: 700; color: var(--gold); text-shadow: 0 2px 0 rgba(0, 0, 0, .3), 0 0 22px rgba(233, 199, 123, .25); }
-.cover .who { font-size: 13px; letter-spacing: .32em; text-transform: uppercase; color: rgba(233, 199, 123, .85); }
-.cover .since { font-family: 'Fraunces', serif; font-size: 14px; color: rgba(243, 233, 218, .7); }
-.cover .heart { width: 22px; height: 22px; fill: #FF8FA3; filter: drop-shadow(0 0 8px rgba(255, 143, 163, .6)); }
-
-/* Trang ảnh */
-.sheet .front {
+.lamp { position: absolute; left: 50%; top: -18vmin; width: 70vmin; height: 70vmin; margin-left: -35vmin; border-radius: 50%; background: radial-gradient(circle, rgba(255, 190, 110, .18), rgba(255, 190, 110, 0) 65%); pointer-events: none; }
+.tv { position: relative; width: min(88vw, 148vh, 1040px); transform-origin: 0 0; transition: transform 1.8s cubic-bezier(.6, 0, .25, 1); z-index: 2; }
+.tv-body {
+  position: relative; display: grid; grid-template-columns: 1fr 16%; gap: 2.6%; padding: 3% 2.8% 3% 3%;
+  aspect-ratio: 16 / 9.4; border-radius: 22px;
   background:
-    repeating-linear-gradient(180deg, rgba(58, 43, 63, 0) 0 27px, rgba(58, 43, 63, .07) 27px 28px),
-    radial-gradient(130% 90% at 50% 0%, #FBF5EA, var(--paper));
-  box-shadow: inset 8px 0 12px -6px rgba(0, 0, 0, .25);
-  display: flex; flex-direction: column; align-items: center; padding: 9% 9% 7%;
-  color: var(--ink);
+    repeating-linear-gradient(92deg, rgba(0, 0, 0, .06) 0 3px, rgba(255, 255, 255, .025) 3px 7px, rgba(0, 0, 0, .04) 7px 13px),
+    linear-gradient(180deg, #7A5133, #5A3920 55%, #46301C);
+  box-shadow: inset 0 2px 0 rgba(255, 220, 170, .18), inset 0 -6px 14px rgba(0, 0, 0, .45), 0 30px 60px rgba(0, 0, 0, .65);
 }
-.snap { position: relative; width: 100%; aspect-ratio: 4 / 5; padding: 8px 8px 0; background: #FFFDF8; box-shadow: 0 6px 16px rgba(58, 43, 63, .22); transform: rotate(var(--tilt, -1.5deg)); }
-.snap .ph { position: relative; width: 100%; height: calc(100% - 8px); overflow: hidden; background: #1a1520; }
-.snap img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.12); filter: saturate(.9) contrast(1.03) sepia(.08); }
-.page.live .snap img { animation: kenburns 7.5s ease-out forwards; }
-@keyframes kenburns { from { transform: scale(1.14) translate(1.5%, 1%); } to { transform: scale(1.02) translate(0, 0); } }
-.snap .stamp { position: absolute; right: 8px; bottom: 6px; font: 600 12px/1 ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: .08em; color: var(--stamp); text-shadow: 0 0 6px rgba(255, 138, 42, .8); opacity: .92; }
-.tape { position: absolute; width: 74px; height: 22px; background: rgba(255, 236, 200, .62); box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
-.tape.a { left: -14px; top: 10px; transform: rotate(-38deg); }
-.tape.b { right: -14px; top: 10px; transform: rotate(38deg); }
-.note { margin: 16px 2px 0; font-family: 'Dancing Script', cursive; font-size: clamp(19px, 5.4vw, 24px); font-weight: 700; line-height: 1.25; text-align: center; color: #5A3B5E; }
-.pno { margin-top: auto; padding-top: 8px; font: 500 11px/1 'Be Vietnam Pro', sans-serif; letter-spacing: .2em; color: rgba(58, 43, 63, .45); }
+.leg { position: absolute; bottom: -7%; width: 4%; height: 8%; background: linear-gradient(#3B2717, #24170D); border-radius: 0 0 6px 6px; }
+.leg.l1 { left: 12%; transform: skewX(8deg); }
+.leg.l2 { right: 12%; transform: skewX(-8deg); }
 
-/* Trang cuối (bìa sau) */
-.last .front { background: linear-gradient(160deg, var(--cover-a), var(--cover-b)); display: grid; place-items: center; }
-.last .front p { margin: 0; padding: 0 14%; text-align: center; font-family: 'Dancing Script', cursive; font-size: 28px; font-weight: 700; color: var(--gold); line-height: 1.3; }
+.tv-screen {
+  position: relative; overflow: hidden; border-radius: 9% / 12%;
+  background: radial-gradient(120% 120% at 50% 50%, #1B1F1C, #070908 75%);
+  box-shadow: 0 0 0 7px #24180F, 0 0 0 9px #120B06, inset 0 0 50px rgba(0, 0, 0, .95);
+}
+.crt-content { position: absolute; inset: 0; overflow: hidden; }
+.crt-static { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .25s; }
+.crt-static.on { opacity: .9; }
+.crt-static.soft { opacity: .14; }
+.crt-scan { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .6s;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .28) 0 1px, rgba(0, 0, 0, 0) 1px 3px); }
+.tv.on .crt-scan { opacity: 1; animation: flicker .12s steps(2) infinite; }
+@keyframes flicker { 50% { opacity: .92; } }
+.crt-glass { position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(130% 110% at 50% 50%, rgba(0, 0, 0, 0) 58%, rgba(0, 0, 0, .55) 100%),
+    linear-gradient(140deg, rgba(255, 255, 255, .13) 0%, rgba(255, 255, 255, 0) 32%); }
+.crt-line { position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; background: #FFFFFF; box-shadow: 0 0 18px 6px rgba(200, 230, 255, .9); transform: scaleX(0); opacity: 0; }
+.crt-line.on { animation: line-on .55s ease-out forwards; }
+@keyframes line-on { 0% { transform: scaleX(0); opacity: 1; } 45% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(1) scaleY(260); opacity: 0; } }
+.crt-line.off { animation: line-off .7s ease-in forwards; }
+@keyframes line-off { 0% { transform: scaleX(1) scaleY(260); opacity: 0; } 30% { transform: scaleX(1) scaleY(1); opacity: 1; } 75% { transform: scaleX(.02) scaleY(1.5); opacity: 1; } 100% { transform: scaleX(0); opacity: 0; } }
+.crt-content.squash { animation: squash .45s ease-in forwards; }
+@keyframes squash { to { transform: scaleY(.01); filter: brightness(3); } }
 
-/* ===== Khung ngắm ===== */
-.hud { position: fixed; inset: calc(var(--safe-top) + 12px) 14px calc(var(--safe-bottom) + 14px); pointer-events: none; z-index: 20; font: 600 12px/1 ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: .1em; color: rgba(255, 255, 255, .85); text-shadow: 0 1px 3px rgba(0, 0, 0, .6); animation: fade-in 1.2s ease both; }
-@keyframes fade-in { from { opacity: 0; } }
-.hud .c { position: absolute; width: 22px; height: 22px; border: 2px solid rgba(255, 255, 255, .7); }
-.hud .tl { left: 0; top: 0; border-right: 0; border-bottom: 0; }
-.hud .tr { right: 0; top: 0; border-left: 0; border-bottom: 0; }
-.hud .bl { left: 0; bottom: 0; border-right: 0; border-top: 0; }
-.hud .br { right: 0; bottom: 0; border-left: 0; border-top: 0; }
-.hud-play { position: absolute; left: 30px; top: 6px; }
-.hud-play b { color: #7CFFB0; }
-.hud-count { position: absolute; right: 30px; top: 6px; }
-.hud-batt { position: absolute; right: 30px; bottom: 6px; display: flex; gap: 2px; padding: 2px; border: 1.5px solid rgba(255, 255, 255, .75); border-radius: 2px; }
-.hud-batt i { width: 5px; height: 8px; background: rgba(255, 255, 255, .8); }
-.hud-date { position: absolute; left: 30px; bottom: 6px; color: var(--stamp); text-shadow: 0 0 6px rgba(255, 138, 42, .8); }
+/* Chữ trên màn hình (OSD) kiểu đầu băng: hơi lệch màu đỏ / xanh */
+.osd { position: absolute; inset: 5% 6%; pointer-events: none; font: 700 clamp(9px, 1.6vw, 15px)/1 ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: .12em; color: #F4FFF6; text-shadow: 1.5px 0 rgba(255, 40, 80, .7), -1.5px 0 rgba(40, 200, 255, .7), 0 0 6px rgba(255, 255, 255, .4); z-index: 4; }
+.osd-play { position: absolute; left: 0; top: 0; }
+.osd-play b { color: #7CFFB0; }
+.osd-ch { position: absolute; right: 0; top: 0; }
+.osd-tc { position: absolute; right: 0; bottom: 0; }
+.osd-date { position: absolute; left: 0; bottom: 0; }
+
+/* Bảng điều khiển bên phải */
+.tv-panel { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 6% 0 4%; border-radius: 12px; background: linear-gradient(180deg, #2A1C12, #1C120B); box-shadow: inset 0 2px 6px rgba(0, 0, 0, .6); }
+.tv-brand { font-family: 'Dancing Script', cursive; font-weight: 700; font-size: clamp(12px, 2.2vw, 22px); color: var(--gold); opacity: .85; }
+.knob { width: 52%; aspect-ratio: 1; border-radius: 50%; position: relative; background: radial-gradient(circle at 38% 32%, #EDE6DA, #9C948A 55%, #5D5750); box-shadow: 0 4px 8px rgba(0, 0, 0, .6), inset 0 -3px 6px rgba(0, 0, 0, .35); }
+.knob::after { content: ''; position: absolute; left: 50%; top: 10%; width: 8%; height: 34%; margin-left: -4%; border-radius: 2px; background: #3B2A1E; }
+.knob.k2::after { transform: rotate(130deg); transform-origin: 50% 118%; }
+.speaker { width: 64%; height: 22%; border-radius: 6px; background: repeating-linear-gradient(0deg, #120B07 0 2px, #3A281A 2px 5px); }
+.power { position: relative; width: 50%; aspect-ratio: 1; border: 0; border-radius: 50%; cursor: pointer; background: radial-gradient(circle at 38% 32%, #FFE1C2, #C9A27A 50%, #7A5A3C); box-shadow: 0 0 0 3px #120B06, 0 4px 10px rgba(0, 0, 0, .7); }
+.power:active { transform: scale(.92); }
+.tv:not(.on) .power { animation: call 1.8s ease-in-out infinite; }
+@keyframes call { 50% { box-shadow: 0 0 0 3px #120B06, 0 0 22px 6px rgba(255, 190, 110, .45); } }
+.led { position: absolute; right: -16%; top: -16%; width: 22%; aspect-ratio: 1; border-radius: 50%; background: #5A1414; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .6); }
+.tv.on .led { background: #FF3B3B; box-shadow: 0 0 8px 2px rgba(255, 60, 60, .8); }
+.hint { margin: 2.5vh 0 0; font-size: 14px; letter-spacing: .06em; color: rgba(246, 238, 223, .6); animation: hint 2.4s ease-in-out infinite; transition: opacity .6s; }
+.hint.out { opacity: 0; animation: none; }
+@keyframes hint { 50% { opacity: .35; } }
+.room.watching .hint, .room.watching .lamp { opacity: 0; }
+
+/* ===== Các cảnh trong clip ===== */
+.shot { position: absolute; inset: 0; overflow: hidden; background: #08070B; }
+.shot.enter-fade { animation: s-fade .9s ease both; }
+@keyframes s-fade { from { opacity: 0; } }
+.shot .bg { position: absolute; inset: -8%; width: 116%; height: 116%; object-fit: cover; filter: blur(22px) brightness(.5) saturate(1.2); }
+.shot .fg { position: absolute; top: 0; bottom: 0; left: 50%; height: 100%; width: auto; max-width: none; transform: translateX(-50%); }
+.kb .fg { animation: kb-a var(--dur, 4.6s) ease-out both; }
+.kb.alt .fg { animation-name: kb-b; }
+@keyframes kb-a { from { transform: translateX(-50%) scale(1.16) translateY(2%); } to { transform: translateX(-50%) scale(1.02); } }
+@keyframes kb-b { from { transform: translateX(-46%) scale(1.04); } to { transform: translateX(-53%) scale(1.15) translateY(-2%); } }
+
+.duo { display: flex; align-items: center; justify-content: center; gap: 3%; }
+.duo .card, .trio .card { height: 82%; aspect-ratio: 3 / 4; overflow: hidden; border: 4px solid #F8F2E6; box-shadow: 0 10px 26px rgba(0, 0, 0, .6); position: relative; z-index: 1; }
+.duo .card img, .trio .card img, .pola .card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.duo .card:nth-child(2) { animation: from-left .9s cubic-bezier(.2, .8, .2, 1) both; transform: rotate(-2deg); }
+.duo .card:nth-child(3) { animation: from-right .9s cubic-bezier(.2, .8, .2, 1) .25s both; transform: rotate(2deg); }
+@keyframes from-left { from { opacity: 0; transform: translateX(-60%) rotate(-8deg); } }
+@keyframes from-right { from { opacity: 0; transform: translateX(60%) rotate(8deg); } }
+.trio { display: flex; align-items: center; justify-content: center; gap: 2.4%; }
+.trio .card { height: 70%; }
+.trio .card:nth-child(2) { animation: rise .8s cubic-bezier(.2, .8, .2, 1) both; }
+.trio .card:nth-child(3) { animation: rise .8s cubic-bezier(.2, .8, .2, 1) .3s both; transform: translateY(-6%); }
+.trio .card:nth-child(4) { animation: rise .8s cubic-bezier(.2, .8, .2, 1) .6s both; }
+@keyframes rise { from { opacity: 0; transform: translateY(40%); } }
+.pola { display: grid; place-items: center; }
+.pola .card { position: relative; z-index: 1; height: 84%; aspect-ratio: 4 / 5; padding: 3% 3% 13%; background: #FBF6EC; box-shadow: 0 16px 40px rgba(0, 0, 0, .7); transform: rotate(-4deg); animation: drop 1.1s cubic-bezier(.3, 1.4, .5, 1) both; }
+.pola .card b { position: absolute; left: 0; right: 0; bottom: 3%; text-align: center; font-family: 'Dancing Script', cursive; font-size: clamp(14px, 2.6vw, 26px); color: #5A3B5E; }
+@keyframes drop { from { opacity: 0; transform: translateY(-30%) rotate(10deg) scale(1.1); } }
+
+.title { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2%; text-align: center; background: radial-gradient(80% 80% at 50% 50%, #241830, #08070B); }
+.title h2 { margin: 0; font-family: 'Dancing Script', cursive; font-size: clamp(30px, 7vw, 76px); color: var(--gold); text-shadow: 0 0 24px rgba(233, 199, 123, .35); animation: s-fade 1.6s ease both; }
+.title p { margin: 0; font-family: 'Fraunces', serif; font-size: clamp(11px, 2vw, 20px); letter-spacing: .1em; color: rgba(246, 238, 223, .8); animation: s-fade 1.6s ease .6s both; }
+
+/* Phụ đề */
+.cap { position: absolute; left: 8%; right: 8%; bottom: 13%; z-index: 3; text-align: center; font-weight: 600; font-size: clamp(12px, 2.3vw, 22px); line-height: 1.35; color: #FFFDF6; text-shadow: 0 2px 6px rgba(0, 0, 0, .9), 0 0 2px rgba(0, 0, 0, .9); }
+
+/* Chuyển cảnh */
+.fx { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.fx.flash { background: #FFF8EE; animation: fx-flash .7s ease-out forwards; }
+@keyframes fx-flash { 0% { opacity: 0; } 18% { opacity: 1; } 100% { opacity: 0; } }
+.fx.burn { background: radial-gradient(60% 90% at 0% 50%, rgba(255, 150, 60, .95), rgba(255, 60, 90, .6) 40%, rgba(0, 0, 0, 0) 75%); mix-blend-mode: screen; animation: fx-burn 1.1s ease-in-out forwards; }
+@keyframes fx-burn { 0% { opacity: 0; transform: translateX(-60%); } 45% { opacity: 1; } 100% { opacity: 0; transform: translateX(60%); } }
+.crt-content.glitch { animation: glitch .45s steps(6) both; }
+@keyframes glitch {
+  0% { transform: translateX(0); filter: none; }
+  20% { transform: translateX(-3%) skewX(6deg); filter: hue-rotate(40deg) saturate(2); }
+  40% { transform: translateX(4%); filter: contrast(1.6) brightness(1.3); }
+  60% { transform: translateX(-2%) skewX(-4deg); filter: hue-rotate(-40deg); }
+  80% { transform: translateX(1%); }
+  100% { transform: none; filter: none; }
+}
 
 /* ===== Kết ===== */
-.end { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 0 28px; text-align: center; z-index: 12; }
-.end-line { margin: 0; font-family: 'Fraunces', serif; font-size: 20px; color: rgba(243, 233, 218, .8); opacity: 0; transform: translateY(8px); transition: opacity 1.4s, transform 1.4s; }
-.end-line.big { font-size: 27px; color: #F6EEDF; }
+.end { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 0 28px; text-align: center; z-index: 10; }
+.end-line { margin: 0; font-family: 'Fraunces', serif; font-size: 19px; color: rgba(246, 238, 223, .8); opacity: 0; transform: translateY(8px); transition: opacity 1.4s, transform 1.4s; }
+.end-line.big { font-size: 26px; color: var(--cream); }
 .end-line.on, .end-btn.on, .end-again.on { opacity: 1; transform: none; }
-.end-btn { margin-top: 18px; padding: 15px 28px; border-radius: 999px; background: var(--paper); color: var(--ink); font-weight: 700; text-decoration: none; opacity: 0; transform: translateY(8px); transition: opacity 1.2s, transform 1.2s; box-shadow: 0 0 30px rgba(246, 238, 223, .25); }
-.end-again { border: 0; background: none; color: rgba(243, 233, 218, .6); font: inherit; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; opacity: 0; transition: opacity 1.2s; padding: 8px; }
-
-.flash { position: fixed; inset: 0; background: #FFF8EE; opacity: 0; pointer-events: none; z-index: 40; }
-.flash.on { animation: flash 1.6s ease-out; }
-@keyframes flash { 0% { opacity: 0; } 12% { opacity: 1; } 100% { opacity: 0; } }
+.end-btn { margin-top: 14px; padding: 14px 28px; border-radius: 999px; background: var(--cream); color: #3A2B3F; font-weight: 700; text-decoration: none; opacity: 0; transform: translateY(8px); transition: opacity 1.2s, transform 1.2s; box-shadow: 0 0 30px rgba(246, 238, 223, .2); }
+.end-again { opacity: 0; transition: opacity 1.2s; }
 
 @media (prefers-reduced-motion: reduce) {
-  .page { transition-duration: .4s; }
-  .page.live .snap img, .shutter-dot, body.playing .leak-a, body.playing .leak-b { animation: none; }
+  .tv { transition-duration: .4s; }
+  .kb .fg, .crt-content.glitch, .tv.on .crt-scan, .phone-ic { animation: none; }
 }

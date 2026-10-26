@@ -1,54 +1,97 @@
-// Hồi ức (bản xem thử của chương 17): mở đầu bằng vài dòng chữ, rồi một cuốn sổ ảnh lật từng trang
-// như xem lại ảnh trên máy ảnh cũ (hạt phim, vệt sáng hở phim, khung ngắm, dấu ngày cam). Hết sổ thì đưa về web cũ.
+// Hồi ức (bản xem thử của chương 17): chiếc TV cổ trong phòng tối. Bấm công tắc thì nghe tiếng "tách tích",
+// TV bật lên kiểu đời cũ (vạch sáng, nhiễu hạt), máy quay tiến sát vào màn hình và chiếu một đoạn clip dựng
+// từ ảnh. Hết băng thì TV tắt, đưa về web cũ (legacy/), nơi mọi thứ bắt đầu.
 'use strict';
 (() => {
   const $ = (id) => document.getElementById(id);
   const ANNIVERSARY = '2026-08-06T23:38:58';
-  // Ảnh trong album (assets/img) và một dòng viết tay cho mỗi trang. Sau này thêm ảnh, video thì chỉ cần thêm vào đây.
-  const PAGES = [
-    { n: 1, note: 'Cô giáo Văn tương lai.', tilt: -1.5 },
-    { n: 2, note: 'Nắng chiều đẹp. Người đứng trong nắng còn đẹp hơn.', tilt: 1.2 },
-    { n: 5, note: 'Giữa một trời xanh, anh chỉ nhìn thấy em.', tilt: -1 },
-    { n: 4, note: 'Ăn gì cũng phải chụp cho anh xem.', tilt: 1.6 },
-    { n: 3, note: 'Biển chiều, em chạy theo con sóng.', tilt: -1.8 },
-    { n: 15, note: 'Em chào biển. Biển chào em.', tilt: 1 },
-    { n: 10, note: 'Gương mặt này, anh thuộc lòng.', tilt: -1.2 },
-    { n: 11, note: 'Một góc bếp, một người con gái.', tilt: 1.4 },
-    { n: 13, note: 'Gió hồ thổi, tóc em bay.', tilt: -1.6 },
-    { n: 14, note: 'Trời mưa thì có ô. Có ô thì có em.', tilt: 1.1 },
-    { n: 8, note: 'Có những ánh mắt, nhìn một lần là nhớ mãi.', tilt: -1 },
-    { n: 12, note: 'Váy trắng, đêm xanh.', tilt: 1.5 },
-    { n: 16, note: 'Đèn vàng, váy trắng. Tim anh lạc mất một nhịp.', tilt: -1.4 },
-    { n: 17, note: 'Ba khung hình, ba lần anh thương.', tilt: 1.2 },
+  // Nhạc chỉ để làm nền (sau này còn ghép video có tiếng), nên để nhỏ.
+  const SONG = { src: '../assets/sound/In Love x Có Đôi Điều.mp3', start: 55.3, vol: 0.32 };
+  const DUR = 4600;
+  // Kịch bản clip. t: title | kb (ảnh trôi chậm) | duo | trio | pola; fx: cách chuyển vào cảnh (fade, flash, burn, glitch).
+  // Sau này thêm video: { t: 'video', src, from, to, cap } (chừa sẵn trong build()).
+  const SHOTS = [
+    { t: 'title', h: 'Hồi ức', p: 'Quang · Thủy · từ 06.08.2026', dur: 3800, fx: 'fade' },
+    { t: 'kb', n: [1], cap: 'Cô giáo Văn tương lai.', fx: 'fade' },
+    { t: 'kb', n: [2], cap: 'Nắng chiều đẹp. Người đứng trong nắng còn đẹp hơn.', fx: 'burn', alt: true },
+    { t: 'duo', n: [5, 4], cap: 'Đi đâu, ăn gì, cũng phải chụp cho nhau xem.', fx: 'flash' },
+    { t: 'pola', n: [3], note: 'biển chiều', cap: 'Biển chiều, em chạy theo con sóng.', fx: 'fade' },
+    { t: 'kb', n: [15], cap: 'Em chào biển. Biển chào em.', fx: 'glitch', alt: true },
+    { t: 'kb', n: [10], cap: 'Gương mặt này, anh thuộc lòng.', fx: 'fade' },
+    { t: 'duo', n: [11, 13], cap: 'Một góc bếp. Một làn gió. Một người con gái.', fx: 'burn' },
+    { t: 'kb', n: [14], cap: 'Trời mưa thì có ô. Có ô thì có em.', fx: 'flash', alt: true },
+    { t: 'pola', n: [8], note: 'ánh mắt', cap: 'Có những ánh mắt, nhìn một lần là nhớ mãi.', fx: 'glitch' },
+    { t: 'trio', n: [12, 16, 18], cap: 'Đèn vàng, váy trắng. Tim anh lạc mất một nhịp.', fx: 'fade' },
+    { t: 'kb', n: [17], cap: 'Ba khung hình, ba lần anh thương.', fx: 'burn' },
+    { t: 'kb', n: [9], cap: 'Ngày nào cũng muốn được nhìn em thêm một chút.', fx: 'flash', alt: true },
+    { t: 'title', h: 'Còn nhiều cuốn băng nữa', p: 'mình quay tiếp nhé', dur: 4400, fx: 'glitch' },
   ];
-  const SONG = { src: '../assets/sound/In Love x Có Đôi Điều.mp3', start: 55.3, vol: 0.75 };
-  const PAGE_MS = 5200;
-  const src = (p) => '../assets/img/Anh (' + p.n + ').jpg';
+  const img = (n) => '../assets/img/Anh (' + n + ').jpg';
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
+  const pad = (x) => String(x).padStart(2, '0');
   const now = new Date();
   const days = Math.floor((now - new Date(ANNIVERSARY)) / 864e5) + 1;
-  const pad = (x) => String(x).padStart(2, '0');
-  const stamp = pad(now.getDate()) + ' ' + pad(now.getMonth() + 1) + " '" + String(now.getFullYear()).slice(2);
 
-  // ===== Hạt phim: nhiễu nhỏ vẽ lại liên tục, phóng to ra cả màn hình =====
-  const grain = $('grain');
-  const gx = grain.getContext('2d');
-  // Nửa độ phân giải màn hình: hạt mịn, không vỡ ô; vẽ lại vài lần mỗi giây cho hạt "lăn tăn".
-  grain.width = Math.ceil(innerWidth / 2); grain.height = Math.ceil(innerHeight / 2);
-  const noise = gx.createImageData(grain.width, grain.height);
-  setInterval(() => {
-    const d = noise.data;
-    for (let i = 0; i < d.length; i += 4) { const v = Math.random() * 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
-    gx.putImageData(noise, 0, 0);
-  }, 90);
+  // ===== Hạt phim trên cả trang, nhiễu trên màn TV =====
+  function noiseCanvas(cv, w, h, every) {
+    const x = cv.getContext('2d');
+    cv.width = w; cv.height = h;
+    const data = x.createImageData(w, h);
+    return setInterval(() => {
+      const d = data.data;
+      for (let i = 0; i < d.length; i += 4) { const v = Math.random() * 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
+      x.putImageData(data, 0, 0);
+    }, every);
+  }
+  noiseCanvas($('grain'), Math.ceil(innerWidth / 2), Math.ceil(innerHeight / 2), 90);
+  noiseCanvas($('static'), 240, 160, 50);
 
-  // ===== Lấy sẵn ảnh trước khi bắt đầu =====
-  const ready = Promise.all(PAGES.map((p) => new Promise((res) => { const im = new Image(); im.onload = im.onerror = res; im.src = src(p); })));
-  ready.then(() => { $('start-hint').textContent = 'Chạm để xem lại'; $('btn-start').disabled = false; });
-  $('btn-start').disabled = true;
+  // ===== Lấy sẵn ảnh =====
+  const all = [...new Set(SHOTS.flatMap((s) => s.n || []))];
+  const ready = Promise.all(all.map((n) => new Promise((res) => { const im = new Image(); im.onload = im.onerror = res; im.src = img(n); })));
 
-  // ===== Nhạc: vào nhỏ rồi to dần, cuối thì nhỏ dần =====
+  // ===== Xoay ngang (điện thoại); máy tính hay đã xoay thì vào phòng luôn =====
+  const touch = matchMedia('(pointer: coarse)').matches;
+  let portraitOk = false, started = false;
+  function layout() {
+    const needRotate = touch && innerHeight > innerWidth && !portraitOk && !started;
+    $('rotate').hidden = !needRotate;
+    $('room').hidden = needRotate;
+  }
+  addEventListener('resize', () => { layout(); if (zoomed) zoom(true); });
+  $('btn-portrait').addEventListener('click', () => { portraitOk = true; layout(); });
+
+  // ===== Âm thanh tự tạo: tiếng công tắc, tiếng ù và rè của TV cũ =====
+  let ac = null;
+  function noise(t, dur, type, freq, q, gain) {
+    const buf = ac.createBuffer(1, Math.ceil(ac.sampleRate * dur), ac.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    s.buffer = buf; f.type = type; f.frequency.value = freq; f.Q.value = q;
+    g.gain.setValueAtTime(gain, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(f).connect(g).connect(ac.destination);
+    s.start(t);
+  }
+  function tone(t, dur, f0, f1, gain, type) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(f0, t);
+    o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(gain, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(ac.destination);
+    o.start(t); o.stop(t + dur);
+  }
+  const sfx = {
+    click() { if (!ac) return; const t = ac.currentTime; noise(t, 0.04, 'bandpass', 2600, 1, 0.9); noise(t + 0.13, 0.05, 'bandpass', 1700, 1, 0.7); },
+    on() { if (!ac) return; const t = ac.currentTime; tone(t, 0.6, 70, 40, 0.5); tone(t, 1.6, 7600, 7400, 0.015); noise(t + 0.05, 1.1, 'highpass', 1500, 0.4, 0.22); },
+    glitch() { if (!ac) return; noise(ac.currentTime, 0.32, 'highpass', 900, 0.5, 0.12); },
+    off() { if (!ac) return; const t = ac.currentTime; tone(t, 0.6, 520, 60, 0.18, 'triangle'); noise(t + 0.55, 0.05, 'bandpass', 2000, 1, 0.6); },
+  };
+
+  // ===== Nhạc nền =====
   const audio = new Audio(SONG.src);
   audio.preload = 'auto';
   function fade(to, ms) {
@@ -63,134 +106,132 @@
     });
   }
 
-  // ===== Tiếng máy ảnh và tiếng giật trang (tự tạo bằng Web Audio, không cần file) =====
-  let ac = null;
-  function noiseBurst(t, dur, freq, q, gain) {
-    const buf = ac.createBuffer(1, Math.ceil(ac.sampleRate * dur), ac.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2);
-    const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
-    s.buffer = buf; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q; g.gain.value = gain;
-    s.connect(f).connect(g).connect(ac.destination);
-    s.start(t);
+  // ===== Tiến sát vào màn hình TV (phóng to để màn hình gần kín màn) =====
+  const tv = $('tv'), screen = $('screen');
+  let zoomed = false;
+  function zoom(on) {
+    zoomed = on;
+    if (!on) { tv.style.transform = ''; return; }
+    tv.style.transition = 'none';
+    tv.style.transform = '';
+    const t = tv.getBoundingClientRect(), s = screen.getBoundingClientRect();
+    void tv.offsetWidth;
+    tv.style.transition = '';
+    const k = Math.min(innerWidth / s.width, innerHeight / s.height) * 0.96;
+    const cx = s.left + s.width / 2 - t.left, cy = s.top + s.height / 2 - t.top;
+    const tx = innerWidth / 2 - t.left - cx * k, ty = innerHeight / 2 - t.top - cy * k;
+    tv.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + k + ')';
   }
-  const shutterSound = () => { if (!ac) return; const t = ac.currentTime; noiseBurst(t, 0.05, 3200, 0.8, 0.6); noiseBurst(t + 0.09, 0.07, 1800, 0.9, 0.5); };
-  const pageSound = () => { if (!ac) return; const t = ac.currentTime; noiseBurst(t, 0.32, 1400, 0.5, 0.12); noiseBurst(t + 0.18, 0.2, 2600, 0.6, 0.06); };
 
-  // ===== Dựng cuốn sổ =====
-  const book = $('book');
-  const HEART = '<svg class="heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.4-9.3C1.2 8.2 3.4 4.5 7 4.5c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.6 0 5.8 3.7 4.4 7.2C19.5 16.4 12 21 12 21z"/></svg>';
-  const leaves = [];
-  function leaf(cls, front) {
+  // ===== Dựng từng cảnh =====
+  const content = $('content');
+  function build(s) {
     const el = document.createElement('div');
-    el.className = 'page ' + cls;
-    el.innerHTML = '<div class="face front">' + front + '</div><div class="face back"></div>';
-    book.appendChild(el);
-    leaves.push(el);
+    el.className = 'shot ' + s.t + (s.alt ? ' alt' : '');
+    el.style.setProperty('--dur', (s.dur || DUR) + 900 + 'ms');
+    const bg = s.n ? '<img class="bg" alt="" src="' + img(s.n[0]) + '" />' : '';
+    if (s.t === 'title') el.innerHTML = '<h2>' + s.h + '</h2><p>' + s.p + '</p>';
+    else if (s.t === 'kb') el.innerHTML = bg + '<img class="fg" alt="" src="' + img(s.n[0]) + '" />';
+    else if (s.t === 'duo' || s.t === 'trio') el.innerHTML = bg + s.n.map((n) => '<div class="card"><img alt="" src="' + img(n) + '" /></div>').join('');
+    else if (s.t === 'pola') el.innerHTML = bg + '<div class="card"><img alt="" src="' + img(s.n[0]) + '" /><b>' + (s.note || '') + '</b></div>';
     return el;
   }
-  leaf('cover', '<h1>Hồi ức</h1>' + HEART + '<span class="who">Quang · Thủy</span><span class="since">từ 06 · 08 · 2026</span>');
-  PAGES.forEach((p, i) => leaf('sheet',
-    '<div class="snap" style="--tilt:' + p.tilt + 'deg"><i class="tape a"></i><i class="tape b"></i>'
-    + '<div class="ph"><img alt="" src="' + src(p) + '" /><span class="stamp">' + stamp + '</span></div></div>'
-    + '<p class="note">' + p.note + '</p><span class="pno">' + pad(i + 1) + ' / ' + pad(PAGES.length) + '</span>'));
-  leaf('last', '<p>Và còn nhiều trang nữa, mình viết tiếp nhé.</p>');
-  // Trang đầu nằm trên cùng.
-  leaves.forEach((el, i) => { el.style.zIndex = String(leaves.length - i); });
-
-  let at = 0, timer = 0, busy = false, done = false;
-  function show(i) {
-    leaves.forEach((el, k) => el.classList.toggle('live', k === i));
-    const photo = i >= 1 && i <= PAGES.length;
-    $('hud-count').textContent = photo ? pad(i).padStart(3, '0') + '/' + String(PAGES.length).padStart(3, '0') : '---/' + String(PAGES.length).padStart(3, '0');
+  async function caption(el, text) {
+    if (!text) return;
+    const c = document.createElement('div');
+    c.className = 'cap';
+    el.appendChild(c);
+    await sleep(700);
+    for (const ch of text) { c.textContent += ch; await sleep(38); }
   }
-  function turn() {
-    if (busy || done) return;
-    clearTimeout(timer);
-    if (at >= leaves.length - 1) { finish(); return; }
-    busy = true;
-    const el = leaves[at];
-    el.classList.add('turning', 'turned');
-    pageSound();
-    at++;
-    show(at);
-    setTimeout(() => { el.classList.remove('turning'); busy = false; }, 1350);
-    timer = setTimeout(turn, at === leaves.length - 1 ? 3600 : PAGE_MS);
+  function transition(fx, el) {
+    if (fx === 'flash' || fx === 'burn') {
+      const o = document.createElement('div');
+      o.className = 'fx ' + fx;
+      content.appendChild(o);
+      setTimeout(() => o.remove(), 1200);
+    } else if (fx === 'glitch') {
+      sfx.glitch();
+      content.classList.remove('glitch');
+      void content.offsetWidth;
+      content.classList.add('glitch');
+      $('static').classList.add('on');
+      setTimeout(() => $('static').classList.replace('on', 'soft'), 260);
+    } else el.classList.add('enter-fade');
   }
-  book.addEventListener('click', turn);
-
-  // Loé sáng như đèn flash (chạy lại được nhiều lần).
-  function flash() {
-    const f = $('flash');
-    f.classList.remove('on');
-    void f.offsetWidth;
-    f.classList.add('on');
+  async function play() {
+    let prev = null;
+    for (const s of SHOTS) {
+      const el = build(s);
+      content.appendChild(el);
+      transition(s.fx, el);
+      caption(el, s.cap);
+      if (prev) { const p = prev; setTimeout(() => p.remove(), 1000); }
+      prev = el;
+      await sleep(s.dur || DUR);
+    }
   }
 
-  async function finish() {
-    if (done) return;
-    done = true;
-    clearTimeout(timer);
-    book.classList.add('closing');
-    $('hud').hidden = true;
-    fade(0.25, 2500);
+  // ===== Bật TV, chiếu, tắt TV =====
+  let tcTimer = 0;
+  async function powerOn() {
+    if (started) return;
+    started = true;
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; }
+    sfx.click();
+    $('hint').classList.add('out');
+    await sleep(260);
+    tv.classList.add('on');
+    $('room').classList.add('watching');
+    zoom(true);
+    sfx.on();
+    $('crt-line').classList.add('on');
+    $('static').classList.add('on');
+    audio.currentTime = SONG.start;
+    audio.volume = 0;
+    audio.play().then(() => fade(SONG.vol, 5000)).catch(() => {});
     await sleep(1500);
-    flash();
-    await sleep(400);
-    $('stage').hidden = true;
+    $('static').classList.replace('on', 'soft');
+    $('osd').hidden = false;
+    $('osd-date').textContent = pad(now.getDate()) + '.' + pad(now.getMonth() + 1) + '.' + now.getFullYear();
+    const t0 = performance.now();
+    tcTimer = setInterval(() => {
+      const sec = Math.floor((performance.now() - t0) / 1000);
+      $('osd-tc').textContent = '00:' + pad(Math.floor(sec / 60)) + ':' + pad(sec % 60);
+    }, 250);
+    await play();
+    await powerOff();
+  }
+
+  async function powerOff() {
+    clearInterval(tcTimer);
+    fade(0, 2600);
+    sfx.off();
+    $('osd').hidden = true;
+    content.classList.add('squash');
+    $('static').classList.remove('soft', 'on');
+    $('crt-line').classList.remove('on');
+    void $('crt-line').offsetWidth;
+    $('crt-line').classList.add('off');
+    await sleep(900);
+    tv.classList.remove('on');
+    content.innerHTML = '';
+    zoom(false);
+    await sleep(1600);
+    $('room').style.transition = 'opacity 1.2s';
+    $('room').style.opacity = '.18';
     $('end').hidden = false;
     $('end-1').textContent = 'Ngày thứ ' + days + ' bên nhau.';
     for (const id of ['end-1', 'end-2', 'end-go', 'end-again']) { await sleep(1300); $(id).classList.add('on'); }
   }
 
-  // ===== Bắt đầu =====
-  async function start() {
-    document.body.classList.add('playing');
-    audio.currentTime = SONG.start;
-    audio.volume = 0;
-    audio.play().then(() => fade(SONG.vol, 4000)).catch(() => {});
-    $('start').classList.add('out');
-    await sleep(900);
-    $('start').hidden = true;
-    const lines = $('lines');
-    lines.hidden = false;
-    const text = [
-      ['Ngày 6 tháng 8, em nhận lời.', ''],
-      ['Hôm nay là ngày thứ ' + days + '.', ''],
-      ['Mình xem lại một chút nhé.', 'soft'],
-    ];
-    for (const [t, cls] of text) {
-      const p = document.createElement('p');
-      p.textContent = t;
-      if (cls) p.className = cls;
-      lines.appendChild(p);
-      await sleep(80);
-      p.classList.add('on');
-      await sleep(2200);
-    }
-    await sleep(900);
-    lines.classList.add('out');
-    await sleep(900);
-    lines.hidden = true;
-    $('hud-date').textContent = stamp;
-    $('hud').hidden = false;
-    $('stage').hidden = false;
-    show(0);
-    timer = setTimeout(turn, 3200);
-  }
-  $('btn-start').addEventListener('click', () => {
-    $('btn-start').disabled = true;
-    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; }
-    shutterSound();
-    flash();
-    ready.then(start);
-  });
-
+  $('power').addEventListener('click', () => { ready.then(powerOn); });
   $('end-again').addEventListener('click', () => location.reload());
   $('end-go').addEventListener('click', (e) => {
     e.preventDefault();
-    fade(0, 1200);
-    flash();
-    setTimeout(() => { location.href = $('end-go').href; }, 900);
+    document.body.style.transition = 'opacity 1s';
+    document.body.style.opacity = '0';
+    setTimeout(() => { location.href = $('end-go').href; }, 1000);
   });
+  layout();
 })();
