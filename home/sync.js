@@ -15,7 +15,9 @@
 
   const load = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
   const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* bỏ qua */ } };
-  const getWho = () => { try { const w = localStorage.getItem(WHO_KEY); return WHO[w] ? w : null; } catch (e) { return null; } };
+  // Bản xem thử (lpn:preview = '1', chỉ đặt trên server local): không đồng bộ gì, không ghi vào tài khoản thật.
+  const PREVIEW = (() => { try { return localStorage.getItem('lpn:preview') === '1'; } catch (e) { return false; } })();
+  const getWho = () => { if (PREVIEW) return null; try { const w = localStorage.getItem(WHO_KEY); return WHO[w] ? w : null; } catch (e) { return null; } };
   const url = (who) => DB + 'lpn/players/' + who + '.json';
 
   // Ảnh chụp những gì cần sao lưu trên máy này.
@@ -129,6 +131,7 @@
   const Sync = {
     WHO,
     who: getWho(),
+    preview: PREVIEW,
     status: 'idle', // idle | syncing | ok | denied | offline | nowho
     lastAt: (load(META_KEY) || {}).lastAt || 0,
     timer: 0,
@@ -138,6 +141,7 @@
     setStatus(s) { this.status = s; this.emit(); },
 
     setWho(who) {
+      if (PREVIEW) return Promise.resolve(false);
       if (!WHO[who]) return;
       try { localStorage.setItem(WHO_KEY, who); } catch (e) { /* bỏ qua */ }
       const meta = load(META_KEY) || {};
@@ -151,6 +155,7 @@
     // xoá dữ liệu riêng của người đó trên máy, rồi lấy bản của người mới về, không trộn hai người vào nhau.
     // Cần có mạng: tải bản mới hoặc lưu bản cũ không được thì không đổi gì, trả về false.
     async switchTo(who) {
+      if (PREVIEW) return false;
       if (!WHO[who] || who === this.who) return true;
       if (!this.who) return this.setWho(who);
       let remote;
@@ -178,6 +183,7 @@
 
     // Kéo bản sao lưu về, gộp với máy, rồi đẩy bản gộp lên.
     async pull() {
+      if (PREVIEW) return false;
       if (!this.who) { this.setStatus('nowho'); return false; }
       this.setStatus('syncing');
       let remote;
@@ -201,6 +207,7 @@
     },
 
     async push(data, keepalive) {
+      if (PREVIEW) return false;
       if (!this.who) return false;
       const body = Object.assign({}, data || snapshot(), { who: this.who, savedAt: Date.now() });
       try {

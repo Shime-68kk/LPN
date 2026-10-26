@@ -631,7 +631,7 @@
   // Sau khi mở khoá: hỏi ai đang dùng máy. Chọn người kia thì đổi tài khoản (sync.js) rồi tải lại trang.
   Lock.askWho = function () {
     const S = window.Sync;
-    if (!S) { this.done(); return; }
+    if (!S || S.preview) { this.done(); return; }
     $('lock-title').textContent = 'Ai đang dùng máy này?';
     $('lock-dots').hidden = true;
     $('lock-pad').hidden = true;
