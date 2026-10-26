@@ -628,6 +628,8 @@
       "no": 18,
       "title": "Nửa câu em chưa nói",
       "cost": 300,
+      "releaseAt": "2026-10-26T20:00:00+07:00",
+      "early": { "quang": "2026-10-26T00:00:00+07:00" },
       "scene": "may",
       "cast": ["quang", "thuy"],
       "lines": [
