@@ -439,7 +439,11 @@
       if (!fromHistory && history.state && history.state.panel) history.back();
     },
   };
-  window.addEventListener('popstate', () => { if (Viewer.open) Viewer.hide(true); else Panels.hide(true); });
+  window.addEventListener('popstate', () => {
+    // Bước lùi do chính nút đóng ảnh gây ra: bảng phía dưới (album, nhật ký) vẫn mở.
+    if (Viewer.skipPop) { Viewer.skipPop = false; return; }
+    if (Viewer.open) Viewer.hide(true); else Panels.hide(true);
+  });
 
   let letterLoaded = false;
   function loadLetter() {
@@ -500,7 +504,7 @@
     hide(fromHistory) {
       this.open = false;
       $('viewer').hidden = true;
-      if (!fromHistory && history.state && history.state.viewer) history.back();
+      if (!fromHistory && history.state && history.state.viewer) { this.skipPop = true; history.back(); }
     },
     step(d) {
       const L = this.list;

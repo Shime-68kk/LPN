@@ -12,8 +12,8 @@
   const REACTIONS = ['❤️', '🥰', '🥺', '🫂', '🌸'];
   // legacy: tên người viết bình luận như trang cũ vẫn ghi, để trang cũ đọc được.
   const PEOPLE = {
-    quang: { name: 'Anh Quang', initial: 'Q', photo: '../assets/img/avt-quang.webp', legacy: '🧸 Anh Quang' },
-    thuy: { name: 'Lệ Thủy', initial: 'T', photo: '../assets/img/avt-thuy.webp', legacy: '👑 Lệ Thủy' },
+    quang: { name: 'Anh Quang', initial: 'Q', photo: '../assets/img/avt-quang.webp', full: '../assets/img/avt-quang-full.webp', legacy: '🧸 Anh Quang' },
+    thuy: { name: 'Lệ Thủy', initial: 'T', photo: '../assets/img/avt-thuy.webp', full: '../assets/img/avt-thuy-full.webp', legacy: '👑 Lệ Thủy' },
   };
   const SEEN_KEY = 'lpn:seen:diary'; // lần cuối mở nhật ký trên máy này (trang chủ dùng để rung ô Nhật ký)
   const PAGE = 10;
@@ -69,19 +69,27 @@
     if (d.getFullYear() === today.getFullYear()) return short ? d.getDate() + '/' + (d.getMonth() + 1) : d.getDate() + ' tháng ' + (d.getMonth() + 1) + at;
     return d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
   }
+  // Avatar mỗi người là nút: chạm để xem ảnh lớn (như Facebook). Bài chung thì là trái tim.
   function avatar(who, small) {
-    const a = el('span', 'd-av av-' + (PEOPLE[who] ? who : 'both') + (small ? ' sm' : ''));
-    a.setAttribute('aria-hidden', 'true');
-    if (PEOPLE[who]) {
-      a.textContent = PEOPLE[who].initial;
-      // Ảnh đại diện; tải lỗi thì để lại chữ cái đầu.
-      const img = el('img');
-      img.src = PEOPLE[who].photo;
-      img.alt = '';
-      img.decoding = 'async';
-      img.addEventListener('error', () => img.remove());
-      a.appendChild(img);
-    } else a.appendChild(svg(ICON.heart));
+    const cls = 'd-av av-' + (PEOPLE[who] ? who : 'both') + (small ? ' sm' : '');
+    const p = PEOPLE[who];
+    if (!p) {
+      const a = el('span', cls);
+      a.setAttribute('aria-hidden', 'true');
+      a.appendChild(svg(ICON.heart));
+      return a;
+    }
+    const a = el('button', cls, p.initial);
+    a.type = 'button';
+    a.setAttribute('aria-label', 'Xem ảnh đại diện của ' + p.name);
+    a.addEventListener('click', () => { if (window.Viewer) window.Viewer.show(0, [{ thumb: p.photo, full: p.full }]); });
+    // Ảnh đại diện; tải lỗi thì để lại chữ cái đầu.
+    const img = el('img');
+    img.src = p.photo;
+    img.alt = '';
+    img.decoding = 'async';
+    img.addEventListener('error', () => img.remove());
+    a.appendChild(img);
     return a;
   }
 
