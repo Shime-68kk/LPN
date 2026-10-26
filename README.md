@@ -42,19 +42,27 @@ Commit cũ mô tả những thứ không còn trong web hiện tại, nên đừ
 ```
 index.html          cổng vào, chỉ chuyển sang home/
 manifest.json       cấu hình PWA
-service-worker.js   của web cũ; để ở gốc vì máy từng cài app cũ vẫn dùng nó
-home/               trang chủ; wallet.js (ví đốt cây), sync.js (sao lưu Firebase)
+service-worker.js   nhận thông báo đẩy (không cache gì)
+home/               trang chủ; wallet.js (ví đốt cây), sync.js (sao lưu Firebase), push.js (thông báo)
 story/              cốt truyện
 game/               Sâu Tím; beatmaps/ là nốt nhạc của từng bài
 shop/               Tiệm Sâu
 assets/             ảnh, nhạc, thư dùng chung
-tools/              tạo beatmap, ảnh thu nhỏ
+tools/              tạo beatmap, ảnh thu nhỏ, gửi thông báo (push.mjs)
 legacy/             web cũ
 ```
 
 ## Dữ liệu
 
 Mỗi máy chọn một lần đây là máy của ai. Sau đó ví đốt cây, đồ đã có, tiến độ truyện và kỷ lục game được sao lưu lên Firebase Realtime Database ở `lpn/players/{thuy|quang}`. Quà tặng đốt đi qua nhánh `grants`, không sửa thẳng ví.
+
+## Thông báo
+
+Có chương mới, skin mới, sự kiện mới thì app gửi thông báo về tận máy (Web Push), kể cả iPhone đã thêm app ra màn hình chính (iOS 16.4 trở lên).
+
+- Trong app: trang Cốt truyện có nút "Báo cho em khi có chương mới". Bấm và cho phép thì địa chỉ nhận của máy được lưu ở `lpn/players/{ai}/push`.
+- Gửi từ máy tính: `node tools/push.mjs thuy "Có chương mới cho em" "Chương 14 · …" "story/?play=c14"` (người nhận: `thuy`, `quang` hoặc `ca-hai`).
+- Khoá bí mật VAPID nằm ở `~/.config/lpn-push/vapid.json` trên máy gửi, không có trong repo. Khoá công khai nằm trong `home/push.js`.
 
 ## Chạy và triển khai
 

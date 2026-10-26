@@ -18,7 +18,7 @@ style/gift/         trang hộp quà Bông hoa 8/3
 style/img/asset/    icon riêng
 ```
 
-Ảnh, nhạc và thư dùng chung nằm ở `../assets/`. `service-worker.js` ở thư mục gốc cũng là của trang này.
+Ảnh, nhạc và thư dùng chung nằm ở `../assets/`. Trang vẫn đăng ký `../service-worker.js`, nhưng file đó giờ là service worker của web hiện tại: chỉ nhận thông báo, không cache.
 
 ## Đã đổi gì khi đưa vào đây
 

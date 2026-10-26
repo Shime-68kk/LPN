@@ -650,4 +650,27 @@
       }
     })
     .catch(() => { $('map-sub').textContent = 'Chưa tải được cốt truyện, em thử lại sau nha.'; });
+
+  // Nút bật thông báo (home/push.js): đã bật thì chỉ còn dòng chữ nhỏ; iPhone mở trong Safari thì chỉ cách mở đúng.
+  const notifyBtn = $('btn-notify');
+  const NOTIFY_TEXT = {
+    off: 'Báo cho em khi có chương mới',
+    on: 'Đã bật thông báo chương mới',
+    denied: 'Thông báo đang bị tắt trong Cài đặt của máy',
+    install: 'Mở app từ biểu tượng ngoài màn hình chính để bật thông báo',
+    error: 'Chưa bật được, em thử lại nha',
+  };
+  function showNotify(state) {
+    if (!window.Push || state === 'unsupported') { notifyBtn.hidden = true; return; }
+    $('notify-text').textContent = NOTIFY_TEXT[state] || NOTIFY_TEXT.off;
+    notifyBtn.classList.toggle('on', state === 'on');
+    notifyBtn.classList.toggle('note', state === 'denied' || state === 'install');
+    notifyBtn.disabled = state !== 'off' && state !== 'error';
+    notifyBtn.hidden = false;
+  }
+  if (window.Push) showNotify(Push.state());
+  notifyBtn.addEventListener('click', async () => {
+    notifyBtn.disabled = true;
+    showNotify(await Push.enable());
+  });
 })();

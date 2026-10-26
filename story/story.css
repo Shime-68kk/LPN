@@ -12,6 +12,15 @@
 .map-title { margin: 18px 0 8px; display: flex; flex-direction: column; gap: 6px; }
 .map-title .eyebrow { color: var(--muted); font-size: 13px; }
 .map-title p { margin: 0; font-size: 14px; color: var(--muted); }
+.notify {
+  align-self: flex-start; display: flex; align-items: center; gap: 8px; margin-top: 4px;
+  padding: 8px 14px 8px 10px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; font-weight: 600;
+}
+.notify[hidden] { display: none; }
+.notify svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.notify.on { border-color: transparent; background: none; padding-left: 0; color: var(--muted); font-weight: 500; }
+.notify.note { border-style: dashed; color: var(--muted); font-weight: 500; text-align: left; }
 
 /* ===== Ví đốt cây ===== */
 .wallet-bar {
