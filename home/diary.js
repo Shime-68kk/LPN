@@ -15,6 +15,7 @@
     quang: { name: 'Anh Quang', initial: 'Q', legacy: '🧸 Anh Quang' },
     thuy: { name: 'Lệ Thủy', initial: 'T', legacy: '👑 Lệ Thủy' },
   };
+  const SEEN_KEY = 'lpn:seen:diary'; // lần cuối mở nhật ký trên máy này (trang chủ dùng để rung ô Nhật ký)
   const PAGE = 10;
   const LONG = 260; // dài hơn thì thu gọn, có nút "Xem thêm"
 
@@ -96,6 +97,11 @@
       .catch(() => {});
   }
 
+  // Mốc "vừa viết gì đó" của mỗi người (lpn/players/{ai}/diaryAt): trang chủ máy người kia đọc để rung ô Nhật ký.
+  function stamp(who) {
+    fetch(FIREBASE_DB_URL + 'lpn/players/' + who + '/diaryAt.json', { method: 'PUT', body: String(Date.now()) }).catch(() => {});
+  }
+
   // ===== Firebase =====
   async function api(path, method, body) {
     const res = await fetch(FIREBASE_DB_URL + path + '.json', {
@@ -119,8 +125,13 @@
     menuFor: null,
     bound: false,
 
+    since: Date.now(), // bài, bình luận của người kia sau mốc này hiện chữ "Mới"
+
     open() {
       if (!this.bound) this.bind();
+      let seen = null;
+      try { seen = Number(localStorage.getItem(SEEN_KEY)) || null; localStorage.setItem(SEEN_KEY, String(Date.now())); } catch (e) { /* bỏ qua */ }
+      this.since = seen || Date.now();
       this.entries = cache.read();
       this.composer();
       this.render();
@@ -257,6 +268,7 @@
           cache.write(this.entries);
           this.redraw(entry, 'local_' + entry.timestamp);
           notify({ from: who, id: entry.id });
+          stamp(who);
         }
       } catch (err) { this.saveError(err); }
     },
@@ -365,6 +377,7 @@
         cache.write(this.entries);
         this.redraw(entry);
         notify({ from: who, id: entry.id, cid: c.id });
+        stamp(who);
       } catch (err) { this.saveError(err); }
     },
 
@@ -449,7 +462,9 @@
       const when = el('time', 'd-time', ago(entry.timestamp) + (entry.isEdited ? ' · đã sửa' : ''));
       when.dateTime = new Date(entry.timestamp).toISOString();
       when.title = new Date(entry.timestamp).toLocaleString('vi-VN');
-      meta.append(el('b', 'd-name', PEOPLE[entry.author] ? PEOPLE[entry.author].name : 'Tụi mình'), when);
+      const name = el('b', 'd-name', PEOPLE[entry.author] ? PEOPLE[entry.author].name : 'Tụi mình');
+      if (this.isNew(entry.author, entry.timestamp)) name.appendChild(el('span', 'd-new', 'Mới'));
+      meta.append(name, when);
       head.append(avatar(entry.author), meta);
       if (who && canManage(entry)) {
         const more = this.iconBtn(ICON.more, 'Tuỳ chọn', () => this.togglePop('menuFor', entry), 'd-more');
@@ -582,6 +597,8 @@
       return card;
     },
 
+    isNew(by, ts) { return !!me() && !!PEOPLE[by] && by !== me() && ts > this.since; },
+
     commentRow(entry, c) {
       const by = commentBy(c);
       const row = el('div', 'd-c');
@@ -590,6 +607,7 @@
       bubble.append(el('b', '', PEOPLE[by].name), el('p', '', c.text || ''));
       const meta = el('div', 'd-c-meta');
       meta.appendChild(el('span', '', ago(c.timestamp || entry.timestamp, true)));
+      if (this.isNew(by, c.timestamp)) meta.appendChild(el('span', 'd-new', 'Mới'));
       if (by === me()) {
         const del = el('button', '', 'Xoá');
         del.type = 'button';

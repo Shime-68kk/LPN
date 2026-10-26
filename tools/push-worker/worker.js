@@ -2,7 +2,8 @@
 // Chạy riêng trên Cloudflare (worker "lpn-push"), tách khỏi trang chính vì cần giữ khoá bí mật VAPID.
 //   POST /diary  { from: "quang" | "thuy", id: "<mã trang nhật ký>", cid?: "<mã bình luận>" }
 // Worker tự đọc lại trang đó trên Firebase để soạn nội dung, nên không ai gửi được chữ tuỳ ý:
-// chỉ báo khi bài / bình luận đúng là của người gửi, vừa viết trong 15 phút, và mỗi cái một lần.
+// chỉ báo khi bài / bình luận đúng là của người gửi, vừa viết trong 15 phút, và mỗi cái một lần
+// (đánh dấu ở diary/{mã}/notified/{post | mã bình luận}; Firebase chỉ cho ghi vào diary/ và lpn/players/).
 // Khoá bí mật: secret VAPID_JWK (privateJwk trong ~/.config/lpn-push/vapid.json). Cách cài: README.md cùng thư mục.
 
 const DB = 'https://yeult-diary-default-rtdb.asia-southeast1.firebasedatabase.app/';
@@ -76,12 +77,12 @@ async function compose({ from, id, cid }) {
     const list = Array.isArray(entry.comments) ? entry.comments : Object.values(entry.comments || {});
     const c = list.find((x) => x && x.id === cid);
     if (!c || c.by !== from || !(Date.now() - c.timestamp < FRESH)) return null;
-    return { key: id + '_' + cid, title: name + ' vừa bình luận!', body: '“' + snippet(String(c.text || ''), 120) + '”' };
+    return { key: cid, title: name + ' vừa bình luận!', body: '“' + snippet(String(c.text || ''), 120) + '”' };
   }
   if (entry.author !== from || !(Date.now() - entry.timestamp < FRESH)) return null;
   const text = String(entry.text || '').trim();
   return {
-    key: id,
+    key: 'post',
     title: name + ' vừa viết nhật ký!',
     body: text ? snippet(text, 140) : 'Có một tấm ảnh mới, chạm để xem nha 📷',
   };
@@ -91,12 +92,13 @@ async function notify(req, env) {
   const msg = await compose(req);
   if (!msg) return { sent: 0, skip: 'nothing' };
   // Mỗi bài / bình luận chỉ báo một lần.
-  if (await db('lpn/notified/' + msg.key)) return { sent: 0, skip: 'done' };
-  await db('lpn/notified/' + msg.key, 'PUT', Date.now());
+  const mark = 'diary/' + req.id + '/notified/' + msg.key;
+  if (await db(mark)) return { sent: 0, skip: 'done' };
+  await db(mark, 'PUT', Date.now());
   const to = req.from === 'quang' ? 'thuy' : 'quang';
   const subs = (await db('lpn/players/' + to + '/push')) || {};
   const jwk = JSON.parse(env.VAPID_JWK);
-  const payload = JSON.stringify({ title: msg.title, body: msg.body, url: 'home/?mo=nhat-ky', tag: 'nhat-ky-' + msg.key });
+  const payload = JSON.stringify({ title: msg.title, body: msg.body, url: 'home/?mo=nhat-ky', tag: 'nhat-ky-' + req.id + '-' + msg.key });
   let sent = 0;
   for (const [sid, sub] of Object.entries(subs)) {
     try {

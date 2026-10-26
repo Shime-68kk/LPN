@@ -2,7 +2,7 @@
 
 Worker nhỏ gửi thông báo lên điện thoại khi nhật ký có bài mới hoặc bình luận mới. Nó chạy riêng ở `https://lpn-push.luongquang060804.workers.dev`, không đi theo bản deploy của trang chính.
 
-Trang nhật ký (`home/diary.js`) gọi `POST /diary` sau khi lưu. Worker đọc lại bài đó trên Firebase rồi tự soạn nội dung, nên không ai gửi được chữ tuỳ ý. Mỗi bài hay bình luận chỉ được báo một lần, đánh dấu ở `lpn/notified`. Người nhận là người còn lại, gửi tới các máy lưu ở `lpn/players/{ai}/push`.
+Trang nhật ký (`home/diary.js`) gọi `POST /diary` sau khi lưu. Worker đọc lại bài đó trên Firebase rồi tự soạn nội dung, nên không ai gửi được chữ tuỳ ý. Mỗi bài hay bình luận chỉ được báo một lần, đánh dấu ở `diary/{mã}/notified`. Người nhận là người còn lại, gửi tới các máy lưu ở `lpn/players/{ai}/push`.
 
 Cài lần đầu (cần đăng nhập Cloudflare):
 

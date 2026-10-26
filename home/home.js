@@ -239,7 +239,7 @@
           const nextI = list.findIndex((c) => !done[c.id]);
           const card = $('story-card');
           card.href = '../story/';
-          card.classList.remove('is-case', 'is-new');
+          card.classList.remove('is-case', 'is-new', 'has-new');
           $('story-fill').style.width = (list.length ? (n / list.length) * 100 : 0) + '%';
           News.check(list, done, flags);
           const cs = list.find((c) => c.case && done[c.id] && !flags[c.case.id + 'Done']);
@@ -262,6 +262,10 @@
           const ch = list[nextI];
           const locked = ch.cost && !open[ch.id];
           const fresh = !!ch.announce;
+          // Còn chương đọc được ngay (chưa tới giờ mở hay chưa đủ đốt thì thôi): thẻ lấp lánh nhắc vào đọc.
+          const waiting = ch.openAt && Date.parse(ch.openAt) > Date.now();
+          const dot = (store.get('lpn:wallet') || {}).dot || 0;
+          card.classList.toggle('has-new', !waiting && (!locked || dot >= ch.cost));
           card.classList.toggle('is-new', fresh);
           if (fresh) card.href = '../story/?play=' + encodeURIComponent(ch.id);
           $('story-eyebrow').textContent = 'Cốt truyện · Chương ' + (ch.no || nextI + 1) + (fresh ? ' · Mới' : '/' + list.length) + (locked ? ' · cần ' + ch.cost + ' đốt cây' : '');
@@ -370,6 +374,43 @@
     Player.sync();
   }
 
+  // ================= Dấu "có cái mới" =================
+  // Không có hộp thông báo: ô nào có cái mới thì rung nhẹ kèm chấm hồng, mở ra xem là thôi.
+  // Mỗi mục nhớ lần xem cuối trên máy (lpn:seen:*). Lần đầu chưa có mốc thì coi như đã xem, để không báo nhầm.
+  const Fresh = {
+    tile: (name) => document.querySelector('.tile[data-open="' + name + '"]'),
+    seen(k, now) {
+      let v = store.get('lpn:seen:' + k);
+      if (v == null) { v = now; store.set('lpn:seen:' + k, v); }
+      return v;
+    },
+    // Nhật ký: người kia vừa đăng bài / bình luận (mốc lpn/players/{người kia}/diaryAt, diary.js ghi).
+    diary() {
+      const who = window.Sync && window.Sync.who;
+      if (!who) return;
+      const other = who === 'quang' ? 'thuy' : 'quang';
+      fetch('https://yeult-diary-default-rtdb.asia-southeast1.firebasedatabase.app/lpn/players/' + other + '/diaryAt.json', { cache: 'no-store' })
+        .then((r) => r.json())
+        .then((at) => this.tile('diary').classList.toggle('has-new', typeof at === 'number' && at > this.seen('diary', Date.now())))
+        .catch(() => {});
+    },
+    // Âm nhạc: bài mới mở khoá chưa nghe; Album: thêm ảnh mới.
+    songs() {
+      const ids = SONGS.map((s) => s.id);
+      const seen = this.seen('songs', ids);
+      this.tile('music').classList.toggle('has-new', ids.some((id) => !seen.includes(id)));
+    },
+    album() {
+      this.tile('album').classList.toggle('has-new', PHOTOS.length > this.seen('album', PHOTOS.length));
+    },
+    see(name) {
+      if (name === 'music') store.set('lpn:seen:songs', SONGS.map((s) => s.id));
+      else if (name === 'album') store.set('lpn:seen:album', PHOTOS.length);
+      else if (name !== 'diary') return; // nhật ký tự ghi mốc khi mở (diary.js)
+      this.tile(name).classList.remove('has-new');
+    },
+  };
+
   // ================= Bảng trượt =================
   const Panels = {
     open: null,
@@ -381,6 +422,7 @@
       if (name === 'album') renderAlbum();
       if (name === 'music') renderPlaylist();
       if (name === 'diary' && window.Diary) window.Diary.open();
+      Fresh.see(name);
       $('backdrop').hidden = false;
       el.hidden = false;
       document.body.classList.add('locked');
@@ -696,7 +738,7 @@
     } else if (e.key === 'Escape') Panels.hide();
   });
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) { Home.gameStars(); Home.story(); Weather.refresh(false); }
+    if (!document.hidden) { Home.gameStars(); Home.story(); Weather.refresh(false); Fresh.diary(); }
   });
 
   // ================= Khởi động =================
@@ -713,9 +755,12 @@
       Home.gameStars();
       Home.story();
       Weather.apply();
+      Fresh.songs();
     })
     .catch((err) => console.warn(err));
   Weather.refresh(false);
+  Fresh.diary();
+  Fresh.album();
   // Đã cho phép vị trí từ trước thì tự dùng, không hỏi lại.
   if (navigator.permissions && navigator.permissions.query && !store.get('lpn:loc')) {
     navigator.permissions.query({ name: 'geolocation' }).then((p) => { if (p.state === 'granted') Weather.locate(); }).catch(() => {});
