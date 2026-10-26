@@ -53,6 +53,13 @@
   // Bình luận cũ chỉ có tên kèm biểu tượng ("🧸 Anh Quang" / "👑 Lệ Thủy").
   const commentBy = (c) => c.by || (String(c.author || '').includes('Quang') ? 'quang' : 'thuy');
   const canManage = (entry) => !entry.author || entry.author === me();
+  // Nhóm bình luận: bình luận gốc kèm các câu trả lời (re = mã bình luận gốc). Gốc đã xoá thì câu trả lời đứng riêng.
+  const threadsOf = (comments) => {
+    const ids = new Set(comments.map((c) => c.id));
+    return comments
+      .filter((c) => !c.re || !ids.has(c.re))
+      .map((c) => ({ c, replies: comments.filter((r) => r.re === c.id) }));
+  };
 
   // "Vừa xong", "5 phút", "3 giờ", "Hôm qua lúc 21:30", "12 tháng 10 lúc 21:30", "12/10/2025"
   // short (bình luận): "Hôm qua", "12/10"
@@ -139,6 +146,7 @@
     expanded: new Set(), // bài dài đang mở hết chữ
     pickerFor: null,
     menuFor: null,
+    replyTo: null, // { key: bài, root: mã bình luận gốc, name } khi đang trả lời một bình luận
     bound: false,
 
     since: Date.now(), // bài, bình luận của người kia sau mốc này hiện chữ "Mới"
@@ -381,6 +389,8 @@
       const who = me();
       if (!who) return;
       const c = { id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), by: who, author: PEOPLE[who].legacy, text, timestamp: Date.now() };
+      const rt = this.replyTo;
+      if (rt && rt.key === keyOf(entry)) { c.re = rt.root; this.replyTo = null; }
       entry.comments = asList(entry.comments).concat(c);
       cache.write(this.entries);
       this.redraw(entry, null, true);
@@ -596,17 +606,24 @@
       const sum = this.summary(entry);
       if (sum) card.appendChild(sum);
 
-      // Bình luận: hiện 2 cái mới nhất, còn lại bấm "Xem cả"
+      // Bình luận: hiện 2 nhóm mới nhất (bình luận gốc kèm các câu trả lời), còn lại bấm "Xem cả"
       if (comments.length) {
         const thread = el('div', 'd-thread');
-        const all = this.threads.has(key) || comments.length <= 2;
+        const groups = threadsOf(comments);
+        const all = this.threads.has(key) || groups.length <= 2;
         if (!all) {
           const b = el('button', 'd-viewall', 'Xem cả ' + comments.length + ' bình luận');
           b.type = 'button';
           b.addEventListener('click', () => { this.threads.add(key); this.redraw(entry); });
           thread.appendChild(b);
         }
-        for (const c of all ? comments : comments.slice(-2)) thread.appendChild(this.commentRow(entry, c));
+        for (const g of all ? groups : groups.slice(-2)) {
+          thread.appendChild(this.commentRow(entry, g.c, g.c.id));
+          if (!g.replies.length) continue;
+          const box = el('div', 'd-replies');
+          for (const r of g.replies) box.appendChild(this.commentRow(entry, r, g.c.id));
+          thread.appendChild(box);
+        }
         card.appendChild(thread);
       }
       if (who) card.appendChild(this.replyForm(entry, who));
@@ -615,7 +632,8 @@
 
     isNew(by, ts) { return !!me() && !!PEOPLE[by] && by !== me() && ts > this.since; },
 
-    commentRow(entry, c) {
+    // root: mã bình luận gốc của nhóm; trả lời một câu trả lời thì vẫn xếp vào nhóm đó.
+    commentRow(entry, c, root) {
       const by = commentBy(c);
       const row = el('div', 'd-c');
       const body = el('div', 'd-c-body');
@@ -624,6 +642,12 @@
       const meta = el('div', 'd-c-meta');
       meta.appendChild(el('span', '', ago(c.timestamp || entry.timestamp, true)));
       if (this.isNew(by, c.timestamp)) meta.appendChild(el('span', 'd-new', 'Mới'));
+      if (me()) {
+        const re = el('button', '', 'Trả lời');
+        re.type = 'button';
+        re.addEventListener('click', () => this.startReply(entry, root, PEOPLE[by].name));
+        meta.appendChild(re);
+      }
       if (by === me()) {
         const del = el('button', '', 'Xoá');
         del.type = 'button';
@@ -635,14 +659,31 @@
       return row;
     },
 
+    startReply(entry, root, name) {
+      this.replyTo = { key: keyOf(entry), root, name };
+      this.redraw(entry);
+      const input = $('diary-list').querySelector('[data-key="' + keyOf(entry) + '"] .d-reply input');
+      if (input) input.focus();
+    },
+
     replyForm(entry, who) {
       const form = el('form', 'd-reply');
+      const rt = this.replyTo && this.replyTo.key === keyOf(entry) ? this.replyTo : null;
+      if (rt) {
+        const chip = el('div', 'd-replying');
+        chip.append(document.createTextNode('Đang trả lời '), el('b', '', rt.name), document.createTextNode(' · '));
+        const cancel = el('button', '', 'Huỷ');
+        cancel.type = 'button';
+        cancel.addEventListener('click', () => { this.replyTo = null; this.redraw(entry); });
+        chip.appendChild(cancel);
+        form.appendChild(chip);
+      }
       const input = el('input');
       input.type = 'text';
       input.maxLength = 300;
       input.enterKeyHint = 'send';
-      input.placeholder = 'Viết bình luận…';
-      input.setAttribute('aria-label', 'Viết bình luận');
+      input.placeholder = rt ? 'Trả lời ' + rt.name + '…' : 'Viết bình luận…';
+      input.setAttribute('aria-label', rt ? 'Trả lời ' + rt.name : 'Viết bình luận');
       const send = el('button', 'd-send');
       send.type = 'submit';
       send.setAttribute('aria-label', 'Gửi bình luận');
