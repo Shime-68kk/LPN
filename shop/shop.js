@@ -13,7 +13,7 @@
   const BIG = (r) => r === 'suthi' || TOP(r);
   const SLOT_NAME = { skin: 'Skin', fx: 'Hiệu ứng', wing: 'Cánh bướm', bg: 'Nền' };
   const HINT = {
-    skin: 'Chạm để thử lên bé sâu. Mỗi skin có một kỹ năng riêng khi chơi (chạm đúp màn hình để dùng), skin càng hiếm kỹ năng càng mạnh.',
+    skin: 'Chạm để thử lên bé sâu. Chỉ hai skin độc quyền Nàng Thơ và Vi Mạch có kỹ năng riêng khi chơi (chạm đúp màn hình để dùng).',
     fx: 'Hiện ra mỗi lần bé sâu đớp lá. Chạm để xem thử.',
     wing: 'Đôi cánh khi bé sâu hoá bướm cuối bài. Chạm để xem thử.',
     bg: 'Khung cảnh phía sau khi chơi Sâu Tím, đổi luôn màu lá và cành. Chạm để xem thử.',
