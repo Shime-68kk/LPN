@@ -372,18 +372,6 @@ body.night .item .i-state.on { color: #CDB8F0; }
 .memo .m-text p { margin: 0; font-size: 13px; line-height: 1.45; color: var(--muted); font-style: italic; }
 .memo li.locked { opacity: .7; }
 .memo .m-lock { width: 64px; height: 56px; flex: none; border-radius: 12px; background: var(--bg); display: grid; place-items: center; font-family: 'Fraunces', serif; font-size: 24px; color: var(--muted); }
-.old-gift {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: var(--t-gift);
-  color: var(--t-gift-ink);
-  text-decoration: none;
-}
-.old-gift span { display: flex; flex-direction: column; gap: 2px; }
-.old-gift small { font-size: 12px; opacity: .8; }
 
 /* ===== Sao lưu & chọn máy ===== */
 .sync-line {
