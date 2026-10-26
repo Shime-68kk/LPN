@@ -72,7 +72,8 @@
   // ================= Bản đồ =================
   // Đọc thử mọi chương không tốn đốt: thêm ?thu=1, chỉ có tác dụng khi chạy ở máy (server local), không có trên web thật.
   const OPEN_ALL = /[?&]thu=1/.test(location.search) && !location.hostname.endsWith('workers.dev');
-  const isOpen = (i) => OPEN_ALL || !CHAPTERS[i].cost || !!save.open[CHAPTERS[i].id];
+  // Đã đọc xong thì coi như đã mở (vd. đọc ở bản thử ?thu=1 rồi mới lên bản thật).
+  const isOpen = (i) => OPEN_ALL || !CHAPTERS[i].cost || !!save.open[CHAPTERS[i].id] || !!save.done[CHAPTERS[i].id];
   // Chương mở lần lượt: xong chương trước mới được dùng đốt cây mở chương sau.
   function status(i) {
     const ch = CHAPTERS[i];
