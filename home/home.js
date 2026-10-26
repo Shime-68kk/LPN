@@ -541,6 +541,50 @@
       $('news').hidden = true;
     },
   };
+  // Hỏi bật thông báo (home/push.js): thẻ nhỏ ở đáy, chờ qua màn khoá và thông báo chương mới.
+  // "Để sau" thì 3 ngày sau hỏi lại, tối đa 3 lần; đã bật, bị chặn hay máy không hỗ trợ thì thôi.
+  const AskPush = {
+    key: 'lpn:askPush',
+    ready() {
+      const P = window.Push;
+      const st = P ? P.state() : 'unsupported';
+      if (st !== 'off' && st !== 'install') return false;
+      const s = store.get(this.key) || { n: 0, at: 0 };
+      return !s.done && s.n < 3 && Date.now() - s.at > 3 * 864e5;
+    },
+    show() {
+      if (Push.state() === 'install') {
+        $('ask-text').textContent = 'Muốn nhận, em thêm app ra màn hình chính (Chia sẻ → Thêm vào MH chính) rồi mở từ đó nha.';
+        $('ask-ok').hidden = true;
+        $('ask-later').textContent = 'Đã hiểu';
+      }
+      $('ask').hidden = false;
+    },
+    close(done) {
+      const s = store.get(this.key) || { n: 0, at: 0 };
+      store.set(this.key, { n: s.n + 1, at: Date.now(), done: !!done });
+      $('ask').hidden = true;
+    },
+  };
+  if (AskPush.ready()) {
+    let tries = 0;
+    const wait = setInterval(() => {
+      const free = !document.documentElement.classList.contains('need-lock') && $('news').hidden && $('backdrop').hidden;
+      if (free) { clearInterval(wait); setTimeout(() => { if ($('news').hidden) AskPush.show(); }, 1200); }
+      else if (++tries > 900) clearInterval(wait);
+    }, 1000);
+  }
+  $('ask-ok').addEventListener('click', async () => {
+    $('ask-ok').disabled = true;
+    const st = await Push.enable();
+    $('ask-ok').hidden = true;
+    $('ask-later').hidden = true;
+    $('ask-title').textContent = st === 'on' ? 'Đã bật rồi!' : 'Chưa bật được';
+    $('ask-text').textContent = st === 'on' ? 'Có gì mới app sẽ báo cho em ngay.'
+      : st === 'denied' ? 'Thông báo đang bị tắt, em bật lại trong Cài đặt của máy nha.' : 'Em thử lại sau ở trang Cốt truyện nha.';
+    setTimeout(() => AskPush.close(st === 'on' || st === 'denied'), 2600);
+  });
+  $('ask-later').addEventListener('click', () => AskPush.close(Push.state() === 'install'));
   $('news-ok').addEventListener('click', () => News.seen());
   $('news-later').addEventListener('click', () => News.close());
 

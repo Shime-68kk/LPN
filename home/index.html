@@ -42,7 +42,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="home.css?v=21" />
+  <link rel="stylesheet" href="home.css?v=22" />
 </head>
 <body data-weather="nang">
   <script>document.body.dataset.weather = LPN_SKY; document.body.classList.toggle('night', LPN_NIGHT); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
@@ -297,6 +297,20 @@
     </div>
   </div>
 
+  <!-- Hỏi bật thông báo (tính năng mới): thẻ nhỏ ở đáy màn hình, sau màn khoá và thông báo chương mới -->
+  <div class="ask" id="ask" role="dialog" aria-labelledby="ask-title" hidden>
+    <svg class="ask-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0" /></svg>
+    <div class="ask-body">
+      <small>Tính năng mới</small>
+      <b id="ask-title">Bật thông báo nhé?</b>
+      <p id="ask-text">Có chương mới hay sự kiện mới, app sẽ báo về máy em ngay.</p>
+      <div class="ask-btns">
+        <button class="btn primary" id="ask-ok" type="button">Bật thông báo</button>
+        <button class="btn ghost" id="ask-later" type="button">Để sau</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Màn khoá: cùng mật khẩu với trang cũ -->
   <div class="lock" id="lock" role="dialog" aria-modal="true" aria-labelledby="lock-title">
     <div class="lock-card">
@@ -322,7 +336,7 @@
   <script src="sync.js?v=5"></script>
   <script src="push.js?v=1"></script>
   <script src="diary.js?v=2"></script>
-  <script src="home.js?v=15"></script>
+  <script src="home.js?v=16"></script>
   <script src="../shop/skins.js?v=23"></script>
   <script>
     // Tiệm Sâu đang có sự kiện thì gắn nhãn lên ô; máy này chưa xem thì nhãn nhấp nháy.
