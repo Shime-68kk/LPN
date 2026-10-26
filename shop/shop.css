@@ -53,6 +53,25 @@ body.night .stage { background: linear-gradient(#29224E, #3A3166 70%, #2D2655); 
   color: var(--ink);
 }
 .stage-tag.trying { background: #FF8FA3; color: #2B2140; }
+.stage-play {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px 9px 12px;
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--card-ink);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 6px 16px rgba(29, 24, 50, .22);
+}
+.stage-play[hidden] { display: none; }
+.stage-play svg { width: 16px; height: 16px; fill: currentColor; }
+.stage-play:active { transform: scale(.96); }
 
 .shop-title { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .shop-title .eyebrow { color: var(--muted); }

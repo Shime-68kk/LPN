@@ -39,7 +39,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Dancing+Script:wght@600;700&display=swap" />
   <link rel="stylesheet" href="../home/home.css?v=14" />
-  <link rel="stylesheet" href="shop.css?v=15" />
+  <link rel="stylesheet" href="shop.css?v=16" />
 </head>
 <body data-weather="nang">
   <script>document.body.classList.toggle('night', LPN_NIGHT); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
@@ -56,6 +56,10 @@
     <section class="stage" aria-label="Xem trước">
       <canvas id="stage"></canvas>
       <span class="stage-tag" id="stage-tag">Đang mặc</span>
+      <!-- Mặc xong chơi luôn, không phải ra trang chủ -->
+      <a class="stage-play" id="stage-play" href="../game/">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>Chơi ngay
+      </a>
     </section>
 
     <div class="shop-title">
@@ -403,6 +407,6 @@
   <script src="../home/sync.js?v=5"></script>
   <script src="../home/wallet.js?v=12"></script>
   <script src="skins.js?v=23"></script>
-  <script src="shop.js?v=19"></script>
+  <script src="shop.js?v=20"></script>
 </body>
 </html>

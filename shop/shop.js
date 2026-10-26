@@ -2346,7 +2346,10 @@
       const st = stateOf(UI.trying, w);
       tag.textContent = st.on ? 'Đang dùng' : 'Đang thử: ' + UI.trying.name;
       tag.classList.toggle('trying', !st.on);
+      // Đang thử món chưa mặc thì ẩn nút chơi (vào game sẽ là đồ đang mặc, không phải món đang thử).
+      $('stage-play').hidden = !st.on;
     } else {
+      $('stage-play').hidden = false;
       tag.textContent = UI.tab === 'wing' ? 'Cánh đang dùng' : UI.tab === 'bg' ? 'Nền đang dùng' : 'Đang mặc';
       tag.classList.remove('trying');
     }
