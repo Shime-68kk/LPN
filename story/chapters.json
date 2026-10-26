@@ -442,7 +442,7 @@
     {
       "id": "c14",
       "no": 14,
-      "title": "Những ngày em chưa về",
+      "title": "Những ngày đi mượn",
       "cost": 240,
       "scene": "dem",
       "cast": ["quang", "thuy"],
@@ -488,7 +488,7 @@
     {
       "id": "c15",
       "no": 15,
-      "title": "Không nặng bằng hôm đi Sa Pa",
+      "title": "Nhẹ đi một người",
       "cost": 260,
       "scene": "hoanghon",
       "cast": ["quang", "thuy"],
@@ -531,7 +531,7 @@
     {
       "id": "c16",
       "no": 16,
-      "title": "Bữa cơm lúc năm giờ chiều",
+      "title": "Thứ không chụp lại được",
       "cost": 280,
       "scene": "nang",
       "cast": ["quang", "thuy"],
