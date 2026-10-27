@@ -66,15 +66,6 @@
     $('rotate').hidden = !needRotate;
     $('room').hidden = needRotate;
   }
-  // Android: toàn màn hình rồi khoá ngang được thì có nút làm giúp. iPhone không cho, chỉ có hướng dẫn tắt khoá xoay.
-  const canTurn = !!(document.documentElement.requestFullscreen && window.screen.orientation && window.screen.orientation.lock) && !/iPhone|iPad|iPod/.test(navigator.userAgent);
-  $('btn-turn').hidden = !canTurn;
-  $('btn-turn').addEventListener('click', async () => {
-    try {
-      await document.documentElement.requestFullscreen();
-      await window.screen.orientation.lock('landscape');
-    } catch (e) { $('btn-turn').hidden = true; }
-  });
   addEventListener('resize', () => { layout(); if (zoomed) zoom(true); });
   $('btn-portrait').addEventListener('click', () => { portraitOk = true; layout(); });
 

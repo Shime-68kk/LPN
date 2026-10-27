@@ -21,9 +21,7 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .rotate p { margin: 0; font-family: 'Fraunces', serif; font-size: 20px; }
 .phone-ic { width: 46px; height: 78px; border: 3px solid var(--cream); border-radius: 10px; position: relative; animation: turn 2.6s ease-in-out infinite; }
 .phone-ic i { position: absolute; left: 50%; bottom: 5px; width: 10px; height: 3px; margin-left: -5px; border-radius: 2px; background: var(--cream); }
-.rotate small, .locked small { max-width: 340px; font-size: 13px; line-height: 1.6; color: rgba(246, 238, 223, .7); }
-.btn-turn { padding: 10px 22px; border: 0; border-radius: 999px; background: var(--cream); color: #2B2140; font: 600 15px 'Be Vietnam Pro', system-ui, sans-serif; }
-.btn-turn[hidden] { display: none; }
+.locked small { max-width: 340px; font-size: 13px; line-height: 1.6; color: rgba(246, 238, 223, .7); }
 
 /* ===== Chưa tới ngày: cuộn băng khoá ===== */
 .locked { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 0 30px; }
