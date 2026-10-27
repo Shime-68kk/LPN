@@ -74,7 +74,21 @@
   $('btn-portrait').addEventListener('click', () => { portraitOk = true; layout(); });
 
   // ===== Âm thanh tự tạo: tiếng công tắc, tiếng ù và rè của TV cũ =====
-  let ac = null;
+  // iPhone gạt im lặng thì Safari tắt tiếng Web Audio (nhạc nền vẫn chạy): khai báo đây là âm thanh phát lại để vẫn kêu.
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* máy không hỗ trợ */ }
+  let ac = null, out = null;
+  // Tạo (hoặc đánh thức) bộ âm thanh ngay trong lúc chạm; mọi tiếng đi qua một bộ nén cho to mà không vỡ.
+  function audioOn() {
+    if (!ac) {
+      try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; return; }
+      const comp = ac.createDynamicsCompressor();
+      comp.threshold.value = -14; comp.knee.value = 10; comp.ratio.value = 4;
+      out = ac.createGain();
+      out.gain.value = 1.9;
+      out.connect(comp).connect(ac.destination);
+    }
+    if (ac.state !== 'running') ac.resume().catch(() => {});
+  }
   function noise(t, dur, type, freq, q, gain) {
     const buf = ac.createBuffer(1, Math.ceil(ac.sampleRate * dur), ac.sampleRate);
     const d = buf.getChannelData(0);
@@ -83,7 +97,7 @@
     s.buffer = buf; f.type = type; f.frequency.value = freq; f.Q.value = q;
     g.gain.setValueAtTime(gain, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    s.connect(f).connect(g).connect(ac.destination);
+    s.connect(f).connect(g).connect(out);
     s.start(t);
   }
   function tone(t, dur, f0, f1, gain, type) {
@@ -93,16 +107,16 @@
     o.frequency.exponentialRampToValueAtTime(f1, t + dur);
     g.gain.setValueAtTime(gain, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g).connect(ac.destination);
+    o.connect(g).connect(out);
     o.start(t); o.stop(t + dur);
   }
   const sfx = {
     click() { if (!ac) return; const t = ac.currentTime; noise(t, 0.04, 'bandpass', 2600, 1, 0.9); noise(t + 0.13, 0.05, 'bandpass', 1700, 1, 0.7); },
-    on() { if (!ac) return; const t = ac.currentTime; tone(t, 0.6, 70, 40, 0.5); tone(t, 1.6, 7600, 7400, 0.015); noise(t + 0.05, 1.1, 'highpass', 1500, 0.4, 0.22); },
+    on() { if (!ac) return; const t = ac.currentTime; tone(t, 0.6, 70, 40, 0.5); tone(t, 1.6, 7600, 7400, 0.015); noise(t + 0.05, 1.1, 'highpass', 1500, 0.4, 0.4); },
     glitch() { if (!ac) return; noise(ac.currentTime, 0.32, 'highpass', 900, 0.5, 0.12); },
     off() { if (!ac) return; const t = ac.currentTime; tone(t, 0.6, 520, 60, 0.18, 'triangle'); noise(t + 0.55, 0.05, 'bandpass', 2000, 1, 0.6); },
     // Chập điện: tiếng rè rẹt của TV cũ không chịu lên
-    zap(k) { if (!ac) return; const t = ac.currentTime; tone(t, 0.25 + 0.15 * k, 110, 90, 0.12 + 0.05 * k, 'sawtooth'); noise(t, 0.3 + 0.2 * k, 'bandpass', 3200, 0.7, 0.25); noise(t + 0.18, 0.12, 'bandpass', 900, 1, 0.3); },
+    zap(k) { if (!ac) return; const t = ac.currentTime; tone(t, 0.25 + 0.15 * k, 110, 90, 0.2 + 0.08 * k, 'sawtooth'); noise(t, 0.3 + 0.2 * k, 'bandpass', 3200, 0.7, 0.5); noise(t + 0.18, 0.12, 'bandpass', 900, 1, 0.55); },
   };
 
   // ===== Nhạc nền =====
@@ -191,7 +205,7 @@
   async function powerOn() {
     if (started) return;
     started = true;
-    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; }
+    audioOn();
     sfx.click();
     $('hint').classList.add('out');
     await sleep(260);
@@ -244,7 +258,7 @@
   const HINTS = ['Bấm công tắc để bật', 'Ơ… chưa lên. Bấm lại thử?', 'Sắp được rồi, bấm thêm lần nữa!'];
   async function sputter(k) {
     failing = true;
-    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; } }
+    audioOn();
     sfx.click();
     sfx.zap(k);
     const body = tv.querySelector('.tv-body');
@@ -276,6 +290,7 @@
     body.classList.remove('shake', 'shake2');
     void body.offsetWidth;
     body.classList.add('shake');
+    audioOn(); // ngay lúc chạm, kẻo iPhone không cho bật tiếng sau khi chờ ảnh
     ready.then(powerOn);
   });
   $('end-again').addEventListener('click', () => location.reload());

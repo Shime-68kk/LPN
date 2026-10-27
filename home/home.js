@@ -758,7 +758,8 @@
     : guessByClock();
   Weather.apply();
   document.querySelector('.wx-partner-tag').textContent = IS_QUANG ? 'Chỗ em' : 'Chỗ anh';
-  $('tape-link').hidden = !IS_QUANG;
+  // Băng số 1 (hồi ức trên TV) đang làm: máy anh Quang bấm "hồi ức" là vào TV y như Thủy sẽ thấy; máy Thủy vẫn vào web cũ.
+  if (IS_QUANG) $('memory-link').href = '../story/hoi-uc.html';
   fetch('../game/beatmaps/index.json')
     .then((r) => r.json())
     .then((d) => {
