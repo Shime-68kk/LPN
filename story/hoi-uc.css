@@ -514,10 +514,8 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 @keyframes tr-sk { 20%, 80% { transform: translate(-2px, 1px); } 40%, 60% { transform: translate(4px, -2px); } }
 @keyframes tr-sk2 { 10%, 90% { transform: translate(-3px, 2px) rotate(-.3deg); } 20%, 80% { transform: translate(6px, -3px) rotate(.4deg); } 30%, 50%, 70% { transform: translate(-8px, 3px) rotate(-.6deg); } 40%, 60% { transform: translate(8px, -3px) rotate(.6deg); } }
 
-/* Trailer xem dọc: khung cảnh phóng to vừa chiều cao, cắt bớt hai bên như video dọc */
+/* Trailer: xem dọc thì khung cảnh vừa bề ngang (thấy trọn khung, trên dưới viền đen), giống xem video ngang */
 .room.trailer { overflow: hidden; }
-.room.trailer.tall .scene { width: calc((100vh - 120px) * 16 / 9 * .9); flex: none; }
-.room.trailer.tall .tr-bar { height: 7%; }
 /* Chữ trên màn TV trong trailer: hiện ra méo giật, bẹp lại khi tắt */
 .tmsg { position: absolute; inset: 0; display: grid; place-items: center; padding: 0 8%; text-align: center; font: 600 6.2cqw/1.25 'Fraunces', serif; color: #EDEBE3; text-shadow: .3cqw 0 rgba(255, 40, 80, .7), -.3cqw 0 rgba(40, 200, 255, .7); animation: tm-in .5s steps(5) both, tm-jit 1.2s steps(2) .5s infinite; }
 .tmsg.last { font: 700 7.4cqw/1.2 'Dancing Script', cursive; color: #E9C77B; text-shadow: 0 0 2cqw rgba(233, 199, 123, .5), .25cqw 0 rgba(255, 40, 80, .5), -.25cqw 0 rgba(40, 200, 255, .5); }

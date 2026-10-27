@@ -843,14 +843,12 @@
     await card('Một bí mật.', '', 1100, { hit: 'big' });
     // Về lại chiếc TV: bật lên, máy quay zoom dần vào màn hình, chữ méo giật, lời hẹn, rồi TV tắt và cháy nổ nhẹ
     go('r1'); S.done.jig = true; render();
-    // Xem dọc thì khung đã phóng to sẵn, chỉ zoom nhẹ kẻo cắt mất chữ trên màn TV.
-    const tall = $('room').classList.contains('tall');
-    cam(tall ? 'scale(1) translate(0, 9%)' : 'scale(1.5) translate(0, 8%)', 0);
+    cam('scale(1.5) translate(0, 8%)', 0);
     await sleep(60);
     flick(); black(false);
     await sleep(500);
     shake(true);
-    await TV.tease(['Tín hiệu yếu…', 'Đang tua lại…', 'Hẹn em ở cuộn băng thật.'], () => cam(tall ? 'scale(1.12) translate(0, 10%)' : 'scale(2.45) translate(0, 21%)', 6200));
+    await TV.tease(['Tín hiệu yếu…', 'Đang tua lại…', 'Hẹn em ở cuộn băng thật.'], () => cam('scale(2.45) translate(0, 21%)', 6200));
     await TV.burn();
     shake();
     black(true);

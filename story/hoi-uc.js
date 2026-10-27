@@ -65,11 +65,13 @@
 
   // ===== Xoay ngang (điện thoại); máy tính hay đã xoay thì vào phòng luôn =====
   const touch = matchMedia('(pointer: coarse)').matches;
-  let portraitOk = false, started = false;
+  let portraitOk = false, started = false, entered = false;
   function layout() {
     if (LOCKED) { $('locked').hidden = false; $('rotate').hidden = true; $('room').hidden = true; return; }
-    $('room').classList.toggle('tall', TRAILER && innerHeight > innerWidth);
-    const needRotate = touch && innerHeight > innerWidth && !portraitOk && !started;
+    // Chỉ nhắc xoay ngang lúc mới vào. Đã vào phòng rồi thì xoay dọc / ngang giữa chừng vẫn xem tiếp:
+    // khung cảnh tự co theo bề ngang màn hình (thấy trọn khung, trên dưới là viền đen).
+    const needRotate = touch && innerHeight > innerWidth && !portraitOk && !started && !entered;
+    if (!needRotate) entered = true;
     $('rotate').hidden = !needRotate;
     $('room').hidden = needRotate;
   }
