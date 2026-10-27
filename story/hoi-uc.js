@@ -343,9 +343,9 @@
   $('power').addEventListener('click', () => {
     if (started || failing || busy) return;
     if (!realIn) {
+      // Chưa có băng thật: phòng tự lo (đang có băng giả thì chiếu, trống thì nhắc).
       audioOn();
-      sfx.click();
-      if (window.HoiUcRoom) window.HoiUcRoom.say('Máy chưa có băng. Bấm cũng chẳng lên đâu.');
+      if (window.HoiUcRoom) window.HoiUcRoom.power(); else sfx.click();
       return;
     }
     presses++;
