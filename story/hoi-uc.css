@@ -19,7 +19,7 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 /* ===== Xoay ngang ===== */
 .rotate { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; text-align: center; padding: 0 30px; }
 .rotate p { margin: 0; font-family: 'Fraunces', serif; font-size: 20px; }
-.phone-ic { width: 46px; height: 78px; border: 3px solid var(--cream); border-radius: 10px; position: relative; animation: turn 2.6s ease-in-out infinite; }
+.phone-ic { width: 46px; height: 78px; border: 3px solid var(--cream); border-radius: 10px; position: relative; transform: rotate(-35deg); animation: turn 2.8s ease-in-out infinite; }
 .phone-ic i { position: absolute; left: 50%; bottom: 5px; width: 10px; height: 3px; margin-left: -5px; border-radius: 2px; background: var(--cream); }
 .locked small { max-width: 340px; font-size: 13px; line-height: 1.6; color: rgba(246, 238, 223, .7); }
 
@@ -31,7 +31,8 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .tape::before { content: ''; position: absolute; left: 18px; right: 18px; top: 16px; height: 22px; border-radius: 3px; background: #F3E3C3; }
 .tape i { position: absolute; top: 46px; width: 30px; height: 30px; border-radius: 50%; border: 6px solid #E9DCC4; background: #120B06; }
 .tape i:first-child { left: 30px; } .tape i:last-child { right: 30px; }
-@keyframes turn { 0%, 25% { transform: rotate(0); } 55%, 85% { transform: rotate(-90deg); } 100% { transform: rotate(0); } }
+/* Điện thoại nghiêng chéo, khẽ lắc về phía nằm ngang */
+@keyframes turn { 0%, 100% { transform: rotate(-30deg); } 50% { transform: rotate(-55deg); } }
 
 /* ===== Phòng và TV ===== */
 .room {

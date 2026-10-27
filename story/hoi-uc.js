@@ -55,7 +55,11 @@
   // ===== Ai được xem =====
   // Trên trang thật, trước ngày mở băng chỉ máy anh Quang xem thử được; máy khác chỉ thấy cuộn băng khoá.
   // Server ở nhà (không phải workers.dev) thì ai cũng xem được để thử.
-  const LOCKED = location.hostname.endsWith('workers.dev') && (() => { try { return localStorage.getItem('lpn:who') !== 'quang'; } catch (e) { return true; } })();
+  // Mở bằng ?xem=anh một lần thì máy đó xem thử được luôn (máy anh Quang đang để tài khoản khác cũng vào được).
+  try { if (/[?&]xem=anh\b/.test(location.search)) localStorage.setItem('lpn:tapePreview', '1'); } catch (e) { /* bỏ qua */ }
+  const LOCKED = location.hostname.endsWith('workers.dev') && (() => {
+    try { return localStorage.getItem('lpn:who') !== 'quang' && localStorage.getItem('lpn:tapePreview') !== '1'; } catch (e) { return true; }
+  })();
 
   // ===== Xoay ngang (điện thoại); máy tính hay đã xoay thì vào phòng luôn =====
   const touch = matchMedia('(pointer: coarse)').matches;

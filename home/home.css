@@ -334,6 +334,7 @@ body.night .story-card.is-case .go { background: #F6E7CC; color: #3A2E22; }
 .round-btn.playing .ic-play { display: none; }
 .round-btn.playing .ic-pause { display: block; }
 
+.tape-link { display: block; width: max-content; margin: 6px auto 0; padding: 8px 16px; border-radius: 999px; border: 1px dashed var(--line); font-size: 13px; font-weight: 600; color: var(--muted); text-decoration: none; }
 .memory-link { display: block; width: max-content; margin: 28px auto 4px; padding: 6px 10px; font-size: 11px; letter-spacing: .08em; color: var(--muted); opacity: .35; text-decoration: none; }
 .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .tile {

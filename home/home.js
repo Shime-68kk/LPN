@@ -758,6 +758,7 @@
     : guessByClock();
   Weather.apply();
   document.querySelector('.wx-partner-tag').textContent = IS_QUANG ? 'Chỗ em' : 'Chỗ anh';
+  $('tape-link').hidden = !IS_QUANG;
   fetch('../game/beatmaps/index.json')
     .then((r) => r.json())
     .then((d) => {
