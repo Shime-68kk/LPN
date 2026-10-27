@@ -352,7 +352,7 @@
     $('static').classList.replace('on', 'soft');
     $('osd').hidden = false;
     $('osd').querySelector('.osd-ch').textContent = 'CH 06';
-    $('osd-date').textContent = '13.11.2026';
+    $('osd-date').textContent = '--.--.2026'; // chưa chốt ngày ra mắt
     $('osd-tc').textContent = '00:00:00';
     await sleep(2000);
     sfx.off();

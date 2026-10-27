@@ -31,7 +31,7 @@
     A: { label: 'Băng 01', ch: 'CH 01', date: '05.2026', lines: ['Mưa gõ trên mái tôn.', 'Có một bức ảnh vỡ trên tường.', 'Ghép lại đi.'] },
     B: { label: 'Băng 02', ch: 'CH 02', date: '07.2026', lines: ['Mật thư:', 'QKLQ GXRL JRL', 'Số nấc xoay nằm trong cuốn từ điển không hiệu sách nào bán.'] },
     C: { label: 'Băng 03', ch: 'CH 03', date: '10.2026', lines: ['Bốn tấm ảnh trên tường phòng ngủ.', 'Lật mặt sau.', '…', 'Khoá vali đọc theo số.'] },
-    D: { label: 'Băng số 1 · 100 ngày', ch: 'CH 06', date: '11.2026', lines: ['Băng số 1.', '…', 'Ơ. Băng trống.', 'Cuộn thật ở chỗ chiếc điện thoại chỉ.', 'Mật mã điện thoại? Hỏi con robot trong phòng ngủ.'] },
+    D: { label: 'Băng số 1', ch: 'CH 06', date: '--.--.2026', lines: ['Băng số 1.', '…', 'Ơ. Băng trống.', 'Cuộn thật ở chỗ chiếc điện thoại chỉ.', 'Mật mã điện thoại? Hỏi con robot trong phòng ngủ.'] },
     E: { label: 'Băng số 1 ♥', real: true },
   };
   const OTHER = { wheel: 'Đĩa xoay chữ', note1: 'Nửa mẩu giấy', note2: 'Nửa mẩu giấy', note: 'Mẩu giấy', key: 'Chìa khoá cổng', log: 'Sổ ghi chép' };
@@ -721,7 +721,7 @@
     radio,
     lantern() { say(S.done.words ? 'Đèn lồng soi xuống bậc thềm.' : 'Đèn lồng chưa thắp.'); },
     bench() {
-      if (S.done.words && !S.items.D) { S.items.D = true; win(() => look('Bậc thềm', '<p>Trên bậc thềm cũ: “Băng số 1 · 100 ngày”.</p>')); return; }
+      if (S.done.words && !S.items.D) { S.items.D = true; win(() => look('Bậc thềm', '<p>Trên bậc thềm cũ, một cuộn băng nhãn viết tay: “Băng số 1”.</p>')); return; }
       say('Bậc thềm cũ. Gió mát.');
     },
   };
@@ -847,7 +847,7 @@
     await card('Một bí mật.', '', 1100, { hit: 'big' });
     await sleep(700);
     flick();
-    await card('BĂNG SỐ 1', 'Hồi ức · Ngày thứ 100 · Sắp ra mắt', 3600, { big: true, hit: 'big', keep: true });
+    await card('BĂNG SỐ 1', 'Hồi ức · Sắp ra mắt', 3600, { big: true, hit: 'big', keep: true });
     const fade = setInterval(() => { music.volume = Math.max(0, music.volume - 0.04); if (!music.volume) { clearInterval(fade); music.pause(); } }, 150);
     $('tr-end').hidden = false;
     $('tr-again').addEventListener('click', () => location.reload());
