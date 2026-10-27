@@ -864,24 +864,29 @@
     $('tr-again').addEventListener('click', () => location.reload());
   }
 
-  // Chữ BĂNG SỐ 1 cuối trailer nhấp nháy như biển hiệu neon cũ: chập chờn không đều, "tít" mỗi lần đèn chập lên,
-  // tiếng rè rè nền. Nháy mãi tới khi rời trang.
+  // Chữ BĂNG SỐ 1 cuối trailer: chập chờn như biển hiệu neon cũ khoảng 1,5–2 giây ("tít" mỗi lần chập lên),
+  // rồi sáng hẳn và đứng yên, tiếng rè tắt dần. Không lặp lại.
   function neonSign() {
     const h = $('tr-card').querySelector('h1');
     h.classList.add('neon');
     fx.neon(true);
-    const PAT = [[1, 900], [0, 70], [1, 60], [0, 90], [1, 50], [0, 420], [1, 1300], [0, 60], [1, 1800], [0, 50], [1, 40], [0, 50], [1, 70], [0, 700], [1, 2200]];
+    const PAT = [[1, 140], [0, 80], [1, 60], [0, 110], [1, 50], [0, 260], [1, 90], [0, 60], [1, 40], [0, 70], [1, 70], [0, 180]];
     let i = 0;
     const step = () => {
-      const [on, ms] = PAT[i % PAT.length];
+      if (i >= PAT.length) {
+        h.classList.remove('off');
+        fx.tick();
+        fx.neonLevel(1);
+        setTimeout(() => fx.neon(false), 900);
+        return;
+      }
+      const [on, ms] = PAT[i++];
       h.classList.toggle('off', !on);
       fx.neonLevel(on ? 1 : 0.15);
-      if (on && ms < 1000) fx.tick();
-      i++;
-      setTimeout(step, ms * (0.8 + Math.random() * 0.4));
+      if (on) fx.tick();
+      setTimeout(step, ms * 1.35); // cả đoạn chập chờn khoảng 1,8 giây
     };
     step();
-    addEventListener('pagehide', () => fx.neon(false));
   }
   const fx = TV.sfx;
 
