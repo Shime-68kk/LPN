@@ -56,7 +56,7 @@ legacy/             web cũ
 
 Mỗi máy chọn một lần đây là máy của ai. Sau đó ví đốt cây, đồ đã có, tiến độ truyện và kỷ lục game được sao lưu lên Firebase Realtime Database ở `lpn/players/{thuy|quang}`. Quà tặng đốt đi qua nhánh `grants`, không sửa thẳng ví.
 
-Nhật ký nằm ở `diary/`, chung với web cũ. Bài mới ghi thêm `author`, cảm xúc ghi theo người ở `by/{ai}`, bình luận ghi thêm `by`. Các trường cũ vẫn giữ để web cũ đọc được.
+Nhật ký nằm ở `diary/`, chung với web cũ. Bài mới ghi thêm `author`, cảm xúc ghi theo người ở `by/{ai}`, bình luận ghi thêm `by`. Các trường cũ vẫn giữ để web cũ đọc được. Ảnh nằm riêng ở `diary/_img/{mã bài}`, bài chỉ ghi `img` (phiên bản) và `imgW`/`imgH`. Danh sách bài tải bằng truy vấn khoá bắt đầu bằng `-` nên không kéo theo ảnh, ảnh tải khi cuộn tới và được giữ trên máy (IndexedDB).
 
 ## Thông báo
 

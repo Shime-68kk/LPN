@@ -4,6 +4,8 @@
 // Người viết lấy từ tài khoản đang dùng máy (Sync.who, chọn ở màn khoá), không phải chọn tay.
 // Bài cũ chưa ghi người viết thì hiện là "Tụi mình"; ai viết thì tự nhận lại ở nút ⋯.
 // Bài mới, bình luận mới: báo lên điện thoại người kia qua worker lpn-push (tools/push-worker/).
+// Ảnh nằm riêng ở diary/_img/{mã bài} (bài chỉ ghi img = số phiên bản, imgW/imgH): danh sách bài tải rất nhẹ,
+// ảnh chỉ tải khi sắp cuộn tới rồi giữ trên máy (IndexedDB). Bài cũ còn ảnh trong bài (image) vẫn hiện như thường.
 'use strict';
 (() => {
   const FIREBASE_DB_URL = 'https://yeult-diary-default-rtdb.asia-southeast1.firebasedatabase.app/';
@@ -102,7 +104,11 @@
 
   const cache = {
     read() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '[]'); } catch (e) { return []; } },
-    write(list) { try { localStorage.setItem(CACHE_KEY, JSON.stringify(list)); } catch (e) { /* đầy bộ nhớ: bỏ qua */ } },
+    // Chỉ giữ chữ; ảnh riêng nằm trong IndexedDB. Ảnh cũ nằm trong bài thì vẫn phải giữ (ít, sẽ hết dần).
+    write(list) {
+      const lean = list.map((e) => (e.img && e.image ? Object.assign({}, e, { image: undefined }) : e));
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(lean)); } catch (e) { /* đầy bộ nhớ: bỏ qua */ }
+    },
   };
   // Cảm xúc trang cũ lưu theo máy; giờ lưu theo người ở entry.by, cái theo máy chỉ còn để đọc bài cũ.
   const myReaction = {
@@ -111,6 +117,72 @@
     set(id, ts, v) { try { v ? localStorage.setItem(this.key(id, ts), v) : localStorage.removeItem(this.key(id, ts)); } catch (e) { /* bỏ qua */ } },
   };
   const safeImage = (src) => typeof src === 'string' && (src.startsWith('data:image/') || src.startsWith('https://'));
+
+  // Mã bài tạo ngay trên máy (giống mã Firebase: bắt đầu bằng "-", xếp theo thời gian), để ghi ảnh trước rồi mới ghi bài.
+  const PUSH_CHARS = '-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz';
+  function newId() {
+    let now = Date.now(), id = '';
+    for (let i = 0; i < 8; i++) { id = PUSH_CHARS.charAt(now % 64) + id; now = Math.floor(now / 64); }
+    for (let i = 0; i < 12; i++) id += PUSH_CHARS.charAt(Math.floor(Math.random() * 64));
+    return id;
+  }
+
+  // ===== Ảnh =====
+  // Tải theo mã bài + phiên bản: có trên máy (IndexedDB) thì lấy ngay, chưa có thì tải một lần rồi cất.
+  const Images = {
+    memo: new Map(),
+    ready: new Map(), // ảnh đã có trong bộ nhớ: vẽ lại bài thì hiện ngay, không nhấp nháy
+    db: null,
+    open() {
+      if (!this.db) {
+        this.db = new Promise((res, rej) => {
+          const r = indexedDB.open('lpn-diary', 1);
+          r.onupgradeneeded = () => r.result.createObjectStore('img');
+          r.onsuccess = () => res(r.result);
+          r.onerror = () => rej(r.error);
+        });
+      }
+      return this.db;
+    },
+    async local(k) {
+      try {
+        const db = await this.open();
+        return await new Promise((res) => {
+          const q = db.transaction('img').objectStore('img').get(k);
+          q.onsuccess = () => res(q.result || null);
+          q.onerror = () => res(null);
+        });
+      } catch (e) { return null; }
+    },
+    async keep(k, data) {
+      try { (await this.open()).transaction('img', 'readwrite').objectStore('img').put(data, k); } catch (e) { /* hết chỗ: lần sau tải lại */ }
+    },
+    put(entry, data) {
+      const k = entry.id + ':' + entry.img;
+      this.memo.set(k, Promise.resolve(data));
+      this.ready.set(k, data);
+      this.keep(k, data);
+    },
+    now(entry) {
+      if (safeImage(entry.image)) return entry.image;
+      return entry.img && entry.id ? this.ready.get(entry.id + ':' + entry.img) || null : null;
+    },
+    get(entry) {
+      if (safeImage(entry.image)) return Promise.resolve(entry.image);
+      if (!entry.img || !entry.id) return Promise.resolve(null);
+      const k = entry.id + ':' + entry.img;
+      if (!this.memo.has(k)) {
+        const p = this.local(k)
+          .then((d) => d || api('diary/_img/' + entry.id).then((x) => { if (!safeImage(x)) return null; this.keep(k, x); return x; }))
+          .catch(() => null);
+        p.then((d) => { if (d) this.ready.set(k, d); else this.memo.delete(k); });
+        this.memo.set(k, p);
+      }
+      return this.memo.get(k);
+    },
+  };
+  // Bài có ảnh không (ảnh riêng hay ảnh cũ nằm trong bài).
+  const hasImage = (e) => !!e.img || safeImage(e.image);
 
   // ===== Thông báo =====
   // Chỉ báo khi có điều muốn người kia đọc: bài mới và bình luận. Sửa, xoá, thả cảm xúc thì thôi.
@@ -126,8 +198,8 @@
   }
 
   // ===== Firebase =====
-  async function api(path, method, body) {
-    const res = await fetch(FIREBASE_DB_URL + path + '.json', {
+  async function api(path, method, body, query) {
+    const res = await fetch(FIREBASE_DB_URL + path + '.json' + (query || ''), {
       method: method || 'GET',
       headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
       body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -172,8 +244,9 @@
     async sync() {
       if (!this.entries.length) this.status('Đang tải nhật ký…');
       try {
-        const data = await api('diary');
-        const list = Object.keys(data || {}).map((id) => Object.assign({ id }, data[id]));
+        // Chỉ lấy các bài (mã bắt đầu bằng "-"), không kéo theo diary/_img.
+        const data = await api('diary', 'GET', undefined, '?orderBy=%22%24key%22&startAt=%22-%22&endAt=%22-%EF%A3%BF%22');
+        const list = Object.keys(data || {}).filter((id) => id.charAt(0) === '-').map((id) => Object.assign({ id }, data[id]));
         list.sort((a, b) => b.timestamp - a.timestamp);
         this.entries = list;
         cache.write(list);
@@ -234,15 +307,16 @@
           c.width = w;
           c.height = h;
           c.getContext('2d').drawImage(img, 0, 0, w, h);
-          this.setImage(c.toDataURL('image/jpeg', 0.72));
+          this.setImage(c.toDataURL('image/jpeg', 0.72), { w, h });
         };
         img.src = reader.result;
       };
       reader.readAsDataURL(file);
     },
 
-    setImage(data) {
+    setImage(data, dims) {
       this.image = data;
+      this.imageDims = data ? dims || null : null;
       $('diary-photo').value = '';
       $('diary-preview').hidden = !data;
       $('diary-preview-img').src = data || '';
@@ -265,20 +339,34 @@
       this.status('');
       if (this.editing) {
         const entry = this.editing;
-        const change = { text, image: this.image || null, isEdited: true };
-        Object.assign(entry, change);
-        if (!entry.image) delete entry.image;
+        const change = { text, isEdited: true };
+        const image = this.image, dims = this.imageDims;
+        const imageChanged = image !== this.editingImage;
+        if (imageChanged) {
+          // Ảnh mới thì lên phiên bản mới (máy kia biết mà tải lại); bỏ ảnh thì xoá hẳn. Ảnh cũ trong bài cũng dọn đi.
+          change.image = null;
+          change.img = image ? Date.now() : null;
+          change.imgW = image && dims ? dims.w : null;
+          change.imgH = image && dims ? dims.h : null;
+        }
+        for (const [k, v] of Object.entries(change)) { if (v === null) delete entry[k]; else entry[k] = v; }
+        if (imageChanged && image) Images.put(entry, image);
         cache.write(this.entries);
         this.resetForm();
         this.redraw(entry);
-        if (!entry.id) return;
         try {
+          if (imageChanged) await (image ? api('diary/_img/' + entry.id, 'PUT', image) : api('diary/_img/' + entry.id, 'DELETE'));
           await api('diary/' + entry.id, 'PATCH', change);
         } catch (err) { this.saveError(err); }
         return;
       }
-      const entry = { author: who, text, timestamp: Date.now() };
-      if (this.image) entry.image = this.image;
+      const entry = { id: newId(), author: who, text, timestamp: Date.now() };
+      const image = this.image, dims = this.imageDims;
+      if (image) {
+        entry.img = entry.timestamp;
+        if (dims) { entry.imgW = dims.w; entry.imgH = dims.h; }
+        Images.put(entry, image);
+      }
       this.entries.unshift(entry);
       cache.write(this.entries);
       this.visible = PAGE;
@@ -286,14 +374,13 @@
       this.render();
       $('diary-list').firstElementChild.classList.add('fresh');
       try {
-        const res = await api('diary', 'POST', entry);
-        if (res && res.name) {
-          entry.id = res.name;
-          cache.write(this.entries);
-          this.redraw(entry, 'local_' + entry.timestamp);
-          notify({ from: who, id: entry.id });
-          stamp(who);
-        }
+        // Ảnh lên trước, bài lên sau: máy kia thấy bài là đã có ảnh để tải.
+        if (image) await api('diary/_img/' + entry.id, 'PUT', image);
+        const body = Object.assign({}, entry);
+        delete body.id;
+        await api('diary/' + entry.id, 'PUT', body);
+        notify({ from: who, id: entry.id });
+        stamp(who);
       } catch (err) { this.saveError(err); }
     },
 
@@ -306,8 +393,16 @@
     edit(entry) {
       this.closePops();
       this.editing = entry;
+      this.editingImage = null;
       $('diary-text').value = entry.text || '';
-      this.setImage(safeImage(entry.image) ? entry.image : null);
+      this.setImage(null);
+      if (hasImage(entry)) {
+        Images.get(entry).then((d) => {
+          if (this.editing !== entry || !d) return;
+          this.editingImage = d;
+          this.setImage(d, entry.imgW ? { w: entry.imgW, h: entry.imgH } : null);
+        });
+      }
       $('diary-save').textContent = 'Lưu';
       $('diary-cancel').hidden = false;
       $('diary-compose').classList.add('editing');
@@ -324,6 +419,7 @@
       if (!entry.id) return;
       try {
         await api('diary/' + entry.id, 'DELETE');
+        if (entry.img) await api('diary/_img/' + entry.id, 'DELETE');
       } catch (err) { this.saveError(err); }
     },
 
@@ -528,14 +624,14 @@
         }
       }
 
-      // Ảnh: chạm để xem lớn, chạm đúp để thả tim
-      if (safeImage(entry.image)) {
+      // Ảnh: khung giữ sẵn đúng tỉ lệ, sắp cuộn tới mới tải. Chạm để xem lớn, chạm đúp để thả tim.
+      if (hasImage(entry)) {
         const fig = el('figure', 'd-media');
+        if (entry.imgW && entry.imgH) fig.style.aspectRatio = entry.imgW + ' / ' + entry.imgH;
         const img = el('img');
-        img.src = entry.image;
         img.alt = 'Ảnh trong nhật ký';
-        img.loading = 'lazy';
         img.decoding = 'async';
+        this.lazy(img, entry);
         const burst = el('span', 'd-burst');
         burst.appendChild(svg(ICON.heart));
         fig.append(img, burst);
@@ -552,7 +648,7 @@
           }
           timer = setTimeout(() => {
             timer = null;
-            if (window.Viewer) window.Viewer.show(0, [{ thumb: entry.image, full: entry.image }]);
+            if (window.Viewer && img.src) window.Viewer.show(0, [{ thumb: img.src, full: img.src }]);
           }, 260);
         });
         card.appendChild(fig);
@@ -628,6 +724,32 @@
       }
       if (who) card.appendChild(this.replyForm(entry, who));
       return card;
+    },
+
+    // Tải ảnh khi khung ảnh còn cách màn hình chừng một màn (cuộn tới là đã có), hiện dần lên.
+    lazy(img, entry) {
+      const now = Images.now(entry);
+      if (now) { img.src = now; img.classList.add('ready'); return; }
+      const load = () => Images.get(entry).then((d) => {
+        if (!d) { img.closest('.d-media')?.classList.add('missing'); return; }
+        img.onload = () => img.classList.add('ready');
+        img.src = d;
+      });
+      if (!('IntersectionObserver' in window)) { load(); return; }
+      if (!this.io) {
+        this.io = new IntersectionObserver((list) => {
+          for (const it of list) {
+            if (!it.isIntersecting) continue;
+            this.io.unobserve(it.target);
+            const fn = this.pending.get(it.target);
+            this.pending.delete(it.target);
+            if (fn) fn();
+          }
+        }, { root: $('panel-diary').querySelector('.d-scroll'), rootMargin: '900px 0px' });
+        this.pending = new WeakMap();
+      }
+      this.pending.set(img, load);
+      this.io.observe(img);
     },
 
     isNew(by, ts) { return !!me() && !!PEOPLE[by] && by !== me() && ts > this.since; },
