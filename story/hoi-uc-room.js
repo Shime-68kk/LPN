@@ -543,12 +543,12 @@
         bin: () => open('Thùng rác', (box) => {
           file(box, 'loi-to-tinh-nhap.txt', () => open('Thùng rác/loi-to-tinh-nhap.txt', (b2) => text(b2, '“Anh chào Lệ Thuỷ nhé, anh là người đã theo dõi em từ lâu rồi, quan tâm em và thêm nữa anh đã yêu em một cách chân thành…”\n\n(Sến quá. Xoá.)')));
           file(box, 'anh-chup-vo.jpg', () => open('Thùng rác/anh-chup-vo.jpg', (b2) => text(b2, '(Ảnh nhoè, chỉ thấy một ngón tay to đùng che ống kính.)')));
-          file(box, 'mat-khau-do-an.txt', () => open('Thùng rác/mat-khau-do-an.txt', (b2) => text(b2, 'Mật khẩu thư mục Đồ án:\nVĂN + SÓNG\n(viết liền, không dấu)')));
+          file(box, 'mat-khau-do-an.txt', () => open('Thùng rác/mat-khau-do-an.txt', (b2) => text(b2, 'Mật khẩu thư mục Đồ án:\nVĂN + SÓNG\n\nGõ: viết thường, không dấu, viết liền nhau.\n(vd. “Hà Nội” thì gõ hanoi)')));
         }),
         project: () => {
           if (S.done.dir) { open('C:/Đồ án/robot_v2/so-do-chip.txt', (box) => text(box, 'Robot chưa chạy: thiếu 4 chip.\nỔ 1: tam giác đỏ\nỔ 2: tròn xanh dương\nỔ 3: vuông vàng\nỔ 4: ngôi sao xanh lá\nLắp đủ, robot sẽ đọc mật mã.')); return; }
           open('C:/Đồ án 🔒', (box) => {
-            box.insertAdjacentHTML('beforeend', '<div class="pwrow"><input type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Mật khẩu thư mục" /><button type="button">Mở</button></div>');
+            box.insertAdjacentHTML('beforeend', '<div class="pwrow"><input type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="viết thường, không dấu" /><button type="button">Mở</button></div>');
             const inp = box.querySelector('input');
             const tryOpen = () => {
               if (norm(inp.value) === 'vansong') {
@@ -749,87 +749,106 @@
 
   document.querySelector('[data-obj="frame"] .frame-img').style.backgroundImage = 'url("' + PHOTO + '")';
   // ===== Trailer: phim giới thiệu tự chạy bằng chính căn phòng (không lộ đáp án) =====
+  // Nhịp phiêu lưu: tim đập trong bóng tối, "bùm" ở mỗi câu lớn, vút + chớp nhiễu khi chuyển cảnh, rung theo cú đánh,
+  // tiếng rít dồn lên trước cao trào. Có assets/sound/trailer.mp3 thì phát kèm (bài hát cắt sẵn ~40 giây).
   async function runTrailer() {
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     const room = $('room'), scene = $('scene');
     room.classList.add('trailer');
     const ov = document.createElement('div');
     ov.className = 'tr-ov';
-    ov.innerHTML = '<div class="tr-black" id="tr-black"></div><div class="tr-bar t"></div><div class="tr-bar b"></div><div class="tr-card" id="tr-card"><h1></h1><p></p></div><div class="tr-flash" id="tr-flash"></div><button class="tr-start" id="tr-start" type="button"><b>▶</b>Xem trailer</button><div class="tr-end" id="tr-end" hidden><button type="button" id="tr-again">Xem lại</button><a href="../home/">Về nhà</a></div>';
+    ov.innerHTML = '<div class="tr-black" id="tr-black"></div><div class="tr-crt"></div><div class="tr-glitch" id="tr-glitch"><i></i><i></i><i></i></div><div class="tr-bar t"></div><div class="tr-bar b"></div><div class="tr-card" id="tr-card"><h1></h1><p></p></div><div class="tr-flash" id="tr-flash"></div><button class="tr-start" id="tr-start" type="button"><b>▶</b>Xem trailer</button><div class="tr-end" id="tr-end" hidden><button type="button" id="tr-again">Xem lại</button><a href="../home/">Về nhà</a></div>';
     room.appendChild(ov);
     await new Promise((res) => $('tr-start').addEventListener('click', res, { once: true }));
     $('tr-start').remove();
     TV.audioOn();
-    // Nhạc trailer (nếu có file): assets/sound/trailer.mp3
     const music = new Audio('../assets/sound/trailer.mp3');
-    music.volume = 0.8;
+    music.volume = 0.85;
     music.play().catch(() => {});
+    const fx = TV.sfx;
     const black = (on) => $('tr-black').classList.toggle('on', on);
-    const card = async (h, p, ms, big) => {
+    const replay = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+    const shake = (big) => replay(room, big ? 'tr-shake2' : 'tr-shake');
+    const flick = () => { replay($('tr-glitch'), 'go'); replay(room, 'tr-flicker'); fx.glitch(); };
+    const hit = (big) => { fx.boom(); shake(big); replay($('tr-flash'), 'go'); };
+    const card = async (h, p, ms, opt) => {
+      const o = opt || {};
       const c = $('tr-card');
-      c.classList.toggle('big', !!big);
+      c.classList.toggle('big', !!o.big);
       c.querySelector('h1').textContent = h || '';
       c.querySelector('p').textContent = p || '';
+      if (o.hit) hit(o.hit === 'big');
+      if (o.beat) fx.beat();
       c.classList.add('on');
       await sleep(ms);
+      if (o.keep) return;
       c.classList.remove('on');
-      await sleep(350);
+      await sleep(300);
     };
     const cam = (t, ms) => { scene.style.transition = 'transform ' + ms + 'ms cubic-bezier(.45, 0, .25, 1)'; scene.style.transform = t; };
-    const cut = async (fn) => { TV.sfx.glitch(); const f = $('tr-flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); await sleep(90); fn(); render(); };
+    const cut = async (fn) => { fx.whoosh(); flick(); await sleep(80); fn(); render(); };
     const go = (r) => { S.room = r; };
 
+    // Mở: bóng tối, tim đập
     black(true);
-    await sleep(600);
-    await card('Có một cuộn băng', '', 2200);
-    await card('đang chờ em.', '', 1800);
+    await sleep(500);
+    fx.beat(); await sleep(900);
+    fx.beat(); await sleep(700);
+    await card('Có một cuộn băng', '', 1900, { beat: true });
+    await card('đang chờ em.', '', 1700, { hit: true });
+    // Phòng khách tối, đèn bật
     go('r1'); S.lamp = false; render();
-    cam('scale(1.3) translate(6%, 4%)', 0);
-    await sleep(50);
-    black(false);
-    cam('scale(1.12) translate(2%, 1%)', 3600);
-    await sleep(1600);
-    TV.sfx.click(); S.lamp = true; render();
-    await sleep(1600);
-    await card('Năm cuộn băng.', '', 1500);
+    cam('scale(1.32) translate(6%, 4%)', 0);
+    await sleep(40);
+    fx.whoosh(); flick(); black(false);
+    cam('scale(1.1) translate(2%, 1%)', 3400);
+    await sleep(1400);
+    fx.click(); S.lamp = true; render();
+    fx.riser(9.5);
+    await sleep(1300);
+    await card('Năm cuộn băng.', '', 1300, { beat: true });
     Object.assign(S.items, { A: true, B: true, C: true, D: true }); // cuộn thứ năm để người xem tự tò mò
     render(); $('bag').hidden = false;
-    await sleep(1600);
-    await card('Chỉ một cuộn là thật.', '', 1700);
+    await sleep(1300);
+    await card('Chỉ một cuộn là thật.', '', 1600, { hit: 'big' });
     $('bag').hidden = true;
-    await cut(() => { go('r2'); cam('scale(1.25) translate(-8%, 2%)', 0); });
-    await sleep(60);
-    cam('scale(1.25) translate(-18%, 2%)', 3200);
-    await sleep(1800);
-    TV.sfx.click(); S.done.robot = true; render();
-    await sleep(1400);
-    await cut(() => { go('r3'); cam('scale(1.05)', 0); });
-    await sleep(900);
-    S.items.key = true; S.done.gate = true; render(); TV.sfx.click();
-    cam('scale(1.3) translate(0, 6%)', 2600);
-    await sleep(1800);
-    S.done.words = true; render();
-    await sleep(1200);
-    await cut(() => { go('r1'); cam('scale(1.6) translate(14%, -8%)', 0); S.done.jig = true; });
-    await sleep(700);
-    await cut(() => { go('r2'); cam('scale(1.6) translate(6%, -10%)', 0); S.done.case = true; S.done.pillow = true; });
-    await sleep(700);
-    await cut(() => { go('r3'); cam('scale(1.9) translate(0, 14%)', 0); });
+    // Phòng ngủ đêm
+    await cut(() => { go('r2'); cam('scale(1.28) translate(-6%, 2%)', 0); });
+    await sleep(50);
+    cam('scale(1.28) translate(-18%, 2%)', 2800);
+    await sleep(1500);
+    fx.click(); S.done.robot = true; render();
     await sleep(1100);
-    await cut(() => { cam('scale(1.55) translate(0, 8%)', 0); });
-    await sleep(300);
+    // Sân đình
+    await cut(() => { go('r3'); cam('scale(1.05)', 0); });
+    await sleep(700);
+    S.items.key = true; S.done.gate = true; render(); fx.click(); shake();
+    cam('scale(1.32) translate(0, 6%)', 2300);
+    await sleep(1500);
+    S.done.words = true; render(); fx.beat();
+    await sleep(900);
+    // Cắt nhanh
+    await cut(() => { go('r1'); cam('scale(1.65) translate(14%, -8%)', 0); S.done.jig = true; });
+    await sleep(550);
+    await cut(() => { go('r2'); cam('scale(1.6) translate(6%, -10%)', 0); S.done.case = true; S.done.pillow = true; });
+    await sleep(550);
+    await cut(() => { go('r3'); cam('scale(1.9) translate(0, 14%)', 0); });
+    await sleep(550);
+    await cut(() => { go('r1'); cam('scale(1.55) translate(0, 8%)', 0); });
+    await sleep(250);
+    shake(true);
     await TV.tease();
+    // Cao trào
     black(true);
-    await sleep(400);
-    await card('Ba căn phòng.', '', 1100);
-    await card('Năm cuộn băng.', '', 1100);
-    await card('Một bí mật.', '', 1400);
-    await sleep(300);
-    await card('BĂNG SỐ 1', 'Hồi ức · Ngày thứ 100 · Sắp ra mắt', 4200, true);
-    const fade = setInterval(() => { music.volume = Math.max(0, music.volume - 0.05); if (!music.volume) { clearInterval(fade); music.pause(); } }, 120);
-    $('tr-card').querySelector('h1').textContent = 'BĂNG SỐ 1';
-    $('tr-card').querySelector('p').textContent = 'Hồi ức · Ngày thứ 100 · Sắp ra mắt';
-    $('tr-card').classList.add('on', 'big');
+    fx.riser(3.4);
+    await sleep(500);
+    await card('Ba căn phòng.', '', 900, { hit: true });
+    await card('Năm cuộn băng.', '', 900, { hit: true });
+    await card('Một bí mật.', '', 1100, { hit: 'big' });
+    await sleep(700);
+    flick();
+    await card('BĂNG SỐ 1', 'Hồi ức · Ngày thứ 100 · Sắp ra mắt', 3600, { big: true, hit: 'big', keep: true });
+    const fade = setInterval(() => { music.volume = Math.max(0, music.volume - 0.04); if (!music.volume) { clearInterval(fade); music.pause(); } }, 150);
     $('tr-end').hidden = false;
     $('tr-again').addEventListener('click', () => location.reload());
   }

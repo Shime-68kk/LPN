@@ -119,7 +119,26 @@
     off() { if (!ac) return; const t = ac.currentTime; tone(t, 0.6, 520, 60, 0.18, 'triangle'); noise(t + 0.55, 0.05, 'bandpass', 2000, 1, 0.6); },
     // Chập điện: tiếng rè rẹt của TV cũ không chịu lên
     zap(k) { if (!ac) return; const t = ac.currentTime; tone(t, 0.25 + 0.15 * k, 110, 90, 0.2 + 0.08 * k, 'sawtooth'); noise(t, 0.3 + 0.2 * k, 'bandpass', 3200, 0.7, 0.5); noise(t + 0.18, 0.12, 'bandpass', 900, 1, 0.55); },
+    // Âm thanh trailer: "bùm" trầm, tiếng vút chuyển cảnh, tiếng rít dồn lên, tim đập.
+    boom() { if (!ac) return; const t = ac.currentTime; tone(t, 1.4, 95, 30, 0.95); tone(t, 0.5, 190, 60, 0.25, 'triangle'); noise(t, 0.6, 'lowpass', 260, 0.7, 0.7); },
+    whoosh() { if (!ac) return; sweep(ac.currentTime, 0.55, 'bandpass', 350, 3800, 0.45); },
+    riser(d) { if (!ac) return; sweep(ac.currentTime, d, 'highpass', 300, 7000, 0.28, true); },
+    beat() { if (!ac) return; const t = ac.currentTime; tone(t, 0.14, 62, 38, 0.9); tone(t + 0.2, 0.14, 56, 36, 0.65); },
   };
+  // Tiếng ồn quét tần số (vút qua hoặc rít dồn lên).
+  function sweep(t, dur, type, f0, f1, gain, swell) {
+    const buf = ac.createBuffer(1, Math.ceil(ac.sampleRate * dur), ac.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    src.buffer = buf; f.type = type; f.Q.value = 1.2;
+    f.frequency.setValueAtTime(f0, t);
+    f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    if (swell) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + dur * 0.95); g.gain.linearRampToValueAtTime(0, t + dur); }
+    else { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + dur * 0.4); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); }
+    src.connect(f).connect(g).connect(out);
+    src.start(t);
+  }
 
   // ===== Nhạc nền =====
   const audio = new Audio(SONG.src);

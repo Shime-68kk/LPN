@@ -499,3 +499,17 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .tr-start b { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #2B1A12; color: #F6EEDF; font-size: 14px; }
 .tr-end { position: absolute; left: 0; right: 0; bottom: 14%; display: flex; justify-content: center; gap: 12px; }
 .tr-end button, .tr-end a { padding: 10px 22px; border: 1px solid rgba(246, 238, 223, .35); border-radius: 999px; background: rgba(20, 15, 22, .7); color: var(--cream); font: 600 14px 'Be Vietnam Pro', sans-serif; text-decoration: none; }
+.tr-crt { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .22) 0 1px, rgba(0, 0, 0, 0) 1px 3px), radial-gradient(120% 100% at 50% 50%, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, .55)); animation: flicker .12s steps(2) infinite; }
+.tr-glitch { position: absolute; inset: 0; opacity: 0; }
+.tr-glitch i { position: absolute; left: -5%; right: -5%; height: 9%; mix-blend-mode: screen; }
+.tr-glitch i:nth-child(1) { top: 22%; background: rgba(255, 40, 80, .55); }
+.tr-glitch i:nth-child(2) { top: 48%; height: 4%; background: rgba(40, 200, 255, .55); }
+.tr-glitch i:nth-child(3) { top: 70%; height: 6%; background: rgba(255, 255, 255, .35); }
+.tr-glitch.go { animation: tr-gl .32s steps(4) 1; }
+@keyframes tr-gl { 0% { opacity: 1; transform: translateX(-6%); } 25% { opacity: 1; transform: translateX(5%) skewX(-12deg); } 50% { opacity: .8; transform: translateX(-3%); } 75% { opacity: .6; transform: translateX(2%) scaleY(1.6); } 100% { opacity: 0; } }
+.room.tr-flicker { animation: tr-flk .3s steps(3) 1; }
+@keyframes tr-flk { 0% { filter: brightness(2.2) contrast(1.4) saturate(0); } 33% { filter: brightness(.4) hue-rotate(40deg); } 66% { filter: brightness(1.6) saturate(1.8); } 100% { filter: none; } }
+.room.tr-shake { animation: tr-sk .35s cubic-bezier(.36, .07, .19, .97) 1; }
+.room.tr-shake2 { animation: tr-sk2 .6s cubic-bezier(.36, .07, .19, .97) 1; }
+@keyframes tr-sk { 20%, 80% { transform: translate(-2px, 1px); } 40%, 60% { transform: translate(4px, -2px); } }
+@keyframes tr-sk2 { 10%, 90% { transform: translate(-3px, 2px) rotate(-.3deg); } 20%, 80% { transform: translate(6px, -3px) rotate(.4deg); } 30%, 50%, 70% { transform: translate(-8px, 3px) rotate(-.6deg); } 40%, 60% { transform: translate(8px, -3px) rotate(.6deg); } }
