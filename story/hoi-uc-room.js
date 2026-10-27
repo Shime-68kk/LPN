@@ -834,24 +834,56 @@
     await sleep(550);
     await cut(() => { go('r3'); cam('scale(1.9) translate(0, 14%)', 0); });
     await sleep(550);
-    await cut(() => { go('r1'); cam('scale(1.55) translate(0, 8%)', 0); });
-    await sleep(250);
-    shake(true);
-    await TV.tease();
     // Cao trào
     black(true);
     fx.riser(3.4);
-    await sleep(500);
+    await sleep(400);
     await card('Ba căn phòng.', '', 900, { hit: true });
     await card('Năm cuộn băng.', '', 900, { hit: true });
     await card('Một bí mật.', '', 1100, { hit: 'big' });
-    await sleep(700);
+    // Về lại chiếc TV: bật lên, máy quay zoom dần vào màn hình, chữ méo giật, lời hẹn, rồi TV tắt và cháy nổ nhẹ
+    go('r1'); S.done.jig = true; render();
+    // Xem dọc thì khung đã phóng to sẵn, chỉ zoom nhẹ kẻo cắt mất chữ trên màn TV.
+    const tall = $('room').classList.contains('tall');
+    cam(tall ? 'scale(1) translate(0, 9%)' : 'scale(1.5) translate(0, 8%)', 0);
+    await sleep(60);
+    flick(); black(false);
+    await sleep(500);
+    shake(true);
+    await TV.tease(['Tín hiệu yếu…', 'Đang tua lại…', 'Hẹn em ở cuộn băng thật.'], () => cam(tall ? 'scale(1.12) translate(0, 10%)' : 'scale(2.45) translate(0, 21%)', 6200));
+    await TV.burn();
+    shake();
+    black(true);
+    await sleep(900);
     flick();
-    await card('BĂNG SỐ 1', 'Hồi ức · Sắp ra mắt', 3600, { big: true, hit: 'big', keep: true });
+    await card('BĂNG SỐ 1', 'Hồi ức · Sắp ra mắt', 600, { big: true, hit: 'big', keep: true });
+    neonSign();
+    await sleep(3000);
     const fade = setInterval(() => { music.volume = Math.max(0, music.volume - 0.04); if (!music.volume) { clearInterval(fade); music.pause(); } }, 150);
     $('tr-end').hidden = false;
     $('tr-again').addEventListener('click', () => location.reload());
   }
+
+  // Chữ BĂNG SỐ 1 cuối trailer nhấp nháy như biển hiệu neon cũ: chập chờn không đều, "tít" mỗi lần đèn chập lên,
+  // tiếng rè rè nền. Nháy mãi tới khi rời trang.
+  function neonSign() {
+    const h = $('tr-card').querySelector('h1');
+    h.classList.add('neon');
+    fx.neon(true);
+    const PAT = [[1, 900], [0, 70], [1, 60], [0, 90], [1, 50], [0, 420], [1, 1300], [0, 60], [1, 1800], [0, 50], [1, 40], [0, 50], [1, 70], [0, 700], [1, 2200]];
+    let i = 0;
+    const step = () => {
+      const [on, ms] = PAT[i % PAT.length];
+      h.classList.toggle('off', !on);
+      fx.neonLevel(on ? 1 : 0.15);
+      if (on && ms < 1000) fx.tick();
+      i++;
+      setTimeout(step, ms * (0.8 + Math.random() * 0.4));
+    };
+    step();
+    addEventListener('pagehide', () => fx.neon(false));
+  }
+  const fx = TV.sfx;
 
   window.HoiUcRoom = { say, power };
   render();

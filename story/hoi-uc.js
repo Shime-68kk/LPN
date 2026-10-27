@@ -68,7 +68,8 @@
   let portraitOk = false, started = false;
   function layout() {
     if (LOCKED) { $('locked').hidden = false; $('rotate').hidden = true; $('room').hidden = true; return; }
-    const needRotate = touch && innerHeight > innerWidth && !portraitOk && !started;
+    $('room').classList.toggle('tall', TRAILER && innerHeight > innerWidth);
+    const needRotate = touch && innerHeight > innerWidth && !portraitOk && !started && !TRAILER;
     $('rotate').hidden = !needRotate;
     $('room').hidden = needRotate;
   }
@@ -124,6 +125,21 @@
     whoosh() { if (!ac) return; sweep(ac.currentTime, 0.55, 'bandpass', 350, 3800, 0.45); },
     riser(d) { if (!ac) return; sweep(ac.currentTime, d, 'highpass', 300, 7000, 0.28, true); },
     beat() { if (!ac) return; const t = ac.currentTime; tone(t, 0.14, 62, 38, 0.9); tone(t + 0.2, 0.14, 56, 36, 0.65); },
+    // Biển hiệu neon cũ: "tít" mỗi lần đèn chập lên; neon(true/false) bật / tắt tiếng rè rè nền.
+    tick() { if (!ac) return; const t = ac.currentTime; tone(t, 0.06, 2300, 2150, 0.22); noise(t, 0.03, 'bandpass', 4000, 1, 0.25); },
+    neon(on) {
+      if (!ac) return;
+      if (!on) { if (sfx.hum) { sfx.hum.g.gain.setTargetAtTime(0, ac.currentTime, 0.1); sfx.hum.o.stop(ac.currentTime + 0.5); sfx.hum = null; } return; }
+      if (sfx.hum) return;
+      const o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain();
+      o.type = 'sawtooth'; o.frequency.value = 100; f.type = 'lowpass'; f.frequency.value = 500; g.gain.value = 0.0001;
+      g.gain.setTargetAtTime(0.06, ac.currentTime, 0.2);
+      o.connect(f).connect(g).connect(out); o.start();
+      sfx.hum = { o, g };
+    },
+    neonLevel(k) { if (sfx.hum && ac) sfx.hum.g.gain.setTargetAtTime(0.06 * k, ac.currentTime, 0.01); },
+    // TV cháy: bùm nhỏ rồi lách tách
+    pop() { if (!ac) return; const t = ac.currentTime; tone(t, 0.7, 120, 40, 0.6); noise(t, 0.25, 'lowpass', 900, 0.7, 0.55); for (let i = 0; i < 9; i++) noise(t + 0.2 + Math.random() * 1.4, 0.02 + Math.random() * 0.03, 'highpass', 2500 + Math.random() * 3000, 0.6, 0.25 + Math.random() * 0.2); },
   };
   // Tiếng ồn quét tần số (vút qua hoặc rít dồn lên).
   function sweep(t, dur, type, f0, f1, gain, swell) {
@@ -331,8 +347,9 @@
     $('hint').classList.remove('out');
     busy = false;
   }
-  // Trailer: TV chập điện, bật lên nhiễu và chữ PLAY một thoáng rồi tắt.
-  async function tease() {
+  // Trailer: TV chập điện, bật lên nhiễu; trên màn hình lần lượt hiện các dòng chữ méo giật rồi bẹp lại,
+  // dòng cuối là lời hẹn; rồi TV tắt. onAir: gọi khi màn hình vừa lên (để máy quay zoom dần vào).
+  async function tease(msgs, onAir) {
     audioOn();
     sfx.click();
     sfx.zap(2);
@@ -354,7 +371,24 @@
     $('osd').querySelector('.osd-ch').textContent = 'CH 06';
     $('osd-date').textContent = '--.--.2026'; // chưa chốt ngày ra mắt
     $('osd-tc').textContent = '00:00:00';
-    await sleep(2000);
+    if (onAir) onAir();
+    if (!msgs) await sleep(2000);
+    for (const [i, m] of (msgs || []).entries()) {
+      const last = i === msgs.length - 1;
+      const el = document.createElement('div');
+      el.className = 'tmsg' + (last ? ' last' : '');
+      el.textContent = m;
+      content.appendChild(el);
+      sfx.glitch();
+      $('static').classList.replace('soft', 'on');
+      await sleep(170);
+      $('static').classList.replace('on', 'soft');
+      await sleep(last ? 2600 : 1400);
+      el.classList.add('out');
+      sfx.glitch();
+      await sleep(300);
+      el.remove();
+    }
     sfx.off();
     $('osd').hidden = true;
     $('static').classList.remove('soft', 'on');
@@ -364,9 +398,20 @@
     await sleep(800);
     tv.classList.remove('on');
   }
+  // Trailer: TV vừa tắt thì cháy nổ nhẹ (loé cam, tia lửa, khói).
+  async function burn() {
+    audioOn();
+    const b = document.createElement('div');
+    b.className = 'tv-burn';
+    b.innerHTML = '<i class="fl"></i>' + [1, 2, 3, 4, 5, 6, 7, 8].map((n) => '<i class="sp p' + n + '"></i>').join('') + '<i class="sm s1"></i><i class="sm s2"></i><i class="sm s3"></i>';
+    tv.appendChild(b);
+    sfx.pop();
+    tv.querySelector('.tv-body').classList.add('shake2', 'burnt');
+    await sleep(2200);
+  }
   // Phần căn phòng gọi vào đây (hoi-uc-room.js).
   window.HoiUc = {
-    trailer: TRAILER, tease,
+    trailer: TRAILER, tease, burn,
     sfx, audioOn, playFake,
     busy: () => busy || started,
     armReal(on) { realIn = on; if (on) $('hint').textContent = HINTS[presses] || HINTS[0]; },
