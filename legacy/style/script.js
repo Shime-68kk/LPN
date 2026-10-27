@@ -17,101 +17,11 @@ const ANNIVERSARY_DATE = "2026-08-06T23:38:58";
 let audioPlayer = null;
 let isPlaying = false;
 
-// Cấu hình Discord Webhook URL để nhận thông báo thời gian thật khi bấm nút đồng ý
-// Trang "hồi ức": mở xem lại kỷ niệm không gửi thông báo nào (Discord, email).
-const DISCORD_WEBHOOK_URL = "";
+// Trang "hồi ức": chỉ để xem lại kỷ niệm, không gửi thông báo nào (Discord và email đã gỡ hẳn ngày 27/10/2026).
 
 // Cấu hình Firebase Database URL để đồng bộ nhật ký giữa các thiết bị
 const FIREBASE_DB_URL = "https://yeult-diary-default-rtdb.asia-southeast1.firebasedatabase.app/"; // Hãy thay thế bằng link database Firebase của bạn
 
-// Cấu hình gửi Email thông báo tự động cho Lệ Thủy qua EmailJS (lethuynong2@gmail.com)
-const EMAILJS_CONFIG = {
-  SERVICE_ID: "service_wfekquk",
-  TEMPLATE_ID: "template_fz6sdr8",
-  PUBLIC_KEY: "eiEumZGjJAjTNCJw2",
-  RECIPIENT_EMAIL: "lethuynong2@gmail.com"
-};
-
-// Kích hoạt gửi email thông báo tự động
-const ENABLE_EMAIL_NOTIFICATIONS = false;
-
-// Gửi email thông báo tự động đến hộp thư của Lệ Thủy
-async function sendEmailToLeThuy({ title, message, author }) {
-  // Tạm dừng gửi mail khi đang test
-  if (!ENABLE_EMAIL_NOTIFICATIONS) {
-    console.log("💌 [TẠM KHÓA GỬI MAIL] Đang trong chế độ kiểm thử hoàng hôn.");
-    return;
-  }
-
-  // Chỉ gửi email khi người gửi là Anh Quang (để tránh gửi nhầm khi chính Lệ Thủy thao tác)
-  if (author && !author.includes("Quang") && author !== "Anh Quang 👦") {
-    return;
-  }
-  
-  if (EMAILJS_CONFIG.SERVICE_ID && EMAILJS_CONFIG.TEMPLATE_ID && EMAILJS_CONFIG.PUBLIC_KEY) {
-    try {
-      const now = new Date();
-      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} ngày ${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
-      
-      const templateParams = {
-        to_email: EMAILJS_CONFIG.RECIPIENT_EMAIL,
-        recipient: EMAILJS_CONFIG.RECIPIENT_EMAIL,
-        email: EMAILJS_CONFIG.RECIPIENT_EMAIL,
-        title: title || "💌 Lời nhắn yêu thương từ Anh Quang",
-        message: message || "",
-        author: author || "Anh Quang 👦",
-        name: author || "Anh Quang 👦",
-        time: timeStr,
-        web_link: "https://lpn.luongquang060804.workers.dev/"
-      };
-      
-      // Sử dụng trực tiếp EmailJS REST API (Bảo đảm 100% gửi thành công trên mọi thiết bị)
-      const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          service_id: EMAILJS_CONFIG.SERVICE_ID,
-          template_id: EMAILJS_CONFIG.TEMPLATE_ID,
-          user_id: EMAILJS_CONFIG.PUBLIC_KEY,
-          template_params: templateParams
-        })
-      });
-      
-      if (res.ok) {
-        console.log("💌 Đã gửi email thông báo thành công đến Lệ Thủy:", EMAILJS_CONFIG.RECIPIENT_EMAIL);
-      } else {
-        const errText = await res.text();
-        console.warn("⚠️ Gửi qua REST API lỗi, thử qua SDK:", errText);
-        if (typeof emailjs !== "undefined") {
-          await emailjs.send(
-            EMAILJS_CONFIG.SERVICE_ID,
-            EMAILJS_CONFIG.TEMPLATE_ID,
-            templateParams,
-            EMAILJS_CONFIG.PUBLIC_KEY
-          );
-        }
-      }
-    } catch (err) {
-      console.error("Gửi email thất bại:", err);
-    }
-  }
-}
-
-function sendDiscordNotification(timeString) {
-  if (DISCORD_WEBHOOK_URL) {
-    fetch(DISCORD_WEBHOOK_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        content: `💖 **Lệ Thủy đã đồng ý làm người yêu lúc:** ${timeString} \n👉 Hãy cập nhật ngày kỉ niệm cố định này vào file script.js để đồng bộ mọi thiết bị nhé!`
-      })
-    }).catch(err => console.error("Webhook notification failed:", err));
-  }
-}
 
 const heartsContainer=document["body"],imageFiles=Array["from"]( {
 'length':0x12
@@ -1365,9 +1275,7 @@ if (btnAccept) {
     const acceptTime = new Date();
     localStorage.setItem("anniversaryStartDate", acceptTime.getTime().toString());
     
-    // Send Discord Webhook notification with exact timestamp
     const timeString = acceptTime.toLocaleTimeString("vi-VN") + " ngày " + acceptTime.toLocaleDateString("vi-VN");
-    sendDiscordNotification(timeString);
     
     // Trigger Heart Confetti Rain!
     triggerHeartConfetti();
@@ -2030,11 +1938,13 @@ async function syncDiaryFromFirebase() {
     
     const entries = [];
     if (data) {
+      // Từ 27/10/2026 ảnh nằm riêng ở diary/_img/{mã bài} (web mới tải ảnh khi cần); "_img" không phải một bài.
+      const imgs = data._img || {};
       Object.keys(data).forEach(key => {
-        entries.push({
-          id: key,
-          ...data[key]
-        });
+        if (key.charAt(0) === "_") return;
+        const entry = { id: key, ...data[key] };
+        if (!entry.image && imgs[key]) entry.image = imgs[key];
+        entries.push(entry);
       });
     }
     
@@ -2060,28 +1970,6 @@ async function syncDiaryFromFirebase() {
   }
 }
 
-// Send Discord notification when diary entry is added
-function sendDiscordNotificationForDiary(entry) {
-  if (DISCORD_WEBHOOK_URL) {
-    let messageContent = `✍️ **Nhật ký tình yêu vừa có trang mới!** 💕\n`;
-    if (entry.text) {
-      messageContent += `📝 *"${entry.text}"*\n`;
-    }
-    if (entry.image) {
-      messageContent += `📸 *Có đính kèm hình ảnh kỉ niệm.*`;
-    }
-    
-    fetch(DISCORD_WEBHOOK_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        content: messageContent
-      })
-    }).catch(err => console.error("Webhook notification failed:", err));
-  }
-}
 
 // Save Entry to Firebase and Local Cache
 async function saveDiaryEntryToFirebase(newEntry) {
@@ -2115,13 +2003,6 @@ async function saveDiaryEntryToFirebase(newEntry) {
       renderDiaryEntries();
     }
     
-    // Send Discord & Email notification to Le Thuy
-    sendDiscordNotificationForDiary(newEntry);
-    sendEmailToLeThuy({
-      title: "Nhật ký tình yêu vừa có trang mới!",
-      message: newEntry.text || "(Có đính kèm hình ảnh kỉ niệm)",
-      author: "Anh Quang"
-    });
   } catch (err) {
     console.error("Failed to save to Firebase:", err);
   }
@@ -2150,18 +2031,6 @@ async function updateDiaryEntryInFirebase(id, updatedEntry) {
     });
     if (!response.ok) throw new Error("Update failed");
     
-    // Send Discord message for edit
-    if (DISCORD_WEBHOOK_URL) {
-      let messageContent = `📝 **Một trang nhật ký tình yêu vừa được chỉnh sửa!** 💕\n`;
-      if (updatedEntry.text) {
-        messageContent += `📝 *"${updatedEntry.text}"*\n`;
-      }
-      fetch(DISCORD_WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: messageContent })
-      }).catch(console.error);
-    }
   } catch (err) {
     console.error("Failed to update Firebase:", err);
   }
@@ -2513,10 +2382,6 @@ async function toggleDiaryReaction(entryId, entryTimestamp, emoji) {
     targetEntry.reactions[emoji] = (targetEntry.reactions[emoji] || 0) + 1;
     localStorage.setItem(reactionStorageKey, emoji);
 
-    // Discord Notification
-    if (DISCORD_WEBHOOK_URL) {
-      sendDiscordNotification(`💖 **Lệ Thủy vừa thả cảm xúc [${emoji}] vào một trang nhật ký!** 📝`);
-    }
   }
 
   // Update local storage and re-render instantly
@@ -2565,24 +2430,6 @@ async function addDiaryComment(entryId, entryTimestamp, author, text) {
   entries[targetIndex] = targetEntry;
   localStorage.setItem("loveDiaryEntries", JSON.stringify(entries));
   renderDiaryEntries();
-
-  // Generate note snippet for context
-  const noteSnippet = targetEntry.text 
-    ? (targetEntry.text.length > 35 ? targetEntry.text.substring(0, 35) + "..." : targetEntry.text)
-    : (targetEntry.image ? "[Hình ảnh kỉ niệm]" : "trang nhật ký");
-
-  // Send Discord & Email Notification
-  if (DISCORD_WEBHOOK_URL) {
-    sendDiscordNotification(`💬 **${newComment.author} vừa bình luận về note "${noteSnippet}":**\n"${newComment.text}" 💕`);
-  }
-  if (author && author.includes("Quang")) {
-    const emailMessage = `💬 Lời bình luận: "${newComment.text}"\n📝 Về dòng nhật ký: "${noteSnippet}"`;
-    sendEmailToLeThuy({
-      title: `Anh Quang vừa bình luận về note "${noteSnippet}"`,
-      message: emailMessage,
-      author: "Anh Quang 👦"
-    });
-  }
 
   // Async sync to Firebase
   if (entryId) {
@@ -2640,17 +2487,6 @@ async function deleteDiaryEntry(id, index) {
       });
       if (!response.ok) throw new Error("Delete failed");
       
-      if (DISCORD_WEBHOOK_URL) {
-        fetch(DISCORD_WEBHOOK_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            content: `🗑️ **Một trang nhật ký tình yêu vừa được xóa.**`
-          })
-        }).catch(console.error);
-      }
     } catch (err) {
       console.error("Failed to delete from Firebase:", err);
     }
@@ -3358,7 +3194,6 @@ if (btnCloseWishPanel && wishFormPanel) {
   });
 }
 
-// Send Wish to Discord Webhook
 if (btnSendWish) {
   let isSendingWish = false;
   btnSendWish.addEventListener("click", () => {
@@ -3368,39 +3203,7 @@ if (btnSendWish) {
       alert("Em hãy ghi điều ước vào đây nhé! ✨💕");
       return;
     }
-
-    if (DISCORD_WEBHOOK_URL) {
-      isSendingWish = true;
-      const originalText = btnSendWish.innerText;
-      btnSendWish.innerText = "Đang gửi điều ước... ✨";
-      btnSendWish.disabled = true;
-
-      fetch(DISCORD_WEBHOOK_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          content: `🌟 **ĐIỀU ƯỚC CỦA LỆ THỦY:**\n> "${wishText.replace(/"/g, "'")}"\n👉 Hãy thực hiện cho cô ấy nhé!`
-        })
-      })
-      .then(() => {
-        alert("Điều ước của em đã được gửi đi rồi! Hãy chờ điều kỳ diệu nhé! 😉💜");
-        wishFormPanel.classList.add("hidden");
-        if (wishTextarea) wishTextarea.value = "";
-      })
-      .catch((err) => {
-        console.error("Failed to send wish:", err);
-        alert("Gửi điều ước thất bại, em kiểm tra kết nối mạng nhé! 🥺");
-      })
-      .finally(() => {
-        isSendingWish = false;
-        btnSendWish.innerText = originalText;
-        btnSendWish.disabled = false;
-      });
-    } else {
-      alert("Chức năng gửi điều ước đang bận, em báo lại anh nhé! 💕");
-    }
+    alert("Chức năng gửi điều ước đang bận, em báo lại anh nhé! 💕");
   });
 }
 
@@ -3672,8 +3475,6 @@ function unlockAchievement(id, name) {
     }, 4000);
   }
   
-  // Send Discord notification for achievement unlock!
-  sendDiscordNotification(`🏆 **Lệ Thủy đã mở khóa Thành Tựu:** [${name}]! 🎉`);
 }
 
 function updateAchievementsModalUI() {
@@ -4065,8 +3866,6 @@ moodButtons.forEach(btn => {
       clone.play();
     }
     
-    // Send Discord message
-    sendDiscordNotification(`🧸 **Lệ Thủy đã thả cảm xúc [${emoji} - ${moodTitle}] cho gấu Mascot!** \n💬 Lời thì thầm: *"${moodQuotes[mood]}"*`);
   });
 });
 
