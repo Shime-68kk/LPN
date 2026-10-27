@@ -151,6 +151,12 @@
     tv.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + k + ')';
   }
 
+  // Hiệu ứng chạy xong thì gỡ luôn class: phòng khách bị ẩn rồi hiện lại (chuyển phòng) thì trình duyệt chạy lại
+  // mọi animation còn gắn trên TV, TV sẽ giật một cái và loé vạch sáng như ma.
+  tv.querySelector('.tv-body').addEventListener('animationend', (e) => e.currentTarget.classList.remove('shake', 'shake2'));
+  $('crt-line').addEventListener('animationend', (e) => { if (e.animationName === 'line-off') e.currentTarget.classList.remove('off'); });
+  $('content').addEventListener('animationend', (e) => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('glitch'); });
+
   // ===== Dựng từng cảnh =====
   const content = $('content');
   function build(s) {

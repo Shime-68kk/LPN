@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="hoi-uc.css?v=14" />
+  <link rel="stylesheet" href="hoi-uc.css?v=16" />
 </head>
 <body>
   <!-- Chương 17 (bản xem thử): một chiếc TV cổ trong phòng tối. Bấm công tắc thì TV bật lên kiểu đời cũ
@@ -100,25 +100,39 @@
           </div>
       </div>
 
-      <!-- Phòng ngủ -->
+      <!-- Phòng ngủ: phòng của dân Điện tử Viễn thông. Bàn học có máy tính, con robot đang lắp dở, khay chip -->
       <div class="view v2" data-room="r2" hidden>
         <div class="wall" aria-hidden="true"></div>
         <div class="floor" aria-hidden="true"></div>
-        <div class="window" aria-hidden="true"><i class="rain"></i></div>
+        <div class="window" aria-hidden="true"><i class="moon"></i><i class="city"></i><i class="curtain cl"></i><i class="curtain cr"></i></div>
+        <div class="poster" aria-hidden="true"><svg viewBox="0 0 40 60"><rect x="1" y="1" width="38" height="58" rx="2" fill="#1F3A35" /><path d="M8 10h10v10h12M8 30h6v14h18M26 20v12h6M20 44v8" stroke="#6FD3B5" stroke-width="1.6" fill="none" /><circle cx="8" cy="10" r="2" fill="#E9C77B" /><circle cx="30" cy="20" r="2" fill="#E9C77B" /><circle cx="32" cy="44" r="2" fill="#E9C77B" /><circle cx="20" cy="52" r="2" fill="#E9C77B" /></svg></div>
+        <button class="obj o-board" data-obj="board" type="button" aria-label="Bảng ghim ảnh">
+          <span class="board"><i class="pol p1"></i><i class="pol p2"></i><i class="pol p3"></i><i class="pol p4"></i></span>
+        </button>
         <div class="desk" aria-hidden="true"></div>
-        <button class="obj o-laptop" data-obj="laptop" type="button" aria-label="Máy tính">
-          <svg viewBox="0 0 60 40" aria-hidden="true"><rect class="dk" x="8" y="2" width="44" height="28" rx="2" /><rect class="screen-lap" x="11" y="5" width="38" height="22" /><path class="metal" d="M2 31h56l-4 6H6z" /></svg>
+        <button class="obj o-pc" data-obj="pc" type="button" aria-label="Máy tính">
+          <svg viewBox="0 0 70 50" aria-hidden="true"><rect class="dk" x="2" y="2" width="66" height="38" rx="3" /><rect class="pc-screen" x="5" y="5" width="60" height="32" rx="1" /><rect class="metal" x="31" y="40" width="8" height="5" /><rect class="metal" x="22" y="45" width="26" height="3" rx="1" /></svg>
         </button>
-        <button class="obj o-wardrobe w2" data-obj="wardrobe" type="button" aria-label="Tủ quần áo">
-          <svg viewBox="0 0 70 150" preserveAspectRatio="none" aria-hidden="true"><rect class="wood" x="2" y="2" width="66" height="146" rx="3" /><rect class="wood2" x="6" y="8" width="28" height="134" rx="2" /><rect class="wood2" x="36" y="8" width="28" height="134" rx="2" /><circle class="metal" cx="31" cy="76" r="2" /><circle class="metal" cx="39" cy="76" r="2" /></svg>
+        <div class="keyboard" aria-hidden="true"></div>
+        <button class="obj o-robot" data-obj="robot" type="button" aria-label="Con robot đang lắp">
+          <svg viewBox="0 0 40 50" aria-hidden="true"><path class="metal" d="M20 2v6" /><circle class="ant" cx="20" cy="3" r="2" /><rect class="bot" x="8" y="8" width="24" height="16" rx="5" /><circle class="eye" cx="15" cy="16" r="2.6" /><circle class="eye" cx="25" cy="16" r="2.6" /><rect class="bot" x="10" y="26" width="20" height="16" rx="3" /><rect class="bot-open" x="13" y="29" width="14" height="10" rx="1" /><rect class="bot" x="4" y="28" width="5" height="10" rx="2" /><rect class="bot" x="31" y="28" width="5" height="10" rx="2" /><rect class="bot" x="12" y="42" width="6" height="6" rx="1" /><rect class="bot" x="22" y="42" width="6" height="6" rx="1" /></svg>
         </button>
-        <div class="bed" aria-hidden="true"></div>
+        <!-- Đồ nghề của dân điện tử trên bàn: máy hiện sóng, bo mạch, mỏ hàn, đèn LED, kệ linh kiện -->
+        <div class="wshelf" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div class="led-lamp" aria-hidden="true"></div>
+        <div class="scope" aria-hidden="true"><svg viewBox="0 0 50 34"><rect x="1" y="1" width="48" height="32" rx="3" fill="#2B2F36" /><rect x="4" y="4" width="28" height="22" rx="1" fill="#0B1A12" /><path class="wave" d="M5 15c3-8 5 8 8 0s5 8 8 0s5 8 8 0" stroke="#6BFF8E" stroke-width="1.2" fill="none" /><circle cx="39" cy="10" r="3" fill="#9BA7B4" /><circle cx="39" cy="21" r="3" fill="#9BA7B4" /><rect x="35" y="27" width="10" height="3" rx="1" fill="#E05A4F" /></svg></div>
+        <div class="pcb" aria-hidden="true"><svg viewBox="0 0 60 20"><rect x="1" y="1" width="58" height="18" rx="2" fill="#1F5A3A" /><path d="M6 6h14v8h10M34 4v12M40 10h14" stroke="#E9C77B" stroke-width=".9" fill="none" /><rect x="22" y="7" width="8" height="6" fill="#111" /><rect x="44" y="5" width="6" height="4" fill="#111" /><circle cx="8" cy="14" r="1.6" fill="#E05A4F" /></svg></div>
+        <div class="iron" aria-hidden="true"><svg viewBox="0 0 30 40"><rect x="4" y="30" width="22" height="8" rx="2" fill="#2B2F36" /><path d="M15 30V12" stroke="#9BA7B4" stroke-width="2" /><path d="M8 26c4-4 10-4 14 0" stroke="#9BA7B4" stroke-width="1.4" fill="none" /><path d="M15 12L21 2" stroke="#D96B2B" stroke-width="3" stroke-linecap="round" /><circle cx="21" cy="2" r="1.5" fill="#FFB36B" /></svg></div>
+        <div class="cable" aria-hidden="true"></div>
+        <div class="tray" aria-hidden="true"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div>
+        <div class="bed" aria-hidden="true"><i class="blanket"></i></div>
         <button class="obj o-pillow" data-obj="pillow" type="button" aria-label="Cái gối">
           <svg viewBox="0 0 70 34" aria-hidden="true"><path class="pillow" d="M6 8C10 2 60 2 64 8c4 6 4 12 0 18c-4 6-54 6-58 0C2 20 2 14 6 8z" /><path class="pillow-l" d="M12 12c10 3 36 3 46 0" /></svg>
         </button>
         <button class="obj o-case" data-obj="case" type="button" aria-label="Chiếc vali">
           <svg viewBox="0 0 60 70" aria-hidden="true"><path class="metal" d="M22 12V6h16v6h-3V9H25v3z" /><rect class="case-b" x="2" y="12" width="56" height="54" rx="6" /><rect class="case-s" x="2" y="30" width="56" height="4" /><rect class="metal" x="24" y="27" width="12" height="10" rx="2" /><circle class="dk" cx="12" cy="68" r="2" /><circle class="dk" cx="48" cy="68" r="2" /></svg>
         </button>
+        <div class="plant" aria-hidden="true"></div>
         <button class="door d-left" data-go="r1" type="button" aria-label="Về phòng khách"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg><span>Phòng khách</span></button>
         <button class="door d-right" data-go="r3" type="button" aria-label="Ra sân đình"><span>Ra đình</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
       </div>
@@ -170,7 +184,7 @@
     <button class="link end-again" id="end-again" type="button">Xem lại</button>
   </section>
 
-  <script src="hoi-uc.js?v=10"></script>
-  <script src="hoi-uc-room.js?v=3"></script>
+  <script src="hoi-uc.js?v=11"></script>
+  <script src="hoi-uc-room.js?v=5"></script>
 </body>
 </html>
