@@ -495,7 +495,7 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .tr-flash { position: absolute; inset: 0; background: #fff; opacity: 0; mix-blend-mode: screen; }
 .tr-flash.go { animation: tr-flash .35s ease-out; }
 @keyframes tr-flash { 0% { opacity: .55; } 100% { opacity: 0; } }
-.tr-start { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 12px; padding: 16px 30px; border: 0; border-radius: 999px; background: #F6EEDF; color: #2B1A12; font: 700 18px 'Be Vietnam Pro', sans-serif; box-shadow: 0 0 40px rgba(246, 238, 223, .25); }
+.tr-start { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); white-space: nowrap; display: flex; align-items: center; gap: 12px; padding: 16px 30px; border: 0; border-radius: 999px; background: #F6EEDF; color: #2B1A12; font: 700 18px 'Be Vietnam Pro', sans-serif; box-shadow: 0 0 40px rgba(246, 238, 223, .25); }
 .tr-start b { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #2B1A12; color: #F6EEDF; font-size: 14px; }
 .tr-end { position: absolute; left: 0; right: 0; bottom: 14%; display: flex; justify-content: center; gap: 12px; }
 .tr-end button, .tr-end a { padding: 10px 22px; border: 1px solid rgba(246, 238, 223, .35); border-radius: 999px; background: rgba(20, 15, 22, .7); color: var(--cream); font: 600 14px 'Be Vietnam Pro', sans-serif; text-decoration: none; }

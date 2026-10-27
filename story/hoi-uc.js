@@ -69,7 +69,7 @@
   function layout() {
     if (LOCKED) { $('locked').hidden = false; $('rotate').hidden = true; $('room').hidden = true; return; }
     $('room').classList.toggle('tall', TRAILER && innerHeight > innerWidth);
-    const needRotate = touch && innerHeight > innerWidth && !portraitOk && !started && !TRAILER;
+    const needRotate = touch && innerHeight > innerWidth && !portraitOk && !started;
     $('rotate').hidden = !needRotate;
     $('room').hidden = needRotate;
   }
