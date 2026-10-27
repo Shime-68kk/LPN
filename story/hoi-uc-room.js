@@ -17,13 +17,14 @@
   const KEY = 'lpn:bang1';
   const TV = window.HoiUc;
   if (!TV) return;
+  const TRAILER = !!TV.trailer; // đoạn phim giới thiệu: không đọc / ghi tiến độ thật
   try { if (/[?&]moi=1\b/.test(location.search)) localStorage.removeItem(KEY); } catch (e) { /* bỏ qua */ }
-  const load = () => { try { const v = JSON.parse(localStorage.getItem(KEY)); return v && v.v === 2 ? v : {}; } catch (e) { return {}; } };
+  const load = () => { if (TRAILER) return {}; try { const v = JSON.parse(localStorage.getItem(KEY)); return v && v.v === 2 ? v : {}; } catch (e) { return {}; } };
   const S = Object.assign({ v: 2, room: 'r1', lamp: false, tut: false, items: {}, seen: {}, done: {}, inVcr: null }, load());
   // Thoát giữa lúc chiếu băng giả: băng về lại túi, không kẹt trong máy.
   if (S.inVcr && S.inVcr !== 'E') S.inVcr = null;
   let sel = null; // món đang cầm trên tay (chọn từ túi)
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* bỏ qua */ } };
+  const save = () => { if (TRAILER) return; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* bỏ qua */ } };
 
   // ===== Đồ vật trong túi =====
   const TAPES = {
@@ -79,6 +80,7 @@
     if (!it.D) return { room: 'r3', t: '[data-obj="bench"]', hint: 'Đèn lồng soi xuống bậc thềm.' };
     if (!S.seen.D) return tapeStep('D');
     if (!d.pc) return { room: 'r2', t: '[data-obj="pc"]', hint: 'Máy tính của anh. Em biết mật khẩu mà.' };
+    if (!d.dir) return { room: 'r2', t: '[data-obj="pc"]', hint: 'Thư mục Đồ án khoá. Lục trong máy xem.' };
     if (!d.robot) return { room: 'r2', t: '[data-obj="robot"]', hint: 'Con robot còn thiếu chip.' };
     if (!d.phone) return { room: 'r1', t: '[data-obj="phone"]', hint: 'Mật mã con robot vừa đọc.' };
     if (!it.E) return { room: 'r1', t: '[data-obj="frame"]', hint: 'Sau tấm ảnh em vừa ghép.' };
@@ -90,14 +92,14 @@
   let idle = 0;
   function guide() {
     for (const n of document.querySelectorAll('.glow')) n.classList.remove('glow');
-    if (S.tut && idle < 40) return;
+    if (TRAILER || S.tut && idle < 40) return;
     const st = step();
     if (st.room && st.room !== S.room) { const door = document.querySelector('.view:not([hidden]) .door[data-go="' + st.room + '"]') || document.querySelector('.view:not([hidden]) .door'); if (door) door.classList.add('glow'); return; }
     const t = document.querySelector('#bag:not([hidden]) .bag-items button[data-id="' + (st.id || '') + '"]') || document.querySelector(st.t);
     if (t) t.classList.add('glow');
   }
   setInterval(() => {
-    if (TV.busy() || !$('look').hidden || $('room').hidden) return;
+    if (TRAILER || TV.busy() || !$('look').hidden || $('room').hidden) return;
     idle++;
     if (idle === 40) guide();
     if (idle === 90) say('Gợi ý: ' + step().hint, 9000);
@@ -119,6 +121,7 @@
     q('case').classList.toggle('open', !!S.done.case);
     q('gate').classList.toggle('open', !!S.done.gate);
     q('lantern').classList.toggle('lit', !!S.done.words);
+    document.querySelector('.v3').classList.toggle('lit2', !!S.done.words);
     q('pc').classList.toggle('on', !!S.done.pc);
     q('robot').classList.toggle('alive', !!S.done.robot);
     document.querySelector('.v2').classList.toggle('robot-done', !!S.done.robot);
@@ -341,7 +344,8 @@
     if (S.done.radio && !S.done.words) { words(); return; }
     if (S.done.words) { say('Radio đang phát nhạc rất khẽ.'); return; }
     let f = 92;
-    look('Radio cũ', '<div class="radio-ui"><div class="freq"></div><div class="bars"><i></i><i></i><i></i><i></i><i></i></div><input type="range" min="80" max="100" step="0.5" aria-label="Dò sóng" /></div><p class="say">Rè rè…</p>', (body) => {
+    // Một mặt dò sóng duy nhất: kéo kim đỏ dọc thang tần số. Vạch sóng bên cạnh chỉ để báo gần hay xa.
+    look('Radio cũ', '<div class="radio-ui"><div class="dialrow"><div class="freq"></div><div class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div></div><div class="dial"><div class="scale" aria-hidden="true"><span>80</span><span>85</span><span>90</span><span>95</span><span>100</span></div><input type="range" min="80" max="100" step="0.5" aria-label="Kéo kim để dò sóng" /></div><p class="say">Kéo kim đỏ để dò sóng.</p></div>', (body) => {
       const input = body.querySelector('input'), bars = body.querySelectorAll('.bars i');
       input.value = f;
       const show = () => {
@@ -349,6 +353,7 @@
         body.querySelector('.freq').textContent = f.toFixed(1);
         const n = Math.max(0, 5 - Math.floor(Math.abs(f - 85) / 1.5));
         bars.forEach((b, i) => { b.style.height = 6 + i * 5 + 'px'; b.classList.toggle('on', i < n); });
+        body.querySelector('.say').textContent = n >= 5 ? 'Rõ rồi!' : n >= 3 ? 'Có tiếng người, còn rè…' : 'Rè rè…';
         if (Math.random() < 0.5) TV.sfx.glitch();
         if (f === 85 && !S.done.radio) {
           S.done.radio = true;
@@ -514,26 +519,63 @@
       }
     });
   }
+  // Màn hình máy tính: thư gửi em, ảnh, nhạc, thùng rác để lục; thư mục Đồ án bị khoá, mật khẩu nằm trong thùng rác.
+  const norm = (t) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9]/g, '');
   function pcDesk() {
-    const FILES = {
-      'Ảnh': { path: 'C:/Ảnh', html: '<div class="thumbs">' + [3, 5, 10, 14, 2, 12, 8, 17].map((n) => '<img alt="" src="../assets/thumbs/anh-' + n + '.webp" />').join('') + '</div>' },
-      'Đồ án': { path: 'C:/Đồ án/robot_v2/so-do-chip.txt', text: 'Robot chưa chạy: thiếu 4 chip.\nỔ 1: tam giác đỏ\nỔ 2: tròn xanh\nỔ 3: vuông vàng\nỔ 4: ngôi sao xanh lá\nLắp đủ, robot sẽ đọc mật mã.' },
-      'Thùng rác': { path: 'Thùng rác/loi-to-tinh-nhap.txt', text: '“Anh chào Lệ Thuỷ nhé, anh là người đã theo dõi em từ lâu rồi, quan tâm em và thêm nữa anh đã yêu em một cách chân thành…”\n\n(Sến quá. Xoá.)' },
-    };
+    const ICONS = [
+      ['letter', 'Thư gửi em', 'txt'], ['photos', 'Ảnh', ''], ['music', 'Nhạc', ''], ['project', 'Đồ án', 'lock'], ['bin', 'Thùng rác', 'bin'],
+    ];
     look('Máy tính', '<div class="desktop"><div class="icons"></div><div class="win" hidden></div></div>', (body) => {
       const icons = body.querySelector('.icons'), win2 = body.querySelector('.win');
-      for (const [name, f] of Object.entries(FILES)) {
+      const open = (path, build) => { win2.hidden = false; win2.replaceChildren(); const p = document.createElement('div'); p.className = 'path'; p.textContent = path; win2.appendChild(p); build(win2); };
+      const text = (box, t) => box.appendChild(document.createTextNode(t));
+      const file = (box, name, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'file'; b.textContent = name; b.addEventListener('click', () => { TV.sfx.click(); fn(); }); box.appendChild(b); };
+      const SHOW = {
+        letter: () => open('C:/Thư gửi em.txt', (box) => {
+          text(box, 'Đang mở…');
+          fetch('../assets/letter.txt').then((r) => r.text()).then((t) => { box.lastChild.remove(); text(box, t.trim()); }).catch(() => { box.lastChild.textContent = 'Không mở được thư.'; });
+        }),
+        photos: () => open('C:/Ảnh', (box) => { box.insertAdjacentHTML('beforeend', '<div class="thumbs">' + [3, 5, 10, 14, 2, 12, 8, 17].map((n) => '<img alt="" src="../assets/thumbs/anh-' + n + '.webp" />').join('') + '</div>'); }),
+        music: () => open('C:/Nhạc', (box) => {
+          text(box, 'Đang tải…');
+          fetch('../game/beatmaps/index.json').then((r) => r.json()).then((d) => { box.lastChild.remove(); text(box, d.songs.map((x) => '♪ ' + x.title).join('\n')); }).catch(() => { box.lastChild.textContent = '♪'; });
+        }),
+        bin: () => open('Thùng rác', (box) => {
+          file(box, 'loi-to-tinh-nhap.txt', () => open('Thùng rác/loi-to-tinh-nhap.txt', (b2) => text(b2, '“Anh chào Lệ Thuỷ nhé, anh là người đã theo dõi em từ lâu rồi, quan tâm em và thêm nữa anh đã yêu em một cách chân thành…”\n\n(Sến quá. Xoá.)')));
+          file(box, 'anh-chup-vo.jpg', () => open('Thùng rác/anh-chup-vo.jpg', (b2) => text(b2, '(Ảnh nhoè, chỉ thấy một ngón tay to đùng che ống kính.)')));
+          file(box, 'mat-khau-do-an.txt', () => open('Thùng rác/mat-khau-do-an.txt', (b2) => text(b2, 'Mật khẩu thư mục Đồ án:\nVĂN + SÓNG\n(viết liền, không dấu)')));
+        }),
+        project: () => {
+          if (S.done.dir) { open('C:/Đồ án/robot_v2/so-do-chip.txt', (box) => text(box, 'Robot chưa chạy: thiếu 4 chip.\nỔ 1: tam giác đỏ\nỔ 2: tròn xanh dương\nỔ 3: vuông vàng\nỔ 4: ngôi sao xanh lá\nLắp đủ, robot sẽ đọc mật mã.')); return; }
+          open('C:/Đồ án 🔒', (box) => {
+            box.insertAdjacentHTML('beforeend', '<div class="pwrow"><input type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Mật khẩu thư mục" /><button type="button">Mở</button></div>');
+            const inp = box.querySelector('input');
+            const tryOpen = () => {
+              if (norm(inp.value) === 'vansong') {
+                S.done.dir = true;
+                save();
+                render();
+                TV.sfx.click();
+                SHOW.project();
+                for (const x of icons.children) if (x.dataset.id === 'project') x.querySelector('i').className = '';
+                return;
+              }
+              wrong(inp);
+              inp.value = '';
+              inp.placeholder = 'Sai mật khẩu';
+            };
+            box.querySelector('button').addEventListener('click', tryOpen);
+            inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryOpen(); });
+          });
+        },
+      };
+      for (const [id, name, cls] of ICONS) {
         const b = document.createElement('button');
         b.type = 'button';
-        b.innerHTML = '<i class="' + (name === 'Thùng rác' ? 'bin' : '') + '"></i>' + name;
-        b.addEventListener('click', () => {
-          TV.sfx.click();
-          for (const x of icons.children) x.classList.toggle('on', x === b);
-          win2.hidden = false;
-          win2.innerHTML = '<div class="path"></div>' + (f.html || '');
-          win2.querySelector('.path').textContent = f.path;
-          if (f.text) win2.appendChild(document.createTextNode(f.text));
-        });
+        b.dataset.id = id;
+        b.innerHTML = '<i class="' + (id === 'project' && S.done.dir ? '' : cls) + '"></i>';
+        b.appendChild(document.createTextNode(name));
+        b.addEventListener('click', () => { TV.sfx.click(); for (const x of icons.children) x.classList.toggle('on', x === b); SHOW[id](); });
         icons.appendChild(b);
       }
     });
@@ -623,7 +665,8 @@
       [S.items.note1 && S.items.note2, 'Mẩu giấy: tám mươi, chín mươi cây số. Sóng ở giữa.', d.radio],
       [d.radio, 'Radio đọc một câu lộn xộn. Xếp lại.', d.words],
       [S.seen.D, 'Băng 04: mật mã điện thoại ở con robot.', d.robot],
-      [d.pc, 'Máy tính: sơ đồ chip trong thư mục Đồ án.', d.robot],
+      [d.pc, 'Máy tính: thư mục Đồ án bị khoá.', d.dir],
+      [d.dir, 'Đồ án: sơ đồ lắp chip cho robot.', d.robot],
       [d.robot, 'Robot đọc: 4 7 1 9.', d.phone],
       [d.phone, 'Điện thoại: sau tấm ảnh em vừa ghép.', S.items.E],
     ].filter((r) => r[0]);
@@ -705,6 +748,93 @@
   }
 
   document.querySelector('[data-obj="frame"] .frame-img').style.backgroundImage = 'url("' + PHOTO + '")';
+  // ===== Trailer: phim giới thiệu tự chạy bằng chính căn phòng (không lộ đáp án) =====
+  async function runTrailer() {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const room = $('room'), scene = $('scene');
+    room.classList.add('trailer');
+    const ov = document.createElement('div');
+    ov.className = 'tr-ov';
+    ov.innerHTML = '<div class="tr-black" id="tr-black"></div><div class="tr-bar t"></div><div class="tr-bar b"></div><div class="tr-card" id="tr-card"><h1></h1><p></p></div><div class="tr-flash" id="tr-flash"></div><button class="tr-start" id="tr-start" type="button"><b>▶</b>Xem trailer</button><div class="tr-end" id="tr-end" hidden><button type="button" id="tr-again">Xem lại</button><a href="../home/">Về nhà</a></div>';
+    room.appendChild(ov);
+    await new Promise((res) => $('tr-start').addEventListener('click', res, { once: true }));
+    $('tr-start').remove();
+    TV.audioOn();
+    // Nhạc trailer (nếu có file): assets/sound/trailer.mp3
+    const music = new Audio('../assets/sound/trailer.mp3');
+    music.volume = 0.8;
+    music.play().catch(() => {});
+    const black = (on) => $('tr-black').classList.toggle('on', on);
+    const card = async (h, p, ms, big) => {
+      const c = $('tr-card');
+      c.classList.toggle('big', !!big);
+      c.querySelector('h1').textContent = h || '';
+      c.querySelector('p').textContent = p || '';
+      c.classList.add('on');
+      await sleep(ms);
+      c.classList.remove('on');
+      await sleep(350);
+    };
+    const cam = (t, ms) => { scene.style.transition = 'transform ' + ms + 'ms cubic-bezier(.45, 0, .25, 1)'; scene.style.transform = t; };
+    const cut = async (fn) => { TV.sfx.glitch(); const f = $('tr-flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); await sleep(90); fn(); render(); };
+    const go = (r) => { S.room = r; };
+
+    black(true);
+    await sleep(600);
+    await card('Có một cuộn băng', '', 2200);
+    await card('đang chờ em.', '', 1800);
+    go('r1'); S.lamp = false; render();
+    cam('scale(1.3) translate(6%, 4%)', 0);
+    await sleep(50);
+    black(false);
+    cam('scale(1.12) translate(2%, 1%)', 3600);
+    await sleep(1600);
+    TV.sfx.click(); S.lamp = true; render();
+    await sleep(1600);
+    await card('Năm cuộn băng.', '', 1500);
+    Object.assign(S.items, { A: true, B: true, C: true, D: true }); // cuộn thứ năm để người xem tự tò mò
+    render(); $('bag').hidden = false;
+    await sleep(1600);
+    await card('Chỉ một cuộn là thật.', '', 1700);
+    $('bag').hidden = true;
+    await cut(() => { go('r2'); cam('scale(1.25) translate(-8%, 2%)', 0); });
+    await sleep(60);
+    cam('scale(1.25) translate(-18%, 2%)', 3200);
+    await sleep(1800);
+    TV.sfx.click(); S.done.robot = true; render();
+    await sleep(1400);
+    await cut(() => { go('r3'); cam('scale(1.05)', 0); });
+    await sleep(900);
+    S.items.key = true; S.done.gate = true; render(); TV.sfx.click();
+    cam('scale(1.3) translate(0, 6%)', 2600);
+    await sleep(1800);
+    S.done.words = true; render();
+    await sleep(1200);
+    await cut(() => { go('r1'); cam('scale(1.6) translate(14%, -8%)', 0); S.done.jig = true; });
+    await sleep(700);
+    await cut(() => { go('r2'); cam('scale(1.6) translate(6%, -10%)', 0); S.done.case = true; S.done.pillow = true; });
+    await sleep(700);
+    await cut(() => { go('r3'); cam('scale(1.9) translate(0, 14%)', 0); });
+    await sleep(1100);
+    await cut(() => { cam('scale(1.55) translate(0, 8%)', 0); });
+    await sleep(300);
+    await TV.tease();
+    black(true);
+    await sleep(400);
+    await card('Ba căn phòng.', '', 1100);
+    await card('Năm cuộn băng.', '', 1100);
+    await card('Một bí mật.', '', 1400);
+    await sleep(300);
+    await card('BĂNG SỐ 1', 'Hồi ức · Ngày thứ 100 · Sắp ra mắt', 4200, true);
+    const fade = setInterval(() => { music.volume = Math.max(0, music.volume - 0.05); if (!music.volume) { clearInterval(fade); music.pause(); } }, 120);
+    $('tr-card').querySelector('h1').textContent = 'BĂNG SỐ 1';
+    $('tr-card').querySelector('p').textContent = 'Hồi ức · Ngày thứ 100 · Sắp ra mắt';
+    $('tr-card').classList.add('on', 'big');
+    $('tr-end').hidden = false;
+    $('tr-again').addEventListener('click', () => location.reload());
+  }
+
   window.HoiUcRoom = { say, power };
   render();
+  if (TRAILER) runTrailer();
 })();

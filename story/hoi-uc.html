@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="hoi-uc.css?v=16" />
+  <link rel="stylesheet" href="hoi-uc.css?v=19" />
 </head>
 <body>
   <!-- Chương 17 (bản xem thử): một chiếc TV cổ trong phòng tối. Bấm công tắc thì TV bật lên kiểu đời cũ
@@ -43,7 +43,10 @@
       <div class="view v1" data-room="r1">
         <div class="wall" aria-hidden="true"></div>
         <div class="floor" aria-hidden="true"></div>
+        <div class="rug" aria-hidden="true"></div>
         <div class="lamp" aria-hidden="true"></div>
+        <div class="clock" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#F3E9D6" stroke="#6A4428" stroke-width="3" /><path d="M20 6v3M20 31v3M6 20h3M31 20h3" stroke="#6A4428" stroke-width="1.6" /><path class="hand-h" d="M20 20L20 11" stroke="#2B201A" stroke-width="2.2" stroke-linecap="round" /><path class="hand-m" d="M20 20L28 20" stroke="#2B201A" stroke-width="1.4" stroke-linecap="round" /><circle cx="20" cy="20" r="1.6" fill="#B5462F" /></svg></div>
+        <div class="plant p-living" aria-hidden="true"><svg viewBox="0 0 40 70"><path d="M20 44C10 34 4 24 6 12c8 4 12 14 14 32z" fill="#3E7A4E" /><path d="M20 44c10-10 16-22 14-34c-8 4-12 16-14 34z" fill="#4F8F5C" /><path d="M20 46C14 30 18 16 22 4c4 12 2 28-2 42z" fill="#5FA36B" /><path d="M9 46h22l-3 22H12z" fill="#3E5C76" /><rect x="7" y="44" width="26" height="5" rx="1.5" fill="#4F6F8C" /></svg></div>
         <button class="obj o-shelf" data-obj="shelf" type="button" aria-label="Giá sách">
           <svg viewBox="0 0 60 140" preserveAspectRatio="none" aria-hidden="true"><rect class="wood" x="2" y="2" width="56" height="136" rx="3" /><rect class="dk" x="7" y="7" width="46" height="126" /><rect class="wood" x="7" y="40" width="46" height="4" /><rect class="wood" x="7" y="78" width="46" height="4" /><rect class="wood" x="7" y="114" width="46" height="4" />
             <rect class="b1" x="10" y="16" width="6" height="24" /><rect class="b2" x="17" y="20" width="5" height="20" /><rect class="b3" x="23" y="14" width="7" height="26" /><rect class="b4" x="31" y="18" width="5" height="22" /><rect class="b2" x="40" y="22" width="9" height="18" transform="rotate(-12 44 40)" />
@@ -109,7 +112,10 @@
         <button class="obj o-board" data-obj="board" type="button" aria-label="Bảng ghim ảnh">
           <span class="board"><i class="pol p1"></i><i class="pol p2"></i><i class="pol p3"></i><i class="pol p4"></i></span>
         </button>
+        <div class="rug r2rug" aria-hidden="true"></div>
         <div class="desk" aria-hidden="true"></div>
+        <div class="mug" aria-hidden="true"><i class="steam s1"></i><i class="steam s2"></i></div>
+        <div class="sticky" aria-hidden="true"><i></i><i></i></div>
         <button class="obj o-pc" data-obj="pc" type="button" aria-label="Máy tính">
           <svg viewBox="0 0 70 50" aria-hidden="true"><rect class="dk" x="2" y="2" width="66" height="38" rx="3" /><rect class="pc-screen" x="5" y="5" width="60" height="32" rx="1" /><rect class="metal" x="31" y="40" width="8" height="5" /><rect class="metal" x="22" y="45" width="26" height="3" rx="1" /></svg>
         </button>
@@ -132,7 +138,7 @@
         <button class="obj o-case" data-obj="case" type="button" aria-label="Chiếc vali">
           <svg viewBox="0 0 60 70" aria-hidden="true"><path class="metal" d="M22 12V6h16v6h-3V9H25v3z" /><rect class="case-b" x="2" y="12" width="56" height="54" rx="6" /><rect class="case-s" x="2" y="30" width="56" height="4" /><rect class="metal" x="24" y="27" width="12" height="10" rx="2" /><circle class="dk" cx="12" cy="68" r="2" /><circle class="dk" cx="48" cy="68" r="2" /></svg>
         </button>
-        <div class="plant" aria-hidden="true"></div>
+        <div class="plant" aria-hidden="true"><svg viewBox="0 0 40 70"><path d="M20 44C10 34 4 24 6 12c8 4 12 14 14 32z" fill="#3E7A4E" /><path d="M20 44c10-10 16-22 14-34c-8 4-12 16-14 34z" fill="#4F8F5C" /><path d="M20 46C14 30 18 16 22 4c4 12 2 28-2 42z" fill="#5FA36B" /><path d="M20 46c-6-6-14-8-18-4c6 4 12 6 18 4z" fill="#356B44" /><path d="M20 46V30M20 40l-6-10M20 38l6-12" stroke="#2A5236" stroke-width="1" fill="none" /><path d="M9 46h22l-3 22H12z" fill="#B4673E" /><rect x="7" y="44" width="26" height="5" rx="1.5" fill="#C9784A" /></svg></div>
         <button class="door d-left" data-go="r1" type="button" aria-label="Về phòng khách"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg><span>Phòng khách</span></button>
         <button class="door d-right" data-go="r3" type="button" aria-label="Ra sân đình"><span>Ra đình</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
       </div>
@@ -140,10 +146,13 @@
       <!-- Sân đình -->
       <div class="view v3" data-room="r3" hidden>
         <div class="sky" aria-hidden="true"></div>
+        <div class="yard" aria-hidden="true"></div>
         <div class="dinh" aria-hidden="true">
-          <svg viewBox="0 0 200 90" preserveAspectRatio="none"><path class="roof" d="M4 42C30 40 50 30 60 18h80c10 12 30 22 56 24l-6 6H10z" /><path class="roof2" d="M0 40c8 4 14 2 18-4M200 40c-8 4-14 2-18-4" /><rect class="wall-d" x="22" y="48" width="156" height="34" /><rect class="col" x="40" y="48" width="6" height="34" /><rect class="col" x="97" y="48" width="6" height="34" /><rect class="col" x="154" y="48" width="6" height="34" /><rect class="step" x="10" y="82" width="180" height="4" /><rect class="step" x="4" y="86" width="192" height="4" /></svg>
+          <svg viewBox="0 0 200 90" preserveAspectRatio="none"><defs><pattern id="tiles" width="6" height="4" patternUnits="userSpaceOnUse"><path d="M0 4c1.5-3 4.5-3 6 0" fill="none" stroke="#2A1D17" stroke-width=".8" /></pattern></defs><path class="roof" d="M4 42C30 40 50 30 60 18h80c10 12 30 22 56 24l-6 6H10z" /><path d="M4 42C30 40 50 30 60 18h80c10 12 30 22 56 24l-6 6H10z" fill="url(#tiles)" /><path d="M58 18h84" stroke="#5A4034" stroke-width="2.4" /><circle cx="100" cy="14" r="3" fill="#C9A35B" /><path class="roof2" d="M0 40c8 4 14 2 18-4M200 40c-8 4-14 2-18-4" /><rect class="wall-d" x="22" y="48" width="156" height="34" /><rect class="col" x="40" y="48" width="6" height="34" /><rect class="col" x="97" y="48" width="6" height="34" /><rect class="col" x="154" y="48" width="6" height="34" /><rect class="step" x="10" y="82" width="180" height="4" /><rect class="step" x="4" y="86" width="192" height="4" /></svg>
         </div>
-        <div class="tree" aria-hidden="true"></div>
+        <div class="tree" aria-hidden="true"><svg viewBox="0 0 60 100" preserveAspectRatio="none"><path d="M26 98c2-20 0-40 4-58M32 98c0-18 4-36 0-56M20 98c6-10 6-20 8-30M40 98c-4-10-6-20-6-30" stroke="#3A2A1E" stroke-width="5" fill="none" /><path d="M30 60c-6 10-4 26-2 38M30 60c6 10 6 26 4 38" stroke="#2B2018" stroke-width="2" fill="none" /><ellipse cx="30" cy="30" rx="30" ry="26" fill="#1E2E22" /><ellipse cx="16" cy="36" rx="14" ry="12" fill="#22352A" /><ellipse cx="44" cy="34" rx="15" ry="12" fill="#1A2A1E" /></svg></div>
+        <div class="lan-deco l1" aria-hidden="true"></div><div class="lan-deco l2" aria-hidden="true"></div>
+        <div class="incense" aria-hidden="true"><svg viewBox="0 0 30 30"><path d="M4 14h22l-3 12H7z" fill="#8A6A3A" /><rect x="2" y="12" width="26" height="3" rx="1" fill="#A88448" /><path d="M11 12V3M15 12V1M19 12V4" stroke="#B5462F" stroke-width="1" /><circle cx="11" cy="3" r="1" fill="#FF8A4D" /><circle cx="15" cy="1" r="1" fill="#FF8A4D" /><circle cx="19" cy="4" r="1" fill="#FF8A4D" /></svg><i class="smoke"></i></div>
         <button class="obj o-lantern" data-obj="lantern" type="button" aria-label="Đèn lồng">
           <svg viewBox="0 0 30 50" aria-hidden="true"><path class="metal" d="M15 0v8" /><rect class="lan-top" x="7" y="8" width="16" height="4" rx="1" /><ellipse class="lan" cx="15" cy="26" rx="11" ry="14" /><rect class="lan-top" x="7" y="39" width="16" height="4" rx="1" /><path class="lan-t" d="M12 43l-1 6M15 43v7M18 43l1 6" /></svg>
         </button>
@@ -184,7 +193,7 @@
     <button class="link end-again" id="end-again" type="button">Xem lại</button>
   </section>
 
-  <script src="hoi-uc.js?v=11"></script>
-  <script src="hoi-uc-room.js?v=5"></script>
+  <script src="hoi-uc.js?v=12"></script>
+  <script src="hoi-uc-room.js?v=8"></script>
 </body>
 </html>

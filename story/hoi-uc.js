@@ -57,7 +57,9 @@
   // Server ở nhà (không phải workers.dev) thì ai cũng xem được để thử.
   // Mở bằng ?xem=anh một lần thì máy đó xem thử được luôn (máy anh Quang đang để tài khoản khác cũng vào được).
   try { if (/[?&]xem=anh\b/.test(location.search)) localStorage.setItem('lpn:tapePreview', '1'); } catch (e) { /* bỏ qua */ }
-  const LOCKED = location.hostname.endsWith('workers.dev') && (() => {
+  // Trailer (?trailer=1): đoạn phim tự chạy, ai cũng xem được, không chơi được và không lộ đáp án.
+  const TRAILER = /[?&]trailer=1\b/.test(location.search);
+  const LOCKED = !TRAILER && location.hostname.endsWith('workers.dev') && (() => {
     try { return localStorage.getItem('lpn:who') !== 'quang' && localStorage.getItem('lpn:tapePreview') !== '1'; } catch (e) { return true; }
   })();
 
@@ -310,8 +312,42 @@
     $('hint').classList.remove('out');
     busy = false;
   }
+  // Trailer: TV chập điện, bật lên nhiễu và chữ PLAY một thoáng rồi tắt.
+  async function tease() {
+    audioOn();
+    sfx.click();
+    sfx.zap(2);
+    const body = tv.querySelector('.tv-body');
+    body.classList.add('shake2');
+    $('static').classList.add('on');
+    await sleep(420);
+    $('static').classList.remove('on');
+    await sleep(600);
+    sfx.click();
+    tv.classList.add('on');
+    sfx.on();
+    $('crt-line').classList.remove('off');
+    $('crt-line').classList.add('on');
+    $('static').classList.add('on');
+    await sleep(900);
+    $('static').classList.replace('on', 'soft');
+    $('osd').hidden = false;
+    $('osd').querySelector('.osd-ch').textContent = 'CH 06';
+    $('osd-date').textContent = '13.11.2026';
+    $('osd-tc').textContent = '00:00:00';
+    await sleep(2000);
+    sfx.off();
+    $('osd').hidden = true;
+    $('static').classList.remove('soft', 'on');
+    $('crt-line').classList.remove('on');
+    void $('crt-line').offsetWidth;
+    $('crt-line').classList.add('off');
+    await sleep(800);
+    tv.classList.remove('on');
+  }
   // Phần căn phòng gọi vào đây (hoi-uc-room.js).
   window.HoiUc = {
+    trailer: TRAILER, tease,
     sfx, audioOn, playFake,
     busy: () => busy || started,
     armReal(on) { realIn = on; if (on) $('hint').textContent = HINTS[presses] || HINTS[0]; },

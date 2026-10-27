@@ -59,6 +59,35 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .glow { animation: glow 1.6s ease-in-out infinite; }
 @keyframes glow { 50% { filter: drop-shadow(0 0 6px rgba(255, 214, 140, .95)) brightness(1.25); } }
 
+/* Chi tiết trang trí */
+.v1 .wall { background: radial-gradient(70% 90% at 24% 40%, rgba(255, 190, 110, .08), rgba(0, 0, 0, 0) 60%), repeating-linear-gradient(90deg, rgba(255, 255, 255, .018) 0 2px, rgba(0, 0, 0, 0) 2px 34px), linear-gradient(180deg, #1B1520, #120E17); }
+.wall::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2.4%; background: linear-gradient(180deg, #3B2616, #2A1A0E); }
+.rug { position: absolute; left: 30%; top: 74%; width: 40%; height: 16%; border-radius: 50%; background: radial-gradient(closest-side, #6B3A4A, #4E2836 70%, #3A1E28); box-shadow: inset 0 0 0 4px rgba(233, 199, 123, .25), inset 0 0 0 9px rgba(0, 0, 0, .15); opacity: .85; }
+.r2rug { left: 40%; top: 78%; width: 34%; height: 14%; background: radial-gradient(closest-side, #2E3E5A, #233048 70%, #1A2336); box-shadow: inset 0 0 0 4px rgba(158, 201, 255, .18); }
+.clock { position: absolute; left: 19.5%; top: 9%; width: 6.5%; aspect-ratio: 1; }
+.clock svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .5)); }
+.hand-m { transform-origin: 20px 20px; animation: tick 60s steps(60) infinite; }
+@keyframes tick { to { transform: rotate(360deg); } }
+.p-living { left: 75%; top: 52%; width: 6%; height: 26%; }
+.mug { position: absolute; left: 81.5%; top: 47.6%; width: 2.2%; height: 4.4%; border-radius: 0 0 3px 3px; background: #E9DCC4; box-shadow: 4px 2px 0 -1px transparent; }
+.mug::after { content: ''; position: absolute; right: -40%; top: 20%; width: 45%; height: 45%; border: 2px solid #E9DCC4; border-left: 0; border-radius: 0 50% 50% 0; }
+.steam { position: absolute; bottom: 100%; width: 2px; height: 140%; border-radius: 2px; background: linear-gradient(transparent, rgba(255, 255, 255, .35)); animation: steam 2.4s ease-in-out infinite; }
+.steam.s1 { left: 30%; } .steam.s2 { left: 62%; animation-delay: 1.2s; }
+@keyframes steam { 0% { opacity: 0; transform: translateY(4px) scaleY(.6); } 50% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px) scaleY(1.1) skewX(10deg); } }
+.sticky { position: absolute; left: 75.5%; top: 24.5%; width: 3%; height: 5%; pointer-events: none; z-index: 4; }
+.sticky i { position: absolute; width: 100%; height: 100%; background: #F6E27A; box-shadow: 0 1px 2px rgba(0, 0, 0, .4); }
+.sticky i:last-child { left: 40%; top: 70%; transform: rotate(8deg); background: #F7A8B8; }
+.yard { position: absolute; left: 0; right: 0; top: 60%; bottom: 0; background: repeating-linear-gradient(90deg, rgba(0, 0, 0, .25) 0 1px, transparent 1px 8%), repeating-linear-gradient(0deg, rgba(0, 0, 0, .25) 0 1px, transparent 1px 22%), linear-gradient(180deg, #3A322A, #221C16); }
+.lan-deco { position: absolute; top: 36%; width: 2.6%; height: 7%; border-radius: 45%; background: #6A2A22; box-shadow: 0 -10px 0 -6px #2B1A12; }
+.lan-deco::before { content: ''; position: absolute; left: 50%; bottom: 100%; width: 1px; height: 60%; background: #9BA7B4; }
+.lan-deco.l1 { left: 24%; } .lan-deco.l2 { left: 73.4%; }
+.v3 .o-lantern.lit ~ .lan-deco, .v3.lit2 .lan-deco { background: #FF6A3D; box-shadow: 0 0 12px rgba(255, 120, 60, .8); }
+.incense { position: absolute; left: 46.5%; top: 74%; width: 7%; height: 12%; }
+.incense svg { width: 100%; height: 100%; display: block; }
+.smoke { position: absolute; left: 48%; bottom: 100%; width: 3px; height: 70%; background: linear-gradient(transparent, rgba(220, 220, 230, .3)); animation: steam 3.2s ease-in-out infinite; }
+.tree { position: absolute; left: -3%; top: 2%; width: 22%; height: 70%; }
+.tree svg { width: 100%; height: 100%; display: block; }
+
 /* Phòng khách */
 .o-shelf { left: 2%; top: 9%; width: 13%; height: 62%; }
 .o-lamp { left: 18.5%; top: 37%; width: 10%; height: 34%; z-index: 7; }
@@ -140,7 +169,8 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .pcb { position: absolute; left: 77%; top: 50.4%; width: 6%; height: 2.4%; }
 .iron { position: absolute; left: 84%; top: 44.5%; width: 3.6%; height: 8%; }
 .cable { position: absolute; left: 54%; top: 51%; width: 9%; height: 6%; border: 2px solid #2B2F36; border-top: 0; border-radius: 0 0 50% 50%; }
-.plant { position: absolute; left: 89%; top: 54%; width: 7%; height: 32%; background: radial-gradient(60% 40% at 50% 30%, #2E5A3A 60%, transparent 62%), linear-gradient(90deg, transparent 30%, #6B4E35 30% 70%, transparent 70%) 0 100% / 100% 34% no-repeat; }
+.plant { position: absolute; left: 89%; top: 52%; width: 8%; height: 34%; }
+.plant svg { width: 100%; height: 100%; display: block; }
 
 /* Sân đình (đêm) */
 .v3 { background: linear-gradient(180deg, #0D1226, #16182B 60%, #1E1A16 60.5%, #120F0C); }
@@ -148,7 +178,6 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .dinh { position: absolute; left: 18%; top: 22%; width: 64%; height: 46%; }
 .dinh svg { width: 100%; height: 100%; display: block; }
 .roof { fill: #3A2A22; } .roof2 { fill: none; stroke: #3A2A22; stroke-width: 3; } .wall-d { fill: #4A3A2E; } .col { fill: #6A3A28; } .step { fill: #5A4E44; }
-.tree { position: absolute; left: -2%; top: 4%; width: 22%; height: 66%; background: radial-gradient(60% 45% at 50% 34%, #1E2A1E 60%, transparent 62%), linear-gradient(90deg, transparent 44%, #2B2018 44% 56%, transparent 56%) 0 60% / 100% 40% no-repeat; }
 .o-lantern { left: 47%; top: 26%; width: 5%; height: 15%; z-index: 3; }
 .lan { fill: #4A2420; transition: fill .8s, filter .8s; } .lan-top { fill: #2B1A12; } .lan-t { stroke: #B5462F; stroke-width: 1.2; fill: none; }
 .o-lantern.lit .lan { fill: #FF6A3D; filter: drop-shadow(0 0 10px rgba(255, 120, 60, .9)); }
@@ -231,11 +260,18 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .symlock { display: flex; justify-content: center; gap: 8px; margin: 6px 0 12px; }
 .symlock button { width: 54px; height: 64px; border: 0; border-radius: 10px; background: #2B201A; color: #F3E9D6; font-size: 28px; }
 .radio-ui { margin: 4px 0 10px; }
-.radio-ui .freq { text-align: center; font: 700 30px ui-monospace, Menlo, monospace; color: #2B201A; }
-.radio-ui input { width: 100%; accent-color: #B5462F; }
-.radio-ui .bars { display: flex; gap: 4px; justify-content: center; align-items: flex-end; height: 26px; margin: 6px 0; }
-.radio-ui .bars i { width: 8px; border-radius: 2px; background: #CDB89A; }
+.dialrow { display: flex; align-items: center; justify-content: center; gap: 14px; }
+.radio-ui .freq { font: 700 30px ui-monospace, Menlo, monospace; color: #2B201A; }
+.radio-ui .bars { display: flex; gap: 4px; align-items: flex-end; height: 28px; pointer-events: none; }
+.radio-ui .bars i { width: 7px; border-radius: 2px; background: #CDB89A; }
 .radio-ui .bars i.on { background: #4F7A4A; }
+.dial { position: relative; margin: 10px 0 6px; padding: 8px 12px 6px; border-radius: 10px; background: linear-gradient(180deg, #F3D9A0, #E2C27E); box-shadow: inset 0 0 0 3px #6A4428, inset 0 6px 10px rgba(0, 0, 0, .15); }
+.scale { display: flex; justify-content: space-between; height: 30px; padding: 0 2px; background: repeating-linear-gradient(90deg, #6A4428 0 1px, transparent 1px 2.5%) 0 0 / 100% 10px no-repeat; font: 700 11px ui-monospace, monospace; color: #4A3020; align-items: flex-end; }
+.dial input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0 12px; background: none; -webkit-appearance: none; appearance: none; cursor: pointer; }
+.dial input::-webkit-slider-runnable-track { height: 100%; background: transparent; }
+.dial input::-moz-range-track { height: 100%; background: transparent; }
+.dial input::-webkit-slider-thumb { -webkit-appearance: none; width: 6px; height: 46px; margin-top: 0; border-radius: 3px; background: #C23A3A; box-shadow: 0 0 0 1px #7A1E1E, 0 0 8px rgba(194, 58, 58, .6); }
+.dial input::-moz-range-thumb { width: 6px; height: 46px; border: 0; border-radius: 3px; background: #C23A3A; }
 .tiles { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
 .tiles button { padding: 8px 12px; border: 1px solid #CDB89A; border-radius: 8px; background: #FFF8EC; color: #3A2B22; font: 600 14px 'Be Vietnam Pro', sans-serif; }
 .tiles button.used { opacity: .25; pointer-events: none; }
@@ -257,6 +293,13 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .icons button i { display: block; margin: 0 auto 4px; width: 34px; height: 26px; border-radius: 3px; background: #E9C77B; }
 .icons button i.txt { width: 24px; height: 30px; background: #F3F6FA; }
 .icons button i.bin { width: 24px; height: 30px; border-radius: 2px 2px 6px 6px; background: #9BA7B4; }
+.icons button i.lock { position: relative; background: #9BA7B4; }
+.icons button i.lock::after { content: '🔒'; position: absolute; right: -8px; bottom: -6px; font-size: 14px; }
+.win .file { display: block; width: 100%; margin: 4px 0; padding: 8px 10px; border: 0; border-radius: 6px; background: rgba(255, 255, 255, .08); color: #E6F0FA; font: 600 13px ui-monospace, Menlo, monospace; text-align: left; }
+.win { max-height: 46vh; overflow-y: auto; }
+.pwrow { display: flex; gap: 8px; margin-top: 6px; }
+.pwrow input { flex: 1; min-width: 0; padding: 9px 12px; border: 1px solid #9EC9FF; border-radius: 8px; background: rgba(0, 0, 0, .3); color: #E6F0FA; font: 600 16px 'Be Vietnam Pro', sans-serif; }
+.pwrow button { padding: 0 16px; border: 0; border-radius: 8px; background: #9EC9FF; color: #0E1F33; font: 700 14px 'Be Vietnam Pro', sans-serif; }
 .win { margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: rgba(5, 12, 22, .65); white-space: pre-line; line-height: 1.55; }
 .win .path { margin-bottom: 6px; font-size: 11px; color: #9EC9FF; }
 .thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
@@ -432,3 +475,27 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
   .tv { transition-duration: .4s; }
   .kb .fg, .crt-content.glitch, .tv.on .crt-scan, .phone-ic { animation: none; }
 }
+
+/* ===== Trailer ===== */
+.room.trailer .scene { pointer-events: none; transform-origin: 50% 50%; }
+.room.trailer .hint, .room.trailer .bag-btn, .room.trailer .door { opacity: 0 !important; }
+.room.trailer .bag { left: 50%; bottom: 14%; transform: translateX(-50%); }
+.tr-ov { position: fixed; inset: 0; z-index: 40; pointer-events: none; }
+.tr-ov button, .tr-ov a { pointer-events: auto; }
+.tr-black { position: absolute; inset: 0; background: #050407; opacity: 0; transition: opacity .6s; }
+.tr-black.on { opacity: 1; }
+.tr-bar { position: absolute; left: 0; right: 0; height: 9%; background: #000; }
+.tr-bar.t { top: 0; } .tr-bar.b { bottom: 0; }
+.tr-card { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; opacity: 0; transform: scale(1.04); transition: opacity .45s, transform 1.6s ease-out; }
+.tr-card.on { opacity: 1; transform: none; }
+.tr-card h1 { margin: 0; font: 600 clamp(22px, 5vw, 46px) 'Fraunces', serif; color: #F6EEDF; letter-spacing: .02em; text-shadow: 0 0 30px rgba(233, 199, 123, .35); }
+.tr-card p { margin: 0; font: 500 clamp(12px, 2vw, 17px) 'Be Vietnam Pro', sans-serif; letter-spacing: .18em; text-transform: uppercase; color: rgba(246, 238, 223, .7); }
+.tr-card.big h1 { font: 700 clamp(40px, 10vw, 96px) 'Dancing Script', cursive; color: var(--gold); letter-spacing: 0; animation: tr-flicker 2.4s steps(1) 1; }
+@keyframes tr-flicker { 0%, 8%, 12%, 30% { opacity: 1; } 6%, 10%, 28% { opacity: .2; } }
+.tr-flash { position: absolute; inset: 0; background: #fff; opacity: 0; mix-blend-mode: screen; }
+.tr-flash.go { animation: tr-flash .35s ease-out; }
+@keyframes tr-flash { 0% { opacity: .55; } 100% { opacity: 0; } }
+.tr-start { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 12px; padding: 16px 30px; border: 0; border-radius: 999px; background: #F6EEDF; color: #2B1A12; font: 700 18px 'Be Vietnam Pro', sans-serif; box-shadow: 0 0 40px rgba(246, 238, 223, .25); }
+.tr-start b { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #2B1A12; color: #F6EEDF; font-size: 14px; }
+.tr-end { position: absolute; left: 0; right: 0; bottom: 14%; display: flex; justify-content: center; gap: 12px; }
+.tr-end button, .tr-end a { padding: 10px 22px; border: 1px solid rgba(246, 238, 223, .35); border-radius: 999px; background: rgba(20, 15, 22, .7); color: var(--cream); font: 600 14px 'Be Vietnam Pro', sans-serif; text-decoration: none; }
