@@ -188,7 +188,13 @@
     },
 
     // Kéo bản sao lưu về, gộp với máy, rồi đẩy bản gộp lên. Trả về { ok, changed }.
-    async merge() {
+    // Xếp hàng: hai lần gộp chạy chồng nhau (vừa mở trang vừa chơi xong ván) có thể cộng phần chênh hai lần.
+    merge() {
+      const run = () => this.mergeNow();
+      this.queue = (this.queue || Promise.resolve()).then(run, run);
+      return this.queue;
+    },
+    async mergeNow() {
       if (PREVIEW || !this.who) return { ok: false };
       let remote;
       try {
