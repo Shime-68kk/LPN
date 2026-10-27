@@ -253,6 +253,64 @@
     for (const id of ['end-1', 'end-2', 'end-go', 'end-again']) { await sleep(1300); $(id).classList.add('on'); }
   }
 
+  // ===== Băng giả (hoi-uc-room.js): TV bật nhanh, tiến sát màn hình, gõ từng câu manh mối rồi tắt, nhả băng =====
+  let busy = false, realIn = false;
+  async function playFake(tape) {
+    if (busy || started) return;
+    busy = true;
+    audioOn();
+    sfx.click();
+    $('hint').classList.add('out');
+    await sleep(220);
+    tv.classList.add('on');
+    $('room').classList.add('watching');
+    zoom(true);
+    sfx.on();
+    $('crt-line').classList.remove('off');
+    $('crt-line').classList.add('on');
+    $('static').classList.add('on');
+    await sleep(1700);
+    $('static').classList.replace('on', 'soft');
+    $('osd').hidden = false;
+    $('osd').querySelector('.osd-ch').textContent = tape.ch;
+    $('osd-date').textContent = tape.date || '';
+    $('osd-tc').textContent = '00:00:00';
+    const box = document.createElement('div');
+    box.className = 'fake';
+    content.appendChild(box);
+    for (const line of tape.lines) {
+      for (const p of box.querySelectorAll('p')) p.classList.add('old');
+      const el = document.createElement('p');
+      box.appendChild(el);
+      if (line === '…') { sfx.glitch(); $('static').classList.replace('soft', 'on'); await sleep(500); $('static').classList.replace('on', 'soft'); el.remove(); continue; }
+      for (const ch of line) { el.textContent += ch; await sleep(34); }
+      await sleep(1500 + line.length * 22);
+    }
+    await sleep(1200);
+    sfx.off();
+    $('osd').hidden = true;
+    content.classList.add('squash');
+    $('static').classList.remove('soft', 'on');
+    $('crt-line').classList.remove('on');
+    void $('crt-line').offsetWidth;
+    $('crt-line').classList.add('off');
+    await sleep(800);
+    tv.classList.remove('on');
+    content.classList.remove('squash');
+    content.innerHTML = '';
+    zoom(false);
+    await sleep(1500);
+    $('room').classList.remove('watching');
+    $('hint').classList.remove('out');
+    busy = false;
+  }
+  // Phần căn phòng gọi vào đây (hoi-uc-room.js).
+  window.HoiUc = {
+    sfx, audioOn, playFake,
+    busy: () => busy || started,
+    armReal(on) { realIn = on; if (on) $('hint').textContent = HINTS[presses] || HINTS[0]; },
+  };
+
   // TV cũ "dở chứng": hai lần đầu bấm chỉ rung, chập chờn rồi tắt; lần thứ ba mới chịu lên.
   let presses = 0, failing = false;
   const HINTS = ['Bấm công tắc để bật', 'Ơ… chưa lên. Bấm lại thử?', 'Sắp được rồi, bấm thêm lần nữa!'];
@@ -283,7 +341,13 @@
     failing = false;
   }
   $('power').addEventListener('click', () => {
-    if (started || failing) return;
+    if (started || failing || busy) return;
+    if (!realIn) {
+      audioOn();
+      sfx.click();
+      if (window.HoiUcRoom) window.HoiUcRoom.say('Máy chưa có băng. Bấm cũng chẳng lên đâu.');
+      return;
+    }
     presses++;
     if (presses < 3) { sputter(presses); return; }
     const body = tv.querySelector('.tv-body');

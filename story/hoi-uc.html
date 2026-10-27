@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="hoi-uc.css?v=8" />
+  <link rel="stylesheet" href="hoi-uc.css?v=12" />
 </head>
 <body>
   <!-- Chương 17 (bản xem thử): một chiếc TV cổ trong phòng tối. Bấm công tắc thì TV bật lên kiểu đời cũ
@@ -34,36 +34,94 @@
     <button class="link" id="btn-portrait" type="button">Xem dọc cũng được</button>
   </section>
 
-  <!-- Phòng tối và chiếc TV -->
+  <!-- Phòng tối và chiếc TV. Trước khi xem phải tìm đúng cuộn băng (hoi-uc-room.js):
+       5 cuộn, 1 cuộn thật; mỗi cuộn giả chiếu một đoạn chữ chỉ đường tới cuộn sau. -->
   <section class="room" id="room" hidden>
-    <div class="lamp" aria-hidden="true"></div>
-    <div class="tv" id="tv">
-      <div class="tv-body">
-        <div class="tv-screen" id="screen">
-          <div class="crt-content" id="content"></div>
-          <canvas class="crt-static" id="static" aria-hidden="true"></canvas>
-          <div class="crt-line" id="crt-line" aria-hidden="true"></div>
-          <div class="osd" id="osd" hidden aria-hidden="true">
-            <span class="osd-play"><b>▶</b> PLAY</span>
-            <span class="osd-ch">CH 06</span>
-            <span class="osd-tc" id="osd-tc">00:00:00</span>
-            <span class="osd-date" id="osd-date"></span>
+    <div class="scene" id="scene">
+      <div class="wall" aria-hidden="true"></div>
+      <div class="floor" aria-hidden="true"></div>
+      <div class="lamp" aria-hidden="true"></div>
+
+      <button class="obj o-shelf" data-obj="shelf" type="button" aria-label="Giá sách">
+        <svg viewBox="0 0 60 140" preserveAspectRatio="none" aria-hidden="true"><rect class="wood" x="2" y="2" width="56" height="136" rx="3" /><rect class="dk" x="7" y="7" width="46" height="126" /><rect class="wood" x="7" y="40" width="46" height="4" /><rect class="wood" x="7" y="78" width="46" height="4" /><rect class="wood" x="7" y="114" width="46" height="4" />
+          <rect class="b1" x="10" y="16" width="6" height="24" /><rect class="b2" x="17" y="20" width="5" height="20" /><rect class="b3" x="23" y="14" width="7" height="26" /><rect class="b4" x="31" y="18" width="5" height="22" /><rect class="b2" x="40" y="22" width="9" height="18" transform="rotate(-12 44 40)" />
+          <rect class="b3" x="10" y="52" width="8" height="26" /><rect class="b1" x="19" y="56" width="5" height="22" /><rect class="b4" x="25" y="54" width="6" height="24" /><rect class="b2" x="32" y="50" width="7" height="28" /><rect class="b1" x="40" y="58" width="5" height="20" />
+          <rect class="b4" x="10" y="92" width="5" height="22" /><rect class="b2" x="16" y="88" width="7" height="26" /><rect class="b3" x="24" y="94" width="5" height="20" /><rect class="b1" x="30" y="90" width="8" height="24" /></svg>
+      </button>
+      <button class="obj o-lamp" data-obj="lamp" type="button" aria-label="Đèn bàn">
+        <svg viewBox="0 0 60 110" aria-hidden="true"><path class="shade" d="M14 6h32l10 28H4z" /><rect class="metal" x="28" y="34" width="4" height="34" /><rect class="metal" x="18" y="66" width="24" height="5" rx="2" /><rect class="wood" x="2" y="72" width="56" height="6" rx="2" /><rect class="wood" x="8" y="78" width="5" height="32" /><rect class="wood" x="47" y="78" width="5" height="32" /></svg>
+      </button>
+      <button class="obj o-cal" data-obj="cal" type="button" aria-label="Tờ lịch">
+        <svg viewBox="0 0 40 50" aria-hidden="true"><rect class="paper" x="2" y="4" width="36" height="44" rx="2" /><rect class="red" x="2" y="4" width="36" height="10" rx="2" /><text x="20" y="12" class="cal-t">THÁNG 8</text><g class="grid"><rect x="7" y="18" width="4" height="3" /><rect x="14" y="18" width="4" height="3" /><rect x="21" y="18" width="4" height="3" /><rect x="28" y="18" width="4" height="3" /><rect x="7" y="25" width="4" height="3" /><rect x="14" y="25" width="4" height="3" /><rect x="28" y="25" width="4" height="3" /><rect x="7" y="32" width="4" height="3" /><rect x="14" y="32" width="4" height="3" /><rect x="21" y="32" width="4" height="3" /><rect x="28" y="32" width="4" height="3" /><rect x="7" y="39" width="4" height="3" /><rect x="14" y="39" width="4" height="3" /></g><circle class="ring" cx="23" cy="26.5" r="4.2" /></svg>
+      </button>
+      <button class="obj o-wardrobe" data-obj="wardrobe" type="button" aria-label="Tủ quần áo">
+        <svg viewBox="0 0 70 150" preserveAspectRatio="none" aria-hidden="true"><rect class="wood" x="2" y="2" width="66" height="146" rx="3" /><rect class="wood2" x="6" y="8" width="28" height="134" rx="2" /><rect class="wood2" x="36" y="8" width="28" height="134" rx="2" /><circle class="metal" cx="31" cy="76" r="2" /><circle class="metal" cx="39" cy="76" r="2" /></svg>
+      </button>
+      <button class="obj o-tapeA" data-obj="tapeA" type="button" aria-label="Cuộn băng trên nóc tủ">
+        <svg viewBox="0 0 40 24" aria-hidden="true"><rect class="tape-b" x="1" y="1" width="38" height="22" rx="3" /><rect class="tape-l" x="5" y="4" width="30" height="6" rx="1" /><circle class="tape-r" cx="13" cy="16" r="3.5" /><circle class="tape-r" cx="27" cy="16" r="3.5" /></svg>
+      </button>
+      <button class="obj o-case" data-obj="case" type="button" aria-label="Chiếc vali">
+        <svg viewBox="0 0 60 70" aria-hidden="true"><path class="metal" d="M22 12V6h16v6h-3V9H25v3z" /><rect class="case-b" x="2" y="12" width="56" height="54" rx="6" /><rect class="case-s" x="2" y="30" width="56" height="4" /><rect class="metal" x="24" y="27" width="12" height="10" rx="2" /><circle class="dk" cx="12" cy="68" r="2" /><circle class="dk" cx="48" cy="68" r="2" /></svg>
+      </button>
+      <div class="bed" aria-hidden="true"></div>
+      <button class="obj o-pillow" data-obj="pillow" type="button" aria-label="Cái gối">
+        <svg viewBox="0 0 70 34" aria-hidden="true"><path class="pillow" d="M6 8C10 2 60 2 64 8c4 6 4 12 0 18c-4 6-54 6-58 0C2 20 2 14 6 8z" /><path class="pillow-l" d="M12 12c10 3 36 3 46 0" /></svg>
+      </button>
+
+      <div class="cabinet" aria-hidden="true"></div>
+      <button class="obj o-vase" data-obj="vase" type="button" aria-label="Bình hoa sen">
+        <svg viewBox="0 0 50 90" aria-hidden="true"><g class="stems"><path d="M25 55V20M25 55L14 26M25 55l11-29M25 55L8 36M25 55l17-19M25 55L19 16M25 55l6-39" /></g><g class="lotus"><circle cx="25" cy="18" r="5" /><circle cx="14" cy="24" r="5" /><circle cx="36" cy="24" r="5" /><circle cx="8" cy="34" r="4.5" /><circle cx="42" cy="34" r="4.5" /><circle cx="19" cy="13" r="4" /><circle cx="31" cy="13" r="4" /></g><path class="vase" d="M14 52h22l-3 8c6 6 6 24-4 28H21c-10-4-10-22-4-28z" /></svg>
+      </button>
+      <button class="obj o-phone" data-obj="phone" type="button" aria-label="Điện thoại">
+        <svg viewBox="0 0 30 16" aria-hidden="true"><rect class="dk" x="1" y="1" width="28" height="14" rx="3" /><rect class="screen-ph" x="4" y="3" width="22" height="10" rx="1" /></svg>
+      </button>
+      <button class="obj o-note" data-obj="note" type="button" aria-label="Mẩu giấy" hidden>
+        <svg viewBox="0 0 30 22" aria-hidden="true"><path class="paper" d="M2 3l25-1 1 17-26 2z" /><path class="ink" d="M6 8h16M6 12h13M6 16h9" /></svg>
+      </button>
+      <button class="obj o-vcr" data-obj="vcr" type="button" aria-label="Đầu băng">
+        <span class="vcr-slot"></span><span class="vcr-label" id="vcr-label"></span><i class="vcr-led" id="vcr-led"></i>
+      </button>
+
+      <div class="dark" id="dark" aria-hidden="true"></div>
+
+        <div class="tv" id="tv">
+          <div class="tv-body">
+            <div class="tv-screen" id="screen">
+              <div class="crt-content" id="content"></div>
+              <canvas class="crt-static" id="static" aria-hidden="true"></canvas>
+              <div class="crt-line" id="crt-line" aria-hidden="true"></div>
+              <div class="osd" id="osd" hidden aria-hidden="true">
+                <span class="osd-play"><b>▶</b> PLAY</span>
+                <span class="osd-ch">CH 06</span>
+                <span class="osd-tc" id="osd-tc">00:00:00</span>
+                <span class="osd-date" id="osd-date"></span>
+              </div>
+              <div class="crt-scan" aria-hidden="true"></div>
+              <div class="crt-glass" aria-hidden="true"></div>
+            </div>
+            <div class="tv-panel">
+              <span class="tv-brand">Hồi ức</span>
+              <i class="knob k1" aria-hidden="true"></i>
+              <i class="knob k2" aria-hidden="true"></i>
+              <span class="speaker" aria-hidden="true"></span>
+              <button class="power" id="power" type="button" aria-label="Bật TV"><i class="led" id="led"></i></button>
+            </div>
           </div>
-          <div class="crt-scan" aria-hidden="true"></div>
-          <div class="crt-glass" aria-hidden="true"></div>
+          <i class="leg l1" aria-hidden="true"></i><i class="leg l2" aria-hidden="true"></i>
         </div>
-        <div class="tv-panel">
-          <span class="tv-brand">Hồi ức</span>
-          <i class="knob k1" aria-hidden="true"></i>
-          <i class="knob k2" aria-hidden="true"></i>
-          <span class="speaker" aria-hidden="true"></span>
-          <button class="power" id="power" type="button" aria-label="Bật TV"><i class="led" id="led"></i></button>
-        </div>
-      </div>
-      <i class="leg l1" aria-hidden="true"></i><i class="leg l2" aria-hidden="true"></i>
     </div>
     <p class="hint" id="hint">Bấm công tắc để bật</p>
+    <div class="inv" id="inv" aria-label="Đồ đã nhặt"></div>
   </section>
+
+  <!-- Nhìn gần một đồ vật: chữ, khoá số, chọn sách… -->
+  <div class="look" id="look" role="dialog" aria-modal="true" aria-labelledby="look-title" hidden>
+    <div class="look-card">
+      <h2 id="look-title"></h2>
+      <div class="look-body" id="look-body"></div>
+      <button class="link look-close" id="look-close" type="button">Đóng</button>
+    </div>
+  </div>
 
   <!-- Kết -->
   <section class="end" id="end" hidden>
@@ -73,6 +131,7 @@
     <button class="link end-again" id="end-again" type="button">Xem lại</button>
   </section>
 
-  <script src="hoi-uc.js?v=8"></script>
+  <script src="hoi-uc.js?v=9"></script>
+  <script src="hoi-uc-room.js?v=1"></script>
 </body>
 </html>
