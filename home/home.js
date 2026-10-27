@@ -2,12 +2,15 @@
 'use strict';
 (() => {
   // ================= Cấu hình =================
-  const NAME = 'Thủy';
+  // Máy của anh Quang (chọn ở màn khoá) thì chào Quang và đảo hai chỗ thời tiết; còn lại là máy của Thủy.
+  const IS_QUANG = (() => { try { return localStorage.getItem('lpn:who') === 'quang'; } catch (e) { return false; } })();
+  const NAME = IS_QUANG ? 'Quang' : 'Thủy';
   const ANNIVERSARY = '2026-08-06T23:38:58';
-  // Em ở Thái Nguyên: dùng khi máy chưa cho phép lấy vị trí.
-  const DEFAULT_LOC = { lat: 21.5942, lon: 105.8482, name: 'Thái Nguyên' };
-  // Anh ở Hà Nội: hiện thêm trong bảng thời tiết.
-  const PARTNER_LOC = { lat: 21.0285, lon: 105.8542, name: 'Hà Nội' };
+  // Em ở Thái Nguyên, anh ở Hà Nội. Chỗ mình dùng khi máy chưa cho phép lấy vị trí; chỗ người kia hiện thêm trong bảng thời tiết.
+  const THAI_NGUYEN = { lat: 21.5942, lon: 105.8482, name: 'Thái Nguyên' };
+  const HA_NOI = { lat: 21.0285, lon: 105.8542, name: 'Hà Nội' };
+  const DEFAULT_LOC = IS_QUANG ? HA_NOI : THAI_NGUYEN;
+  const PARTNER_LOC = IS_QUANG ? THAI_NGUYEN : HA_NOI;
   const WEATHER_TTL = 20 * 60 * 1000;
   const SONG_FOR = { binhminh: 'lo-say-bye', nang: 'noi-nay-co-anh', may: 'ai-ngoai-anh', mua: 'missing-you', hoanghon: 'in-love', dem: 'anh-la-ai' };
   const SKY_COLOR = { binhminh: '#FFE3D3', nang: '#BFE4FF', may: '#D5DBE9', mua: '#8D9AB5', hoanghon: '#FFB996', dem: '#29224E' };
@@ -149,7 +152,7 @@
       $('wx-temp').textContent = w.temp !== null ? w.temp + '°' : '--°';
       $('wx-label').textContent = w.label;
       $('wx-sun').textContent = w.rise ? 'Mặt trời mọc ' + hm(w.rise) + ' · lặn ' + hm(w.set) : 'Chưa lấy được thời tiết';
-      $('wx-place').textContent = store.get('lpn:loc') ? 'Theo vị trí hiện tại' : 'Chỗ em · ' + DEFAULT_LOC.name;
+      $('wx-place').textContent = store.get('lpn:loc') ? 'Theo vị trí hiện tại' : (IS_QUANG ? 'Chỗ anh · ' : 'Chỗ em · ') + DEFAULT_LOC.name;
       const p = this.partner;
       $('wx-partner').hidden = !p;
       if (p) {
@@ -309,7 +312,7 @@
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
           title: song.title,
-          artist: 'Dành cho ' + NAME,
+          artist: 'Dành cho Thủy',
           artwork: [{ src: new URL(song.cover, location.href).href, sizes: '160x160', type: 'image/webp' }],
         });
       }
@@ -754,6 +757,7 @@
     ? Object.assign(guessByClock(), { sky: window.LPN_SKY, night: !!window.LPN_NIGHT, label: window.LPN_NIGHT ? 'Buổi tối' : 'Hôm nay' })
     : guessByClock();
   Weather.apply();
+  document.querySelector('.wx-partner-tag').textContent = IS_QUANG ? 'Chỗ em' : 'Chỗ anh';
   fetch('../game/beatmaps/index.json')
     .then((r) => r.json())
     .then((d) => {
