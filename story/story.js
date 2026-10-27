@@ -385,8 +385,10 @@
         setNear(a + (b - a) * Math.min(1, P.talkK / Math.max(1, P.talkN)));
       }
       // who "none": chỉ hiện chữ, không có nhãn người nói (tiếng động, tin nhắn…).
+      // Phía sau chỉ còn dòng điều khiển (đổi cảnh, mở nhạc…): đây là câu cuối của chương.
+      const final = !P.queue.some((x) => x.text || x.choice || x.if || x.ifWeather);
       P.log.push({ who: NAMES[item.who] || item.who === 'none' ? item.who : 'ke', text: String(item.text || ''), sky: P.sky,
-        cast: P.cast, near: P.near, heart: P.heart, emote: item.emote || '', emoteWho: item.emoteWho || item.who });
+        cast: P.cast, near: P.near, heart: P.heart, emote: item.emote || '', emoteWho: item.emoteWho || item.who, final });
       show(P.log.length - 1, true);
       return;
     }
@@ -417,7 +419,7 @@
     if (!typing) { setSky(item.sky, false); setCast(item.cast); setNear(item.near, item.heart); }
     showEmote(item.emote, item.emoteWho);
     $('btn-prev').hidden = idx === 0;
-    $('step').textContent = last ? '' : 'Xem lại ' + (idx + 1) + '/' + P.log.length;
+    $('step').textContent = last ? (item.final ? 'Câu cuối của chương' : '') : 'Xem lại ' + (idx + 1) + '/' + P.log.length;
     const who = item.who;
     const tag = $('who');
     tag.textContent = NAMES[who] || '';
@@ -611,6 +613,11 @@
   $('btn-skip').addEventListener('click', () => { if (P.typing) finishTyping(); });
   $('btn-back').addEventListener('click', () => history.back());
   $('btn-end-map').addEventListener('click', () => history.back());
+  // Hết chương rồi vẫn quay lại được câu vừa đọc (rồi lùi tiếp bằng nút ‹ hay phím ←), không phải đọc lại từ đầu.
+  $('btn-end-back').addEventListener('click', () => {
+    $('end').hidden = true;
+    if (P.log.length) show(P.log.length - 1);
+  });
   $('btn-end-next').addEventListener('click', (e) => {
     if (e.currentTarget.dataset.case) { location.href = e.currentTarget.dataset.case; return; }
     const i = P.ch + 1;
