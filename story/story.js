@@ -191,6 +191,8 @@
 
   function renderMap() {
     setSky(liveSky, true);
+    // Băng số 1 (hồi ức): đang làm, chỉ máy anh Quang mở xem thử.
+    $('tape-card').hidden = WHO !== 'quang';
     const path = $('path');
     path.querySelectorAll('.stop').forEach((n) => n.remove());
     path.style.height = CHAPTERS.length * SPACING + 'px';

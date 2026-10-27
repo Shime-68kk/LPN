@@ -52,14 +52,29 @@
   const all = [...new Set(SHOTS.flatMap((s) => s.n || []))];
   const ready = Promise.all(all.map((n) => new Promise((res) => { const im = new Image(); im.onload = im.onerror = res; im.src = img(n); })));
 
+  // ===== Ai được xem =====
+  // Trên trang thật, trước ngày mở băng chỉ máy anh Quang xem thử được; máy khác chỉ thấy cuộn băng khoá.
+  // Server ở nhà (không phải workers.dev) thì ai cũng xem được để thử.
+  const LOCKED = location.hostname.endsWith('workers.dev') && (() => { try { return localStorage.getItem('lpn:who') !== 'quang'; } catch (e) { return true; } })();
+
   // ===== Xoay ngang (điện thoại); máy tính hay đã xoay thì vào phòng luôn =====
   const touch = matchMedia('(pointer: coarse)').matches;
   let portraitOk = false, started = false;
   function layout() {
+    if (LOCKED) { $('locked').hidden = false; $('rotate').hidden = true; $('room').hidden = true; return; }
     const needRotate = touch && innerHeight > innerWidth && !portraitOk && !started;
     $('rotate').hidden = !needRotate;
     $('room').hidden = needRotate;
   }
+  // Android: toàn màn hình rồi khoá ngang được thì có nút làm giúp. iPhone không cho, chỉ có hướng dẫn tắt khoá xoay.
+  const canTurn = !!(document.documentElement.requestFullscreen && window.screen.orientation && window.screen.orientation.lock) && !/iPhone|iPad|iPod/.test(navigator.userAgent);
+  $('btn-turn').hidden = !canTurn;
+  $('btn-turn').addEventListener('click', async () => {
+    try {
+      await document.documentElement.requestFullscreen();
+      await window.screen.orientation.lock('landscape');
+    } catch (e) { $('btn-turn').hidden = true; }
+  });
   addEventListener('resize', () => { layout(); if (zoomed) zoom(true); });
   $('btn-portrait').addEventListener('click', () => { portraitOk = true; layout(); });
 

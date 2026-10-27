@@ -56,7 +56,12 @@ body.night .shop-icon { color: #9FE0B2; }
   border: 1px solid #E2C99A;
   box-shadow: 0 6px 18px rgba(122, 82, 48, .14);
 }
+.case-card[hidden] { display: none; }
 .case-card img { flex: none; width: 56px; height: 56px; }
+.tape-card { margin-top: 10px; }
+.tape-ic { flex: none; width: 56px; height: 56px; fill: #3A2A1E; stroke: none; }
+.tape-ic .lbl { fill: #F3E3C3; }
+.tape-ic circle { fill: #120B06; stroke: #E9DCC4; stroke-width: 3; }
 .case-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .case-meta small { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #B0412E; }
 .case-meta b { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; }

@@ -12,17 +12,27 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="hoi-uc.css?v=5" />
+  <link rel="stylesheet" href="hoi-uc.css?v=6" />
 </head>
 <body>
   <!-- Chương 17 (bản xem thử): một chiếc TV cổ trong phòng tối. Bấm công tắc thì TV bật lên kiểu đời cũ
        và chiếu lại kỷ niệm như một đoạn clip dựng sẵn. Hết băng thì tắt TV, đưa về web cũ (legacy/). -->
   <canvas class="grain" id="grain" aria-hidden="true"></canvas>
 
+  <!-- Chưa tới ngày mở băng (máy chưa được xem trước): chỉ thấy cuộn băng khoá -->
+  <section class="locked" id="locked" hidden>
+    <div class="tape" aria-hidden="true"><i></i><i></i></div>
+    <p>Băng số 1</p>
+    <small>Chưa tới ngày mở băng.</small>
+    <a class="link" href="../home/">Về nhà</a>
+  </section>
+
   <!-- Điện thoại đang dọc: nhờ xoay ngang -->
   <section class="rotate" id="rotate" hidden>
     <div class="phone-ic" aria-hidden="true"><i></i></div>
     <p>Xoay ngang điện thoại để xem nhé</p>
+    <small class="rotate-help" id="rotate-help">Màn hình không xoay? Tắt khoá xoay trước: vuốt từ góc trên bên phải xuống, chạm biểu tượng ổ khoá có mũi tên tròn, rồi xoay ngang máy.</small>
+    <button class="btn-turn" id="btn-turn" type="button" hidden>Xoay ngang giúp em</button>
     <button class="link" id="btn-portrait" type="button">Xem dọc cũng được</button>
   </section>
 
@@ -65,6 +75,6 @@
     <button class="link end-again" id="end-again" type="button">Xem lại</button>
   </section>
 
-  <script src="hoi-uc.js?v=4"></script>
+  <script src="hoi-uc.js?v=5"></script>
 </body>
 </html>
