@@ -177,10 +177,10 @@
     if (sel && !held) { held = document.createElement('div'); held.className = 'held'; $('room').appendChild(held); }
     if (held) { if (sel) held.textContent = 'Đang cầm: ' + (TAPES[sel] ? TAPES[sel].label : OTHER[sel]); else held.remove(); }
   }
-  $('bag-btn').addEventListener('click', () => { TV.sfx.click(); $('bag').hidden = !$('bag').hidden; renderBag(); guide(); });
+  $('bag-btn').addEventListener('click', () => { $('bag').hidden = !$('bag').hidden; TV.sfx.bag(!$('bag').hidden); renderBag(); guide(); });
 
   function useItem(it) {
-    TV.sfx.click();
+    TV.sfx.ui();
     if (it.tape) {
       sel = sel === it.id ? null : it.id;
       $('bag').hidden = true;
@@ -204,13 +204,13 @@
       S.inVcr = sel;
       sel = null;
       TV.audioOn();
-      TV.sfx.click();
+      TV.sfx.tapeIn();
       save();
       render();
       say(TAPES[S.inVcr].real ? 'Cạch. Bấm nút nguồn đi.' : 'Cạch. Giờ bấm nút nguồn trên TV.', 3500);
       return;
     }
-    if (S.inVcr && S.inVcr !== 'E') { TV.sfx.click(); S.inVcr = null; save(); render(); say('Nhả băng ra.'); return; }
+    if (S.inVcr && S.inVcr !== 'E') { TV.sfx.tapeOut(); S.inVcr = null; save(); render(); say('Nhả băng ra.'); return; }
     say(S.inVcr === 'E' ? 'Băng thật đang trong máy. Bấm nút nguồn.' : 'Đầu băng trống. Chọn một cuộn trong túi trước.');
   }
   async function power() {
@@ -241,7 +241,8 @@
     p.textContent = text;
   };
   const wrong = (el) => { el.classList.remove('shake-x'); void el.offsetWidth; el.classList.add('shake-x'); };
-  const win = (fn) => { TV.sfx.click(); save(); fn(); render(); };
+  // Giải được / tìm thấy đồ: lưu, hiện kết quả. Tiếng theo đồ vật (mặc định hai nốt chuông "tìm thấy").
+  const win = (fn, snd) => { TV.sfx[snd || 'find'](); save(); fn(); render(); };
 
   // Ghép tranh 3×3: chạm hai mảnh để đổi chỗ.
   const PHOTO = '../assets/img/Anh (2).jpg';
@@ -278,7 +279,7 @@
           b.style.backgroundPosition = (p % 3) * 50 + '% ' + Math.floor(p / 3) * 50 + '%';
           if (i === pick) b.classList.add('pick');
           b.addEventListener('click', () => {
-            TV.sfx.click();
+            TV.sfx.piece();
             if (pick < 0) { pick = i; draw(); return; }
             [order[pick], order[i]] = [order[i], order[pick]];
             pick = -1;
@@ -312,8 +313,8 @@
         if (k === 3 && !S.done.cipher) { S.done.cipher = true; win(() => msg(body, 'Nhìn dưới gối.')); }
       };
       const [l, , r] = body.querySelector('.rings').children;
-      l.addEventListener('click', () => { k = (k + 25) % 26; TV.sfx.click(); show(); });
-      r.addEventListener('click', () => { k = (k + 1) % 26; TV.sfx.click(); show(); });
+      l.addEventListener('click', () => { k = (k + 25) % 26; TV.sfx.notch(); show(); });
+      r.addEventListener('click', () => { k = (k + 1) % 26; TV.sfx.notch(); show(); });
       show();
     });
   }
@@ -346,7 +347,7 @@
           const r = b.querySelector('.roll');
           r.innerHTML = glyph(SYM[cur[i]]);
           r.classList.remove('go'); void r.offsetWidth; r.classList.add('go');
-          TV.sfx.click();
+          TV.sfx.roller();
         });
         row.appendChild(b);
       });
@@ -355,7 +356,7 @@
           S.done.case = true;
           S.items.key = true;
           S.items.note2 = true;
-          win(() => { body.innerHTML = '<p>Tách. Nắp vali bật lên.</p><p>Một chiếc chìa khoá cũ, và nửa mẩu giấy.</p>'; });
+          win(() => { body.innerHTML = '<p>Tách. Nắp vali bật lên.</p><p>Một chiếc chìa khoá cũ, và nửa mẩu giấy.</p>'; }, 'latch');
           return;
         }
         wrong(row);
@@ -406,7 +407,7 @@
           b.textContent = t;
           if (got.includes(t)) b.classList.add('used');
           b.addEventListener('click', () => {
-            TV.sfx.click();
+            TV.sfx.tile();
             got.push(t);
             if (ANS[got.length - 1] !== t) { draw(); wrong(out); setTimeout(() => { got = []; draw(); }, 500); return; }
             draw();
@@ -436,14 +437,14 @@
         b.textContent = k;
         if (!k) { b.style.visibility = 'hidden'; }
         b.addEventListener('click', () => {
-          TV.sfx.click();
+          TV.sfx.dial(k);
           if (k === '⌫') { code = code.slice(0, -1); draw(); return; }
           code += k;
           draw();
           if (code.length < 4) return;
           if (code === '4719') {
             S.done.phone = true;
-            win(() => { body.innerHTML = '<p>Mở khoá.</p><p class="hand">Sau tấm ảnh em vừa ghép.</p>'; });
+            win(() => { body.innerHTML = '<p>Mở khoá.</p><p class="hand">Sau tấm ảnh em vừa ghép.</p>'; }, 'unlock');
             return;
           }
           wrong(pin);
@@ -475,7 +476,7 @@
         b.textContent = name;
         b.style.background = color;
         b.addEventListener('click', () => {
-          TV.sfx.click();
+          TV.sfx.book();
           if (no) { msg(body, no); return; }
           S.done.book = true;
           win(() => {
@@ -501,7 +502,7 @@
         c.className = 'polcard';
         c.innerHTML = '<span class="f"><img alt="" src="../assets/thumbs/' + img + '.webp" /></span><span class="b"><span>' + n + '</span>' + glyph(sym) + '</span>';
         c.addEventListener('click', () => {
-          TV.sfx.click();
+          TV.sfx.paper();
           c.classList.toggle('flip');
           flipped.add(n);
           if (flipped.size === 4 && !S.done.board) { S.done.board = true; save(); }
@@ -528,7 +529,7 @@
         b.textContent = k;
         if (!k) b.style.visibility = 'hidden';
         b.addEventListener('click', () => {
-          TV.sfx.click();
+          TV.sfx.beep();
           if (k === '⌫') { code = code.slice(0, -1); draw(); return; }
           code += k;
           draw();
@@ -553,7 +554,7 @@
       const icons = body.querySelector('.icons'), win2 = body.querySelector('.win');
       const open = (path, build) => { win2.hidden = false; win2.replaceChildren(); const p = document.createElement('div'); p.className = 'path'; p.textContent = path; win2.appendChild(p); build(win2); };
       const text = (box, t) => box.appendChild(document.createTextNode(t));
-      const file = (box, name, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'file'; b.textContent = name; b.addEventListener('click', () => { TV.sfx.click(); fn(); }); box.appendChild(b); };
+      const file = (box, name, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'file'; b.textContent = name; b.addEventListener('click', () => { TV.sfx.ui(); fn(); }); box.appendChild(b); };
       const SHOW = {
         letter: () => open('C:/Thư gửi em.txt', (box) => {
           text(box, 'Đang mở…');
@@ -594,7 +595,7 @@
                 S.done.dir = true;
                 save();
                 render();
-                TV.sfx.click();
+                TV.sfx.unlock();
                 SHOW.project();
                 for (const x of icons.children) if (x.dataset.id === 'project') x.querySelector('i').className = '';
                 return;
@@ -610,7 +611,7 @@
                 b.type = 'button';
                 b.textContent = k;
                 if (k === '⌫') b.className = 'del';
-                b.addEventListener('click', () => { TV.sfx.click(); key(k); });
+                b.addEventListener('click', () => { TV.sfx.key(); key(k); });
                 r.appendChild(b);
               }
               kb.appendChild(r);
@@ -627,7 +628,7 @@
         b.dataset.id = id;
         b.innerHTML = '<i class="' + (id === 'project' && S.done.dir ? '' : cls) + '"></i>';
         b.appendChild(document.createTextNode(name));
-        b.addEventListener('click', () => { TV.sfx.click(); for (const x of icons.children) x.classList.toggle('on', x === b); SHOW[id](); });
+        b.addEventListener('click', () => { TV.sfx.ui(); for (const x of icons.children) x.classList.toggle('on', x === b); SHOW[id](); });
         icons.appendChild(b);
       }
     });
@@ -648,13 +649,13 @@
         if (old >= 0) slot[old] = null;
         slot[i] = sh;
         held = null;
-        TV.sfx.click();
+        TV.sfx.chip();
         draw();
         if (slot.every(Boolean)) {
           if (slot.every((v, k) => v === ANS[k])) {
             bot.dataset.screen = '4719';
             S.done.robot = true;
-            win(() => msg(body, 'Bíp bíp. Mắt robot sáng lên: 4 7 1 9.'));
+            win(() => msg(body, 'Bíp bíp. Mắt robot sáng lên: 4 7 1 9.'), 'robot');
           } else {
             bot.dataset.screen = 'ERR';
             wrong(bot);
@@ -671,7 +672,7 @@
           s2.className = 'sock' + (held && !sh ? ' pick' : '');
           s2.dataset.i = i;
           s2.innerHTML = '<span>' + (i + 1) + '</span>';
-          if (sh) { const c = chipEl(sh); c.addEventListener('click', () => { slot[i] = null; TV.sfx.click(); draw(); }); s2.appendChild(c); }
+          if (sh) { const c = chipEl(sh); c.addEventListener('click', () => { slot[i] = null; TV.sfx.chipOut(); draw(); }); s2.appendChild(c); }
           s2.addEventListener('click', () => { if (held && !slot[i]) place(i, held); });
           bot.appendChild(s2);
         });
@@ -679,7 +680,7 @@
           if (slot.includes(sh)) continue;
           const c = chipEl(sh);
           if (held === sh) c.classList.add('sel');
-          c.addEventListener('click', () => { held = held === sh ? null : sh; TV.sfx.click(); draw(); });
+          c.addEventListener('click', () => { held = held === sh ? null : sh; TV.sfx.ui(); draw(); });
           // Kéo thả: thả lên ổ nào thì cắm vào ổ đó.
           c.addEventListener('pointerdown', (e) => {
             const ghost = c.cloneNode(true);
@@ -734,7 +735,7 @@
       S.lamp = true;
       S.items.A = true;
       TV.audioOn();
-      win(() => say('Sáng rồi. Trong túi có sẵn một cuộn băng.', 5000));
+      win(() => say('Sáng rồi. Trong túi có sẵn một cuộn băng.', 5000), 'lamp');
     },
     frame() {
       if (!S.seen.A) { say('Bức ảnh vỡ mất rồi.'); return; }
@@ -745,7 +746,7 @@
     },
     drawer() {
       if (!S.done.jig) { say('Ngăn kéo kẹt cứng.'); return; }
-      if (!S.items.B) { S.items.B = true; S.items.wheel = true; win(() => look('Ngăn kéo', '<p>Một cuộn băng, và một chiếc đĩa có hai vòng chữ cái.</p>')); return; }
+      if (!S.items.B) { S.items.B = true; S.items.wheel = true; win(() => look('Ngăn kéo', '<p>Một cuộn băng, và một chiếc đĩa có hai vòng chữ cái.</p>'), 'drawer'); return; }
       say('Ngăn kéo trống.');
     },
     vcr,
@@ -761,14 +762,14 @@
     robot,
     pillow() {
       if (!S.done.cipher) { say('Gối êm lắm. Chưa phải lúc.'); return; }
-      if (!S.done.pillow) { S.done.pillow = true; S.items.C = true; S.items.note1 = true; win(() => look('Dưới gối', '<p>Một cuộn băng, và nửa mẩu giấy.</p><p class="say">Gối vẫn còn mùi tóc em.</p>')); return; }
+      if (!S.done.pillow) { S.done.pillow = true; S.items.C = true; S.items.note1 = true; win(() => look('Dưới gối', '<p>Một cuộn băng, và nửa mẩu giấy.</p><p class="say">Gối vẫn còn mùi tóc em.</p>'), 'cloth'); return; }
       say('Gối vẫn còn mùi tóc em.');
     },
     case() { if (S.done.case) { say('Vali trống, nhẹ tênh.'); return; } symbolLock(); },
     gate() {
       if (!S.items.key) { say('Cổng đình khoá.'); return; }
       S.done.gate = true;
-      win(() => say('Kẹt… cổng mở.', 3500));
+      win(() => say('Kẹt… cổng mở.', 3500), 'gate');
     },
     radio,
     lantern() { say(S.done.words ? 'Đèn lồng soi xuống bậc thềm.' : 'Đèn lồng chưa thắp.'); },
@@ -788,7 +789,7 @@
   for (const d of document.querySelectorAll('#scene .door')) {
     d.addEventListener('click', () => {
       if (TV.busy()) return;
-      TV.sfx.click();
+      TV.sfx.door();
       const to = d.dataset.go;
       const v = document.querySelector('.view[data-room="' + to + '"]');
       v.style.setProperty('--from', d.classList.contains('d-right') ? '24px' : '-24px');
@@ -811,7 +812,7 @@
     room.classList.add('trailer');
     const ov = document.createElement('div');
     ov.className = 'tr-ov';
-    ov.innerHTML = '<div class="tr-black" id="tr-black"></div><div class="tr-crt"></div><div class="tr-glitch" id="tr-glitch"><i></i><i></i><i></i></div><div class="tr-bar t"></div><div class="tr-bar b"></div><div class="tr-card" id="tr-card"><h1></h1><p></p></div><div class="tr-flash" id="tr-flash"></div><button class="tr-start" id="tr-start" type="button"><b>▶</b>Xem trailer</button><div class="tr-end" id="tr-end" hidden><button type="button" id="tr-again">Xem lại</button><a href="../home/">Về nhà</a></div>';
+    ov.innerHTML = '<div class="tr-bloom" id="tr-bloom"></div><div class="tr-vig"></div><div class="tr-grain"></div><div class="tr-black" id="tr-black"></div><div class="tr-crt"></div><div class="tr-glitch" id="tr-glitch"><i></i><i></i><i></i></div><div class="tr-bar t"></div><div class="tr-bar b"></div><div class="tr-card" id="tr-card"><h1></h1><p></p></div><div class="tr-flash" id="tr-flash"></div><button class="tr-start" id="tr-start" type="button"><b>▶</b>Xem trailer</button><div class="tr-end" id="tr-end" hidden><button type="button" id="tr-again">Xem lại</button><a href="../home/">Về nhà</a></div>';
     room.appendChild(ov);
     const music = new Audio('../assets/sound/trailer.mp3');
     music.preload = 'auto'; // tải sẵn trong lúc chờ bấm, để nhạc vào ngay
@@ -822,8 +823,11 @@
     music.play().catch(() => {});
     const fx = TV.sfx;
     // Có nhạc nền thì bỏ tiếng tim đập và tiếng rít dồn lên (nhạc tự có nhịp và cao trào), chỉ giữ tiếng va chạm, nhiễu, vút.
+    // Tiếng hiệu ứng có độ vang như trong phòng lớn và nhỏ hơn một chút khi có nhạc, để hoà vào nhạc nền.
     let withMusic = false;
-    music.addEventListener('playing', () => { withMusic = true; });
+    fx.space(0.35);
+    music.addEventListener('playing', () => { withMusic = true; fx.level(0.8); });
+    const tock = () => { if (!withMusic) fx.tock(); };
     const beat = () => { if (!withMusic) fx.beat(); };
     const riser = (d) => { if (!withMusic) fx.riser(d); };
     const t0 = performance.now();
@@ -844,99 +848,164 @@
       c.querySelector('p').textContent = p || '';
       if (o.hit) hit(o.hit === 'big');
       if (o.beat) beat();
-      c.classList.add('on');
+      replay(c, 'on');
+      room.classList.add('dof'); // xoá phông: cảnh sau lưng chữ mờ và tối đi
       if (to === undefined) return;
       await at(to);
       c.classList.remove('on');
+      room.classList.remove('dof');
     };
-    const cam = (t, ms) => { scene.style.transition = 'transform ' + ms + 'ms cubic-bezier(.45, 0, .25, 1)'; scene.style.transform = t; };
+    const cam = (t, ms) => { scene.style.transition = 'transform ' + ms + 'ms cubic-bezier(.45, 0, .25, 1), filter .6s'; scene.style.transform = t; };
     const cut = async (t, fn) => { await at(t - 0.08); fx.whoosh(); flick(); await at(t); fn(); render(); };
     const go = (r) => { S.room = r; };
 
-    // Mở: bóng tối, chỉ có tiếng tích‑tắc
+    // Mở: khung phim kéo vào, đồng hồ trong bóng tối, kim giây nhảy theo tiếng tích của nhạc. Điểm 20:00 (giờ hẹn),
+    // rồi băng tua ngược: kim quay ngược về 23:38 đêm ấy, nhạc phát lại từ đoạn vừa bị tua.
     black(true);
-    await at(0.37); beat();
-    await at(1.63); beat();
-    await card('Có một cuộn băng', '', 2.88, 4.9, { beat: true });
-    await card('đang chờ em.', '', 5.39, 7.3, { hit: true });
+    requestAnimationFrame(() => ov.classList.add('cine'));
+    const clk = document.createElement('div');
+    clk.className = 'tr-clock';
+    clk.innerHTML = clockFace() + '<div class="tr-clock-t"></div>';
+    ov.insertBefore(clk, $('tr-card'));
+    const osd = document.createElement('div');
+    osd.className = 'tr-osd';
+    osd.textContent = '◀◀ TUA LẠI';
+    ov.appendChild(osd);
+    const [hh, mh, sh] = ['.hh', '.mh', '.sh'].map((q) => clk.querySelector(q));
+    const label = clk.querySelector('.tr-clock-t');
+    let now = 0; // giây tính từ nửa đêm, âm khi tua về hôm trước
+    const setClock = (t) => {
+      now = t;
+      hh.style.transform = 'rotate(' + t / 120 + 'deg)';
+      mh.style.transform = 'rotate(' + t / 10 + 'deg)';
+      sh.style.transform = 'rotate(' + Math.floor(t) * 6 + 'deg)';
+    };
+    const hm = (t) => { const d = ((Math.floor(t / 60) % 1440) + 1440) % 1440; return String(Math.floor(d / 60)).padStart(2, '0') + ':' + String(d % 60).padStart(2, '0'); };
+    setClock(19 * 3600 + 59 * 60 + 56);
+    await at(0.1);
+    clk.classList.add('on');
+    for (const t of [0.37, 1.63, 2.88]) { await at(t); setClock(now + 1); tock(); }
+    await at(4.13);
+    setClock(now + 1); tock(); fx.chime();
+    label.textContent = hm(now);
+    clk.classList.add('strike');
+    // Tua ngược 20 giờ 22 phút: từ 20:00 về 23:38 đêm hôm trước
+    await at(4.75);
+    const from = now, to = from - (20 * 3600 + 22 * 60);
+    clk.classList.add('rew');
+    osd.classList.add('on');
+    fx.rewind(2.25);
+    const jitter = setInterval(flick, 420);
+    await new Promise((res) => {
+      const f = () => {
+        const k = Math.min(1, (clock() - 4.75) / 2.25), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+        setClock(from + (to - from) * e);
+        label.textContent = hm(now);
+        if (k < 1) requestAnimationFrame(f); else res();
+      };
+      f();
+    });
+    clearInterval(jitter);
+    clk.classList.remove('rew', 'strike');
+    osd.classList.remove('on');
+    fx.thunk(); shake(); replay($('tr-flash'), 'go');
+    label.textContent = '23:38';
+    clk.classList.add('lit');
+    for (const t of [7.89, 9.15]) { await at(t); setClock(now + 1); tock(); }
+    await at(9.7);
+    clk.classList.add('out');
+    await card('Có một cuộn băng', '', 10.4, 12.3, { beat: true });
+    await card('đang chờ em.', '', 12.89, 13.9, { hit: true });
     // Phòng khách tối hiện ra; đèn bật đúng lúc organ vào
-    await at(7.89);
+    await at(14.14);
     go('r1'); S.lamp = false; render();
     cam('scale(1.32) translate(6%, 4%)', 0);
     await sleep(40);
     fx.whoosh(); flick(); black(false);
     cam('scale(1.1) translate(2%, 1%)', 3400);
-    await at(10.4);
-    fx.click(); S.lamp = true; render();
+    await at(15.41);
+    fx.lamp(); S.lamp = true; render(); replay($('tr-bloom'), 'go');
     riser(9.5);
-    await card('Năm cuộn băng.', '', 12.91, 13.9, { beat: true });
+    await card('Năm cuộn băng.', '', 17.92, 18.91, { beat: true });
     // Năm cuộn rơi xuống theo nửa nhịp tích‑tắc thành một hàng ngang (xem dọc vẫn vừa màn hình); cuộn thứ năm là dấu hỏi chớp nhiễu
     const row = document.createElement('div');
     row.className = 'tr-tapes';
     row.innerHTML = TR_TAPES.map(([c, t], i) => '<div class="tr-tape' + (i === 4 ? ' q' : '') + '" style="--c:' + c + '">' + cassette(t) + '</div>').join('');
     ov.insertBefore(row, $('tr-card'));
     const tapes = row.children;
-    for (const [i, t] of [14.16, 14.79, 15.41, 16.04].entries()) { await at(t); tapes[i].classList.add('in'); fx.click(); }
-    await at(17.29);
+    for (const [i, t] of [19.17, 19.8, 20.42, 21.05].entries()) { await at(t); tapes[i].classList.add('in'); fx.clack(); }
+    await at(22.3);
     tapes[4].classList.add('in'); flick(); beat();
     // Cú đánh lớn, nhạc chuyển sang No Time for Caution
-    await at(19.17);
+    await at(24.18);
     row.classList.add('judge');
-    await card('Chỉ một cuộn là thật.', '', 19.17, 20.8, { hit: 'big' });
+    await card('Chỉ một cuộn là thật.', '', 24.18, 25.81, { hit: 'big' });
     row.classList.add('out');
     // Phòng ngủ đêm
-    await cut(21.17, () => { go('r2'); cam('scale(1.28) translate(-6%, 2%)', 0); });
+    await cut(26.18, () => { go('r2'); cam('scale(1.28) translate(-6%, 2%)', 0); });
     await sleep(50);
     cam('scale(1.28) translate(-18%, 2%)', 2800);
-    await at(23.17);
-    fx.click(); S.done.robot = true; render();
+    await at(28.18);
+    fx.robot(); S.done.robot = true; render();
     // Sân đình
-    await cut(24.17, () => { go('r3'); cam('scale(1.05)', 0); });
-    await at(25.17);
-    S.items.key = true; S.done.gate = true; render(); fx.click(); shake();
+    await cut(29.18, () => { go('r3'); cam('scale(1.05)', 0); });
+    await at(30.18);
+    S.items.key = true; S.done.gate = true; render(); fx.gate(); shake();
     cam('scale(1.32) translate(0, 6%)', 2300);
-    await at(26.17);
+    await at(31.18);
     S.done.words = true; render(); beat();
     // Cắt nhanh theo nửa phách
-    await cut(27.17, () => { go('r1'); cam('scale(1.65) translate(14%, -8%)', 0); S.done.jig = true; });
-    await cut(27.67, () => { go('r2'); cam('scale(1.6) translate(6%, -10%)', 0); S.done.case = true; S.done.pillow = true; });
-    await cut(28.17, () => { go('r3'); cam('scale(1.9) translate(0, 14%)', 0); });
+    await cut(32.18, () => { go('r1'); cam('scale(1.65) translate(14%, -8%)', 0); S.done.jig = true; });
+    await cut(32.68, () => { go('r2'); cam('scale(1.6) translate(6%, -10%)', 0); S.done.case = true; S.done.pillow = true; });
+    await cut(33.18, () => { go('r3'); cam('scale(1.9) translate(0, 14%)', 0); });
     // Cao trào: ba chữ trên ba phách, "Một bí mật." đúng cú vỡ oà của bản nhạc
-    await at(28.67);
+    await at(33.68);
     black(true);
     riser(2.4);
-    await card('Ba căn phòng.', '', 29.17, 29.95, { hit: true });
-    await card('Năm cuộn băng.', '', 30.17, 30.95, { hit: true });
-    await card('Một bí mật.', '', 31.17, 32.3, { hit: 'big' });
+    await card('Ba căn phòng.', '', 34.18, 34.96, { hit: true });
+    await card('Năm cuộn băng.', '', 35.18, 35.96, { hit: true });
+    await card('Một bí mật.', '', 36.18, 37.31, { hit: 'big' });
     // Sóng organ thứ hai: lướt nhanh qua ba phòng, rồi dội lại đúng lúc máy quay lao vào chiếc TV
-    await cut(32.67, () => { black(false); go('r2'); cam('scale(1.45) translate(-10%, 4%)', 0); });
+    await cut(37.68, () => { black(false); go('r2'); cam('scale(1.45) translate(-10%, 4%)', 0); });
     cam('scale(1.6) translate(-14%, 4%)', 500);
-    await cut(33.17, () => { go('r3'); cam('scale(1.4) translate(0, 8%)', 0); });
+    await cut(38.18, () => { go('r3'); cam('scale(1.4) translate(0, 8%)', 0); });
     cam('scale(1.55) translate(0, 10%)', 500);
-    await cut(33.67, () => { go('r1'); S.done.jig = true; cam('scale(1.1) translate(0, 4%)', 0); });
-    await at(34.16);
+    await cut(38.68, () => { go('r1'); S.done.jig = true; cam('scale(1.1) translate(0, 4%)', 0); });
+    await at(39.17);
     hit(true); flick();
     cam('scale(1.5) translate(0, 8%)', 1300);
     // Nhạc tụt về tiếng tích‑tắc: về lại chiếc TV, máy quay zoom dần vào màn hình, chữ méo giật, lời hẹn, rồi TV tắt và cháy nổ nhẹ
-    await at(35.67);
+    await at(40.68);
     flick(); shake(true);
-    await TV.tease(['Tín hiệu yếu…', 'Đang tua lại…', 'Hẹn em ở cuộn băng thật.'], () => cam('scale(2.45) translate(0, 21%)', 6200));
-    await at(45.2);
+    await TV.tease(['Tín hiệu yếu…', 'Đang tua lại…', 'Hẹn em ở cuộn băng thật.'], () => cam('scale(2.45) translate(0, 21%)', 6200), true);
+    // Tín hiệu quá tải: băng tự huỷ, đếm 3, 2, 1 đúng ba tiếng tích‑tắc, mỗi số máy quay giật sát vào thêm
+    await TV.selfDestruct(at, 49.44, [50.69, 51.92, 53.18], (i) => { cam('scale(' + (2.62 + i * 0.17) + ') translate(0, 21%)', 140); shake(i === 2); });
+    // Hết số: chập điện, rồi nổ đúng tiếng tích kế tiếp (54.43)
+    await at(54.08);
+    cam('scale(1.4) translate(0, 27%)', 1900); // máy quay lùi ra, hạ khung xuống: thấy trọn lửa trên nóc TV và cột khói
+    setTimeout(() => shake(true), 350); // rung đúng lúc nổ bóng
     await TV.burn();
-    shake();
     black(true);
     // Im lặng, rồi BĂNG SỐ 1. Neon chập chờn: nhạc lùi xuống thật nhỏ cho tiếng "tít" vang trong khoảng lặng;
     // đèn sáng hẳn đúng tiếng bùng của Mountains thì nhạc dâng lên, ngân dài rồi tự tắt dần.
-    await at(48.3);
+    await at(57.53);
     flick();
     mix.to(0.15, 0.3);
-    await card('BĂNG SỐ 1', 'Hồi ức · Sắp ra mắt', 48.3, undefined, { big: true, hit: 'big' });
-    await at(50.54 - NEON_MS / 1000);
+    await card('BĂNG SỐ 1', 'Hồi ức · Sắp ra mắt', 57.53, undefined, { big: true, hit: 'big' });
+    await at(59.77 - NEON_MS / 1000);
     await neonSign();
-    mix.to(1, 0.25);
-    await at(52.77);
+    mix.to(0.85, 0.4); // đoạn kết đã nhỏ hơn 5 dB trong file nhạc, không làm giật mình người đeo tai nghe
+    await at(62);
     $('tr-end').hidden = false;
     $('tr-again').addEventListener('click', () => location.reload());
+  }
+
+  // Mặt đồng hồ quả lắc cũ cho đoạn mở màn trailer: vành đồng, mặt ngà, kim đen, kim giây đỏ.
+  function clockFace() {
+    const marks = Array.from({ length: 60 }, (_, i) => '<line class="' + (i % 5 ? 'mn' : 'hr') + '" x1="100" y1="' + (i % 5 ? 21 : 19) + '" x2="100" y2="' + (i % 5 ? 26 : 32) + '" transform="rotate(' + i * 6 + ' 100 100)"/>').join('');
+    return '<svg viewBox="0 0 200 200" aria-hidden="true"><circle class="rim" cx="100" cy="100" r="96"/><circle class="face" cx="100" cy="100" r="86"/>' + marks
+      + '<path class="hh" d="M96 106 L98.6 56 Q100 50 101.4 56 L104 106 Z"/><path class="mh" d="M97.6 108 L99.3 30 Q100 25 100.7 30 L102.4 108 Z"/>'
+      + '<g class="sh"><line x1="100" y1="120" x2="100" y2="24"/><circle cx="100" cy="100" r="4.5"/></g><circle class="pin" cx="100" cy="100" r="2"/></svg>';
   }
 
   // Năm cuộn băng trong trailer: mỗi cuộn một màu nhãn, cuộn cuối không nhãn, chỉ có dấu hỏi.

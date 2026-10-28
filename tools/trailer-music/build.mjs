@@ -15,25 +15,35 @@ const SRC = { M: path.join(dir, 'src/Mountains.mp3'), N: path.join(dir, 'src/No 
 const OUT = path.join(dir, '../../assets/sound/trailer.mp3');
 
 const CUES = [
-  // Mở màn tối: chỉ có tích‑tắc, organ vào đúng lúc đèn bật (10.4), năm cuộn băng rơi theo nhịp, tới "Chỉ một cuộn là thật."
-  { src: 'M', from: 0.00, to: 19.17, at: 0.00, db: 6, fin: 0.6, fout: 0.03 },
-  // Ba căn phòng: organ dồn dập của No Time for Caution, "Một bí mật." rơi đúng cú vỡ oà 2:35.67 (giây 31.17),
-  // chạy hết đợt sóng thứ hai (dội ở 34.16) rồi mới lắng
-  { src: 'N', from: 143.67, to: 160.17, at: 19.17, db: 0, fin: 0.02, fout: 0.45 },
-  // Rơi tụt về tiếng tích‑tắc lặng: TV nhiễu và lời hẹn; nhạc phồng nhẹ rồi cắt đúng lúc TV nổ (giây 45.20)
-  { src: 'M', from: 41.63, to: 51.16, at: 35.67, db: 8, fin: 0.05, fout: 0.12 },
-  // Im lặng. Chữ BĂNG SỐ 1 hiện (48.30) trên nền nhạc đang dồn, đèn neon sáng hẳn đúng tiếng bùng 2:01.96 (giây 50.54)
-  { src: 'M', from: 119.72, to: 128.23, at: 48.30, db: 0, fin: 0.5, fout: 1.2 },
+  // Mở màn: đồng hồ tích‑tắc theo nhạc, điểm 20:00 ở tiếng tích 4.13
+  { src: 'M', from: 0.00, to: 4.75, at: 0.00, db: 6, fin: 0.6, fout: 0.2 },
+  // Tua băng ngược: chính đoạn vừa nghe, chạy ngược và nhanh gấp 2,11 lần (rít cao lên), kim đồng hồ quay về 23:38
+  { src: 'M', from: 0.00, to: 4.75, at: 4.75, db: 2, fin: 0.3, fout: 0.08, rev: true, speed: 2.11 },
+  // Băng chạy lại từ tiếng tích 2.88 (rơi ở giây 7.89): từ đây mọi mốc lùi 5.01 giây so với Mountains.
+  // Organ vào đúng lúc đèn bật (15.41), năm cuộn băng rơi theo nhịp, tới "Chỉ một cuộn là thật."
+  { src: 'M', from: 2.70, to: 19.17, at: 7.71, db: 6, fin: 0.15, fout: 0.03 },
+  // Ba căn phòng: organ dồn dập của No Time for Caution, "Một bí mật." rơi đúng cú vỡ oà 2:35.67 (giây 36.18),
+  // chạy hết đợt sóng thứ hai (dội ở 39.17) rồi mới lắng
+  { src: 'N', from: 143.67, to: 160.17, at: 24.18, db: 0, fin: 0.02, fout: 0.45 },
+  // Rơi tụt về tiếng tích‑tắc lặng: TV nhiễu và lời hẹn, nhạc phồng nhẹ; cảnh báo quá tải (49.44), đếm 3, 2, 1 trên ba
+  // tiếng tích 50.69, 51.92, 53.18; cắt đúng lúc TV nổ ở tiếng tích kế tiếp (54.43)
+  { src: 'M', from: 41.63, to: 55.38, at: 40.68, db: 8, fin: 0.05, fout: 0.12 },
+  // Im lặng. Chữ BĂNG SỐ 1 hiện (57.53) trên nền nhạc đang dồn, đèn neon sáng hẳn đúng tiếng bùng 2:01.96 (giây 59.77).
+  // Nhỏ hơn bản gốc 5 dB: đoạn kết không làm giật mình người đeo tai nghe.
+  { src: 'M', from: 119.72, to: 128.23, at: 57.53, db: -5, fin: 0.5, fout: 1.2 },
   // Ngân dài: nối sang đoạn kết của Mountains, tắt dần tự nhiên
-  { src: 'M', from: 203.49, to: 219.00, at: 55.60, db: 0, fin: 1.2, fout: 0.5 },
+  { src: 'M', from: 203.49, to: 219.00, at: 64.83, db: -5, fin: 1.2, fout: 0.5 },
 ];
 
 const args = ['-v', 'error', '-y'];
 CUES.forEach((c) => args.push('-i', SRC[c.src]));
 const parts = CUES.map((c, i) => {
   const len = c.to - c.from, ms = Math.round(c.at * 1000);
-  return `[${i}:a]atrim=${c.from}:${c.to},asetpts=PTS-STARTPTS,aformat=sample_rates=44100:channel_layouts=stereo,volume=${c.db}dB,`
-    + `afade=t=in:d=${c.fin},afade=t=out:st=${(len - c.fout).toFixed(3)}:d=${c.fout},adelay=${ms}|${ms}[c${i}]`;
+  // rev: chạy ngược; speed: tua nhanh (cao giọng lên như băng bị tua)
+  const fx = (c.rev ? 'areverse,' : '') + (c.speed ? `asetrate=${Math.round(44100 * c.speed)},aresample=44100,` : '');
+  const out = c.speed ? len / c.speed : len;
+  return `[${i}:a]atrim=${c.from}:${c.to},asetpts=PTS-STARTPTS,aformat=sample_rates=44100:channel_layouts=stereo,${fx}volume=${c.db}dB,`
+    + `afade=t=in:d=${c.fin},afade=t=out:st=${(out - c.fout).toFixed(3)}:d=${c.fout},adelay=${ms}|${ms}[c${i}]`;
 });
 const graph = parts.join(';') + ';' + CUES.map((_, i) => `[c${i}]`).join('') + `amix=inputs=${CUES.length}:normalize=0:duration=longest,alimiter=limit=0.89:level=false[out]`;
 args.push('-filter_complex', graph, '-map', '[out]', '-ac', '2', '-ar', '44100', '-b:a', '192k', OUT);
