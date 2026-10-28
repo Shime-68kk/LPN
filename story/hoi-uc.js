@@ -278,6 +278,20 @@
     // Trailer: bật độ vang (0 → 1) và chỉnh độ to chung của tiếng hiệu ứng cho vừa với nhạc nền.
     space(k) { if (wet) wet.gain.setTargetAtTime(k, ac.currentTime, 0.1); },
     level(k) { if (out) out.gain.setTargetAtTime(1.9 * k, ac.currentTime, 0.1); },
+    // Chuyển cảnh kiểu phim: gió trầm cuộn lên như tiếng va chạm phát ngược (to dần rồi dứt), đúng lúc sang cảnh thì chạm
+    // một nhịp trầm êm (thud). Cú cắt nhanh thì dùng tiếng màn trập máy quay phim (shutter).
+    swell(d) {
+      if (!ac) return;
+      const t = ac.currentTime;
+      sweep(t, d, 'lowpass', 180, 1400, 0.3, true);
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.frequency.setValueAtTime(45, t); o.frequency.exponentialRampToValueAtTime(85, t + d);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.32, t + d); g.gain.linearRampToValueAtTime(0, t + d + 0.03);
+      o.connect(g).connect(out);
+      o.start(t); o.stop(t + d + 0.05);
+    },
+    thud() { if (!ac) return; const t = ac.currentTime; tone(t, 0.9, 68, 34, 0.5); noise(t, 0.25, 'lowpass', 220, 0.7, 0.35); },
+    shutter() { if (!ac) return; const t = ac.currentTime; noise(t, 0.012, 'bandpass', 2600, 2, 0.45); noise(t + 0.035, 0.012, 'bandpass', 1900, 2, 0.35); tone(t, 0.18, 90, 45, 0.3); },
     // Còi báo quá tải: hai nốt luân phiên, ba lượt
     alarm() { if (!ac) return; const t = ac.currentTime; for (let i = 0; i < 3; i++) { tone(t + i * 0.3, 0.14, 1320, 1320, 0.06, 'square'); tone(t + i * 0.3 + 0.15, 0.14, 990, 990, 0.06, 'square'); } },
     // Đếm ngược: bíp và nhịp trầm; số cuối bíp cao, kéo dài

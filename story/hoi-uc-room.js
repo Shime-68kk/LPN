@@ -812,7 +812,7 @@
     room.classList.add('trailer');
     const ov = document.createElement('div');
     ov.className = 'tr-ov';
-    ov.innerHTML = '<div class="tr-bloom" id="tr-bloom"></div><div class="tr-vig"></div><div class="tr-grain"></div><div class="tr-black" id="tr-black"></div><div class="tr-crt"></div><div class="tr-glitch" id="tr-glitch"><i></i><i></i><i></i></div><div class="tr-bar t"></div><div class="tr-bar b"></div><div class="tr-card" id="tr-card"><h1></h1><p></p></div><div class="tr-flash" id="tr-flash"></div><button class="tr-start" id="tr-start" type="button"><b>▶</b>Xem trailer</button><div class="tr-end" id="tr-end" hidden><button type="button" id="tr-again">Xem lại</button><a href="../home/">Về nhà</a></div>';
+    ov.innerHTML = '<div class="tr-bloom" id="tr-bloom"></div><div class="tr-vig"></div><div class="tr-grain"></div><div class="tr-black" id="tr-black"></div><div class="tr-dip" id="tr-dip"></div><div class="tr-crt"></div><div class="tr-glitch" id="tr-glitch"><i></i><i></i><i></i></div><div class="tr-bar t"></div><div class="tr-bar b"></div><div class="tr-card" id="tr-card"><h1></h1><p></p></div><div class="tr-flash" id="tr-flash"></div><button class="tr-start" id="tr-start" type="button"><b>▶</b>Xem trailer</button><div class="tr-end" id="tr-end" hidden><button type="button" id="tr-again">Xem lại</button><a href="../home/">Về nhà</a></div>';
     room.appendChild(ov);
     const music = new Audio('../assets/sound/trailer.mp3');
     music.preload = 'auto'; // tải sẵn trong lúc chờ bấm, để nhạc vào ngay
@@ -856,7 +856,18 @@
       room.classList.remove('dof');
     };
     const cam = (t, ms) => { scene.style.transition = 'transform ' + ms + 'ms cubic-bezier(.45, 0, .25, 1), filter .6s'; scene.style.transform = t; };
-    const cut = async (t, fn) => { await at(t - 0.08); fx.whoosh(); flick(); await at(t); fn(); render(); };
+    // Chuyển cảnh kiểu phim: chớp qua màn đen rất nhanh, cảnh mới hiện ra từ nhoè chuyển động như máy quay vừa lia.
+    // Tiếng: gió trầm cuộn lên rồi chạm nhịp trầm; cú cắt nhanh (quick) chỉ là tiếng màn trập.
+    const whip = () => replay(scene, 'whip');
+    const cut = async (t, fn, quick) => {
+      if (!quick) { await at(t - 0.35); fx.swell(0.35); }
+      await at(t - 0.08);
+      replay($('tr-dip'), 'go');
+      if (quick) fx.shutter();
+      await at(t);
+      fn(); render(); whip();
+      if (!quick) fx.thud();
+    };
     const go = (r) => { S.room = r; };
 
     // Mở: khung phim kéo vào, đồng hồ trong bóng tối, kim giây nhảy theo tiếng tích của nhạc. Điểm 20:00 (giờ hẹn),
@@ -917,11 +928,13 @@
     await card('Có một cuộn băng', '', 10.4, 12.3, { beat: true });
     await card('đang chờ em.', '', 12.89, 13.9, { hit: true });
     // Phòng khách tối hiện ra; đèn bật đúng lúc organ vào
+    await at(13.79);
+    fx.swell(0.35);
     await at(14.14);
     go('r1'); S.lamp = false; render();
     cam('scale(1.32) translate(6%, 4%)', 0);
     await sleep(40);
-    fx.whoosh(); flick(); black(false);
+    fx.thud(); whip(); black(false);
     cam('scale(1.1) translate(2%, 1%)', 3400);
     await at(15.41);
     fx.lamp(); S.lamp = true; render(); replay($('tr-bloom'), 'go');
@@ -935,7 +948,7 @@
     const tapes = row.children;
     for (const [i, t] of [19.17, 19.8, 20.42, 21.05].entries()) { await at(t); tapes[i].classList.add('in'); fx.clack(); }
     await at(22.3);
-    tapes[4].classList.add('in'); flick(); beat();
+    tapes[4].classList.add('in'); fx.glitch(); beat();
     // Cú đánh lớn, nhạc chuyển sang No Time for Caution
     await at(24.18);
     row.classList.add('judge');
@@ -955,9 +968,9 @@
     await at(31.18);
     S.done.words = true; render(); beat();
     // Cắt nhanh theo nửa phách
-    await cut(32.18, () => { go('r1'); cam('scale(1.65) translate(14%, -8%)', 0); S.done.jig = true; });
-    await cut(32.68, () => { go('r2'); cam('scale(1.6) translate(6%, -10%)', 0); S.done.case = true; S.done.pillow = true; });
-    await cut(33.18, () => { go('r3'); cam('scale(1.9) translate(0, 14%)', 0); });
+    await cut(32.18, () => { go('r1'); cam('scale(1.65) translate(14%, -8%)', 0); S.done.jig = true; }, true);
+    await cut(32.68, () => { go('r2'); cam('scale(1.6) translate(6%, -10%)', 0); S.done.case = true; S.done.pillow = true; }, true);
+    await cut(33.18, () => { go('r3'); cam('scale(1.9) translate(0, 14%)', 0); }, true);
     // Cao trào: ba chữ trên ba phách, "Một bí mật." đúng cú vỡ oà của bản nhạc
     await at(33.68);
     black(true);
@@ -966,17 +979,17 @@
     await card('Năm cuộn băng.', '', 35.18, 35.96, { hit: true });
     await card('Một bí mật.', '', 36.18, 37.31, { hit: 'big' });
     // Sóng organ thứ hai: lướt nhanh qua ba phòng, rồi dội lại đúng lúc máy quay lao vào chiếc TV
-    await cut(37.68, () => { black(false); go('r2'); cam('scale(1.45) translate(-10%, 4%)', 0); });
+    await cut(37.68, () => { black(false); go('r2'); cam('scale(1.45) translate(-10%, 4%)', 0); }, true);
     cam('scale(1.6) translate(-14%, 4%)', 500);
-    await cut(38.18, () => { go('r3'); cam('scale(1.4) translate(0, 8%)', 0); });
+    await cut(38.18, () => { go('r3'); cam('scale(1.4) translate(0, 8%)', 0); }, true);
     cam('scale(1.55) translate(0, 10%)', 500);
-    await cut(38.68, () => { go('r1'); S.done.jig = true; cam('scale(1.1) translate(0, 4%)', 0); });
+    await cut(38.68, () => { go('r1'); S.done.jig = true; cam('scale(1.1) translate(0, 4%)', 0); }, true);
     await at(39.17);
-    hit(true); flick();
+    hit(true); whip();
     cam('scale(1.5) translate(0, 8%)', 1300);
     // Nhạc tụt về tiếng tích‑tắc: về lại chiếc TV, máy quay zoom dần vào màn hình, chữ méo giật, lời hẹn, rồi TV tắt và cháy nổ nhẹ
     await at(40.68);
-    flick(); shake(true);
+    replay($('tr-dip'), 'go'); shake(true);
     await TV.tease(['Tín hiệu yếu…', 'Đang tua lại…', 'Hẹn em ở cuộn băng thật.'], () => cam('scale(2.45) translate(0, 21%)', 6200), true);
     // Tín hiệu quá tải: băng tự huỷ, đếm 3, 2, 1 đúng ba tiếng tích‑tắc, mỗi số máy quay giật sát vào thêm
     await TV.selfDestruct(at, 49.44, [50.69, 51.92, 53.18], (i) => { cam('scale(' + (2.62 + i * 0.17) + ') translate(0, 21%)', 140); shake(i === 2); });
@@ -989,7 +1002,6 @@
     // Im lặng, rồi BĂNG SỐ 1. Neon chập chờn: nhạc lùi xuống thật nhỏ cho tiếng "tít" vang trong khoảng lặng;
     // đèn sáng hẳn đúng tiếng bùng của Mountains thì nhạc dâng lên, ngân dài rồi tự tắt dần.
     await at(57.53);
-    flick();
     mix.to(0.15, 0.3);
     await card('BĂNG SỐ 1', 'Hồi ức · Sắp ra mắt', 57.53, undefined, { big: true, hit: 'big' });
     await at(59.77 - NEON_MS / 1000);
