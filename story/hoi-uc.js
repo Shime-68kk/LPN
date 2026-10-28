@@ -292,6 +292,8 @@
     },
     thud() { if (!ac) return; const t = ac.currentTime; tone(t, 0.9, 68, 34, 0.5); noise(t, 0.25, 'lowpass', 220, 0.7, 0.35); },
     shutter() { if (!ac) return; const t = ac.currentTime; noise(t, 0.012, 'bandpass', 2600, 2, 0.45); noise(t + 0.035, 0.012, 'bandpass', 1900, 2, 0.35); tone(t, 0.18, 90, 45, 0.3); },
+    // Biển neon chập: vài tiếng xèn xẹt rất ngắn và tiếng rè điện
+    crackle() { if (!ac) return; const t = ac.currentTime; for (let i = 0; i < 5; i++) noise(t + i * 0.025 + Math.random() * 0.02, 0.015, 'bandpass', 2500 + Math.random() * 2500, 1.2, 0.18); tone(t, 0.12, 120, 118, 0.05, 'sawtooth'); },
     // Còi báo quá tải: hai nốt luân phiên, ba lượt
     alarm() { if (!ac) return; const t = ac.currentTime; for (let i = 0; i < 3; i++) { tone(t + i * 0.3, 0.14, 1320, 1320, 0.06, 'square'); tone(t + i * 0.3 + 0.15, 0.14, 990, 990, 0.06, 'square'); } },
     // Đếm ngược: bíp và nhịp trầm; số cuối bíp cao, kéo dài

@@ -28,11 +28,12 @@ const CUES = [
   // Rơi tụt về tiếng tích‑tắc lặng: TV nhiễu và lời hẹn, nhạc phồng nhẹ; cảnh báo quá tải (49.44), đếm 3, 2, 1 trên ba
   // tiếng tích 50.69, 51.92, 53.18; cắt đúng lúc TV nổ ở tiếng tích kế tiếp (54.43)
   { src: 'M', from: 41.63, to: 55.38, at: 40.68, db: 8, fin: 0.05, fout: 0.12 },
-  // Im lặng. Chữ BĂNG SỐ 1 hiện (57.53) trên nền nhạc đang dồn, đèn neon sáng hẳn đúng tiếng bùng 2:01.96 (giây 59.77).
+  // Im lặng. Biển BĂNG SỐ 1 hiện (57.53) trên nền nhạc đang dồn: neon nháy, hỏng tạm thời, rồi sáng trọn vẹn đúng tiếng
+  // bùng 2:01.96 (giây 62.0).
   // Nhỏ hơn bản gốc 5 dB: đoạn kết không làm giật mình người đeo tai nghe.
-  { src: 'M', from: 119.72, to: 128.23, at: 57.53, db: -5, fin: 0.5, fout: 1.2 },
+  { src: 'M', from: 117.49, to: 128.23, at: 57.53, db: -5, fin: 0.5, fout: 1.2 },
   // Ngân dài: nối sang đoạn kết của Mountains, tắt dần tự nhiên
-  { src: 'M', from: 203.49, to: 219.00, at: 64.83, db: -5, fin: 1.2, fout: 0.5 },
+  { src: 'M', from: 203.49, to: 219.00, at: 67.06, db: -5, fin: 1.2, fout: 0.5 },
 ];
 
 const args = ['-v', 'error', '-y'];

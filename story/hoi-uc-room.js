@@ -869,6 +869,50 @@
       if (!quick) fx.thud();
     };
     const go = (r) => { S.room = r; };
+    // Kết trailer: biển neon cũ trong sương, tối và huyền bí. Từ giây t0 nháy chập chờn lúc bật, rồi hỏng tạm thời
+    // (chữ Ố chập chờn kèm tiếng xèn xẹt, chữ G tắt một lúc, chữ Ă yếu, cả biển sụt áp), chớp lần cuối và sáng trọn vẹn
+    // đúng giây tFull (cú bùng của nhạc): mọi chữ sáng đều, viền bóng đèn bừng lên lần lượt.
+    const brokenSign = async (t0, tFull) => {
+      const rnd = (a, z) => a + Math.random() * (z - a);
+      const edge = (k) => (k < 0.3 ? [k / 0.3 * 100, 0] : k < 0.5 ? [100, (k - 0.3) / 0.2 * 100] : k < 0.8 ? [100 - (k - 0.5) / 0.3 * 100, 100] : [0, 100 - (k - 0.8) / 0.2 * 100]);
+      const bulbs = Array.from({ length: 40 }, (_, i) => { const [x, y] = edge(i / 40); return '<i class="' + (i % 3 === 1 ? 'alive' : '') + '" style="left:' + x.toFixed(2) + '%;top:' + y.toFixed(2) + '%;--t:' + rnd(2.2, 5.5).toFixed(1) + 's;--d:' + (-rnd(0, 5)).toFixed(1) + 's;--w:' + (i * 0.03).toFixed(2) + 's"></i>'; }).join('');
+      const dust = Array.from({ length: 14 }, () => '<i style="left:' + rnd(38, 62).toFixed(1) + '%;top:' + rnd(30, 80).toFixed(1) + '%;--t:' + rnd(5, 9).toFixed(1) + 's;--d:' + (-rnd(0, 9)).toFixed(1) + 's;--x:' + rnd(-4, 4).toFixed(1) + 'cqw"></i>').join('');
+      const box = document.createElement('div');
+      box.className = 'tr-sign';
+      box.innerHTML = '<div class="beam"></div><div class="dust">' + dust + '</div><div class="fog"></div><div class="board"><div class="bulbs">' + bulbs + '</div></div><div class="fog f2"></div>'
+        + '<h1>' + [...'BĂNG SỐ 1'].map((c) => '<b>' + c + '</b>').join('') + '</h1><p>Hồi ức · Sắp ra mắt</p>';
+      ov.insertBefore(box, $('tr-card'));
+      requestAnimationFrame(() => box.classList.add('on'));
+      const h = box.querySelector('h1'), L = h.querySelectorAll('b'); // B Ă N G _ S Ố _ 1
+      const all = (off) => L.forEach((b) => b.classList.toggle('off', off));
+      await at(t0);
+      fx.neon(true);
+      for (const [on, ms] of NEON) { h.classList.toggle('lit', !!on); fx.neonLevel(on ? 1 : 0.15); if (on) fx.tick(); await sleep(ms); }
+      h.classList.add('lit'); fx.tick();
+      L[1].classList.add('dim');
+      // Hỏng tạm thời: Ố chập chờn, G tắt, Ố, sụt áp... cho tới sát lúc sáng trọn vẹn
+      for (let k = 0; clock() < tFull - 0.75; k++) {
+        const r = [0, 1, 0, 2][k % 4];
+        if (r === 0) {
+          for (let i = 0; i < 3; i++) { L[6].classList.add('off'); fx.crackle(); fx.neonLevel(0.6); await sleep(rnd(40, 100)); L[6].classList.remove('off'); fx.neonLevel(1); await sleep(rnd(50, 120)); }
+        } else if (r === 1) {
+          L[3].classList.add('off'); fx.crackle(); await sleep(560); L[3].classList.remove('off'); fx.tick();
+        } else {
+          box.classList.add('sag'); fx.neonLevel(0.3); await sleep(150); box.classList.remove('sag'); fx.neonLevel(1);
+        }
+        await sleep(rnd(180, 360));
+      }
+      // Chớp lần cuối rồi sáng trọn vẹn
+      await at(tFull - 0.32);
+      all(true); fx.neonLevel(0.15); await sleep(140);
+      all(false); fx.tick(); fx.neonLevel(1); await sleep(90);
+      all(true); fx.neonLevel(0.15);
+      await at(tFull);
+      all(false); L[1].classList.remove('dim');
+      box.classList.add('full');
+      fx.thud(); fx.neonLevel(1);
+      setTimeout(() => fx.neon(false), 1400);
+    };
 
     // Mở: khung phim kéo vào, đồng hồ trong bóng tối, kim giây nhảy theo tiếng tích của nhạc. Điểm 20:00 (giờ hẹn),
     // rồi băng tua ngược: kim quay ngược về 23:38 đêm ấy, nhạc phát lại từ đoạn vừa bị tua.
@@ -1003,11 +1047,10 @@
     // đèn sáng hẳn đúng tiếng bùng của Mountains thì nhạc dâng lên, ngân dài rồi tự tắt dần.
     await at(57.53);
     mix.to(0.15, 0.3);
-    await card('BĂNG SỐ 1', 'Hồi ức · Sắp ra mắt', 57.53, undefined, { big: true, hit: 'big' });
-    await at(59.77 - NEON_MS / 1000);
-    await neonSign();
+    hit(true);
+    await brokenSign(57.7, 62);
     mix.to(0.85, 0.4); // đoạn kết đã nhỏ hơn 5 dB trong file nhạc, không làm giật mình người đeo tai nghe
-    await at(62);
+    await at(64.2);
     $('tr-end').hidden = false;
     $('tr-again').addEventListener('click', () => location.reload());
   }
@@ -1028,34 +1071,9 @@
       + '<rect class="wn" x="24" y="38" width="52" height="17" rx="8.5"/><circle class="rl" cx="37" cy="46.5" r="5"/><circle class="rl" cx="63" cy="46.5" r="5"/></svg>';
   }
 
-  // Chữ BĂNG SỐ 1 cuối trailer: chập chờn như biển hiệu neon cũ khoảng 1,6 giây ("tít" mỗi lần chập lên),
-  // rồi sáng hẳn và đứng yên, tiếng rè tắt dần. Không lặp lại. Trả về lúc đèn sáng hẳn.
+  // Nhịp nháy của biển neon lúc bật (bật / tắt, mili giây), cả đoạn khoảng 1,6 giây.
   const NEON = [[1, 140], [0, 80], [1, 60], [0, 110], [1, 50], [0, 260], [1, 90], [0, 60], [1, 40], [0, 70], [1, 70], [0, 180]].map(([on, ms]) => [on, ms * 1.35]);
-  const NEON_MS = NEON.reduce((s, [, ms]) => s + ms, 0); // cả đoạn chập chờn khoảng 1,6 giây
-  function neonSign() {
-    const h = $('tr-card').querySelector('h1');
-    h.classList.add('neon');
-    fx.neon(true);
-    return new Promise((done) => {
-      let i = 0;
-      const step = () => {
-        if (i >= NEON.length) {
-          h.classList.remove('off');
-          fx.tick();
-          fx.neonLevel(1);
-          setTimeout(() => fx.neon(false), 900);
-          done();
-          return;
-        }
-        const [on, ms] = NEON[i++];
-        h.classList.toggle('off', !on);
-        fx.neonLevel(on ? 1 : 0.15);
-        if (on) fx.tick();
-        setTimeout(step, ms);
-      };
-      step();
-    });
-  }
+
 
   const fx = TV.sfx;
 

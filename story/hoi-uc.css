@@ -663,3 +663,39 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 @keyframes dip { 25%, 45% { opacity: 1; } 100% { opacity: 0; } }
 .room.trailer .scene.whip { animation: whip .5s cubic-bezier(.2, .7, .2, 1); }
 @keyframes whip { from { filter: contrast(1.07) saturate(.88) sepia(.12) blur(7px) brightness(.7); } }
+
+/* Kết trailer: biển neon cũ trong sương. Tối, bóng đèn viền tắt gần hết, vài bóng le lói; sương trôi, luồng sáng có bụi.
+   Neon nháy rồi hỏng tạm thời (chữ tắt, chữ yếu, sụt áp), cuối cùng sáng trọn vẹn và viền bóng đèn bừng lên. */
+.tr-sign { position: absolute; left: 50%; top: 50%; width: min(94vw, 150vh); aspect-ratio: 16 / 9; transform: translate(-50%, -52%); container-type: inline-size; opacity: 0; transition: opacity 1.2s; }
+.tr-sign.on { opacity: 1; }
+.tr-sign .beam { position: absolute; left: 30%; right: 30%; top: -10%; height: 85%; background: linear-gradient(180deg, rgba(255, 220, 170, .09), rgba(255, 220, 170, 0)); clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%); filter: blur(1.5cqw); opacity: .8; }
+.tr-sign .dust { position: absolute; inset: 0; }
+.tr-sign .dust i { position: absolute; width: .35cqw; height: .35cqw; border-radius: 50%; background: rgba(255, 230, 190, .5); animation: dust var(--t) linear infinite; animation-delay: var(--d); }
+@keyframes dust { 0% { transform: translate(0, 0); opacity: 0; } 20%, 80% { opacity: .7; } 100% { transform: translate(var(--x), -14cqw); opacity: 0; } }
+.tr-sign .board { position: absolute; left: 14%; right: 14%; top: 22%; bottom: 28%; border-radius: 2cqw; background: linear-gradient(#140E0B, #0B0807); box-shadow: inset 0 0 0 .4cqw #2A1E15, inset 0 0 4cqw rgba(0, 0, 0, .9); transition: box-shadow 2.5s; }
+.tr-sign.full .board { box-shadow: inset 0 0 0 .4cqw #4A321C, inset 0 0 4cqw rgba(0, 0, 0, .8), 0 0 7cqw rgba(224, 150, 60, .18); }
+.tr-sign .bulbs { position: absolute; inset: 1cqw; }
+.tr-sign .bulbs i { position: absolute; width: 1.1cqw; height: 1.1cqw; margin: -.55cqw; border-radius: 50%; background: #2A2016; }
+.tr-sign .bulbs i.alive { animation: weak var(--t) ease-in-out infinite; animation-delay: var(--d); }
+@keyframes weak { 0%, 100% { background: #3A2A18; box-shadow: none; } 45% { background: #B9803A; box-shadow: 0 0 .8cqw rgba(220, 140, 50, .45); } 50% { background: #4A3520; box-shadow: none; } 55% { background: #A9733A; box-shadow: 0 0 .6cqw rgba(220, 140, 50, .35); } }
+.tr-sign.full .bulbs i { animation: none; background: #E2A95A; box-shadow: 0 0 .7cqw rgba(240, 160, 60, .6), 0 0 1.6cqw rgba(240, 150, 50, .25); transition: background .5s, box-shadow .5s; transition-delay: var(--w); }
+.tr-sign .fog { position: absolute; inset: -20% -40%; pointer-events: none; opacity: .5; background: radial-gradient(ellipse 30% 22% at 30% 60%, rgba(160, 150, 150, .16), rgba(0, 0, 0, 0) 70%), radial-gradient(ellipse 35% 20% at 70% 45%, rgba(150, 140, 140, .13), rgba(0, 0, 0, 0) 70%); filter: blur(2cqw); animation: fog 16s ease-in-out infinite alternate; }
+.tr-sign .fog.f2 { opacity: .35; animation-duration: 22s; animation-direction: alternate-reverse; }
+@keyframes fog { to { transform: translateX(14%); } }
+.tr-sign h1 { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-60%); margin: 0; text-align: center; font: 700 12cqw/1 'Dancing Script', cursive; color: rgba(90, 70, 40, .35); }
+.tr-sign h1 b { font-weight: inherit; -webkit-text-stroke: .14cqw rgba(170, 130, 80, .38); } /* ống neon tắt vẫn thấy hình ống thuỷ tinh */
+.tr-sign h1.lit b { color: #F2D28E; -webkit-text-stroke: 0; text-shadow: 0 0 .3cqw #FFF0CC, 0 0 1.1cqw rgba(233, 180, 100, .8), 0 0 2.6cqw rgba(200, 130, 50, .45); }
+.tr-sign h1.lit b.off { color: rgba(60, 45, 30, .55); -webkit-text-stroke: .14cqw rgba(170, 130, 80, .38); text-shadow: none; }
+/* Bóng neon sắp cháy: le lói, tắt phụt, loé yếu, nhịp không đều; lúc tắt vẫn thấy ống thuỷ tinh */
+.tr-sign h1.lit b.dim { -webkit-text-stroke: .14cqw rgba(170, 130, 80, .38); animation: tube-fail 1.3s steps(1) infinite; }
+@keyframes tube-fail {
+  0%, 22%, 41%, 63%, 88% { color: #B8955E; text-shadow: 0 0 .3cqw rgba(255, 230, 180, .5), 0 0 .8cqw rgba(200, 130, 50, .3); }
+  6%, 30%, 47%, 70%, 94% { color: rgba(60, 45, 30, .55); text-shadow: none; }
+  9%, 35%, 52%, 77% { color: #8E7046; text-shadow: 0 0 .2cqw rgba(255, 220, 160, .3); }
+  12%, 56% { color: #E9C783; text-shadow: 0 0 .3cqw #FFF0CC, 0 0 1cqw rgba(233, 180, 100, .6); }
+}
+.tr-sign.sag h1 { opacity: .45; }
+.tr-sign.full h1 { animation: breathe 3.4s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: .82; } }
+.tr-sign p { position: absolute; left: 0; right: 0; bottom: 17%; margin: 0; text-align: center; font: 600 2.6cqw 'Be Vietnam Pro', sans-serif; letter-spacing: .4em; text-transform: uppercase; color: rgba(220, 205, 180, .55); opacity: 0; transition: opacity 2s .4s; }
+.tr-sign.full p { opacity: 1; }
