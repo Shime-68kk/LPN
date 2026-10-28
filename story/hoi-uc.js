@@ -94,6 +94,21 @@
     }
     if (ac.state !== 'running') ac.resume().catch(() => {});
   }
+  // Nhạc nền đi qua Web Audio để tăng giảm được (Safari trên iPhone không cho đổi audio.volume).
+  // Đi thẳng ra loa, không qua bộ nén, để giữ nguyên độ dội của bản nhạc.
+  function music(el, v) {
+    let g = null;
+    if (ac) { try { g = ac.createGain(); g.gain.value = v; ac.createMediaElementSource(el).connect(g).connect(ac.destination); } catch (e) { g = null; } }
+    if (!g) el.volume = v;
+    return {
+      to(v2, sec) {
+        if (g) { g.gain.cancelScheduledValues(ac.currentTime); g.gain.setTargetAtTime(v2, ac.currentTime, sec / 3); return; }
+        const from = el.volume, t0 = performance.now();
+        const step = () => { const k = Math.min(1, (performance.now() - t0) / (sec * 1000)); el.volume = from + (v2 - from) * k; if (k < 1) requestAnimationFrame(step); };
+        step();
+      },
+    };
+  }
   function noise(t, dur, type, freq, q, gain) {
     const buf = ac.createBuffer(1, Math.ceil(ac.sampleRate * dur), ac.sampleRate);
     const d = buf.getChannelData(0);
@@ -128,7 +143,13 @@
     riser(d) { if (!ac) return; sweep(ac.currentTime, d, 'highpass', 300, 7000, 0.28, true); },
     beat() { if (!ac) return; const t = ac.currentTime; tone(t, 0.14, 62, 38, 0.9); tone(t + 0.2, 0.14, 56, 36, 0.65); },
     // Biển hiệu neon cũ: "tít" mỗi lần đèn chập lên; neon(true/false) bật / tắt tiếng rè rè nền.
-    tick() { if (!ac) return; const t = ac.currentTime; tone(t, 0.06, 2300, 2150, 0.22); noise(t, 0.03, 'bandpass', 4000, 1, 0.25); },
+    // "Tít" rõ, có tiếng vọng nhỏ phía sau như vang trong căn phòng lặng.
+    tick() {
+      if (!ac) return;
+      const t = ac.currentTime;
+      tone(t, 0.07, 2300, 2150, 0.5); tone(t, 0.05, 4600, 4300, 0.12); noise(t, 0.03, 'bandpass', 4000, 1, 0.4);
+      tone(t + 0.14, 0.07, 2300, 2150, 0.16); tone(t + 0.29, 0.07, 2300, 2150, 0.06);
+    },
     neon(on) {
       if (!ac) return;
       if (!on) { if (sfx.hum) { sfx.hum.g.gain.setTargetAtTime(0, ac.currentTime, 0.1); sfx.hum.o.stop(ac.currentTime + 0.5); sfx.hum = null; } return; }
@@ -414,7 +435,7 @@
   // Phần căn phòng gọi vào đây (hoi-uc-room.js).
   window.HoiUc = {
     trailer: TRAILER, tease, burn,
-    sfx, audioOn, playFake,
+    sfx, audioOn, music, playFake,
     busy: () => busy || started,
     armReal(on) { realIn = on; if (on) $('hint').textContent = HINTS[presses] || HINTS[0]; },
   };

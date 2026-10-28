@@ -5,3 +5,6 @@ dist/**
 node_modules
 node_modules/**
 .gemini
+
+# Bài gốc để cắt nhạc trailer: chỉ để trên máy, không đưa lên GitHub
+tools/trailer-music/src/

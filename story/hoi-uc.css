@@ -538,3 +538,27 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 /* BĂNG SỐ 1 cuối trailer: biển hiệu neon cũ chập chờn */
 .tr-card.big h1.neon { animation: none; color: #FFE7A8; text-shadow: 0 0 4px #FFF4D6, 0 0 14px #E9C77B, 0 0 32px #E0A040, 0 0 60px rgba(224, 160, 64, .6); transition: none; }
 .tr-card.big h1.neon.off { color: rgba(120, 95, 50, .45); text-shadow: none; }
+
+/* Năm cuộn băng trong trailer: một hàng ngang, rơi xuống lần lượt; cuộn thứ năm chỉ có dấu hỏi chớp nhiễu */
+.tr-tapes { position: absolute; left: 50%; top: 57%; width: min(94vw, 620px); transform: translateX(-50%); display: flex; gap: min(2.2vw, 14px); padding: min(3vw, 18px); border-radius: 18px; background: radial-gradient(closest-side, rgba(5, 4, 7, .75), rgba(5, 4, 7, 0)); transition: opacity .5s; }
+.tr-tapes.out { opacity: 0; }
+.tr-tape { flex: 1; opacity: 0; transform: translateY(-40%) rotate(-8deg) scale(.8); transition: opacity .25s, transform .45s cubic-bezier(.2, 1.5, .4, 1), filter .5s; }
+.tr-tape:nth-child(even) { --r: 6deg; }
+.tr-tape.in { opacity: 1; transform: rotate(var(--r, -3deg)); }
+.tr-tape svg { display: block; width: 100%; height: auto; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .6)); }
+.tr-tape .sh { fill: #2E241E; stroke: rgba(246, 238, 223, .25); stroke-width: 1.5; }
+.tr-tape .lb { fill: var(--c); }
+.tr-tape text { font: 700 17px 'Be Vietnam Pro', sans-serif; fill: #2B1A12; text-anchor: middle; }
+.tr-tape .wn { fill: #120D0B; }
+.tr-tape .rl { fill: none; stroke: #D9CBB0; stroke-width: 2.6; stroke-dasharray: 3 2.2; transform-box: fill-box; transform-origin: center; }
+.tr-tape.in .rl { animation: reel 1s linear 2; }
+@keyframes reel { to { transform: rotate(360deg); } }
+.tr-tape.q .sh { fill: #120D0B; stroke: #E9C77B; stroke-width: 2; }
+.tr-tape.q .lb { fill: none; stroke: #E9C77B; stroke-width: 1.5; stroke-dasharray: 4 3; }
+.tr-tape.q text { font: 700 24px 'Fraunces', serif; fill: #FFE7A8; }
+.tr-tape.q.in { animation: q-flk 1.6s steps(1) infinite; }
+.tr-tape.q.in svg { filter: drop-shadow(0 0 8px rgba(233, 199, 123, .7)); }
+@keyframes q-flk { 0%, 70%, 80%, 100% { opacity: 1; } 72%, 78% { opacity: .25; } 75% { opacity: .8; } }
+.tr-tapes.judge .tr-tape:not(.q) { filter: grayscale(1) brightness(.4); }
+.tr-tapes.judge .tr-tape.q { animation: none; transform: scale(1.18); }
+.tr-tapes.judge .tr-tape.q svg { filter: drop-shadow(0 0 16px rgba(233, 199, 123, .95)); }

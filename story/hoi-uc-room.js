@@ -749,8 +749,10 @@
 
   document.querySelector('[data-obj="frame"] .frame-img').style.backgroundImage = 'url("' + PHOTO + '")';
   // ===== Trailer: phim giới thiệu tự chạy bằng chính căn phòng (không lộ đáp án) =====
-  // Nhịp phiêu lưu: tim đập trong bóng tối, "bùm" ở mỗi câu lớn, vút + chớp nhiễu khi chuyển cảnh, rung theo cú đánh,
-  // tiếng rít dồn lên trước cao trào. Có assets/sound/trailer.mp3 thì phát kèm (bài hát cắt sẵn ~40 giây).
+  // Nhạc assets/sound/trailer.mp3 cắt từ Interstellar (Hans Zimmer) bằng tools/trailer-music/build.mjs. Mọi mốc dưới đây
+  // là giây trong bản nhạc đó, đo bằng tools/trailer-music/analyze.mjs: tiếng tích‑tắc của Mountains (1,2535 giây một tiếng),
+  // phách 1 giây của No Time for Caution. Hình chạy theo đồng hồ của bản nhạc nên cú đánh rơi đúng phách.
+  // Không có nhạc thì chạy theo giờ máy, kèm tiếng tim đập và tiếng rít tự tạo.
   async function runTrailer() {
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     const room = $('room'), scene = $('scene');
@@ -759,133 +761,162 @@
     ov.className = 'tr-ov';
     ov.innerHTML = '<div class="tr-black" id="tr-black"></div><div class="tr-crt"></div><div class="tr-glitch" id="tr-glitch"><i></i><i></i><i></i></div><div class="tr-bar t"></div><div class="tr-bar b"></div><div class="tr-card" id="tr-card"><h1></h1><p></p></div><div class="tr-flash" id="tr-flash"></div><button class="tr-start" id="tr-start" type="button"><b>▶</b>Xem trailer</button><div class="tr-end" id="tr-end" hidden><button type="button" id="tr-again">Xem lại</button><a href="../home/">Về nhà</a></div>';
     room.appendChild(ov);
+    const music = new Audio('../assets/sound/trailer.mp3');
+    music.preload = 'auto'; // tải sẵn trong lúc chờ bấm, để nhạc vào ngay
     await new Promise((res) => $('tr-start').addEventListener('click', res, { once: true }));
     $('tr-start').remove();
     TV.audioOn();
-    const music = new Audio('../assets/sound/trailer.mp3');
-    music.volume = 0.85;
+    const mix = TV.music(music, 0.85);
     music.play().catch(() => {});
     const fx = TV.sfx;
+    // Có nhạc nền thì bỏ tiếng tim đập và tiếng rít dồn lên (nhạc tự có nhịp và cao trào), chỉ giữ tiếng va chạm, nhiễu, vút.
+    let withMusic = false;
+    music.addEventListener('playing', () => { withMusic = true; });
+    const beat = () => { if (!withMusic) fx.beat(); };
+    const riser = (d) => { if (!withMusic) fx.riser(d); };
+    const t0 = performance.now();
+    const clock = () => (withMusic && !music.paused ? music.currentTime : (performance.now() - t0) / 1000);
+    const at = (t) => new Promise((res) => { const f = () => (clock() >= t ? res() : requestAnimationFrame(f)); f(); });
     const black = (on) => $('tr-black').classList.toggle('on', on);
     const replay = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
     const shake = (big) => replay(room, big ? 'tr-shake2' : 'tr-shake');
     const flick = () => { replay($('tr-glitch'), 'go'); replay(room, 'tr-flicker'); fx.glitch(); };
     const hit = (big) => { fx.boom(); shake(big); replay($('tr-flash'), 'go'); };
-    const card = async (h, p, ms, opt) => {
+    // Chữ hiện từ giây "from" đến giây "to" (không có "to" thì giữ nguyên).
+    const card = async (h, p, from, to, opt) => {
       const o = opt || {};
       const c = $('tr-card');
+      await at(from);
       c.classList.toggle('big', !!o.big);
       c.querySelector('h1').textContent = h || '';
       c.querySelector('p').textContent = p || '';
       if (o.hit) hit(o.hit === 'big');
-      if (o.beat) fx.beat();
+      if (o.beat) beat();
       c.classList.add('on');
-      await sleep(ms);
-      if (o.keep) return;
+      if (to === undefined) return;
+      await at(to);
       c.classList.remove('on');
-      await sleep(300);
     };
     const cam = (t, ms) => { scene.style.transition = 'transform ' + ms + 'ms cubic-bezier(.45, 0, .25, 1)'; scene.style.transform = t; };
-    const cut = async (fn) => { fx.whoosh(); flick(); await sleep(80); fn(); render(); };
+    const cut = async (t, fn) => { await at(t - 0.08); fx.whoosh(); flick(); await at(t); fn(); render(); };
     const go = (r) => { S.room = r; };
 
-    // Mở: bóng tối, tim đập
+    // Mở: bóng tối, chỉ có tiếng tích‑tắc
     black(true);
-    await sleep(500);
-    fx.beat(); await sleep(900);
-    fx.beat(); await sleep(700);
-    await card('Có một cuộn băng', '', 1900, { beat: true });
-    await card('đang chờ em.', '', 1700, { hit: true });
-    // Phòng khách tối, đèn bật
+    await at(0.37); beat();
+    await at(1.63); beat();
+    await card('Có một cuộn băng', '', 2.88, 4.9, { beat: true });
+    await card('đang chờ em.', '', 5.39, 7.3, { hit: true });
+    // Phòng khách tối hiện ra; đèn bật đúng lúc organ vào
+    await at(7.89);
     go('r1'); S.lamp = false; render();
     cam('scale(1.32) translate(6%, 4%)', 0);
     await sleep(40);
     fx.whoosh(); flick(); black(false);
     cam('scale(1.1) translate(2%, 1%)', 3400);
-    await sleep(1400);
+    await at(10.4);
     fx.click(); S.lamp = true; render();
-    fx.riser(9.5);
-    await sleep(1300);
-    await card('Năm cuộn băng.', '', 1300, { beat: true });
-    Object.assign(S.items, { A: true, B: true, C: true, D: true }); // cuộn thứ năm để người xem tự tò mò
-    render(); $('bag').hidden = false;
-    await sleep(1300);
-    await card('Chỉ một cuộn là thật.', '', 1600, { hit: 'big' });
-    $('bag').hidden = true;
+    riser(9.5);
+    await card('Năm cuộn băng.', '', 12.91, 13.9, { beat: true });
+    // Năm cuộn rơi xuống theo nửa nhịp tích‑tắc thành một hàng ngang (xem dọc vẫn vừa màn hình); cuộn thứ năm là dấu hỏi chớp nhiễu
+    const row = document.createElement('div');
+    row.className = 'tr-tapes';
+    row.innerHTML = TR_TAPES.map(([c, t], i) => '<div class="tr-tape' + (i === 4 ? ' q' : '') + '" style="--c:' + c + '">' + cassette(t) + '</div>').join('');
+    ov.insertBefore(row, $('tr-card'));
+    const tapes = row.children;
+    for (const [i, t] of [14.16, 14.79, 15.41, 16.04].entries()) { await at(t); tapes[i].classList.add('in'); fx.click(); }
+    await at(17.29);
+    tapes[4].classList.add('in'); flick(); beat();
+    // Cú đánh lớn, nhạc chuyển sang No Time for Caution
+    await at(19.17);
+    row.classList.add('judge');
+    await card('Chỉ một cuộn là thật.', '', 19.17, 20.8, { hit: 'big' });
+    row.classList.add('out');
     // Phòng ngủ đêm
-    await cut(() => { go('r2'); cam('scale(1.28) translate(-6%, 2%)', 0); });
+    await cut(21.17, () => { go('r2'); cam('scale(1.28) translate(-6%, 2%)', 0); });
     await sleep(50);
     cam('scale(1.28) translate(-18%, 2%)', 2800);
-    await sleep(1500);
+    await at(23.17);
     fx.click(); S.done.robot = true; render();
-    await sleep(1100);
     // Sân đình
-    await cut(() => { go('r3'); cam('scale(1.05)', 0); });
-    await sleep(700);
+    await cut(24.17, () => { go('r3'); cam('scale(1.05)', 0); });
+    await at(25.17);
     S.items.key = true; S.done.gate = true; render(); fx.click(); shake();
     cam('scale(1.32) translate(0, 6%)', 2300);
-    await sleep(1500);
-    S.done.words = true; render(); fx.beat();
-    await sleep(900);
-    // Cắt nhanh
-    await cut(() => { go('r1'); cam('scale(1.65) translate(14%, -8%)', 0); S.done.jig = true; });
-    await sleep(550);
-    await cut(() => { go('r2'); cam('scale(1.6) translate(6%, -10%)', 0); S.done.case = true; S.done.pillow = true; });
-    await sleep(550);
-    await cut(() => { go('r3'); cam('scale(1.9) translate(0, 14%)', 0); });
-    await sleep(550);
-    // Cao trào
+    await at(26.17);
+    S.done.words = true; render(); beat();
+    // Cắt nhanh theo nửa phách
+    await cut(27.17, () => { go('r1'); cam('scale(1.65) translate(14%, -8%)', 0); S.done.jig = true; });
+    await cut(27.67, () => { go('r2'); cam('scale(1.6) translate(6%, -10%)', 0); S.done.case = true; S.done.pillow = true; });
+    await cut(28.17, () => { go('r3'); cam('scale(1.9) translate(0, 14%)', 0); });
+    // Cao trào: ba chữ trên ba phách, "Một bí mật." đúng cú vỡ oà của bản nhạc
+    await at(28.67);
     black(true);
-    fx.riser(3.4);
-    await sleep(400);
-    await card('Ba căn phòng.', '', 900, { hit: true });
-    await card('Năm cuộn băng.', '', 900, { hit: true });
-    await card('Một bí mật.', '', 1100, { hit: 'big' });
-    // Về lại chiếc TV: bật lên, máy quay zoom dần vào màn hình, chữ méo giật, lời hẹn, rồi TV tắt và cháy nổ nhẹ
+    riser(2.4);
+    await card('Ba căn phòng.', '', 29.17, 29.95, { hit: true });
+    await card('Năm cuộn băng.', '', 30.17, 30.95, { hit: true });
+    await card('Một bí mật.', '', 31.17, 32.3, { hit: 'big' });
+    // Nhạc tụt về tiếng tích‑tắc: về lại chiếc TV, máy quay zoom dần vào màn hình, chữ méo giật, lời hẹn, rồi TV tắt và cháy nổ nhẹ
+    await at(32.5);
     go('r1'); S.done.jig = true; render();
     cam('scale(1.5) translate(0, 8%)', 0);
-    await sleep(60);
-    flick(); black(false);
-    await sleep(500);
-    shake(true);
+    flick(); black(false); shake(true);
     await TV.tease(['Tín hiệu yếu…', 'Đang tua lại…', 'Hẹn em ở cuộn băng thật.'], () => cam('scale(2.45) translate(0, 21%)', 6200));
+    await at(42.03);
     await TV.burn();
     shake();
     black(true);
-    await sleep(900);
+    // Im lặng, rồi BĂNG SỐ 1. Neon chập chờn: nhạc lùi xuống thật nhỏ cho tiếng "tít" vang trong khoảng lặng;
+    // đèn sáng hẳn đúng tiếng bùng của Mountains thì nhạc dâng lên, ngân dài rồi tự tắt dần.
+    await at(45.13);
     flick();
-    await card('BĂNG SỐ 1', 'Hồi ức · Sắp ra mắt', 600, { big: true, hit: 'big', keep: true });
-    neonSign();
-    await sleep(3000);
-    const fade = setInterval(() => { music.volume = Math.max(0, music.volume - 0.04); if (!music.volume) { clearInterval(fade); music.pause(); } }, 150);
+    mix.to(0.15, 0.3);
+    await card('BĂNG SỐ 1', 'Hồi ức · Sắp ra mắt', 45.13, undefined, { big: true, hit: 'big' });
+    await at(47.37 - NEON_MS / 1000);
+    await neonSign();
+    mix.to(1, 0.25);
+    await at(49.6);
     $('tr-end').hidden = false;
     $('tr-again').addEventListener('click', () => location.reload());
   }
 
-  // Chữ BĂNG SỐ 1 cuối trailer: chập chờn như biển hiệu neon cũ khoảng 1,5–2 giây ("tít" mỗi lần chập lên),
-  // rồi sáng hẳn và đứng yên, tiếng rè tắt dần. Không lặp lại.
+  // Năm cuộn băng trong trailer: mỗi cuộn một màu nhãn, cuộn cuối không nhãn, chỉ có dấu hỏi.
+  const TR_TAPES = [['#E9C77B', '01'], ['#8FB8DE', '02'], ['#9CCB98', '03'], ['#E88A7A', 'Số 1'], ['none', '?']];
+  function cassette(t) {
+    return '<svg viewBox="0 0 100 64" aria-hidden="true"><rect class="sh" x="2" y="2" width="96" height="60" rx="6"/>'
+      + '<rect class="lb" x="10" y="7" width="80" height="27" rx="3"/><text x="50" y="27">' + t + '</text>'
+      + '<rect class="wn" x="24" y="38" width="52" height="17" rx="8.5"/><circle class="rl" cx="37" cy="46.5" r="5"/><circle class="rl" cx="63" cy="46.5" r="5"/></svg>';
+  }
+
+  // Chữ BĂNG SỐ 1 cuối trailer: chập chờn như biển hiệu neon cũ khoảng 1,6 giây ("tít" mỗi lần chập lên),
+  // rồi sáng hẳn và đứng yên, tiếng rè tắt dần. Không lặp lại. Trả về lúc đèn sáng hẳn.
+  const NEON = [[1, 140], [0, 80], [1, 60], [0, 110], [1, 50], [0, 260], [1, 90], [0, 60], [1, 40], [0, 70], [1, 70], [0, 180]].map(([on, ms]) => [on, ms * 1.35]);
+  const NEON_MS = NEON.reduce((s, [, ms]) => s + ms, 0); // cả đoạn chập chờn khoảng 1,6 giây
   function neonSign() {
     const h = $('tr-card').querySelector('h1');
     h.classList.add('neon');
     fx.neon(true);
-    const PAT = [[1, 140], [0, 80], [1, 60], [0, 110], [1, 50], [0, 260], [1, 90], [0, 60], [1, 40], [0, 70], [1, 70], [0, 180]];
-    let i = 0;
-    const step = () => {
-      if (i >= PAT.length) {
-        h.classList.remove('off');
-        fx.tick();
-        fx.neonLevel(1);
-        setTimeout(() => fx.neon(false), 900);
-        return;
-      }
-      const [on, ms] = PAT[i++];
-      h.classList.toggle('off', !on);
-      fx.neonLevel(on ? 1 : 0.15);
-      if (on) fx.tick();
-      setTimeout(step, ms * 1.35); // cả đoạn chập chờn khoảng 1,8 giây
-    };
-    step();
+    return new Promise((done) => {
+      let i = 0;
+      const step = () => {
+        if (i >= NEON.length) {
+          h.classList.remove('off');
+          fx.tick();
+          fx.neonLevel(1);
+          setTimeout(() => fx.neon(false), 900);
+          done();
+          return;
+        }
+        const [on, ms] = NEON[i++];
+        h.classList.toggle('off', !on);
+        fx.neonLevel(on ? 1 : 0.15);
+        if (on) fx.tick();
+        setTimeout(step, ms);
+      };
+      step();
+    });
   }
+
   const fx = TV.sfx;
 
   window.HoiUcRoom = { say, power };
