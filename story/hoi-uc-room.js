@@ -10,7 +10,7 @@
 //   → máy tính phòng ngủ (mật khẩu máy anh Quang, chỉ lưu mã băm) → file sơ đồ chip → kéo 4 chip vào robot
 //   → robot đọc mã 4719 → điện thoại → sau khung ảnh: băng thật → đầu băng → nút nguồn.
 // Đồ dùng xong tự biến khỏi túi; "Sổ ghi chép" giữ lại manh mối, cái nào giải xong có dấu ✓.
-// Tiến độ lưu trên máy (lpn:bang1). Chơi lại từ đầu: thêm ?moi=1 vào địa chỉ.
+// Tiến độ lưu trên máy (lpn:bang1). Chơi lại từ đầu: thêm ?moi=1 vào địa chỉ. Xem thử câu đố: ?thu=vali, ?thu=bang, ?thu=maytinh.
 'use strict';
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -18,13 +18,20 @@
   const TV = window.HoiUc;
   if (!TV) return;
   const TRAILER = !!TV.trailer; // đoạn phim giới thiệu: không đọc / ghi tiến độ thật
+  // Xem thử một câu đố không cần chơi tới: ?thu=vali (khoá vali), ?thu=bang (bảng ghim), ?thu=maytinh (máy tính đã đăng nhập).
+  // Dựng sẵn tiến độ tới đó, không lưu gì.
+  const TRY = (location.search.match(/[?&]thu=(vali|bang|maytinh)\b/) || [])[1];
+  const DRY = TRAILER || !!TRY;
+  const TRY_STATE = TRY === 'maytinh'
+    ? { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true }, seen: { A: true, B: true, C: true, D: true }, done: { jig: true, book: true, cipher: true, pillow: true, pc: true } }
+    : { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true }, seen: { A: true, B: true, C: true }, done: { jig: true, book: true, cipher: true, pillow: true } };
   try { if (/[?&]moi=1\b/.test(location.search)) localStorage.removeItem(KEY); } catch (e) { /* bỏ qua */ }
-  const load = () => { if (TRAILER) return {}; try { const v = JSON.parse(localStorage.getItem(KEY)); return v && v.v === 2 ? v : {}; } catch (e) { return {}; } };
+  const load = () => { if (TRY) return TRY_STATE; if (TRAILER) return {}; try { const v = JSON.parse(localStorage.getItem(KEY)); return v && v.v === 2 ? v : {}; } catch (e) { return {}; } };
   const S = Object.assign({ v: 2, room: 'r1', lamp: false, tut: false, items: {}, seen: {}, done: {}, inVcr: null }, load());
   // Thoát giữa lúc chiếu băng giả: băng về lại túi, không kẹt trong máy.
   if (S.inVcr && S.inVcr !== 'E') S.inVcr = null;
   let sel = null; // món đang cầm trên tay (chọn từ túi)
-  const save = () => { if (TRAILER) return; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* bỏ qua */ } };
+  const save = () => { if (DRY) return; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* bỏ qua */ } };
 
   // ===== Đồ vật trong túi =====
   const TAPES = {
@@ -538,7 +545,6 @@
     });
   }
   // Màn hình máy tính: thư gửi em, ảnh, nhạc, thùng rác để lục; thư mục Đồ án bị khoá, mật khẩu nằm trong thùng rác.
-  const norm = (t) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9]/g, '');
   function pcDesk() {
     const ICONS = [
       ['letter', 'Thư gửi em', 'txt'], ['photos', 'Ảnh', ''], ['music', 'Nhạc', ''], ['project', 'Đồ án', 'lock'], ['bin', 'Thùng rác', 'bin'],
@@ -565,11 +571,26 @@
         }),
         project: () => {
           if (S.done.dir) { open('C:/Đồ án/robot_v2/so-do-chip.txt', (box) => text(box, 'Robot chưa chạy: thiếu 4 chip.\nỔ 1: tam giác đỏ\nỔ 2: tròn xanh dương\nỔ 3: vuông vàng\nỔ 4: ngôi sao xanh lá\nLắp đủ, robot sẽ đọc mật mã.')); return; }
+          // Bàn phím chữ ngay trong game, không dùng ô nhập của hệ thống: bộ gõ tiếng Việt (Telex) không biến "vansong" thành "vánong",
+          // điện thoại không bật bàn phím riêng. Máy tính gõ phím thật vẫn được: đọc phím vật lý (e.code), không đọc chữ bộ gõ tạo ra.
           open('C:/Đồ án 🔒', (box) => {
-            box.insertAdjacentHTML('beforeend', '<div class="pwrow"><input type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="viết thường, không dấu" /><button type="button">Mở</button></div>');
-            const inp = box.querySelector('input');
+            box.insertAdjacentHTML('beforeend', '<div class="pwrow"><div class="pwfield"></div><button type="button" class="go">Mở</button></div><div class="kb"></div>');
+            const field = box.querySelector('.pwfield'), kb = box.querySelector('.kb');
+            let typed = '';
+            const draw = (ph) => { field.textContent = typed; field.dataset.ph = ph || 'gõ không dấu'; };
+            const key = (k) => { if (k === '⌫') typed = typed.slice(0, -1); else if (typed.length < 12) typed += k; draw(); };
+            const onKey = (e) => {
+              if (!box.isConnected) { document.removeEventListener('keydown', onKey); return; }
+              const m = /^Key([A-Z])$/.exec(e.code);
+              if (m) key(m[1].toLowerCase());
+              else if (e.code === 'Backspace') key('⌫');
+              else if (e.code === 'Enter' || e.code === 'NumpadEnter') tryOpen();
+              else return;
+              e.preventDefault();
+            };
             const tryOpen = () => {
-              if (norm(inp.value) === 'vansong') {
+              if (typed === 'vansong') {
+                document.removeEventListener('keydown', onKey);
                 S.done.dir = true;
                 save();
                 render();
@@ -578,12 +599,25 @@
                 for (const x of icons.children) if (x.dataset.id === 'project') x.querySelector('i').className = '';
                 return;
               }
-              wrong(inp);
-              inp.value = '';
-              inp.placeholder = 'Sai mật khẩu';
+              wrong(field);
+              typed = '';
+              draw('Sai mật khẩu');
             };
-            box.querySelector('button').addEventListener('click', tryOpen);
-            inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryOpen(); });
+            for (const row of ['qwertyuiop', 'asdfghjkl', 'zxcvbnm⌫']) {
+              const r = document.createElement('div');
+              for (const k of row) {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.textContent = k;
+                if (k === '⌫') b.className = 'del';
+                b.addEventListener('click', () => { TV.sfx.click(); key(k); });
+                r.appendChild(b);
+              }
+              kb.appendChild(r);
+            }
+            box.querySelector('.go').addEventListener('click', tryOpen);
+            document.addEventListener('keydown', onKey);
+            draw();
           });
         },
       };
@@ -947,4 +981,5 @@
   window.HoiUcRoom = { say, power };
   render();
   if (TRAILER) runTrailer();
+  if (TRY) ({ vali: symbolLock, bang: board, maytinh: pc })[TRY]();
 })();
