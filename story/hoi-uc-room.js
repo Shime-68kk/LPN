@@ -311,18 +311,36 @@
     });
   }
 
-  // Khoá vali: bốn ô biểu tượng, chạm để đổi. Xếp bốn kỷ niệm theo thời gian.
+  // Ký hiệu vẽ tay (nét mực, mép hơi run nhờ bộ lọc #ink trong hoi-uc.html): dùng cho khoá vali và mặt sau polaroid.
+  const GLYPH = {
+    rain: '<path d="M5 17 Q16 4 27 17"/><path d="M5 17 q2.75 -2.2 5.5 0 q2.75 -2.2 5.5 0 q2.75 -2.2 5.5 0 q2.75 -2.2 5.5 0"/><path d="M16 17 v8 q0 3 -2.6 3 q-2 0 -2 -2"/><path d="M6 6.5 l-1 2.6 M11 3.5 l-.9 2.3 M25 5.5 l-1 2.6 M21 2.8 l-.8 2.1"/>',
+    flower: [0, 72, 144, 216, 288].map((r) => '<ellipse cx="16" cy="9.6" rx="3.7" ry="5.6" transform="rotate(' + r + ' 16 16.5)"/>').join('') + '<circle cx="16" cy="16.5" r="2" class="dot"/>',
+    cake: '<path d="M6.5 18.5 h19 v9 h-19 z"/><path d="M6.5 22.5 q3.2 2.2 6.3 0 q3.2 2.2 6.4 0 q3.1 2.2 6.3 0"/><path d="M16 18.5 v-6"/><path d="M16 10 q-2.2 -2.4 0 -5.6 q2.2 3.2 0 5.6 z"/>',
+    cloud: '<path d="M8.5 24 h15.5 a5 5 0 0 0 .4 -10 a7.2 7.2 0 0 0 -13.6 -1.4 a5.6 5.6 0 0 0 -2.3 11.4 z"/>',
+    case: '<rect x="5.5" y="12" width="21" height="14" rx="2.5"/><path d="M12 12 v-3.2 q0 -1.3 1.3 -1.3 h5.4 q1.3 0 1.3 1.3 v3.2"/><path d="M11 12 v14 M21 12 v14"/>',
+    shuttle: '<circle cx="16" cy="25.5" r="3"/><path d="M13.6 23.6 L9 8 M16 22.5 V6.5 M18.4 23.6 L23 8"/><path d="M9 8 Q16 4.6 23 8"/><path d="M11.2 15.4 Q16 13.6 20.8 15.4"/>',
+  };
+  const glyph = (k) => '<svg class="gl" viewBox="0 0 32 32" aria-hidden="true"><g filter="url(#ink)">' + GLYPH[k] + '</g></svg>';
+
+  // Khoá vali: bốn con lăn đồng khắc hình, chạm để cuộn sang hình khác. Xếp bốn kỷ niệm theo thời gian.
   function symbolLock() {
-    const SYM = ['☔', '🌸', '🎂', '☁️', '🧳', '🏸'];
-    const ANS = ['☔', '🌸', '☁️', '🏸'];
+    const SYM = ['rain', 'flower', 'cake', 'cloud', 'case', 'shuttle'];
+    const ANS = ['rain', 'flower', 'cloud', 'shuttle'];
     const cur = [0, 0, 0, 0];
-    look('Chiếc vali', '<p>Khoá bốn ô hình, đánh số 1 2 3 4. Chạm để đổi.</p><div class="symlock"></div><div class="lk-btns"><button type="button" class="primary">Thử mở</button></div>', (body) => {
+    look('Chiếc vali', '<p>Khoá bốn con lăn, đánh số 1 2 3 4. Chạm để cuộn.</p><div class="symlock"></div><div class="lk-btns"><button type="button" class="primary">Thử mở</button></div>', (body) => {
       const row = body.querySelector('.symlock');
       cur.forEach((_, i) => {
         const b = document.createElement('button');
         b.type = 'button';
-        b.textContent = SYM[cur[i]];
-        b.addEventListener('click', () => { cur[i] = (cur[i] + 1) % SYM.length; b.textContent = SYM[cur[i]]; TV.sfx.click(); });
+        b.setAttribute('aria-label', 'Con lăn ' + (i + 1));
+        b.innerHTML = '<span class="roll">' + glyph(SYM[cur[i]]) + '</span><small>' + (i + 1) + '</small>';
+        b.addEventListener('click', () => {
+          cur[i] = (cur[i] + 1) % SYM.length;
+          const r = b.querySelector('.roll');
+          r.innerHTML = glyph(SYM[cur[i]]);
+          r.classList.remove('go'); void r.offsetWidth; r.classList.add('go');
+          TV.sfx.click();
+        });
         row.appendChild(b);
       });
       body.querySelector('.primary').addEventListener('click', () => {
@@ -334,7 +352,7 @@
           return;
         }
         wrong(row);
-        msg(body, cur.some((v) => SYM[v] === '🎂' || SYM[v] === '🧳') ? 'Có một hình không có trên ảnh nào.' : 'Vẫn khoá.');
+        msg(body, cur.some((v) => SYM[v] === 'cake' || SYM[v] === 'case') ? 'Có một hình không có trên ảnh nào.' : 'Vẫn khoá.');
       });
     });
   }
@@ -466,7 +484,7 @@
   // Bảng ghim: bốn tấm polaroid, lật mặt sau thấy số và hình (khoá vali xếp theo số).
   function board() {
     if (!S.seen.C) { say('Bốn tấm ảnh ghim trên bảng.'); return; }
-    const POLS = [['anh-3', '3', '☁️'], ['anh-10', '1', '☔'], ['anh-14', '4', '🏸'], ['anh-5', '2', '🌸']];
+    const POLS = [['anh-3', '3', 'cloud'], ['anh-10', '1', 'rain'], ['anh-14', '4', 'shuttle'], ['anh-5', '2', 'flower']];
     look('Bảng ghim', '<p>Chạm để lật.</p><div class="polgrid"></div>', (body) => {
       const grid = body.querySelector('.polgrid');
       const flipped = new Set();
@@ -474,7 +492,7 @@
         const c = document.createElement('button');
         c.type = 'button';
         c.className = 'polcard';
-        c.innerHTML = '<span class="f"><img alt="" src="../assets/thumbs/' + img + '.webp" /></span><span class="b"><span>' + n + '<small>' + sym + '</small></span></span>';
+        c.innerHTML = '<span class="f"><img alt="" src="../assets/thumbs/' + img + '.webp" /></span><span class="b"><span>' + n + '</span>' + glyph(sym) + '</span>';
         c.addEventListener('click', () => {
           TV.sfx.click();
           c.classList.toggle('flip');
@@ -856,26 +874,33 @@
     await card('Ba căn phòng.', '', 29.17, 29.95, { hit: true });
     await card('Năm cuộn băng.', '', 30.17, 30.95, { hit: true });
     await card('Một bí mật.', '', 31.17, 32.3, { hit: 'big' });
+    // Sóng organ thứ hai: lướt nhanh qua ba phòng, rồi dội lại đúng lúc máy quay lao vào chiếc TV
+    await cut(32.67, () => { black(false); go('r2'); cam('scale(1.45) translate(-10%, 4%)', 0); });
+    cam('scale(1.6) translate(-14%, 4%)', 500);
+    await cut(33.17, () => { go('r3'); cam('scale(1.4) translate(0, 8%)', 0); });
+    cam('scale(1.55) translate(0, 10%)', 500);
+    await cut(33.67, () => { go('r1'); S.done.jig = true; cam('scale(1.1) translate(0, 4%)', 0); });
+    await at(34.16);
+    hit(true); flick();
+    cam('scale(1.5) translate(0, 8%)', 1300);
     // Nhạc tụt về tiếng tích‑tắc: về lại chiếc TV, máy quay zoom dần vào màn hình, chữ méo giật, lời hẹn, rồi TV tắt và cháy nổ nhẹ
-    await at(32.5);
-    go('r1'); S.done.jig = true; render();
-    cam('scale(1.5) translate(0, 8%)', 0);
-    flick(); black(false); shake(true);
+    await at(35.67);
+    flick(); shake(true);
     await TV.tease(['Tín hiệu yếu…', 'Đang tua lại…', 'Hẹn em ở cuộn băng thật.'], () => cam('scale(2.45) translate(0, 21%)', 6200));
-    await at(42.03);
+    await at(45.2);
     await TV.burn();
     shake();
     black(true);
     // Im lặng, rồi BĂNG SỐ 1. Neon chập chờn: nhạc lùi xuống thật nhỏ cho tiếng "tít" vang trong khoảng lặng;
     // đèn sáng hẳn đúng tiếng bùng của Mountains thì nhạc dâng lên, ngân dài rồi tự tắt dần.
-    await at(45.13);
+    await at(48.3);
     flick();
     mix.to(0.15, 0.3);
-    await card('BĂNG SỐ 1', 'Hồi ức · Sắp ra mắt', 45.13, undefined, { big: true, hit: 'big' });
-    await at(47.37 - NEON_MS / 1000);
+    await card('BĂNG SỐ 1', 'Hồi ức · Sắp ra mắt', 48.3, undefined, { big: true, hit: 'big' });
+    await at(50.54 - NEON_MS / 1000);
     await neonSign();
     mix.to(1, 0.25);
-    await at(49.6);
+    await at(52.77);
     $('tr-end').hidden = false;
     $('tr-again').addEventListener('click', () => location.reload());
   }

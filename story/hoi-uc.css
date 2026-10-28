@@ -257,8 +257,17 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .cipher .rings { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 10px; }
 .cipher .disc { width: 86px; height: 86px; border-radius: 50%; display: grid; place-items: center; background: repeating-conic-gradient(#E4D6BE 0 6.9deg, #D9C8AA 6.9deg 13.85deg); box-shadow: inset 0 0 0 12px #CDB89A; font: 700 20px ui-monospace, monospace; color: #3A2B22; transition: transform .3s; }
 .cipher .rings button { width: 44px; height: 44px; border: 0; border-radius: 50%; background: #3A2B22; color: #F3E9D6; font-size: 18px; }
-.symlock { display: flex; justify-content: center; gap: 8px; margin: 6px 0 12px; }
-.symlock button { width: 54px; height: 64px; border: 0; border-radius: 10px; background: #2B201A; color: #F3E9D6; font-size: 28px; }
+/* Ký hiệu vẽ tay: nét mực tròn đầu, màu theo chỗ đặt */
+.gl { display: block; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.gl .dot { fill: currentColor; stroke: none; }
+/* Khoá vali: vỏ da tối, bốn con lăn đồng hình trụ, hình khắc chìm; chạm thì hình cuộn lên */
+.symlock { display: flex; justify-content: center; gap: 6px; margin: 6px auto 12px; padding: 10px 12px 6px; width: max-content; border-radius: 12px; background: linear-gradient(180deg, #4A3426, #2E2019); box-shadow: inset 0 0 0 2px #6A4A34, 0 4px 10px rgba(0, 0, 0, .35); }
+.symlock button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0; border: 0; background: none; }
+.symlock .roll { display: grid; place-items: center; width: 52px; height: 64px; overflow: hidden; border-radius: 6px; color: #4A2F18; background: linear-gradient(180deg, #7A5A2E 0%, #D9B26A 18%, #F4D99A 46%, #E2BE78 60%, #8C6630 100%); box-shadow: inset 0 0 0 1px rgba(60, 36, 14, .6), inset 0 3px 4px rgba(0, 0, 0, .35), inset 0 -3px 4px rgba(0, 0, 0, .35); }
+.symlock .roll .gl { width: 34px; height: 34px; filter: drop-shadow(0 1px 0 rgba(255, 240, 200, .7)); }
+.symlock .roll.go .gl { animation: roll-in .22s ease-out; }
+@keyframes roll-in { from { transform: translateY(-70%) scaleY(.6); opacity: .2; } }
+.symlock small { font: 700 11px 'Be Vietnam Pro', sans-serif; color: #D9C8AA; }
 .radio-ui { margin: 4px 0 10px; }
 .dialrow { display: flex; align-items: center; justify-content: center; gap: 14px; }
 .radio-ui .freq { font: 700 30px ui-monospace, Menlo, monospace; color: #2B201A; }
@@ -324,8 +333,10 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .polcard.flip { transform: rotateY(180deg); }
 .polcard .f, .polcard .b { position: absolute; inset: 0; border-radius: 4px; backface-visibility: hidden; -webkit-backface-visibility: hidden; padding: 8% 8% 24%; background: #FFF8EC; box-shadow: 0 2px 6px rgba(0, 0, 0, .3); }
 .polcard .f img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.polcard .b { transform: rotateY(180deg); display: grid; place-items: center; padding: 8%; font: 700 30px 'Be Vietnam Pro', sans-serif; color: #3A2B22; }
-.polcard .b small { display: block; font-size: 26px; }
+/* Mặt sau polaroid: số và hình viết tay bằng bút bi xanh */
+.polcard .b { transform: rotateY(180deg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8%; font: 700 30px 'Dancing Script', cursive; color: #2C4A7A; }
+.polcard .b .gl { width: 62%; max-width: 44px; transform: rotate(-6deg); stroke-width: 1.7; }
+.polcard:nth-child(even) .b .gl { transform: rotate(5deg); }
 .journal { margin: 0; padding: 0; list-style: none; }
 .journal li { display: flex; gap: 8px; padding: 8px 0; border-bottom: 1px dashed #CDB89A; font-size: 14px; line-height: 1.45; }
 .journal li b { flex: none; width: 20px; color: #B5462F; }
