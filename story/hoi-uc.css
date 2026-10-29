@@ -421,7 +421,8 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
     linear-gradient(180deg, #7A5133, #5A3920 55%, #46301C);
   box-shadow: inset 0 2px 0 rgba(255, 220, 170, .18), inset 0 -6px 14px rgba(0, 0, 0, .45), 0 30px 60px rgba(0, 0, 0, .65);
 }
-.leg { position: absolute; bottom: -7%; width: 4%; height: 8%; background: linear-gradient(#3B2717, #24170D); border-radius: 0 0 6px 6px; }
+/* Chân TV chạm xuống mặt tủ (trước đây ngắn, TV như lơ lửng) */
+.leg { position: absolute; bottom: -16.5%; width: 4%; height: 17%; background: linear-gradient(#3B2717, #24170D); border-radius: 0 0 6px 6px; }
 .leg.l1 { left: 12%; transform: skewX(8deg); }
 .leg.l2 { right: 12%; transform: skewX(-8deg); }
 
