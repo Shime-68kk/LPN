@@ -10,7 +10,7 @@
 //   → máy tính phòng ngủ (mật khẩu máy anh Quang, chỉ lưu mã băm) → file sơ đồ chip → kéo 4 chip vào robot
 //   → robot đọc mã 4719 → điện thoại → sau khung ảnh: băng thật → đầu băng → nút nguồn.
 // Đồ dùng xong tự biến khỏi túi; "Sổ ghi chép" giữ lại manh mối, cái nào giải xong có dấu ✓.
-// Tiến độ lưu trên máy (lpn:bang1). Chơi lại từ đầu: thêm ?moi=1 vào địa chỉ. Xem thử câu đố: ?thu=vali, ?thu=bang, ?thu=maytinh.
+// Tiến độ lưu trên máy (lpn:bang1). Chơi lại từ đầu: thêm ?moi=1 vào địa chỉ. Xem thử: ?thu=vali, bang, maytinh, dinh, bangthat.
 'use strict';
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -18,13 +18,16 @@
   const TV = window.HoiUc;
   if (!TV) return;
   const TRAILER = !!TV.trailer; // đoạn phim giới thiệu: không đọc / ghi tiến độ thật
-  // Xem thử một câu đố không cần chơi tới: ?thu=vali (khoá vali), ?thu=bang (bảng ghim), ?thu=maytinh (máy tính đã đăng nhập).
-  // Dựng sẵn tiến độ tới đó, không lưu gì.
-  const TRY = (location.search.match(/[?&]thu=(vali|bang|maytinh)\b/) || [])[1];
+  // Xem thử một đoạn không cần chơi tới: ?thu=vali (khoá vali), ?thu=bang (bảng ghim), ?thu=maytinh (máy tính đã đăng nhập),
+  // ?thu=dinh (trước cổng đình, đã có chìa), ?thu=bangthat (băng thật đã trong đầu băng: bấm nguồn 3 lần). Không lưu gì.
+  const TRY = (location.search.match(/[?&]thu=(vali|bang|maytinh|dinh|bangthat)\b/) || [])[1];
   const DRY = TRAILER || !!TRY;
-  const TRY_STATE = TRY === 'maytinh'
-    ? { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true }, seen: { A: true, B: true, C: true, D: true }, done: { jig: true, book: true, cipher: true, pillow: true, pc: true } }
-    : { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true }, seen: { A: true, B: true, C: true }, done: { jig: true, book: true, cipher: true, pillow: true } };
+  const ALL_DONE = { jig: true, book: true, cipher: true, pillow: true, board: true, case: true, gate: true, radio: true, words: true, pc: true, dir: true, robot: true, phone: true };
+  const TRY_STATE = {
+    maytinh: { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true }, seen: { A: true, B: true, C: true, D: true }, done: { jig: true, book: true, cipher: true, pillow: true, pc: true } },
+    dinh: { room: 'r3', lamp: true, tut: true, items: { A: true, B: true, C: true, key: true, note1: true, note2: true }, seen: { A: true, B: true, C: true }, done: { jig: true, book: true, cipher: true, pillow: true, board: true, case: true } },
+    bangthat: { room: 'r1', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true, E: true }, seen: { A: true, B: true, C: true, D: true }, done: ALL_DONE, inVcr: 'E' },
+  }[TRY] || { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true }, seen: { A: true, B: true, C: true }, done: { jig: true, book: true, cipher: true, pillow: true } };
   try { if (/[?&]moi=1\b/.test(location.search)) localStorage.removeItem(KEY); } catch (e) { /* bỏ qua */ }
   const load = () => { if (TRY) return TRY_STATE; if (TRAILER) return {}; try { const v = JSON.parse(localStorage.getItem(KEY)); return v && v.v === 2 ? v : {}; } catch (e) { return {}; } };
   const S = Object.assign({ v: 2, room: 'r1', lamp: false, tut: false, items: {}, seen: {}, done: {}, inVcr: null }, load());
@@ -117,6 +120,7 @@
   function render() {
     const room = $('room');
     room.classList.toggle('lit', !!S.lamp);
+    room.classList.toggle('warm', !!S.items.E); // tìm thấy cuộn băng thật: căn nhà ấm lên
     for (const v of document.querySelectorAll('.view')) v.hidden = v.dataset.room !== S.room;
     $('bag-btn').hidden = !S.lamp;
     const q = (o) => document.querySelector('[data-obj="' + o + '"]');
@@ -128,7 +132,11 @@
     q('case').classList.toggle('open', !!S.done.case);
     q('gate').classList.toggle('open', !!S.done.gate);
     q('lantern').classList.toggle('lit', !!S.done.words);
-    document.querySelector('.v3').classList.toggle('lit2', !!S.done.words);
+    q('radio').classList.toggle('on', !!S.done.words);
+    const v3 = document.querySelector('.v3');
+    v3.classList.toggle('gate-open', !!S.done.gate);
+    v3.classList.toggle('lit2', !!S.done.words);
+    v3.classList.toggle('warm', !!S.items.E);
     q('pc').classList.toggle('on', !!S.done.pc);
     q('robot').classList.toggle('alive', !!S.done.robot);
     document.querySelector('.v2').classList.toggle('robot-done', !!S.done.robot);
@@ -136,6 +144,8 @@
     $('vcr-label').textContent = S.inVcr ? TAPES[S.inVcr].label : '';
     $('vcr-led').classList.toggle('on', !!S.inVcr);
     TV.armReal(S.inVcr === 'E');
+    // Âm thanh nền theo phòng; tìm thấy cuộn băng thật thì căn nhà ấm lại (radio ngoài sân bật từ lúc xếp xong câu)
+    TV.amb.set(S.room, S.items.E ? 'warm' : 'lonely', !!S.done.words);
     renderBag();
     if (!TV.busy()) $('hint').textContent = step().hint;
     guide();
@@ -575,8 +585,8 @@
           // Bàn phím chữ ngay trong game, không dùng ô nhập của hệ thống: bộ gõ tiếng Việt (Telex) không biến "vansong" thành "vánong",
           // điện thoại không bật bàn phím riêng. Máy tính gõ phím thật vẫn được: đọc phím vật lý (e.code), không đọc chữ bộ gõ tạo ra.
           open('C:/Đồ án 🔒', (box) => {
-            box.insertAdjacentHTML('beforeend', '<div class="pwrow"><div class="pwfield"></div><button type="button" class="go">Mở</button></div><div class="kb"></div>');
-            const field = box.querySelector('.pwfield'), kb = box.querySelector('.kb');
+            box.insertAdjacentHTML('beforeend', '<div class="pwrow"><div class="pwfield"></div><button type="button" class="go">Mở</button></div><div class="pwkb"></div>');
+            const field = box.querySelector('.pwfield'), kb = box.querySelector('.pwkb');
             let typed = '';
             const draw = (ph) => { field.textContent = typed; field.dataset.ph = ph || 'gõ không dấu'; };
             const key = (k) => { if (k === '⌫') typed = typed.slice(0, -1); else if (typed.length < 12) typed += k; draw(); };
@@ -619,6 +629,8 @@
             box.querySelector('.go').addEventListener('click', tryOpen);
             document.addEventListener('keydown', onKey);
             draw();
+            // Màn hình thấp (điện thoại xoay ngang): cuộn cho ô mật khẩu và bàn phím vào tầm nhìn
+            requestAnimationFrame(() => box.querySelector('.pwrow').scrollIntoView({ block: 'start', behavior: 'smooth' }));
           });
         },
       };
@@ -690,14 +702,16 @@
             const up = (ev) => {
               removeEventListener('pointermove', mv);
               removeEventListener('pointerup', up);
+              removeEventListener('pointercancel', up);
               ghost.remove();
-              if (!moved) return;
+              if (!moved || ev.type === 'pointercancel') return;
               const t = document.elementFromPoint(ev.clientX, ev.clientY);
               const sock = t && t.closest('.sock');
               if (sock && !slot[+sock.dataset.i]) place(+sock.dataset.i, sh);
             };
             addEventListener('pointermove', mv);
             addEventListener('pointerup', up);
+            addEventListener('pointercancel', up); // thao tác bị huỷ (cuộn, cuộc gọi đến): bỏ chip đang kéo, không kẹt bóng chip
           });
           tray.appendChild(c);
         }
@@ -741,7 +755,7 @@
       if (!S.seen.A) { say('Bức ảnh vỡ mất rồi.'); return; }
       if (!S.done.jig) { jigsaw(); return; }
       if (!S.done.phone) { say('Ảnh liền rồi. Nắng chiều đẹp.'); return; }
-      if (!S.items.E) { S.items.E = true; win(() => look('Sau tấm ảnh', '<p>Một cuộn băng, nhãn vẽ trái tim nhỏ.</p><p class="say">Lần này là thật.</p>')); return; }
+      if (!S.items.E) { S.items.E = true; win(() => look('Sau tấm ảnh', '<p>Một cuộn băng, nhãn vẽ trái tim nhỏ.</p><p class="say">Lần này là thật.</p>'), 'heart'); return; }
       say('Khoảng trống sau tấm ảnh.');
     },
     drawer() {
@@ -778,6 +792,8 @@
       say('Bậc thềm cũ. Gió mát.');
     },
   };
+  // Chạm lần đầu ở bất kỳ đâu: bật âm thanh, căn nhà bắt đầu "thở" (tiếng nền theo phòng)
+  if (!TRAILER) addEventListener('pointerdown', () => { TV.audioOn(); TV.amb.start(); TV.amb.set(S.room, S.items.E ? 'warm' : 'lonely', !!S.done.words); }, { once: true });
   for (const b of document.querySelectorAll('#scene [data-obj]')) {
     b.addEventListener('click', () => {
       if (TV.busy()) return;
@@ -1080,5 +1096,6 @@
   window.HoiUcRoom = { say, power };
   render();
   if (TRAILER) runTrailer();
-  if (TRY) ({ vali: symbolLock, bang: board, maytinh: pc })[TRY]();
+  const tryOpen = TRY && ({ vali: symbolLock, bang: board, maytinh: pc })[TRY];
+  if (tryOpen) tryOpen();
 })();

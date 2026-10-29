@@ -77,16 +77,6 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .sticky { position: absolute; left: 75.5%; top: 24.5%; width: 3%; height: 5%; pointer-events: none; z-index: 4; }
 .sticky i { position: absolute; width: 100%; height: 100%; background: #F6E27A; box-shadow: 0 1px 2px rgba(0, 0, 0, .4); }
 .sticky i:last-child { left: 40%; top: 70%; transform: rotate(8deg); background: #F7A8B8; }
-.yard { position: absolute; left: 0; right: 0; top: 60%; bottom: 0; background: repeating-linear-gradient(90deg, rgba(0, 0, 0, .25) 0 1px, transparent 1px 8%), repeating-linear-gradient(0deg, rgba(0, 0, 0, .25) 0 1px, transparent 1px 22%), linear-gradient(180deg, #3A322A, #221C16); }
-.lan-deco { position: absolute; top: 36%; width: 2.6%; height: 7%; border-radius: 45%; background: #6A2A22; box-shadow: 0 -10px 0 -6px #2B1A12; }
-.lan-deco::before { content: ''; position: absolute; left: 50%; bottom: 100%; width: 1px; height: 60%; background: #9BA7B4; }
-.lan-deco.l1 { left: 24%; } .lan-deco.l2 { left: 73.4%; }
-.v3 .o-lantern.lit ~ .lan-deco, .v3.lit2 .lan-deco { background: #FF6A3D; box-shadow: 0 0 12px rgba(255, 120, 60, .8); }
-.incense { position: absolute; left: 46.5%; top: 74%; width: 7%; height: 12%; }
-.incense svg { width: 100%; height: 100%; display: block; }
-.smoke { position: absolute; left: 48%; bottom: 100%; width: 3px; height: 70%; background: linear-gradient(transparent, rgba(220, 220, 230, .3)); animation: steam 3.2s ease-in-out infinite; }
-.tree { position: absolute; left: -3%; top: 2%; width: 22%; height: 70%; }
-.tree svg { width: 100%; height: 100%; display: block; }
 
 /* Phòng khách */
 .o-shelf { left: 2%; top: 9%; width: 13%; height: 62%; }
@@ -172,26 +162,89 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .plant { position: absolute; left: 89%; top: 52%; width: 8%; height: 34%; }
 .plant svg { width: 100%; height: 100%; display: block; }
 
-/* Sân đình (đêm) */
-.v3 { background: linear-gradient(180deg, #0D1226, #16182B 60%, #1E1A16 60.5%, #120F0C); }
-.sky { position: absolute; inset: 0 0 40% 0; background-image: radial-gradient(1px 1px at 12% 18%, #fff, transparent), radial-gradient(1px 1px at 33% 9%, #fff, transparent), radial-gradient(1.5px 1.5px at 58% 22%, #fff, transparent), radial-gradient(1px 1px at 76% 12%, #fff, transparent), radial-gradient(1px 1px at 90% 26%, #fff, transparent), radial-gradient(1px 1px at 46% 30%, #fff, transparent); opacity: .7; }
-.dinh { position: absolute; left: 18%; top: 22%; width: 64%; height: 46%; }
-.dinh svg { width: 100%; height: 100%; display: block; }
-.roof { fill: #3A2A22; } .roof2 { fill: none; stroke: #3A2A22; stroke-width: 3; } .wall-d { fill: #4A3A2E; } .col { fill: #6A3A28; } .step { fill: #5A4E44; }
-.o-lantern { left: 47%; top: 26%; width: 5%; height: 15%; z-index: 3; }
-.lan { fill: #4A2420; transition: fill .8s, filter .8s; } .lan-top { fill: #2B1A12; } .lan-t { stroke: #B5462F; stroke-width: 1.2; fill: none; }
-.o-lantern.lit .lan { fill: #FF6A3D; filter: drop-shadow(0 0 10px rgba(255, 120, 60, .9)); }
-.o-radio { left: 60%; top: 62%; width: 10%; height: 10%; }
-.grill path { stroke: #4A3A2E; stroke-width: 1.4; } .dial { fill: #E9C77B; }
-.o-bench { left: 24%; top: 66%; width: 26%; height: 6%; }
-.o-bench span { position: absolute; inset: 0; }
-.o-gate { left: 14%; top: 14%; width: 72%; height: 74%; z-index: 4; perspective: 900px; }
-.gate-l, .gate-r { position: absolute; top: 0; bottom: 0; width: 50%; background: repeating-linear-gradient(90deg, #4A2E1A 0 9%, #3A2414 9% 10%), linear-gradient(#5A3920, #3B2616); box-shadow: inset 0 0 0 3px #2B1A10; transition: transform 1.6s cubic-bezier(.5, 0, .2, 1); }
-.gate-l { left: 0; transform-origin: left center; } .gate-r { right: 0; transform-origin: right center; }
-.gate-lock { position: absolute; left: 50%; top: 48%; width: 5%; aspect-ratio: 1; margin-left: -2.5%; border-radius: 3px; background: #C9B48E; box-shadow: 0 0 0 2px #2B1A10; transition: opacity .4s; }
-.o-gate.open { pointer-events: none; }
-.o-gate.open .gate-l { transform: rotateY(80deg); } .o-gate.open .gate-r { transform: rotateY(-80deg); }
-.o-gate.open .gate-lock { opacity: 0; }
+/* ===== Sân đình (đêm): lớp trong là sân và đình làng, lớp ngoài là tường và cổng làng =====
+   Chưa mở cổng: đứng ngoài tường, thấy mái đình, cây đa nhô lên. Mở cổng: hai cánh gỗ xoay vào trong theo bản lề,
+   máy quay đi qua cổng (lớp ngoài phóng to rồi mờ đi, lớp trong tiến lại gần). */
+.v3 { background: #05070F; }
+.v3 .inner { position: absolute; inset: 0; overflow: hidden; border-radius: 6px; transform-origin: 50% 64%; transform: scale(.93); transition: transform 2.6s cubic-bezier(.4, 0, .2, 1) .9s; }
+.v3 .inner::after { content: ''; position: absolute; inset: 0; z-index: 5; pointer-events: none; background: radial-gradient(ellipse at 50% 40%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, .55)), rgba(3, 4, 10, .28); transition: background-color 2s .9s; }
+.v3.gate-open .inner { transform: none; }
+.v3.gate-open .inner::after { background-color: rgba(3, 4, 10, 0); }
+.v3 .art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.v3 .outer-clip { position: absolute; inset: 0; z-index: 6; overflow: hidden; border-radius: 6px; pointer-events: none; }
+.v3 .outer { position: absolute; inset: 0; pointer-events: auto; transform-origin: 50% 70%; transition: transform 1.8s cubic-bezier(.55, 0, .35, 1) 1s, opacity .8s 2s; }
+.v3.gate-open .outer { transform: scale(2.9); opacity: 0; visibility: hidden; pointer-events: none; transition: transform 1.8s cubic-bezier(.55, 0, .35, 1) 1s, opacity .8s 2s, visibility 0s 2.8s; }
+/* Trời đêm: sao lấp lánh, mây trôi, sương lững lờ, ngọc trên nóc toả sáng */
+.v3 .stars .tw { animation: tw 3.6s ease-in-out infinite; }
+@keyframes tw { 50% { opacity: .25; } }
+.v3 .cl { animation: cloud 70s linear infinite alternate; }
+.v3 .cl.c2 { animation-duration: 95s; animation-direction: alternate-reverse; }
+@keyframes cloud { to { transform: translateX(46px); } }
+.v3 .mist { animation: mist 26s ease-in-out infinite alternate; }
+@keyframes mist { to { transform: translateX(46px); } }
+.v3 .pearl { animation: tw 5s ease-in-out infinite; }
+/* Gian thờ: nến lung linh, chấn song hắt ánh đèn; tìm thấy băng thật thì trong đình ấm hẳn lên */
+.v3 .inside { animation: candle 3.4s ease-in-out infinite; }
+@keyframes candle { 30% { opacity: .86; } 55% { opacity: 1; } 75% { opacity: .92; } }
+.v3 .flame { animation: flame .9s steps(3) infinite; }
+@keyframes flame { 50% { opacity: .7; } }
+.v3 .glowin { opacity: .28; transition: opacity 3s; animation: candle 4.2s ease-in-out infinite; }
+.v3 .spill { opacity: .1; transition: opacity 3s; }
+.v3 .warmth { opacity: 0; transition: opacity 3s; }
+.v3.warm .glowin { opacity: .55; } .v3.warm .spill { opacity: .22; } .v3.warm .warmth { opacity: .28; }
+.v3 .ember circle { fill: #FF8A4D; animation: tw 2.2s ease-in-out infinite; }
+/* Đèn lồng hai bên hiên và quầng sáng dưới thềm: thắp khi radio đọc xong câu */
+.v3 .ldeco .lb { transition: fill .9s; }
+.v3.lit2 .ldeco .lb { fill: #E8552E; }
+.v3 .lglow, .v3 .pool { opacity: 0; transition: opacity 1.4s; }
+.v3.lit2 .lglow { opacity: .9; }
+.v3.lit2 .pool { opacity: 1; }
+/* Đom đóm quanh cây đa, bụi tre */
+.v3 .ff { position: absolute; inset: 0; pointer-events: none; }
+.v3 .ff i { position: absolute; width: .45%; aspect-ratio: 1; border-radius: 50%; background: #E8FF9A; box-shadow: 0 0 5px 2px rgba(200, 255, 120, .55); opacity: 0; animation: ff var(--d) ease-in-out infinite; animation-delay: var(--k); }
+@keyframes ff { 0%, 100% { opacity: 0; transform: translate(0, 0); } 30% { opacity: .9; } 50% { opacity: .25; transform: translate(var(--dx), var(--dy)); } 72% { opacity: .85; } }
+/* Khói hương bay lên từ bát hương giữa sân */
+.v3 .smoke { position: absolute; left: 48.3%; top: 63%; width: 3.4%; height: 14%; pointer-events: none; }
+.v3 .smoke i { position: absolute; bottom: 0; left: 40%; width: 18%; height: 100%; border-radius: 50%; background: linear-gradient(to top, rgba(225, 225, 240, .26), rgba(225, 225, 240, 0)); transform-origin: 50% 100%; animation: wisp 5.4s ease-in-out infinite; }
+.v3 .smoke i:nth-child(2) { left: 8%; animation-delay: -1.8s; }
+.v3 .smoke i:nth-child(3) { left: 72%; animation-delay: -3.6s; }
+@keyframes wisp { 0% { opacity: 0; transform: translateY(20%) scaleY(.5); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-40%) scaleY(1.3) skewX(18deg); } }
+/* Đèn lồng (nút): đung đưa nhẹ; thắp lên thì đỏ rực, lõi vàng, toả sáng */
+.v3 .o-lantern { left: 48.25%; top: 40%; width: 3.5%; height: 11.1%; z-index: 4; transform-origin: 50% 0; animation: sway 6s ease-in-out infinite; }
+@keyframes sway { 50% { transform: rotate(2.6deg); } }
+.o-lantern .cap { fill: #C9A35B; }
+.o-lantern .lan { fill: #6A1C14; transition: fill .9s; }
+.o-lantern .rib { fill: none; stroke: #3A0E0A; stroke-width: .8; }
+.o-lantern .core { fill: #FFB25A; opacity: 0; transition: opacity .9s; }
+.o-lantern .tas { stroke: #C9A35B; stroke-width: 1; }
+.o-lantern.lit .lan { fill: #E8452C; }
+.o-lantern.lit .core { opacity: .6; }
+.o-lantern.lit svg { filter: drop-shadow(0 0 5px rgba(255, 120, 60, .9)) drop-shadow(0 0 16px rgba(255, 100, 40, .45)); }
+/* Radio trên bàn đá: phát nhạc thì ô số sáng, nốt nhạc bay lên */
+.v3 .o-radio { left: 77%; top: 69.3%; width: 9%; height: 10%; z-index: 4; }
+.o-radio .win { fill: #3A2A16; transition: fill .9s; }
+.o-radio.on .win { fill: #FFC46A; }
+.o-radio.on svg { filter: drop-shadow(0 0 4px rgba(255, 190, 100, .55)); }
+.o-radio.on::after { content: '♪'; position: absolute; right: 10%; top: -45%; font-size: clamp(9px, 1.5vw, 15px); color: #FFD9A0; animation: note 2.8s ease-out infinite; }
+@keyframes note { 0% { opacity: 0; transform: translateY(6px); } 30% { opacity: .9; } 100% { opacity: 0; transform: translate(-6px, -16px) rotate(-12deg); } }
+/* Bậc thềm (nút): cuộn băng đặt trên bậc trên cùng */
+.v3 .o-bench { left: 37.5%; top: 67.6%; width: 25%; height: 8.4%; z-index: 4; }
+.o-bench span { position: absolute; }
+/* Cổng làng: hai cánh gỗ đinh đồng, ổ khoá; mở thì xoay vào trong theo bản lề, ổ khoá rơi */
+.v3 .o-gate { left: 38.75%; top: 44.9%; width: 22.5%; height: 45.8%; z-index: 2; perspective: 260px; }
+.v3 .gate-l, .v3 .gate-r { position: absolute; top: 0; bottom: 0; width: 50%; transition: transform 1.9s cubic-bezier(.45, 0, .2, 1); }
+.v3 .gate-l { left: 0; transform-origin: 0 50%; }
+.v3 .gate-r { right: 0; transform-origin: 100% 50%; }
+.v3 .gate-l svg, .v3 .gate-r svg { display: block; width: 100%; height: 100%; }
+.v3 .gate-l::after, .v3 .gate-r::after { content: ''; position: absolute; inset: 0; background: #000; opacity: 0; transition: opacity 1.9s; }
+.v3 .o-gate.open .gate-l { transform: rotateY(100deg); }
+.v3 .o-gate.open .gate-r { transform: rotateY(-100deg); }
+.v3 .o-gate.open .gate-l::after, .v3 .o-gate.open .gate-r::after { opacity: .5; }
+.v3 .gate-lock { position: absolute; left: 50%; top: 45%; width: 9%; transform: translateX(-50%); transition: opacity .5s, transform .6s ease-in; }
+.v3 .gate-lock svg { display: block; width: 100%; }
+.v3 .o-gate.open .gate-lock { opacity: 0; transform: translate(-50%, 60%) rotate(25deg); }
+.v3 .o-gate.open { pointer-events: none; }
+
 
 /* Cửa sang phòng khác */
 .door { position: absolute; top: 44%; z-index: 9; display: flex; align-items: center; gap: 2px; padding: 8px 10px; border: 0; border-radius: 999px; background: rgba(12, 10, 16, .55); color: rgba(246, 238, 223, .85); font: 600 12px 'Be Vietnam Pro', sans-serif; }
@@ -312,11 +365,11 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .pwfield:empty::before { content: attr(data-ph); color: rgba(230, 240, 250, .45); letter-spacing: 0; font-family: 'Be Vietnam Pro', sans-serif; }
 @keyframes caret { 50% { opacity: 0; } }
 /* Bàn phím chữ trong game cho mật khẩu thư mục */
-.kb { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-top: 10px; }
-.kb div { display: flex; justify-content: center; gap: 4px; width: 100%; }
-.kb button { flex: 0 1 34px; min-width: 0; height: 40px; padding: 0; border: 0; border-radius: 6px; background: rgba(255, 255, 255, .14); color: #E6F0FA; font: 600 15px 'Be Vietnam Pro', sans-serif; }
-.kb button:active { background: rgba(158, 201, 255, .4); }
-.kb button.del { flex-basis: 52px; }
+.pwkb { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-top: 10px; }
+.pwkb div { display: flex; justify-content: center; gap: 4px; width: 100%; }
+.pwkb button { flex: 0 1 34px; min-width: 0; height: 40px; padding: 0; border: 0; border-radius: 6px; background: rgba(255, 255, 255, .14); color: #E6F0FA; font: 600 15px 'Be Vietnam Pro', sans-serif; }
+.pwkb button:active { background: rgba(158, 201, 255, .4); }
+.pwkb button.del { flex-basis: 52px; }
 .pwrow button { padding: 0 16px; border: 0; border-radius: 8px; background: #9EC9FF; color: #0E1F33; font: 700 14px 'Be Vietnam Pro', sans-serif; }
 .win { margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: rgba(5, 12, 22, .65); white-space: pre-line; line-height: 1.55; }
 .win .path { margin-bottom: 6px; font-size: 11px; color: #9EC9FF; }
@@ -466,6 +519,8 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 
 /* Phụ đề */
 .cap { position: absolute; left: 8%; right: 8%; bottom: 13%; z-index: 3; text-align: center; font-weight: 600; font-size: 2.6cqw; line-height: 1.35; color: #FFFDF6; text-shadow: 0 2px 6px rgba(0, 0, 0, .9), 0 0 2px rgba(0, 0, 0, .9); }
+.cap.now { animation: s-fade .7s ease .4s both; }
+.cap.gone { opacity: 0; transition: opacity .2s; animation: none; }
 
 /* Chuyển cảnh */
 .fx { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
@@ -699,3 +754,94 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 @keyframes breathe { 50% { opacity: .82; } }
 .tr-sign p { position: absolute; left: 0; right: 0; bottom: 17%; margin: 0; text-align: center; font: 600 2.6cqw 'Be Vietnam Pro', sans-serif; letter-spacing: .4em; text-transform: uppercase; color: rgba(220, 205, 180, .55); opacity: 0; transition: opacity 2s .4s; }
 .tr-sign.full p { opacity: 1; }
+
+/* ===== Trau chuốt phòng khách, phòng ngủ ===== */
+/* Sàn gỗ ván theo phối cảnh, ốp gỗ chân tường, bóng đổ dưới đồ đạc */
+.planks { position: absolute; left: 0; top: 68%; width: 100%; height: 32%; pointer-events: none; border-radius: 0 0 6px 6px; }
+.v1 .wall::before, .v2 .wall::before { content: ''; position: absolute; left: 0; right: 0; bottom: 2.4%; height: 22%; background: repeating-linear-gradient(90deg, rgba(0, 0, 0, .22) 0 1px, rgba(255, 220, 170, .03) 1px 2px, rgba(0, 0, 0, 0) 2px 4.6%), linear-gradient(180deg, #2A1A12, #20140D); box-shadow: inset 0 2px 0 rgba(255, 220, 170, .08); }
+.shadow { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 0, 0, .55), rgba(0, 0, 0, 0)); pointer-events: none; }
+.sh-shelf { left: 0; top: 68%; width: 18%; height: 6%; }
+.sh-cab { left: 25%; top: 68.5%; width: 50%; height: 7%; }
+/* Quạt trần quay chầm chậm (nhìn từ dưới lên nên cánh quạt dẹt lại) */
+.fan { position: absolute; left: 39%; top: -1%; width: 22%; height: 12%; pointer-events: none; z-index: 1; }
+.fan .rod { position: absolute; left: 50%; top: 0; width: 1.2%; height: 46%; margin-left: -.6%; background: #2A1E16; }
+.fan .hub { position: absolute; left: 44%; top: 40%; width: 12%; }
+.fan .blades { position: absolute; left: 0; right: 0; top: 54%; aspect-ratio: 1; transform: translateY(-50%) scaleY(.2); filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .5)); }
+.fan .blades svg { display: block; width: 100%; height: 100%; animation: spin 1.7s linear infinite; opacity: .92; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.room:not(.lit) .fan .blades svg { animation-duration: 3.2s; }
+/* Ánh trăng xiên vào phòng khách, quầng đèn hắt xuống sàn */
+.mbeam { position: absolute; right: 2%; top: 0; width: 30%; height: 100%; pointer-events: none; background: linear-gradient(205deg, rgba(160, 180, 255, .1), rgba(160, 180, 255, 0) 72%); clip-path: polygon(62% 0, 100% 0, 52% 100%, 6% 100%); mix-blend-mode: screen; }
+.glow-floor { position: absolute; left: 6%; top: 64%; width: 36%; height: 16%; border-radius: 50%; pointer-events: none; background: radial-gradient(closest-side, rgba(255, 190, 110, .2), rgba(255, 190, 110, 0)); opacity: 0; transition: opacity 1.4s; }
+.room.lit .glow-floor { opacity: 1; }
+/* Bụi lơ lửng trong quầng sáng */
+.motes { position: absolute; inset: 0; pointer-events: none; }
+.motes i { position: absolute; width: .32%; aspect-ratio: 1; border-radius: 50%; background: rgba(255, 236, 200, .8); box-shadow: 0 0 3px rgba(255, 220, 170, .6); opacity: 0; animation: mote var(--d) ease-in-out infinite; animation-delay: var(--k); }
+.motes.m2 i { background: rgba(200, 220, 255, .8); box-shadow: 0 0 3px rgba(170, 200, 255, .6); }
+@keyframes mote { 0%, 100% { opacity: 0; transform: translate(0, 0); } 25% { opacity: .7; } 50% { transform: translate(var(--dx), -14px); opacity: .35; } 75% { opacity: .6; } }
+.room:not(.lit) .motes.m1 { display: none; }
+/* Đồng hồ: kim giây tích tắc mỗi giây */
+.hand-s { transform-origin: 20px 20px; animation: tick 60s steps(60) infinite; }
+/* Phòng ngủ: mây trôi qua trăng, sao, rèm đung đưa, ánh trăng rọi xuống sàn, quầng đèn bàn */
+.stars2 { position: absolute; inset: 0; background-image: radial-gradient(1px 1px at 18% 20%, #fff, transparent), radial-gradient(1px 1px at 40% 34%, #fff, transparent), radial-gradient(1px 1px at 62% 12%, #fff, transparent), radial-gradient(1px 1px at 30% 52%, #fff, transparent), radial-gradient(1px 1px at 52% 46%, #fff, transparent); opacity: .7; animation: tw 4s ease-in-out infinite; }
+.wcloud { position: absolute; height: 12%; border-radius: 50%; background: rgba(40, 46, 80, .85); box-shadow: 0 0 8px rgba(40, 46, 80, .9); }
+.wcloud.w1 { top: 18%; width: 46%; animation: wcloud 38s linear infinite; }
+.wcloud.w2 { top: 32%; width: 34%; animation: wcloud 52s linear -20s infinite; }
+@keyframes wcloud { from { left: -50%; } to { left: 110%; } }
+.city { animation: citytw 5s steps(2) infinite; }
+@keyframes citytw { 50% { filter: brightness(1.25); } }
+.curtain { transform-origin: 50% 0; animation: curtain 7s ease-in-out infinite; }
+.cr { animation-delay: -3.5s; }
+@keyframes curtain { 50% { transform: skewX(1.6deg); } }
+.wbeam { position: absolute; left: 6%; top: 20%; width: 34%; height: 80%; pointer-events: none; background: linear-gradient(160deg, rgba(150, 175, 255, .12), rgba(150, 175, 255, 0) 75%); clip-path: polygon(0 0, 52% 0, 100% 100%, 30% 100%); mix-blend-mode: screen; }
+.lamp-cone { position: absolute; left: 46%; top: 19%; width: 17%; height: 34%; pointer-events: none; background: linear-gradient(180deg, rgba(255, 210, 140, .16), rgba(255, 210, 140, 0)); clip-path: polygon(22% 0, 78% 0, 100% 100%, 0 100%); mix-blend-mode: screen; }
+.pc-screen { animation: monitor 6s ease-in-out infinite; }
+@keyframes monitor { 50% { opacity: .9; } 52% { opacity: 1; } }
+.o-robot .ant { animation: antblink 2.2s steps(1) infinite; }
+@keyframes antblink { 50% { fill: #FF6B5A; } }
+/* Tìm thấy cuộn băng thật: cả căn nhà ấm lên (đèn sáng hơn, tường hửng màu ấm) */
+.view::after { content: ''; position: absolute; inset: 0; z-index: 6; pointer-events: none; border-radius: 6px; background: radial-gradient(70% 70% at 40% 45%, rgba(255, 170, 90, .14), rgba(255, 170, 90, 0) 70%); opacity: 0; transition: opacity 4s; }
+.room.warm .view.v1::after, .room.warm .view.v2::after { opacity: 1; }
+.room.warm .lamp { filter: brightness(1.3); }
+
+/* ===== Cuộn băng thật: cảnh video, thẻ kết "Ngày thứ … bên nhau" ===== */
+.shot .vid, .tape-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; }
+.tape-video { object-fit: contain; }
+.title.fin h2 { font-size: 9cqw; }
+.title.fin p { font-size: 2.6cqw; letter-spacing: .4em; text-transform: uppercase; }
+/* ===== Danh đề cuối phim ===== */
+.credits { position: fixed; inset: 0; z-index: 12; overflow: hidden; background: radial-gradient(120% 90% at 50% 50%, #0E0B10, #040306 70%); opacity: 0; transition: opacity 1.6s; }
+.credits.on { opacity: 1; }
+.credits .roll { position: absolute; left: 0; right: 0; top: 0; display: flex; flex-direction: column; align-items: center; padding: 0 24px; text-align: center; will-change: transform; }
+.c-days { margin-bottom: 16vh; font: 600 clamp(26px, 6.2vmin, 48px)/1.2 'Fraunces', serif; color: var(--cream); }
+.c-title { font: 700 clamp(44px, 12vmin, 96px)/1 'Dancing Script', cursive; color: #F2D28E; text-shadow: 0 0 .3em rgba(233, 180, 100, .45); }
+.c-sub { margin: 10px 0 15vh; font: 600 12px 'Be Vietnam Pro', sans-serif; letter-spacing: .45em; text-transform: uppercase; color: rgba(246, 238, 223, .55); }
+.c-row { margin: 0 0 4.6vh; }
+.c-row small { display: block; margin-bottom: 7px; font: 600 11px 'Be Vietnam Pro', sans-serif; letter-spacing: .32em; text-transform: uppercase; color: rgba(233, 199, 123, .78); }
+.c-row b { display: block; font: 500 clamp(18px, 4.4vmin, 28px)/1.4 'Fraunces', serif; color: var(--cream); white-space: pre-line; }
+.c-gap { height: 9vh; }
+.c-line { max-width: 30ch; font: italic 500 clamp(18px, 4.2vmin, 26px)/1.5 'Fraunces', serif; color: rgba(246, 238, 223, .9); }
+.c-love-h { margin-bottom: 12px; font: 600 11px 'Be Vietnam Pro', sans-serif; letter-spacing: .32em; text-transform: uppercase; color: rgba(233, 199, 123, .78); }
+.c-love { max-width: 34ch; font: 700 clamp(19px, 4.6vmin, 28px)/1.55 'Dancing Script', cursive; color: #F6E2B8; white-space: pre-line; }
+.c-end { margin: 20vh 0 12vh; font: 600 11px 'Be Vietnam Pro', sans-serif; letter-spacing: .5em; text-transform: uppercase; color: rgba(246, 238, 223, .4); }
+.credits .skip { position: absolute; right: calc(var(--safe-right) + 12px); bottom: calc(var(--safe-bottom) + 10px); opacity: 0; transition: opacity 1s; pointer-events: none; }
+.credits.skippable .skip { opacity: 1; pointer-events: auto; }
+
+/* Màn hình thấp (điện thoại xoay ngang): hộp "nhìn gần" rộng ra, gọn lại để mọi thứ vừa một khung, đỡ phải cuộn */
+@media (max-height: 520px) and (orientation: landscape) {
+  .look { padding: 8px; }
+  .look-card { width: min(700px, 100%); padding: 10px 16px 4px; }
+  .look-card h2 { margin-bottom: 4px; font-size: 16px; }
+  .look-body p { margin-bottom: 6px; }
+  .icons { gap: 4px; }
+  .icons button { width: 64px; padding: 4px 2px; font-size: 11px; }
+  .icons button i { width: 28px; height: 20px; }
+  .icons button i.txt, .icons button i.bin { width: 18px; height: 22px; }
+  .win { max-height: none; margin-top: 6px; padding: 8px 10px; }
+  .desktop { min-height: 0; padding: 8px; }
+  .pwkb { gap: 4px; margin-top: 6px; }
+  .pwkb button { height: 32px; }
+  .keys { grid-template-columns: repeat(3, 52px); gap: 6px; }
+  .keys button { height: 38px; }
+  .chipzone { margin-top: 36px; }
+}
