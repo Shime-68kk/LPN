@@ -262,7 +262,9 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .stems path { stroke: #4F7A4A; stroke-width: 1.6; fill: none; } .lotus circle { fill: #F2A1B5; stroke: #D9768F; stroke-width: 1; } .vase { fill: #3E6E8E; }
 .screen-ph { fill: #26313D; }
 .tape-b { fill: #1D1A1A; } .tape-l { fill: #F3E3C3; } .tape-r { fill: #4A4440; stroke: #E9DCC4; stroke-width: 1.2; }
-.room.watching .obj, .room.watching .cabinet, .room.watching .lamp, .room.watching .door { opacity: .12; transition: opacity 1s; }
+.room.watching .obj, .room.watching .cabinet, .room.watching .lamp { opacity: .12; transition: opacity 1s; }
+/* Lúc TV chiếu, nút sang phòng ("Phòng ngủ ›") nằm đè lên màn hình đã phóng to: ẩn hẳn */
+.room.watching .door { opacity: 0; pointer-events: none; transition: opacity .6s; }
 
 /* Túi đồ: nút ở góc trái dưới, mở ra một khay */
 .bag-btn { position: absolute; left: calc(var(--safe-left) + 10px); bottom: calc(var(--safe-bottom) + 8px); z-index: 20; display: flex; align-items: center; gap: 8px; padding: 10px 18px; border: 2px solid #E9C77B; border-radius: 999px; background: rgba(48, 32, 22, .96); color: var(--cream); font: 700 16px 'Be Vietnam Pro', sans-serif; box-shadow: 0 6px 18px rgba(0, 0, 0, .5); }
