@@ -162,13 +162,41 @@
     if (LOCKED) { $('locked').hidden = false; $('rotate').hidden = true; $('room').hidden = true; return; }
     // Chỉ nhắc xoay ngang lúc mới vào. Đã vào phòng rồi thì xoay dọc / ngang giữa chừng vẫn xem tiếp:
     // khung cảnh tự co theo bề ngang màn hình (thấy trọn khung, trên dưới là viền đen).
-    const needRotate = touch && innerHeight > innerWidth && !portraitOk && !started && !entered;
+    const needRotate = touch && portrait() && !portraitOk && !started && !entered;
     if (!needRotate) entered = true;
     $('rotate').hidden = !needRotate;
     $('room').hidden = needRotate;
   }
-  addEventListener('resize', () => { layout(); if (zoomed) zoom(true); });
-  $('btn-portrait').addEventListener('click', () => { portraitOk = true; layout(); });
+  // Đang dọc hay ngang: hỏi nhiều nguồn, chỉ coi là dọc khi mọi nguồn đều nói dọc. iPhone (nhất là mở từ màn hình chính)
+  // báo sự kiện xoay trước khi cập nhật kích thước cửa sổ: đọc innerWidth/innerHeight lúc đó vẫn ra số cũ, trang kẹt ở màn
+  // "Xoay ngang" dù máy đã nằm ngang. Nên sau mỗi lần xoay còn kiểm tra lại vài lần nữa, và chạm vào màn nhắc cũng kiểm tra lại.
+  function portrait() {
+    const so = window.screen.orientation, o = so && so.type; // window.screen: trong file đã có biến screen (màn hình TV)
+    if (o && o.startsWith('landscape')) return false;
+    if (typeof window.orientation === 'number' && Math.abs(window.orientation) === 90) return false;
+    if (matchMedia('(orientation: landscape)').matches) return false;
+    const vv = window.visualViewport;
+    return innerHeight > innerWidth && (!vv || vv.height > vv.width);
+  }
+  let relayT = [];
+  function relayout() {
+    layout();
+    if (zoomed) zoom(true);
+    relayT.forEach(clearTimeout);
+    relayT = [80, 250, 600, 1200].map((ms) => setTimeout(() => { layout(); if (zoomed) zoom(true); }, ms));
+  }
+  addEventListener('resize', relayout);
+  addEventListener('orientationchange', relayout);
+  if (window.screen.orientation) window.screen.orientation.addEventListener('change', relayout);
+  if (window.visualViewport) visualViewport.addEventListener('resize', relayout);
+  matchMedia('(orientation: landscape)').addEventListener('change', relayout);
+  $('rotate').addEventListener('click', relayout);
+  $('btn-portrait').addEventListener('click', (e) => { e.stopPropagation(); portraitOk = true; layout(); });
+
+  // Chặn phóng to ngoài ý muốn trên điện thoại: chụm hai ngón (iPhone bỏ qua user-scalable=no nên chặn bằng tay).
+  // Chạm đôi thì CSS touch-action: manipulation lo, không chặn touchend (chặn sẽ nuốt mất lần bấm thứ hai khi gõ mật mã nhanh).
+  for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
+  document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 
   // ===== Âm thanh tự tạo: tiếng công tắc, tiếng ù và rè của TV cũ =====
   // iPhone gạt im lặng thì Safari tắt tiếng Web Audio (nhạc nền vẫn chạy): khai báo đây là âm thanh phát lại để vẫn kêu.

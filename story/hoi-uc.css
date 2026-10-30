@@ -11,6 +11,7 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; }
+html, body { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; } /* chạm đôi không phóng to */
 body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam Pro', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
 [hidden] { display: none !important; }
 .link { border: 0; background: none; color: rgba(246, 238, 223, .55); font: inherit; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; padding: 8px; cursor: pointer; }
