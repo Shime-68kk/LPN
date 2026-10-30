@@ -142,14 +142,17 @@
   }
 
   // ===== Ai được xem =====
-  // Trên trang thật, trước ngày mở băng chỉ máy anh Quang xem thử được; máy khác chỉ thấy cuộn băng khoá.
+  // Tạm ẩn (30/10/2026): Thủy đã biết, nên trên trang thật máy nào cũng chỉ thấy cuộn băng khoá, kể cả máy anh Quang.
+  // Anh Quang xem thử bằng link ?mo=q0608: chỉ mở trong tab đó, đóng tab là khoá lại, máy không nhớ.
   // Server ở nhà (không phải workers.dev) thì ai cũng xem được để thử.
-  // Mở bằng ?xem=anh một lần thì máy đó xem thử được luôn (máy anh Quang đang để tài khoản khác cũng vào được).
-  try { if (/[?&]xem=anh\b/.test(location.search)) localStorage.setItem('lpn:tapePreview', '1'); } catch (e) { /* bỏ qua */ }
+  try {
+    localStorage.removeItem('lpn:tapePreview'); // khoá cũ (?xem=anh) từng lưu hẳn trên máy
+    if (/[?&]mo=q0608\b/.test(location.search)) sessionStorage.setItem('lpn:tapePreview', '1');
+  } catch (e) { /* bỏ qua */ }
   // Trailer (?trailer=1): đoạn phim tự chạy, ai cũng xem được, không chơi được và không lộ đáp án.
   const TRAILER = /[?&]trailer=1\b/.test(location.search);
   const LOCKED = !TRAILER && location.hostname.endsWith('workers.dev') && (() => {
-    try { return localStorage.getItem('lpn:who') !== 'quang' && localStorage.getItem('lpn:tapePreview') !== '1'; } catch (e) { return true; }
+    try { return sessionStorage.getItem('lpn:tapePreview') !== '1'; } catch (e) { return true; }
   })();
 
   // ===== Xoay ngang (điện thoại); máy tính hay đã xoay thì vào phòng luôn =====
