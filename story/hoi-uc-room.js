@@ -352,6 +352,12 @@
       const paper = body.querySelector('.letter');
       for (const t of LETTER) { const p = document.createElement('p'); p.textContent = t; paper.appendChild(p); }
       paper.insertAdjacentHTML('beforeend', '<p class="sign">Mãi yêu em ❤️<br />Anh, Quang</p>');
+      // Chữ ký thật anh Quang ký bằng bút trên MathBoard (tools/chu-ky.py); chưa có file thì thư vẫn đủ, không hiện ô trống.
+      const sig = new Image();
+      sig.className = 'sig';
+      sig.alt = 'Chữ ký của anh Quang';
+      sig.onload = () => paper.appendChild(sig);
+      sig.src = '../assets/img/chu-ky.svg';
       TV.sfx.paper();
       TV.amb.lift(true);
       onClose = () => { TV.amb.lift(false); if (first) say('Radio nhỏ dần. Cuộn thật đây rồi. Cho vào máy.', 5000); };
