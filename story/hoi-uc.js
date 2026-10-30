@@ -191,14 +191,11 @@
       wet = ac.createGain();
       wet.gain.value = 0;
       out.connect(verb).connect(wet).connect(comp);
+      // Cuộc gọi đến (iPhone để bộ âm thanh ở trạng thái "interrupted"): hết gián đoạn thì tự đánh thức lại
+      ac.addEventListener('statechange', () => { if (ac.state !== 'running') setTimeout(wake, 400); });
     }
     if (ac.state !== 'running' && !document.hidden) ac.resume().catch(() => {});
   }
-  // Chuyển sang ứng dụng khác thì tạm tắt tiếng, quay lại thì kêu tiếp (không kêu ngầm khi đang khoá máy).
-  document.addEventListener('visibilitychange', () => {
-    if (!ac) return;
-    if (document.hidden) ac.suspend().catch(() => {}); else ac.resume().catch(() => {});
-  });
   // Nhạc nền đi qua Web Audio để tăng giảm được (Safari trên iPhone không cho đổi audio.volume).
   // Đi thẳng ra loa, không qua bộ nén, để giữ nguyên độ dội của bản nhạc.
   function music(el, v) {
@@ -450,7 +447,7 @@
       lonely: { verb: 0.34, tone: 0.05, clock: { r1: 0.07, r2: 0.016, r3: 0 }, fan: { r1: 0.025, r2: 0.05, r3: 0 }, wind: { r1: 0.012, r2: 0.022, r3: 0.08 }, crick: { r1: 0.012, r2: 0.016, r3: 0.11 }, pad: 0, song: { r1: 0, r2: 0, r3: 0.045 } },
       warm: { verb: 0.1, tone: 0.03, clock: { r1: 0.035, r2: 0.008, r3: 0 }, fan: { r1: 0.018, r2: 0.03, r3: 0 }, wind: { r1: 0, r2: 0.008, r3: 0.04 }, crick: { r1: 0.008, r2: 0.01, r3: 0.07 }, pad: 0.022, song: { r1: 0.06, r2: 0.05, r3: 0.16 } },
     };
-    let on = false, bus = null, room = 'r1', mood = 'lonely', radio = false, duck = 1, timer = 0, L = null;
+    let on = false, bus = null, room = 'r1', mood = 'lonely', radio = false, duck = 1, lift = false, lifted = false, timer = 0, L = null;
     let nextTick = 0, tickN = 0, chirp = [0, 0, 0];
     const next = {};
     const rnd = (a, z) => a + Math.random() * (z - a);
@@ -518,10 +515,12 @@
       L.crickF.frequency.setTargetAtTime(room === 'r3' ? 9000 : 2200, ac.currentTime, 0.3);
       set(L.clock, m.clock[room] * duck, sec);
       set(L.pad, m.pad * duck, sec);
-      const sv = (room === 'r3' ? (radio || mood === 'warm' ? m.song.r3 : 0) : m.song[room]) * duck;
-      set(L.song, sv, sec * 2);
-      L.songHp.frequency.setTargetAtTime(room === 'r3' ? 280 : 40, ac.currentTime, 0.3);
-      L.songLp.frequency.setTargetAtTime(room === 'r3' ? 3600 : 620, ac.currentTime, 0.3);
+      // Đọc lá thư sau tấm ảnh: radio ngoài sân vặn to, trong nhà nghe rõ cả lời (bớt nghẹt qua tường), tiếng nền lùi lại
+      const sv = (lift ? 0.24 : (room === 'r3' ? (radio || mood === 'warm' ? m.song.r3 : 0) : m.song[room])) * duck;
+      set(L.song, sv, lift ? 1.4 : sec * 2);
+      if (lift) for (const n of [L.tone, L.fan, L.wind, L.clock, L.pad]) set(n, 0, 1.5);
+      L.songHp.frequency.setTargetAtTime(room === 'r3' || lift ? 200 : 40, ac.currentTime, lift ? 1 : 0.3);
+      L.songLp.frequency.setTargetAtTime(room === 'r3' ? 3600 : lift ? 2600 : 620, ac.currentTime, lift ? 1 : 0.3);
       song(sv > 0);
     }
     // Lên lịch tiếng trong khoảng 0,5 giây tới
@@ -586,6 +585,16 @@
         if (on) mix(moodChanged ? 6 : 1.2);
       },
       duck(k) { duck = k; if (on) mix(0.6); },
+      // Radio to lên (lúc đọc thư) rồi nhỏ lại. Lần đầu vặn to thì phát từ lời 1 "Cứ như đôi hạt nắng…", có tiếng rè lúc vặn.
+      lift(up) {
+        if (!on || lift === !!up) return;
+        lift = !!up;
+        if (lift) {
+          sfx.glitch();
+          if (el && !lifted) { lifted = true; try { el.currentTime = SONG.parts[1].at - 0.4; } catch (e) { /* bỏ qua */ } }
+        }
+        mix(lift ? 1.4 : 2.5);
+      },
       stop() { if (!on) return; on = false; clearInterval(timer); set(bus, 0, 0.8); song(false); },
     };
   })();
@@ -594,6 +603,26 @@
   const audio = new Audio();
   audio.preload = 'none';
   let mix = null, wallT0 = 0, useWall = false;
+  // ===== Bị gián đoạn: cuộc gọi đến, chuyển ứng dụng, khoá máy =====
+  // Trang bị ẩn: tắt tiếng, dừng nhạc phim và danh đề (không kêu ngầm, phim không chạy mất đoạn). Quay lại thì chạy tiếp đúng chỗ.
+  // Hệ thống tự dừng nhạc phim (cuộc gọi hiện đè lên trang): danh đề dừng theo. Ảnh trong phim chạy theo giây của bản nhạc nên tự đứng chờ.
+  // Đánh thức lại khi trang hiện lại, khi bộ âm thanh đổi trạng thái và ở mỗi lần chạm (iPhone chỉ cho phát lại trong lúc chạm).
+  let filmOn = false, rollAnim = null;
+  function wake() {
+    if (document.hidden) return;
+    if (ac && ac.state !== 'running') ac.resume().catch(() => {});
+    if (filmOn && audio.paused) audio.play().catch(() => {});
+    else if (rollAnim && rollAnim.playState === 'paused') rollAnim.play();
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) { wake(); return; }
+    if (ac) ac.suspend().catch(() => {});
+    if (filmOn) audio.pause();
+    if (rollAnim) rollAnim.pause();
+  });
+  addEventListener('pointerdown', wake, true);
+  audio.addEventListener('pause', () => { if (filmOn && rollAnim) rollAnim.pause(); });
+  audio.addEventListener('playing', () => { if (filmOn && rollAnim && rollAnim.playState === 'paused') rollAnim.play(); });
   // Chờ tới giây t của bài hát: đồng hồ là chính bản nhạc (ảnh chuyển đúng phách); nhạc không phát được thì theo giờ máy.
   const at = (t) => new Promise((res) => {
     const f = () => { const cur = useWall ? SONG.from + (performance.now() - wallT0) / 1000 : audio.currentTime; if (cur >= t) res(); else requestAnimationFrame(f); };
@@ -748,6 +777,7 @@
       wallT0 = performance.now();
       useWall = false;
       await audio.play().catch(() => { useWall = true; });
+      filmOn = !useWall;
       mix.to(SONG.vol, 1.2);
       await play();
     }
@@ -811,12 +841,15 @@
       { transform: 'translateY(' + (vh - d1) + 'px)', offset: (sec - tail) / sec, easing: 'cubic-bezier(0, 0, .58, 1)' },
       { transform: 'translateY(' + stopY + 'px)' },
     ], { duration: sec * 1000, fill: 'forwards' });
+    rollAnim = anim;
     const skip = $('skip');
     skip.onclick = () => anim.finish();
     setTimeout(() => box.classList.add('skippable'), 4000);
     await anim.finished.catch(() => {});
+    rollAnim = null;
     box.classList.remove('skippable');
     await sleep(1600);
+    filmOn = false;
     if (mix) mix.to(0, 2.4);
     setTimeout(() => audio.pause(), 3500);
     box.classList.remove('on');

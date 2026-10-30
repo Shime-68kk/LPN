@@ -8,9 +8,10 @@
 //   → chìa khoá + nửa giấy → cổng đình → ghép giấy "tám mươi, chín mươi… ở giữa" → dò sóng 85.0
 //   → xếp câu "Tàn rồi, thì mình lại hẹn nhau một cuộc vui khác." → đèn lồng → Băng 04 (trống, chỉ sang con robot)
 //   → máy tính phòng ngủ (mật khẩu máy anh Quang, chỉ lưu mã băm) → file sơ đồ chip → kéo 4 chip vào robot
-//   → robot đọc mã 4719 → điện thoại → sau khung ảnh: băng thật → đầu băng → nút nguồn.
-// Đồ dùng xong tự biến khỏi túi; "Sổ ghi chép" giữ lại manh mối, cái nào giải xong có dấu ✓.
-// Tiến độ lưu trên máy (lpn:bang1). Chơi lại từ đầu: thêm ?moi=1 vào địa chỉ. Xem thử: ?thu=vali, bang, maytinh, dinh, bangthat.
+//   → robot đọc mã 4719 → điện thoại → sau khung ảnh: băng thật + lá thư (radio ngoài sân to lên) → đầu băng → nút nguồn.
+// Đồ tìm thấy không tự vào túi: chỗ có đồ sáng nhẹ, mở ra thấy đồ phát sáng, chạm từng món để cầm lên (bay vào túi).
+// Chìa khoá cổng cũng phải cầm từ túi rồi chạm vào ổ khoá cổng đình. Đồ dùng xong tự biến khỏi túi; "Sổ ghi chép" giữ lại manh mối, cái nào giải xong có dấu ✓.
+// Tiến độ lưu trên máy (lpn:bang1). Chơi lại từ đầu: thêm ?moi=1 vào địa chỉ. Xem thử: ?thu=vali, bang, maytinh, dinh, thu, bangthat.
 'use strict';
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -19,15 +20,17 @@
   if (!TV) return;
   const TRAILER = !!TV.trailer; // đoạn phim giới thiệu: không đọc / ghi tiến độ thật
   // Xem thử một đoạn không cần chơi tới: ?thu=vali (khoá vali), ?thu=bang (bảng ghim), ?thu=maytinh (máy tính đã đăng nhập),
-  // ?thu=dinh (trước cổng đình, đã có chìa), ?thu=bangthat (băng thật đã trong đầu băng: bấm nguồn 3 lần). Không lưu gì.
-  const TRY = (location.search.match(/[?&]thu=(vali|bang|maytinh|dinh|bangthat)\b/) || [])[1];
+  // ?thu=dinh (trước cổng đình, đã có chìa), ?thu=thu (vừa mở khoá điện thoại: lấy băng thật và lá thư sau tấm ảnh),
+  // ?thu=bangthat (băng thật đã trong đầu băng: bấm nguồn 3 lần). Không lưu gì.
+  const TRY = (location.search.match(/[?&]thu=(vali|bang|maytinh|dinh|thu|bangthat)\b/) || [])[1];
   const DRY = TRAILER || !!TRY;
   const ALL_DONE = { jig: true, book: true, cipher: true, pillow: true, board: true, case: true, gate: true, radio: true, words: true, pc: true, dir: true, robot: true, phone: true };
   const TRY_STATE = {
-    maytinh: { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true }, seen: { A: true, B: true, C: true, D: true }, done: { jig: true, book: true, cipher: true, pillow: true, pc: true } },
-    dinh: { room: 'r3', lamp: true, tut: true, items: { A: true, B: true, C: true, key: true, note1: true, note2: true }, seen: { A: true, B: true, C: true }, done: { jig: true, book: true, cipher: true, pillow: true, board: true, case: true } },
-    bangthat: { room: 'r1', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true, E: true }, seen: { A: true, B: true, C: true, D: true }, done: ALL_DONE, inVcr: 'E' },
-  }[TRY] || { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true }, seen: { A: true, B: true, C: true }, done: { jig: true, book: true, cipher: true, pillow: true } };
+    maytinh: { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true, wheel: true, note1: true, note2: true, key: true }, seen: { A: true, B: true, C: true, D: true }, done: { jig: true, book: true, cipher: true, pillow: true, pc: true } },
+    dinh: { room: 'r3', lamp: true, tut: true, items: { A: true, B: true, C: true, wheel: true, key: true, note1: true, note2: true }, seen: { A: true, B: true, C: true }, done: { jig: true, book: true, cipher: true, pillow: true, board: true, case: true } },
+    thu: { room: 'r1', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true, wheel: true, note1: true, note2: true, key: true }, seen: { A: true, B: true, C: true, D: true }, done: ALL_DONE },
+    bangthat: { room: 'r1', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true, E: true, letter: true, wheel: true, note1: true, note2: true, key: true }, seen: { A: true, B: true, C: true, D: true }, done: ALL_DONE, inVcr: 'E' },
+  }[TRY] || { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true, wheel: true, note1: true }, seen: { A: true, B: true, C: true }, done: { jig: true, book: true, cipher: true, pillow: true } };
   try { if (/[?&]moi=1\b/.test(location.search)) localStorage.removeItem(KEY); } catch (e) { /* bỏ qua */ }
   const load = () => { if (TRY) return TRY_STATE; if (TRAILER) return {}; try { const v = JSON.parse(localStorage.getItem(KEY)); return v && v.v === 2 ? v : {}; } catch (e) { return {}; } };
   const S = Object.assign({ v: 2, room: 'r1', lamp: false, tut: false, items: {}, seen: {}, done: {}, inVcr: null }, load());
@@ -44,7 +47,7 @@
     D: { label: 'Băng số 1', ch: 'CH 06', date: '--.--.2026', lines: ['Băng số 1.', '…', 'Ơ. Băng trống.', 'Cuộn thật ở chỗ chiếc điện thoại chỉ.', 'Mật mã điện thoại? Hỏi con robot trong phòng ngủ.'] },
     E: { label: 'Băng số 1 ♥', real: true },
   };
-  const OTHER = { wheel: 'Đĩa xoay chữ', note1: 'Nửa mẩu giấy', note2: 'Nửa mẩu giấy', note: 'Mẩu giấy', key: 'Chìa khoá cổng', log: 'Sổ ghi chép' };
+  const OTHER = { wheel: 'Đĩa xoay chữ', note1: 'Nửa mẩu giấy', note2: 'Nửa mẩu giấy', note: 'Mẩu giấy', key: 'Chìa khoá cổng', log: 'Sổ ghi chép', letter: 'Thư của anh' };
   const PC_HASH = 'c1b7476d'; // mật khẩu máy tính anh Quang (Thủy biết), chỉ giữ mã băm
   const fnv = (str) => { let h = 0x811c9dc5; for (const ch of str) { h ^= ch.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16); };
   const ICON = {
@@ -53,7 +56,11 @@
     wheel: '<svg viewBox="0 0 40 24" aria-hidden="true"><circle cx="20" cy="12" r="10" fill="#E4D6BE" /><circle cx="20" cy="12" r="5" fill="#B5462F" /></svg>',
     note: '<svg viewBox="0 0 40 24" aria-hidden="true"><path d="M8 3l24-1 1 19-25 1z" fill="#F3E9D6" /><path d="M12 8h14M12 12h11M12 16h8" stroke="#6E5A44" stroke-width="1.5" /></svg>',
     log: '<svg viewBox="0 0 40 24" aria-hidden="true"><rect x="9" y="1" width="22" height="22" rx="2" fill="#8C3B3B" /><rect x="12" y="4" width="16" height="16" rx="1" fill="#F3E9D6" /><path d="M15 9h10M15 13h8" stroke="#6E5A44" stroke-width="1.5" /></svg>',
+    letter: '<svg viewBox="0 0 40 24" aria-hidden="true"><rect x="6" y="3" width="28" height="18" rx="2" fill="#F3E9D6" stroke="#B9A07E" stroke-width=".8" /><path d="M6.5 4l13.5 10L33.5 4" fill="none" stroke="#B9A07E" stroke-width="1.2" /><path d="M20 11.6c-1.6-1.6-3.6-.2-2.6 1.4l2.6 2.6 2.6-2.6c1-1.6-1-3-2.6-1.4z" fill="#C0392B" /></svg>',
   };
+  // Biểu tượng và tên của một món (băng hay đồ khác)
+  const iconOf = (id) => (TAPES[id] ? ICON.tape : ICON[id === 'note1' || id === 'note2' ? 'note' : id]);
+  const nameOf = (id) => (TAPES[id] ? TAPES[id].label : OTHER[id]);
 
   // ===== Lời nhắc ở dưới =====
   let sayTimer = 0;
@@ -74,17 +81,25 @@
   function step() {
     const d = S.done, it = S.items;
     if (!S.lamp) return { room: 'r1', t: '[data-obj="lamp"]', hint: 'Tối quá… tìm cái đèn.' };
+    if (!it.A) return { room: 'r1', t: '[data-obj="lamp"]', hint: 'Dưới chân đèn có một cuộn băng. Chạm để cầm lên.' };
     if (!S.seen.A) return tapeStep('A', 'Mở túi đồ, chọn Băng 01.');
     if (!d.jig) return { room: 'r1', t: '[data-obj="frame"]', hint: 'Ghép lại bức ảnh vỡ.' };
-    if (!it.B) return { room: 'r1', t: '[data-obj="drawer"]', hint: 'Ngăn kéo kệ TV vừa bật ra.' };
+    if (!it.B || !it.wheel) return { room: 'r1', t: '[data-obj="drawer"]', hint: 'Ngăn kéo kệ TV vừa bật ra.' };
     if (!S.seen.B) return tapeStep('B');
     if (!d.book) return { room: 'r1', t: '[data-obj="shelf"]', hint: 'Cuốn từ điển không hiệu sách nào bán.' };
     if (!d.cipher) return { t: '#bag-btn', id: 'wheel', hint: 'Dùng đĩa xoay chữ trong túi.' };
     if (!d.pillow) return { room: 'r2', t: '[data-obj="pillow"]', hint: 'Nhìn dưới gối.' };
+    if (!it.C || !it.note1) return { room: 'r2', t: '[data-obj="pillow"]', hint: 'Dưới gối có đồ. Cầm lên.' };
     if (!S.seen.C) return tapeStep('C');
     if (!d.board) return { room: 'r2', t: '[data-obj="board"]', hint: 'Bốn tấm ảnh trên bảng ghim. Lật mặt sau.' };
     if (!d.case) return { room: 'r2', t: '[data-obj="case"]', hint: 'Khoá vali đọc theo số sau ảnh.' };
-    if (!d.gate) return { room: 'r3', t: '[data-obj="gate"]', hint: 'Chìa khoá này mở cổng nào?' };
+    if (!it.key || !it.note2) return { room: 'r2', t: '[data-obj="case"]', hint: 'Trong vali còn đồ. Cầm lên.' };
+    // Cổng đình: lần đầu dùng đồ không phải băng, nên sáng từng bước ngay (cầm chìa trong túi → chạm ổ khoá)
+    if (!d.gate) {
+      if (sel === 'key') return { room: 'r3', t: '[data-obj="gate"]', hint: 'Tra chìa vào ổ khoá trên cổng đình.', now: true };
+      if (S.room !== 'r3') return { room: 'r3', hint: 'Chìa khoá này mở cổng nào?' };
+      return { t: '#bag-btn', id: 'key', hint: 'Cổng khoá. Mở túi đồ, cầm Chìa khoá cổng lên.', now: true };
+    }
     if (!d.radio) return { room: 'r3', t: '[data-obj="radio"]', hint: 'Đọc mẩu giấy ghép, rồi dò sóng.' };
     if (!d.words) return { room: 'r3', t: '[data-obj="radio"]', hint: 'Xếp lại câu radio vừa đọc.' };
     if (!it.D) return { room: 'r3', t: '[data-obj="bench"]', hint: 'Đèn lồng soi xuống bậc thềm.' };
@@ -94,6 +109,7 @@
     if (!d.robot) return { room: 'r2', t: '[data-obj="robot"]', hint: 'Con robot còn thiếu chip.' };
     if (!d.phone) return { room: 'r1', t: '[data-obj="phone"]', hint: 'Mật mã con robot vừa đọc.' };
     if (!it.E) return { room: 'r1', t: '[data-obj="frame"]', hint: 'Sau tấm ảnh em vừa ghép.' };
+    if (!it.letter && S.inVcr !== 'E') return { room: 'r1', t: '[data-obj="frame"]', hint: 'Sau tấm ảnh còn kẹp một lá thư.' };
     if (S.inVcr !== 'E') return tapeStep('E', 'Cuộn thật đây rồi. Cho vào máy.');
     return { room: 'r1', t: '#power', hint: 'Bấm nút nguồn.' };
   }
@@ -102,8 +118,9 @@
   let idle = 0;
   function guide() {
     for (const n of document.querySelectorAll('.glow')) n.classList.remove('glow');
-    if (TRAILER || S.tut && idle < 40) return;
+    if (TRAILER) return;
     const st = step();
+    if (S.tut && idle < 40 && !st.now) return;
     if (st.room && st.room !== S.room) { const door = document.querySelector('.view:not([hidden]) .door[data-go="' + st.room + '"]') || document.querySelector('.view:not([hidden]) .door'); if (door) door.classList.add('glow'); return; }
     const t = document.querySelector('#bag:not([hidden]) .bag-items button[data-id="' + (st.id || '') + '"]') || document.querySelector(st.t);
     if (t) t.classList.add('glow');
@@ -140,6 +157,9 @@
     q('pc').classList.toggle('on', !!S.done.pc);
     q('robot').classList.toggle('alive', !!S.done.robot);
     document.querySelector('.v2').classList.toggle('robot-done', !!S.done.robot);
+    // Chỗ còn đồ chưa cầm lên thì sáng nhẹ, như gợi ý: có gì đó ở đây
+    const wait = { lamp: S.lamp && !S.items.A, drawer: S.done.jig && !(S.items.B && S.items.wheel), pillow: S.done.pillow && !(S.items.C && S.items.note1), case: S.done.case && !(S.items.key && S.items.note2), bench: S.done.words && !S.items.D, frame: S.done.phone && !(S.items.E && S.items.letter) };
+    for (const o in wait) q(o).classList.toggle('waiting', !TRAILER && !!wait[o]);
     q('bench').innerHTML = S.done.words && !S.items.D ? '<span style="left:44%;top:-60%;width:12%;height:120%">' + ICON.tape + '</span>' : '<span></span>';
     $('vcr-label').textContent = S.inVcr ? TAPES[S.inVcr].label : '';
     $('vcr-led').classList.toggle('on', !!S.inVcr);
@@ -160,7 +180,8 @@
       if (S.items.note1 && S.items.note2) list.push({ id: 'note', label: OTHER.note, icon: ICON.note, fresh: true });
       else if (S.items.note1 || S.items.note2) list.push({ id: 'note1', label: OTHER.note1, icon: ICON.note });
     }
-    if (S.items.key && !S.done.gate) list.push({ id: 'key', label: OTHER.key, icon: ICON.key });
+    if (S.items.key && !S.done.gate) list.push({ id: 'key', label: OTHER.key, icon: ICON.key, fresh: true });
+    if (S.items.letter) list.push({ id: 'letter', label: OTHER.letter, icon: ICON.letter });
     if (S.seen.A) list.push({ id: 'log', label: OTHER.log, icon: ICON.log });
     return list;
   }
@@ -185,7 +206,7 @@
     }
     let held = document.querySelector('.held');
     if (sel && !held) { held = document.createElement('div'); held.className = 'held'; $('room').appendChild(held); }
-    if (held) { if (sel) held.textContent = 'Đang cầm: ' + (TAPES[sel] ? TAPES[sel].label : OTHER[sel]); else held.remove(); }
+    if (held) { if (sel) held.textContent = 'Đang cầm: ' + nameOf(sel); else held.remove(); }
   }
   $('bag-btn').addEventListener('click', () => { $('bag').hidden = !$('bag').hidden; TV.sfx.bag(!$('bag').hidden); renderBag(); guide(); });
 
@@ -202,7 +223,13 @@
     if (it.id === 'wheel') return cipherTool();
     if (it.id === 'note') return look('Mẩu giấy', '<p class="hand">Hà Nội – Thái Nguyên:\ntám mươi, chín mươi cây số.\nSóng nằm ở giữa.</p>');
     if (it.id === 'note1') return look('Nửa mẩu giấy', '<p class="hand">Hà Nội – Thái Nguyên:\ntám mươi…</p><p class="say">Còn nửa kia ở đâu đó.</p>');
-    if (it.id === 'key') return say('Chìa khoá to, cũ. Của một cái cổng.');
+    if (it.id === 'key') {
+      sel = sel === 'key' ? null : 'key';
+      render();
+      if (sel) say(S.room === 'r3' ? 'Chạm chìa vào ổ khoá trên cổng đình.' : 'Chìa khoá to, cũ. Của một cái cổng ngoài sân.', 4000);
+      return;
+    }
+    if (it.id === 'letter') return letter();
     if (it.id === 'log') return journal();
   }
 
@@ -236,13 +263,19 @@
   }
 
   // ===== Nhìn gần =====
+  let onClose = null; // việc cần làm khi đóng khung nhìn gần (vd. radio nhỏ lại sau khi đọc thư)
   function look(title, html, setup) {
+    if (onClose) { const f = onClose; onClose = null; f(); }
     $('look-title').textContent = title;
     $('look-body').innerHTML = html;
     $('look').hidden = false;
     if (setup) setup($('look-body'));
   }
-  function closeLook() { $('look').hidden = true; render(); }
+  function closeLook() {
+    $('look').hidden = true;
+    render();
+    if (onClose) { const f = onClose; onClose = null; f(); }
+  }
   $('look-close').addEventListener('click', closeLook);
   $('look').addEventListener('click', (e) => { if (e.target === $('look')) closeLook(); });
   const msg = (body, text) => {
@@ -253,6 +286,81 @@
   const wrong = (el) => { el.classList.remove('shake-x'); void el.offsetWidth; el.classList.add('shake-x'); };
   // Giải được / tìm thấy đồ: lưu, hiện kết quả. Tiếng theo đồ vật (mặc định hai nốt chuông "tìm thấy").
   const win = (fn, snd) => { TV.sfx[snd || 'find'](); save(); fn(); render(); };
+
+  // Tìm thấy đồ: đồ nằm đó phát sáng nhẹ, chạm từng món để cầm lên; món đó bay xuống túi đồ.
+  // Đóng giữa chừng thì món chưa cầm vẫn nằm lại chỗ cũ (chỗ đó sáng nhẹ), chạm lại để lấy tiếp.
+  function fly(from) {
+    const a = from.getBoundingClientRect(), b = $('bag-btn').getBoundingClientRect();
+    const g = from.cloneNode(true);
+    g.className = 'fly';
+    g.style.cssText = 'left:' + a.left + 'px;top:' + a.top + 'px;width:' + a.width + 'px;height:' + a.height + 'px';
+    document.body.appendChild(g);
+    const dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2);
+    const an = g.animate([
+      { transform: 'none', opacity: 1 },
+      { transform: 'translate(' + dx * 0.35 + 'px,' + (dy * 0.35 - 40) + 'px) scale(.8)', opacity: 1, offset: 0.4 },
+      { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.25)', opacity: 0.2 },
+    ], { duration: 650, easing: 'cubic-bezier(.5, 0, .7, 1)' });
+    an.onfinish = () => { g.remove(); const bb = $('bag-btn'); bb.classList.remove('bump'); void bb.offsetWidth; bb.classList.add('bump'); };
+  }
+  function pickup(title, text, ids, snd, after) {
+    look(title, '<p class="find-txt"></p><div class="finds"></div><p class="say find-tip">Chạm để cầm lên.</p>', (body) => {
+      body.querySelector('.find-txt').textContent = text;
+      const box = body.querySelector('.finds');
+      for (const id of ids) {
+        if (S.items[id]) continue;
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'find' + (TAPES[id] ? ' is-tape' : '') + (TAPES[id] && TAPES[id].real ? ' is-real' : '');
+        b.innerHTML = '<span class="find-ic">' + iconOf(id) + '</span><span class="find-l"></span>';
+        b.querySelector('.find-l').textContent = nameOf(id);
+        b.addEventListener('click', () => {
+          if (S.items[id]) return;
+          S.items[id] = true;
+          TV.sfx[snd || 'find']();
+          fly(b.querySelector('.find-ic'));
+          b.classList.add('taken');
+          save();
+          render();
+          if ([...box.children].some((x) => !x.classList.contains('taken'))) return;
+          body.querySelector('.find-tip').textContent = 'Đã cất vào túi đồ.';
+          if (after) setTimeout(() => after(body), 700);
+          else setTimeout(closeLook, 1100);
+        });
+        box.appendChild(b);
+      }
+    });
+  }
+
+  // Lá thư kẹp sau tấm ảnh, cùng cuộn băng thật. Lúc đọc, chiếc radio ngoài sân đình to dần lên.
+  // Lời thư: bản nháp Claude viết theo ý anh Quang (cuộn thật vẫn nằm ở câu đố đầu tiên; tình cảm anh cũng vậy). Anh sửa thoải mái.
+  const LETTER = [
+    'Gửi người con gái anh yêu,',
+    'Em có biết không, cuộn băng thật chưa từng đi đâu cả.',
+    'Nó nằm ở đây ngay từ lúc em bật đèn, sau bức ảnh đầu tiên em ghép lại. Câu đố đầu tiên của em cũng chính là chỗ nó nằm chờ em.',
+    'Em đi qua ba căn phòng, mở vali, dò sóng radio, lục cả máy tính của anh. Còn nó thì vẫn ở yên chỗ cũ, ngay trước mắt em, lặng lẽ đợi em quay về.',
+    'Tình cảm của anh cũng vậy đó.',
+    'Em không cần tìm đâu xa. Những hôm em mệt, em buồn, thấy mọi thứ rối như một câu đố chưa giải được, thì em cứ quay về chỗ ban đầu. Anh vẫn ở đó, như từ lúc em mới bật đèn.',
+    'Hà Nội với Thái Nguyên cách nhau tám mươi, chín mươi cây số. Nhưng anh chưa bao giờ ở xa em.',
+    'Giờ cho cuộn băng vào máy đi em.\nAnh đợi em ở trong đó.',
+  ];
+  function letter() {
+    const first = !S.items.letter;
+    S.items.letter = true;
+    save();
+    look('Thư của anh', '<p class="radio-note">♪ Ngoài sân đình, chiếc radio vừa to lên một chút…</p><div class="letter"></div>', (body) => {
+      const paper = body.querySelector('.letter');
+      for (const t of LETTER) { const p = document.createElement('p'); p.textContent = t; paper.appendChild(p); }
+      paper.insertAdjacentHTML('beforeend', '<p class="sign">Mãi yêu em ❤️<br />Anh, Quang</p>');
+      TV.sfx.paper();
+      TV.amb.lift(true);
+      onClose = () => { TV.amb.lift(false); if (first) say('Radio nhỏ dần. Cuộn thật đây rồi. Cho vào máy.', 5000); };
+    });
+  }
+  function envelope(body) {
+    body.innerHTML = '<p>Lần này là thật.</p><p>Kẹp phía sau cuộn băng còn một lá thư gấp tư.</p><div class="finds"><button type="button" class="find is-letter"><span class="find-ic">' + ICON.letter + '</span><span class="find-l">Thư của anh</span></button></div><p class="say">Chạm để mở thư.</p>';
+    body.querySelector('.find').addEventListener('click', letter);
+  }
 
   // Ghép tranh 3×3: chạm hai mảnh để đổi chỗ.
   const PHOTO = '../assets/img/Anh (2).jpg';
@@ -364,9 +472,8 @@
       body.querySelector('.primary').addEventListener('click', () => {
         if (cur.every((v, i) => SYM[v] === ANS[i])) {
           S.done.case = true;
-          S.items.key = true;
-          S.items.note2 = true;
-          win(() => { body.innerHTML = '<p>Tách. Nắp vali bật lên.</p><p>Một chiếc chìa khoá cũ, và nửa mẩu giấy.</p>'; }, 'latch');
+          win(() => { body.innerHTML = '<p>Tách. Nắp vali bật lên.</p>'; }, 'latch');
+          setTimeout(openCase, 800);
           return;
         }
         wrong(row);
@@ -374,6 +481,8 @@
       });
     });
   }
+
+  const openCase = () => pickup('Chiếc vali', 'Trong vali: một chiếc chìa khoá cũ, và nửa mẩu giấy.', ['key', 'note2']);
 
   // Radio: dò sóng, vạch sóng càng cao càng gần. Bắt được sóng thì nghe đọc một câu, xếp lại câu ấy.
   function radio() {
@@ -743,24 +852,27 @@
   }
 
   // ===== Đồ vật trong các phòng =====
+  const lampTape = () => pickup('Dưới chân đèn', 'Đèn vừa sáng lên. Dưới chân đèn có một cuộn băng cũ.', ['A']);
   const OBJ = {
     lamp() {
+      if (S.lamp && !S.items.A) { lampTape(); return; }
       if (S.lamp) { say('Để đèn sáng thôi. Tối em sợ.'); return; }
       S.lamp = true;
-      S.items.A = true;
       TV.audioOn();
-      win(() => say('Sáng rồi. Trong túi có sẵn một cuộn băng.', 5000), 'lamp');
+      win(() => say('Sáng rồi.', 2500), 'lamp');
+      setTimeout(lampTape, 900);
     },
     frame() {
       if (!S.seen.A) { say('Bức ảnh vỡ mất rồi.'); return; }
       if (!S.done.jig) { jigsaw(); return; }
       if (!S.done.phone) { say('Ảnh liền rồi. Nắng chiều đẹp.'); return; }
-      if (!S.items.E) { S.items.E = true; win(() => look('Sau tấm ảnh', '<p>Một cuộn băng, nhãn vẽ trái tim nhỏ.</p><p class="say">Lần này là thật.</p>'), 'heart'); return; }
-      say('Khoảng trống sau tấm ảnh.');
+      if (!S.items.E) { pickup('Sau tấm ảnh', 'Một cuộn băng, nhãn vẽ trái tim nhỏ.', ['E'], 'heart', envelope); return; }
+      if (!S.items.letter) { look('Sau tấm ảnh', ''); envelope($('look-body')); return; }
+      say('Khoảng trống sau tấm ảnh. Thư anh để trong túi đồ.');
     },
     drawer() {
       if (!S.done.jig) { say('Ngăn kéo kẹt cứng.'); return; }
-      if (!S.items.B) { S.items.B = true; S.items.wheel = true; win(() => look('Ngăn kéo', '<p>Một cuộn băng, và một chiếc đĩa có hai vòng chữ cái.</p>'), 'drawer'); return; }
+      if (!S.items.B || !S.items.wheel) { if (!OBJ.drawer.opened) { OBJ.drawer.opened = true; TV.sfx.drawer(); } pickup('Ngăn kéo', 'Một cuộn băng, và một chiếc đĩa có hai vòng chữ cái.', ['B', 'wheel']); return; }
       say('Ngăn kéo trống.');
     },
     vcr,
@@ -776,19 +888,37 @@
     robot,
     pillow() {
       if (!S.done.cipher) { say('Gối êm lắm. Chưa phải lúc.'); return; }
-      if (!S.done.pillow) { S.done.pillow = true; S.items.C = true; S.items.note1 = true; win(() => look('Dưới gối', '<p>Một cuộn băng, và nửa mẩu giấy.</p><p class="say">Gối vẫn còn mùi tóc em.</p>'), 'cloth'); return; }
+      if (!S.done.pillow) { S.done.pillow = true; win(() => {}, 'cloth'); setTimeout(() => OBJ.pillow(), 700); return; }
+      if (!S.items.C || !S.items.note1) { pickup('Dưới gối', 'Một cuộn băng, và nửa mẩu giấy. Gối vẫn còn mùi tóc em.', ['C', 'note1']); return; }
       say('Gối vẫn còn mùi tóc em.');
     },
-    case() { if (S.done.case) { say('Vali trống, nhẹ tênh.'); return; } symbolLock(); },
+    case() {
+      if (!S.done.case) { symbolLock(); return; }
+      if (!S.items.key || !S.items.note2) { openCase(); return; }
+      say('Vali trống, nhẹ tênh.');
+    },
+    // Cổng đình: phải cầm chìa khoá từ túi rồi chạm vào ổ khoá. Chìa xoay "cạch", ổ khoá rơi, rồi cổng mới mở.
     gate() {
-      if (!S.items.key) { say('Cổng đình khoá.'); return; }
-      S.done.gate = true;
-      win(() => say('Kẹt… cổng mở.', 3500), 'gate');
+      if (!S.items.key) { say('Cổng đình khoá. Ổ khoá to, cũ.'); return; }
+      if (sel !== 'key') { say('Cổng khoá. Mở túi đồ, cầm Chìa khoá cổng lên rồi chạm vào ổ khoá.', 5000); guide(); return; }
+      if (OBJ.gate.turning) return;
+      OBJ.gate.turning = true;
+      sel = null;
+      renderBag();
+      const lock = document.querySelector('.gate-lock');
+      lock.classList.add('turn');
+      TV.sfx.unlock();
+      setTimeout(() => {
+        lock.classList.remove('turn');
+        OBJ.gate.turning = false;
+        S.done.gate = true;
+        win(() => say('Cạch. Chìa xoay được… Kẹt… cổng mở.', 3500), 'gate');
+      }, 900);
     },
     radio,
     lantern() { say(S.done.words ? 'Đèn lồng soi xuống bậc thềm.' : 'Đèn lồng chưa thắp.'); },
     bench() {
-      if (S.done.words && !S.items.D) { S.items.D = true; win(() => look('Bậc thềm', '<p>Trên bậc thềm cũ, một cuộn băng nhãn viết tay: “Băng số 1”.</p>')); return; }
+      if (S.done.words && !S.items.D) { pickup('Bậc thềm', 'Trên bậc thềm cũ, một cuộn băng nhãn viết tay: “Băng số 1”.', ['D']); return; }
       say('Bậc thềm cũ. Gió mát.');
     },
   };
