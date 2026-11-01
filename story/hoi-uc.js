@@ -958,7 +958,7 @@
     });
     return hlsLib.then((H) => {
       // iPhone (iOS 17.1+) chạy hls.js bằng ManagedMediaSource: phải tắt phát qua AirPlay thì mới mở được
-      if (H) { if (window.ManagedMediaSource) el.disableRemotePlayback = true; const h = new H({ maxBufferLength: 40 }); h.loadSource(url); h.attachMedia(el); } else if (!viaHls) el.src = url;
+      if (H) { if (window.ManagedMediaSource) el.disableRemotePlayback = true; const h = new H({ maxBufferLength: 40 }); h.loadSource(url); h.attachMedia(el); } else el.src = url;
     });
   }
   function loadFilm() {
@@ -1021,7 +1021,17 @@
       await Promise.race([audio.play().then(() => { begun = true; }, () => { played = false; }), sleep(6000)]);
       if (!played && !B.video) useWall = true;
       filmOn = !useWall;
-      if (B.video && !begun) resumeAsk(audio);
+      if (B.video && !begun) {
+        // Trình phát sẵn của máy (iPhone) không chạy nổi: đổi sang hls.js (iOS 17.1+ có ManagedMediaSource), rồi chờ chạm
+        if (audio.currentTime < 0.1 && /\.m3u8/.test(audio.getAttribute('src') || '')) {
+          audio.removeAttribute('src');
+          audio.load();
+          filmLoad = attach(audio, B.video, true);
+          await filmLoad;
+          if (SEEK) { try { audio.currentTime = SONG.from + SEEK; } catch (e) { /* bỏ qua */ } }
+        }
+        resumeAsk(audio);
+      }
       mix.to(SONG.vol, 1.2);
       await play();
     }
