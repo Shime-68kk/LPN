@@ -9,6 +9,9 @@
   // Xem thử bản dựng phim: ?phim=nhap-1 thì TV chiếu /_phim/nhap-1.mp4 (máy chủ thử tools/bang1-dung/may-chu.mjs)
   const PHIM = (location.search.match(/[?&]phim=([\w-]+)/) || [])[1];
   if (PHIM) B.video = '/_phim/' + PHIM + '.mp4';
+  // Xem thử đoạn cuối phim (?thu=cuoiphim): băng thật đã trong đầu, bấm nguồn là chiếu từ giây 105: vài cảnh cuối, thẻ kết,
+  // danh đề rồi tới đoạn ghi thêm
+  const SEEK = /[?&]thu=cuoiphim\b/.test(location.search) ? 105 : 0;
   const SONG = Object.assign({ src: '../assets/sound/bang1.mp3', from: 0, bpm: 62, bar0: 0, vol: 0.85 }, B.song || {});
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const pad = (x) => String(x).padStart(2, '0');
@@ -778,8 +781,37 @@
     if (filmOn && audio.paused) audio.play().catch(() => {});
     else if (rollAnim && rollAnim.playState === 'paused') rollAnim.play();
   }
+  // Quay lại sau khi chuyển ứng dụng (nhắn tin, cuộc gọi): iPhone hay không cho phát tiếp khi chưa chạm, hình video còn
+  // có khi đen tới lúc tua. Nên khi trang hiện lại mà phim (hay đoạn ghi thêm) vẫn đứng: hiện nút "Xem tiếp" giữa màn
+  // hình, chạm là phát (lần chạm cho phép phát tiếng) và nhích nhẹ vị trí để máy vẽ lại khung hình.
+  const redraw = (v) => { try { v.currentTime = Math.max(0, v.currentTime - 0.05); } catch (e) { /* bỏ qua */ } };
+  function resumeAsk(v) {
+    let b = $('resume');
+    if (!b) {
+      b = document.createElement('button');
+      b.id = 'resume';
+      b.type = 'button';
+      b.className = 'end-btn resume-btn';
+      b.textContent = '▶ Xem tiếp';
+      document.body.appendChild(b);
+    }
+    b.hidden = false;
+    b.onclick = () => { b.hidden = true; redraw(v); v.play().catch(() => {}); };
+    const gone = () => { b.hidden = true; v.removeEventListener('playing', gone); };
+    v.addEventListener('playing', gone);
+  }
+  function checkResume() {
+    if (document.hidden) return;
+    const tv2 = $('ts-vid'), tsOpen = !$('ts-player').hidden;
+    for (const [v, on] of [[audio, filmOn], [tv2, tsOpen]]) {
+      if (!on || v.ended) continue;
+      if (v.paused) resumeAsk(v);
+      else redraw(v);
+    }
+  }
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) { wake(); return; }
+    if (!document.hidden) { wake(); setTimeout(checkResume, 1200); return; }
+    if (!$('ts-player').hidden) $('ts-vid').pause();
     if (ac) ac.suspend().catch(() => {});
     if (filmOn) audio.pause();
     if (rollAnim) rollAnim.pause();
@@ -795,7 +827,7 @@
   // Nhạc không phát được thì theo giờ máy.
   let ctLast = -1, ctAt = 0;
   function clock() {
-    if (useWall) return SONG.from + (performance.now() - wallT0) / 1000;
+    if (useWall) return SONG.from + SEEK + (performance.now() - wallT0) / 1000;
     const ct = audio.currentTime, ms = performance.now();
     if (ct !== ctLast) { ctLast = ct; ctAt = ms; }
     const moving = !audio.paused && !stalled;
@@ -915,16 +947,19 @@
   // Nạp nhạc phim (hoặc phim dựng sẵn). Phim chia đoạn (.m3u8): trình duyệt tự phát được HLS (Safari, iPhone, Android)
   // thì dùng luôn; còn lại (Chrome máy tính, Firefox) dùng hls.js trong story/vendor, chỉ tải khi cần
   let filmLoad = null, wantFilm = false, hlsLib = null;
-  function attach(el, url) {
+  function attach(el, url, viaHls) {
     el.preload = 'auto';
-    if (!/\.m3u8$/.test(url) || el.canPlayType('application/vnd.apple.mpegurl')) { el.src = url; el.load(); return Promise.resolve(); }
+    if (!/\.m3u8$/.test(url) || (!viaHls && el.canPlayType('application/vnd.apple.mpegurl'))) { el.src = url; el.load(); return Promise.resolve(); }
     hlsLib = hlsLib || new Promise((res) => {
       const s = document.createElement('script');
       s.src = 'vendor/hls.light.min.js';
       s.onload = s.onerror = () => res(window.Hls && Hls.isSupported() ? Hls : null);
       document.head.appendChild(s);
     });
-    return hlsLib.then((H) => { if (H) { const h = new H({ maxBufferLength: 40 }); h.loadSource(url); h.attachMedia(el); } else el.src = url; });
+    return hlsLib.then((H) => {
+      // iPhone (iOS 17.1+) chạy hls.js bằng ManagedMediaSource: phải tắt phát qua AirPlay thì mới mở được
+      if (H) { if (window.ManagedMediaSource) el.disableRemotePlayback = true; const h = new H({ maxBufferLength: 40 }); h.loadSource(url); h.attachMedia(el); } else if (!viaHls) el.src = url;
+    });
   }
   function loadFilm() {
     if (!filmLoad) filmLoad = attach(audio, B.video || SONG.src);
@@ -964,9 +999,9 @@
     document.body.classList.add('film-real');
     $('osd').hidden = false;
     $('osd-date').textContent = pad(now.getDate()) + '.' + pad(now.getMonth() + 1) + '.' + now.getFullYear();
-    const t0 = performance.now();
+    // Đồng hồ góc TV đếm theo phim (phim dừng thì đứng), không theo giờ máy: phim kẹt mà số vẫn chạy thì nhìn như treo
     tcTimer = setInterval(() => {
-      const sec = Math.floor((performance.now() - t0) / 1000);
+      const sec = Math.max(0, Math.floor(clock() - SEEK));
       $('osd-tc').textContent = '00:' + pad(Math.floor(sec / 60)) + ':' + pad(sec % 60);
     }, 250);
     {
@@ -975,12 +1010,17 @@
       if (audio.readyState < 1) await new Promise((res) => { audio.addEventListener('loadedmetadata', res, { once: true }); setTimeout(res, 4000); });
       const enough = audio.readyState >= 3 ? null : new Promise((res) => { audio.addEventListener('canplay', res, { once: true }); });
       await Promise.race([Promise.all([enough, ready]), sleep(3000)]);
-      try { audio.currentTime = SONG.from; } catch (e) { /* bỏ qua */ }
+      try { audio.currentTime = SONG.from + SEEK; } catch (e) { /* bỏ qua */ }
       wallT0 = performance.now();
       useWall = false;
       wantFilm = true;
-      await audio.play().catch(() => { useWall = true; });
+      // Phim dựng sẵn mà máy không cho phát (iPhone chặn vì không đúng lúc chạm): không chạy mù theo giờ máy trên màn đen,
+      // mà đứng chờ và hiện nút "Xem tiếp" (chạm là phát). Chỉ bản nhạc + ảnh mới chạy theo giờ máy được.
+      let played = true;
+      await audio.play().catch(() => { played = false; });
+      if (!played && !B.video) useWall = true;
       filmOn = !useWall;
+      if (!played && B.video) resumeAsk(audio);
       mix.to(SONG.vol, 1.2);
       await play();
     }
@@ -1009,7 +1049,24 @@
       if (v.currentTime > 0.5) { try { v.currentTime = 0; } catch (e) { /* bỏ qua */ } }
       v.play().catch(() => {});
       setTimeout(() => $('ts-close').classList.add('on'), 2500);
+      // Phòng khi máy không chịu phát (iPhone từng kẹt ở đoạn đầu): 7 giây chưa chạy thì đổi sang hls.js (nếu đang để
+      // trình duyệt tự phát) và hiện nút "Chạm để xem" (lần chạm mới cho phép phát tiếng); chạm rồi vẫn không chạy thì sang màn kết
+      const tap = $('ts-tap');
+      let dog = 0, tries = 0;
+      const check = () => {
+        if (v.currentTime > 0.3 || v.ended) return;
+        if (document.hidden) { dog = setTimeout(check, 3000); return; }
+        if (tries++) { done(); return; }
+        if (v.src && /\.m3u8/.test(v.src)) { v.removeAttribute('src'); v.load(); tsLoad = attach(v, B.tamSu, true); }
+        tap.hidden = false;
+        dog = setTimeout(check, 20000);
+      };
+      dog = setTimeout(check, 7000);
+      tap.onclick = () => { tap.hidden = true; v.play().catch(() => {}); clearTimeout(dog); dog = setTimeout(check, 10000); };
       const done = () => {
+        clearTimeout(dog);
+        tap.hidden = true;
+        tap.onclick = null;
         v.removeEventListener('ended', done);
         $('ts-close').onclick = null;
         v.pause();

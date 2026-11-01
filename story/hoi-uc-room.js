@@ -25,7 +25,7 @@
   // Xem thử một đoạn không cần chơi tới: ?thu=vali (khoá vali), ?thu=bang (bảng ghim), ?thu=matkhau (màn hình khoá máy tính), ?thu=maytinh (máy tính đã đăng nhập),
   // ?thu=nhinquanh (vừa xem xong Băng 01: hướng dẫn nút Nhìn quanh), ?thu=modau (xem lại đoạn mở màn quay ngược thời gian, lần nào cũng phát), ?thu=sach (vừa xem Băng 02: tìm cuốn từ điển trên giá sách, xoay đĩa), ?thu=dinh (trước cổng đình, đã có chìa), ?thu=thu (vừa mở khoá điện thoại: lấy băng thật và lá thư sau tấm ảnh), ?thu=chobang (đã đọc thư, cầm cuộn thật cho vào máy: lời dẫn, cả nhà sáng lên),
   // ?thu=bangthat (băng thật đã trong đầu băng: bấm nguồn 3 lần). Không lưu gì.
-  const TRY = (location.search.match(/[?&]thu=(nhinquanh|modau|sach|vali|bang|matkhau|maytinh|dinh|thu|chobang|bangthat)\b/) || [])[1];
+  const TRY = (location.search.match(/[?&]thu=(nhinquanh|modau|sach|vali|bang|matkhau|maytinh|dinh|thu|chobang|bangthat|cuoiphim)\b/) || [])[1];
   const DRY = TRAILER || !!TRY;
   const ALL_DONE = { jig: true, book: true, cipher: true, pillow: true, board: true, case: true, gate: true, radio: true, words: true, pc: true, dir: true, robot: true, phone: true };
   const TRY_STATE = {
@@ -38,7 +38,7 @@
     thu: { room: 'r1', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true, wheel: true, note1: true, note2: true, key: true }, seen: { A: true, B: true, C: true, D: true }, done: ALL_DONE },
     chobang: { room: 'r1', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true, E: true, letter: true, wheel: true, note1: true, note2: true, key: true }, seen: { A: true, B: true, C: true, D: true }, done: ALL_DONE },
     bangthat: { room: 'r1', lamp: true, tut: true, tour: { r1: true, r2: true, r3: true }, items: { A: true, B: true, C: true, D: true, E: true, letter: true, wheel: true, note1: true, note2: true, key: true }, seen: { A: true, B: true, C: true, D: true }, done: ALL_DONE, inVcr: 'E' },
-  }[TRY] || { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true, wheel: true, note1: true }, seen: { A: true, B: true, C: true }, done: { jig: true, book: true, cipher: true, pillow: true } };
+  }[TRY === 'cuoiphim' ? 'bangthat' : TRY] || { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true, wheel: true, note1: true }, seen: { A: true, B: true, C: true }, done: { jig: true, book: true, cipher: true, pillow: true } };
   try { if (/[?&]moi=1\b/.test(location.search)) localStorage.removeItem(KEY); } catch (e) { /* bỏ qua */ }
   const load = () => { if (TRY) return TRY_STATE; if (TRAILER) return {}; try { const v = JSON.parse(localStorage.getItem(KEY)); return v && v.v === 2 ? v : {}; } catch (e) { return {}; } };
   const S = Object.assign({ v: 2, room: 'r1', lamp: false, tut: false, items: {}, seen: {}, done: {}, inVcr: null }, load());
