@@ -771,6 +771,9 @@
     : guessByClock();
   Weather.apply();
   document.querySelector('.wx-partner-tag').textContent = IS_QUANG ? 'Chỗ em' : 'Chỗ anh';
+  // TẠM ĐÓNG (1/11/2026 20:00, anh Quang dặn): Băng số 1 chưa hoàn thiện, cuộn băng giấu sau viên ngày chưa mở cho Thủy.
+  // Mở lại: đổi TAPE_HOLD thành false (và HOLD trong story/hoi-uc.js).
+  const TAPE_HOLD = true;
   // Băng số 1 (hồi ức trên TV): chữ "hồi ức" cũ ở cuối trang ẩn hẳn (Thủy đã biết chỗ đó).
   // Chỗ giấu mới (Chương 17 dặn): phía sau viên "Ngày thứ … bên nhau". Chạm vào viên thì vẫn mở trang widget như cũ;
   // đẩy viên sang trái thì nó trượt ra, lộ cuộn băng nhỏ "Hồi ức" nằm phía sau. Mở từ 20:00 ngày 1/11/2026
@@ -779,7 +782,7 @@
   (() => {
     const pill = $('days'), tape = $('tape-hide');
     // Máy anh Quang mở sớm để thử trước; máy Thủy đợi tới 20:00
-    const open = Date.now() >= Date.parse('2026-11-01T20:00:00+07:00') || !location.hostname.endsWith('workers.dev') || store.get('lpn:who') === 'quang' || localStorage.getItem('lpn:who') === 'quang';
+    const open = (!TAPE_HOLD && Date.now() >= Date.parse('2026-11-01T20:00:00+07:00')) || !location.hostname.endsWith('workers.dev') || store.get('lpn:who') === 'quang' || localStorage.getItem('lpn:who') === 'quang';
     if (!pill || !tape || !open) return;
     const W = () => tape.offsetWidth + 10;
     let x0 = null, dx = 0, base = 0, moved = false, shown = false;
@@ -800,7 +803,7 @@
     pill.style.touchAction = 'pan-y';
   })();
   // Thẻ trailer: tới giờ mở thì đổi lời, gợi ý đọc Chương 17 để tìm cuộn băng thật
-  if (Date.now() >= Date.parse('2026-11-01T20:00:00+07:00')) {
+  if (!TAPE_HOLD && Date.now() >= Date.parse('2026-11-01T20:00:00+07:00')) {
     const tc = document.querySelector('.trailer-card');
     if (tc) { tc.querySelector('.eyebrow').textContent = 'Băng số 1 · Đã mở'; tc.querySelector('.tr-sub').textContent = 'Cuộn băng thật đang trốn đâu đó. Đọc Chương 17 nha.'; }
   }
