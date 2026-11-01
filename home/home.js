@@ -773,7 +773,7 @@
   document.querySelector('.wx-partner-tag').textContent = IS_QUANG ? 'Chỗ em' : 'Chỗ anh';
   // TẠM ĐÓNG (1/11/2026 20:00, anh Quang dặn): Băng số 1 chưa hoàn thiện, cuộn băng giấu sau viên ngày chưa mở cho Thủy.
   // Mở lại: đổi TAPE_HOLD thành false (và HOLD trong story/hoi-uc.js).
-  const TAPE_HOLD = true;
+  const TAPE_HOLD = false;
   // Băng số 1 (hồi ức trên TV): chữ "hồi ức" cũ ở cuối trang ẩn hẳn (Thủy đã biết chỗ đó).
   // Chỗ giấu mới (Chương 17 dặn): phía sau viên "Ngày thứ … bên nhau". Chạm vào viên thì vẫn mở trang widget như cũ;
   // đẩy viên sang trái thì nó trượt ra, lộ cuộn băng nhỏ "Hồi ức" nằm phía sau. Mở từ 20:00 ngày 1/11/2026

@@ -163,7 +163,7 @@
   const TRAILER = /[?&]trailer=1\b/.test(location.search);
   // TẠM ĐÓNG (1/11/2026 20:00, anh Quang dặn): game chưa hoàn thiện, giữ khoá với máy Thủy dù đã qua giờ mở.
   // Mở lại: đổi HOLD thành false (và HOLD trong home/home.js).
-  const HOLD = true;
+  const HOLD = false;
   const LOCKED = !TRAILER && location.hostname.endsWith('workers.dev') && (HOLD || Date.now() < OPEN_AT) && (() => {
     // Máy anh Quang mở sớm để thử trước giờ ra mắt
     try { return sessionStorage.getItem('lpn:tapePreview') !== '1' && localStorage.getItem('lpn:who') !== 'quang'; } catch (e) { return true; }

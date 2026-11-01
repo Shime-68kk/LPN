@@ -685,7 +685,6 @@
       "cost": 0,
       "anyOrder": true,
       "openAt": "2026-11-01T20:00:00+07:00",
-      "releaseAt": "2099-01-01T00:00:00+07:00",
       "early": { "quang": "2026-11-01T00:00:00+07:00" },
       "scene": "dem",
       "cast": ["quang", "thuy"],
