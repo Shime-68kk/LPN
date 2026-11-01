@@ -29,8 +29,8 @@ window.BANG1 = {
   // muốn thẻ kết ngắn đi 2 phách (~2 giây) so với phim ảnh (song.end 115.13), nhường cho ảnh; danh đề giữ nguyên mốc.
   videoEnd: 117.07,
   // Đoạn ghi thêm ở cuối băng: lời tâm sự anh Quang quay (1080p, lọc ồn, chia đoạn HLS). Hiện sau danh đề.
-  // Chưa duyệt: chỉ bật trên máy thử trong nhà, web thật (workers.dev) chưa hiện. Anh Quang duyệt thì bỏ điều kiện.
-  tamSu: location.hostname.endsWith('workers.dev') ? null : '../assets/bang1/tam-su/tam-su.m3u8',
+  // Đoạn ghi thêm sau danh đề (after-credits): nhạc nền "Giữ Mãi Yêu Thương Gần Kề" lót nhỏ phía sau, to ngang phim
+  tamSu: '../assets/bang1/tam-su/tam-su.m3u8',
   // Thư mục ảnh. Ảnh mẫu hiện tại dùng 18 ảnh có sẵn trong assets/img/.
   dir: '../assets/img/',
   song: {

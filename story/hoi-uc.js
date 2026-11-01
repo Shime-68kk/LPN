@@ -806,7 +806,7 @@
     for (const [v, on] of [[audio, filmOn], [tv2, tsOpen]]) {
       if (!on || v.ended) continue;
       if (v.paused) resumeAsk(v);
-      else redraw(v);
+      else if (v.style.visibility !== 'hidden') redraw(v); // đoạn chỉ còn nhạc (danh đề): khỏi nhích, tiếng khỏi khựng
     }
   }
   document.addEventListener('visibilitychange', () => {
