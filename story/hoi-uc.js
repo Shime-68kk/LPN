@@ -1016,11 +1016,12 @@
       wantFilm = true;
       // Phim dựng sẵn mà máy không cho phát (iPhone chặn vì không đúng lúc chạm): không chạy mù theo giờ máy trên màn đen,
       // mà đứng chờ và hiện nút "Xem tiếp" (chạm là phát). Chỉ bản nhạc + ảnh mới chạy theo giờ máy được.
-      let played = true;
-      await audio.play().catch(() => { played = false; });
+      // Không chờ mãi: máy tải chậm hay kẹt thì sau 6 giây vẫn chưa chạy cũng hiện nút (chạm là thử phát lại)
+      let played = true, begun = false;
+      await Promise.race([audio.play().then(() => { begun = true; }, () => { played = false; }), sleep(6000)]);
       if (!played && !B.video) useWall = true;
       filmOn = !useWall;
-      if (!played && B.video) resumeAsk(audio);
+      if (B.video && !begun) resumeAsk(audio);
       mix.to(SONG.vol, 1.2);
       await play();
     }
@@ -1087,11 +1088,12 @@
     void box.offsetWidth;
     box.classList.add('on');
     tsPrep();
-    for (const id of ['ts-line', 'ts-go', 'ts-skip']) { await sleep(1100); $(id).classList.add('on'); }
-    await new Promise((res) => {
+    const pick = new Promise((res) => {
       $('ts-go').onclick = () => { $('ts-go').onclick = $('ts-skip').onclick = null; tamSu().then(res); };
       $('ts-skip').onclick = () => { $('ts-go').onclick = $('ts-skip').onclick = null; res(); };
     });
+    for (const id of ['ts-line', 'ts-go', 'ts-skip']) { await sleep(1100); $(id).classList.add('on'); }
+    await pick;
     box.classList.remove('on');
     await sleep(800);
     box.hidden = true;
