@@ -22,7 +22,12 @@
 //   video: '../assets/bang1/bang1.mp4'. TV sẽ chiếu video đó (có tiếng của video), hết video thì vẫn chạy danh đề.
 'use strict';
 window.BANG1 = {
-  video: null,
+  // Phim dựng sẵn (tools/bang1-dung): ảnh, clip, phụ đề và cả bài nhạc đã duyệt trong một video, chia đoạn 6 giây (HLS)
+  // vì web chỉ nhận file dưới 25 MB. Đổi thành video: null thì quay về phim dựng từ ảnh ở dưới.
+  video: '../assets/bang1/phim.m3u8',
+  // Phim dựng sẵn (tools/bang1-dung/dung.mjs): giây hình trong video hết và thẻ "Ngày thứ … bên nhau" hiện lên. Anh Quang
+  // muốn thẻ kết ngắn đi 2 phách (~2 giây) so với phim ảnh (song.end 115.13), nhường cho ảnh; danh đề giữ nguyên mốc.
+  videoEnd: 117.07,
   // Thư mục ảnh. Ảnh mẫu hiện tại dùng 18 ảnh có sẵn trong assets/img/.
   dir: '../assets/img/',
   song: {

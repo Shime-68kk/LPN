@@ -76,7 +76,8 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .tv { position: absolute; left: 33%; top: 14%; width: 34%; transform-origin: 0 0; transition: transform 1.8s cubic-bezier(.6, 0, .25, 1); z-index: 8; container-type: inline-size; }
 
 /* ===== Ba căn phòng: khung 16:9 luôn vừa màn hình, đồ vật đặt theo phần trăm ===== */
-.scene { position: relative; width: min(100%, calc((100vh - 48px) * 16 / 9)); aspect-ratio: 16 / 9; }
+/* svh: chiều cao nhỏ nhất của màn hình (lúc thanh địa chỉ hiện), không co giãn theo thanh địa chỉ nên xoay máy không giật */
+.scene { position: relative; width: min(100%, calc((100vh - 48px) * 16 / 9)); width: min(100%, calc((100svh - 48px) * 16 / 9)); aspect-ratio: 16 / 9; }
 .view { position: absolute; inset: 0; border-radius: 6px; overflow: visible; animation: v-in .45s ease; }
 @keyframes v-in { from { opacity: 0; transform: translateX(var(--from, 0)); } }
 .wall { position: absolute; inset: 0 0 32% 0; background: radial-gradient(70% 90% at 24% 40%, rgba(255, 190, 110, .08), rgba(0, 0, 0, 0) 60%), linear-gradient(180deg, #1B1520, #120E17); border-radius: 6px 6px 0 0; }
@@ -341,7 +342,7 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 
 /* Màn hình dọc: cảnh cao gần kín màn (rộng hơn màn hình), vuốt ngang để nhìn quanh; mép có mũi tên mờ báo còn cảnh */
 .room.portrait { justify-content: center; overflow: hidden; }
-.room.portrait .scene { width: auto; height: min(64vh, calc(100vh - 200px)); height: min(64dvh, calc(100dvh - 200px)); flex: none; touch-action: none; }
+.room.portrait .scene { width: auto; height: min(64vh, calc(100vh - 200px)); height: min(64svh, calc(100svh - 200px)); flex: none; touch-action: none; }
 .room.portrait .hint { font-size: 15px; max-width: 92%; }
 .room.portrait::before, .room.portrait::after { content: '‹'; position: absolute; top: 50%; z-index: 18; width: 34px; height: 34px; margin-top: -40px; display: grid; place-items: center; border-radius: 50%; background: rgba(12, 10, 16, .55); color: rgba(246, 238, 223, .8); font: 600 26px/1 'Be Vietnam Pro', sans-serif; pointer-events: none; opacity: 0; transition: opacity .3s; animation: nudge 1.6s ease-in-out infinite; }
 .room.portrait::before { left: 6px; }
@@ -400,8 +401,9 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .fly { position: fixed; z-index: 45; pointer-events: none; filter: drop-shadow(0 0 10px rgba(255, 210, 130, .95)); }
 .fly svg { display: block; width: 100%; height: 100%; }
 
-/* Lá thư sau tấm ảnh: giấy viết tay */
-.letter { margin: 4px 0 10px; padding: 16px 18px 14px; border-radius: 6px; background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0) 0 27px, rgba(120, 90, 60, .14) 27px 28px) content-box, linear-gradient(170deg, #FBF4E4, #F1E3C6); box-shadow: inset 0 0 30px rgba(150, 110, 60, .18), 0 6px 16px rgba(0, 0, 0, .18); transform: rotate(-.6deg); animation: letter-in .9s cubic-bezier(.2, .8, .3, 1); }
+/* Lá thư sau tấm ảnh: giấy viết tay. Mỗi dòng cao đúng 28px, chân chữ (baseline) nằm ở 20px của dòng: dòng kẻ vẽ ngay
+   tại đó để chữ ngồi trên dòng kẻ. Mọi thứ trong thư (đoạn văn, ký tên, chữ ký) cao bội số của 28px để không trôi dòng. */
+.letter { margin: 4px 0 10px; padding: 16px 18px 14px; border-radius: 6px; background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0) 0 20px, rgba(120, 90, 60, .2) 20px 21px, rgba(0, 0, 0, 0) 21px 28px) content-box, linear-gradient(170deg, #FBF4E4, #F1E3C6); box-shadow: inset 0 0 30px rgba(150, 110, 60, .18), 0 6px 16px rgba(0, 0, 0, .18); transform: rotate(-.6deg); animation: letter-in .9s cubic-bezier(.2, .8, .3, 1); }
 @keyframes letter-in { from { opacity: 0; transform: translateY(14px) rotate(-3deg) scale(.96); } }
 .letter p { margin: 0; text-indent: 1.4em; font-family: 'Dancing Script', cursive; font-size: 19px; line-height: 28px; color: #4A3326; white-space: pre-line; opacity: 0; animation: ink-in .9s ease forwards; }
 @keyframes ink-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
@@ -409,9 +411,13 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .letter p:nth-child(2) { animation-delay: .5s; } .letter p:nth-child(3) { animation-delay: 1.1s; } .letter p:nth-child(4) { animation-delay: 1.7s; }
 .letter p:nth-child(5) { animation-delay: 2.3s; } .letter p:nth-child(6) { animation-delay: 2.9s; } .letter p:nth-child(7) { animation-delay: 3.5s; }
 .letter p:nth-child(8) { animation-delay: 4.1s; } .letter p:nth-child(9) { animation-delay: 4.7s; }
-.letter .sig { display: block; width: auto; height: 84px; max-width: 70%; margin: 2px 0 0 auto; clip-path: inset(0 100% 0 0); animation: sig-write 2.4s cubic-bezier(.45, .1, .4, 1) 5.6s forwards; }
+.letter .sig { display: block; width: auto; height: 84px; max-width: 70%; margin: 0 0 0 auto; clip-path: inset(0 100% 0 0); animation: sig-write 2.4s cubic-bezier(.45, .1, .4, 1) 6.5s forwards; }
 @keyframes sig-write { to { clip-path: inset(0 0 0 0); } }
 .letter .sign { margin-top: 28px; text-indent: 0; text-align: right; font-size: 21px; color: #8C3B3B; }
+.letter .hrt { position: relative; display: inline-block; width: 1.2em; height: 0; } /* cao 0: không đẩy dòng, giữ chữ đúng dòng kẻ */
+.letter .hrt svg { position: absolute; left: .08em; bottom: -.12em; width: 1.08em; height: 1.04em; overflow: visible; fill: none; stroke: #8C3B3B; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; transform: rotate(-6deg); }
+.letter .hrt path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: heart-draw 1.3s cubic-bezier(.5, .1, .4, 1) 5.1s forwards; }
+@keyframes heart-draw { to { stroke-dashoffset: 0; } }
 .radio-note { margin: 0 0 8px; text-align: center; font-size: 13px; font-style: italic; color: #8C5A3A; opacity: 0; animation: ink-in 1.2s ease 1.6s forwards, radio-pulse 2.4s ease-in-out 2.8s infinite; }
 @keyframes radio-pulse { 50% { color: #C0392B; } }
 
@@ -476,14 +482,15 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .pin i.on { background: #3A2B22; }
 .keys { display: grid; grid-template-columns: repeat(3, 56px); gap: 8px; justify-content: center; margin-bottom: 10px; }
 .keys button { height: 46px; border: 0; border-radius: 12px; background: #E4D6BE; color: #2B201A; font: 700 18px 'Be Vietnam Pro', sans-serif; }
-.desktop { position: relative; min-height: 220px; border-radius: 10px; padding: 12px; background: linear-gradient(160deg, #1B3B5E, #0E1F33); color: #E6F0FA; font: 500 13px 'Be Vietnam Pro', sans-serif; }
+.desktop { position: relative; min-height: min(320px, 62vh); border-radius: 10px; padding: 12px; background: linear-gradient(rgba(16, 10, 34, .3), rgba(16, 10, 34, .3)), url('../assets/img/hinh-nen-hoang-hon.webp') center 70% / cover; color: #E6F0FA; font: 500 13px 'Be Vietnam Pro', sans-serif; }
 .desktop .who { text-align: center; margin: 6px 0 8px; font-weight: 700; }
 .desktop .pw { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; }
 .desktop .pw i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #9EC9FF; }
 .desktop .pw i.on { background: #9EC9FF; }
 .desktop .keys button { background: rgba(255, 255, 255, .12); color: #E6F0FA; }
+
 .icons { display: flex; flex-wrap: wrap; gap: 10px; }
-.icons button { width: 78px; padding: 8px 4px; border: 0; border-radius: 8px; background: transparent; color: #E6F0FA; font: 600 12px 'Be Vietnam Pro', sans-serif; text-align: center; }
+.icons button { width: 78px; padding: 8px 4px; border: 0; border-radius: 8px; background: transparent; color: #fff; font: 600 12px 'Be Vietnam Pro', sans-serif; text-align: center; text-shadow: 0 1px 3px rgba(0, 0, 0, .7); }
 .icons button:active, .icons button.on { background: rgba(255, 255, 255, .14); }
 .icons button i { display: block; margin: 0 auto 4px; width: 34px; height: 26px; border-radius: 3px; background: #E9C77B; }
 .icons button i.txt { width: 24px; height: 30px; background: #F3F6FA; }
@@ -566,10 +573,17 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .crt-static { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .25s; }
 .crt-static.on { opacity: .9; }
 .crt-static.soft { opacity: .14; }
+.crt-static.faint { opacity: .07; }
 .crt-scan { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .6s;
   background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .28) 0 1px, rgba(0, 0, 0, 0) 1px 3px); }
 .tv.on .crt-scan { opacity: 1; animation: flicker .12s steps(2) infinite; }
 @keyframes flicker { 50% { opacity: .92; } }
+/* Phim thật: nhiễu nhẹ mà hình vẫn nét (nhiễu TV rất mờ, vạch quét mảnh đứng yên, viền tối quanh kính nhẹ, hạt phim cả trang nhẹ) */
+.tv.real .crt-scan { background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .14) 0 1px, rgba(0, 0, 0, 0) 1px 4px); animation: none; }
+.tv.real .crt-glass { background: radial-gradient(130% 110% at 50% 50%, rgba(0, 0, 0, 0) 66%, rgba(0, 0, 0, .38) 100%), linear-gradient(140deg, rgba(255, 255, 255, .08) 0%, rgba(255, 255, 255, 0) 30%); }
+.film-real .grain { opacity: .035; }
+/* Đang chiếu: đom đóm, nốt nhạc trong phòng (bị TV che) đứng yên cho máy nhẹ */
+.room.watching .glim i, .room.watching .notes i { animation-play-state: paused; }
 .crt-glass { position: absolute; inset: 0; pointer-events: none;
   background:
     radial-gradient(130% 110% at 50% 50%, rgba(0, 0, 0, 0) 58%, rgba(0, 0, 0, .55) 100%),
@@ -589,6 +603,8 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .osd-ch { position: absolute; right: 0; top: 0; }
 .osd-tc { position: absolute; right: 0; bottom: 0; }
 .osd-date { position: absolute; left: 0; bottom: 0; }
+/* Phim thật có phụ đề ở giữa phía dưới: ngày và đồng hồ băng lên hai góc trên (dưới PLAY, CH 06), không đè chữ */
+.tv.real .osd-date, .tv.real .osd-tc { top: 1.7em; bottom: auto; opacity: .85; }
 
 /* Bảng điều khiển bên phải */
 .tv-panel { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 6% 0 4%; border-radius: 12px; background: linear-gradient(180deg, #2A1C12, #1C120B); box-shadow: inset 0 2px 6px rgba(0, 0, 0, .6); }
@@ -934,9 +950,51 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .o-robot .ant { animation: antblink 2.2s steps(1) infinite; }
 @keyframes antblink { 50% { fill: #FF6B5A; } }
 /* Trước khi tìm ra cuộn băng thật: ngả lạnh, tối dần về các góc (u ám nhẹ, không đen kịt); nhặt cuộn thật thì tan dần */
-.mood-shade { position: absolute; inset: 0; z-index: 7; pointer-events: none; border-radius: 6px; background: radial-gradient(75% 80% at 50% 48%, rgba(8, 8, 22, 0) 40%, rgba(8, 8, 22, .38) 85%, rgba(6, 5, 14, .6) 100%), linear-gradient(rgba(40, 55, 110, .1), rgba(40, 55, 110, .1)); transition: opacity 4s ease; }
-.room.warm .mood-shade, .room.trailer .mood-shade, .room:not(.lit) .mood-shade { opacity: 0; }
+.mood-shade { position: absolute; inset: 0; z-index: 7; pointer-events: none; border-radius: 6px; background: radial-gradient(70% 76% at 50% 48%, rgba(6, 6, 18, 0) 30%, rgba(6, 6, 18, .48) 78%, rgba(4, 3, 10, .74) 100%), linear-gradient(rgba(10, 12, 30, .24), rgba(10, 12, 30, .24)); transition: opacity 3s ease; }
+/* Tối tới tận lúc cuộn băng thật vào đầu băng (kể cả đã bật đèn, đã đọc thư); khi đó mới bừng sáng */
+.room.bloom .mood-shade, .room.trailer .mood-shade, .room:not(.lit) .mood-shade { opacity: 0; }
+.room.bloom .lamp { filter: brightness(1.5); transition: filter 3s; }
+.room.bloom .view.v1::after { opacity: 1; background: radial-gradient(80% 80% at 50% 60%, rgba(255, 180, 100, .2), rgba(255, 170, 90, 0) 75%); }
+/* Luồng sáng ấm toả ra từ đầu băng lúc cuộn thật vừa vào máy */
+.room.bloom-in .scene::after { content: ''; position: absolute; left: 50%; top: 62%; z-index: 8; width: 10%; aspect-ratio: 1; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); background: radial-gradient(closest-side, rgba(255, 220, 160, .55), rgba(255, 190, 110, .2) 50%, rgba(255, 190, 110, 0)); mix-blend-mode: screen; animation: bloom-wave 3s cubic-bezier(.2, .7, .3, 1) forwards; }
+@keyframes bloom-wave { 0% { opacity: 0; width: 6%; } 25% { opacity: 1; } 100% { opacity: 0; width: 220%; } }
 .room.watching .mood-shade { opacity: 0; transition-duration: .8s; }
+/* Sau khi cuộn thật vào máy: cả nhà sáng lên, nhẹ đi (phòng ngủ bớt tối góc, sân đình hửng ấm), hạt sáng bay lên */
+.room.bloom .v2-shade { background: radial-gradient(40% 55% at 55% 45%, rgba(5, 4, 9, 0), rgba(5, 4, 9, .12) 60%, rgba(5, 4, 9, .34) 100%); }
+.room.bloom .view.v2::after { opacity: 1; background: radial-gradient(75% 75% at 55% 50%, rgba(255, 185, 110, .16), rgba(255, 170, 90, 0) 75%); }
+.room.bloom .v3 .inner::after { background: radial-gradient(ellipse at 50% 40%, rgba(0, 0, 0, 0) 62%, rgba(0, 0, 0, .3)); }
+.room.bloom .v3 .glowin { opacity: .8; }
+.room.bloom .v3 .spill { opacity: .38; }
+.room.bloom .v3 .warmth { opacity: .48; }
+.glim { position: absolute; inset: 0; z-index: 7; overflow: hidden; border-radius: 6px; pointer-events: none; opacity: 0; transition: opacity 3s ease; }
+.v3 .glim { z-index: 6; background: radial-gradient(40% 36% at 81% 74%, rgba(255, 196, 120, .16), rgba(255, 196, 120, 0) 70%); }
+.room.bloom .glim { opacity: 1; }
+.glim i { position: absolute; left: var(--x); top: var(--y); width: var(--s); aspect-ratio: 1; border-radius: 50%; opacity: 0; background: radial-gradient(circle, #FFF7DC 0 16%, rgba(255, 216, 140, .6) 36%, rgba(255, 200, 120, 0) 70%); }
+.room.bloom .glim i { animation: glim var(--d) linear var(--k) infinite; will-change: transform, opacity; }
+@keyframes glim {
+  0% { opacity: 0; transform: translate3d(0, 0, 0) scale(.7); }
+  14% { opacity: .95; }
+  32% { opacity: .45; }
+  50% { opacity: 1; transform: translate3d(var(--dx), calc(var(--rise) * -.5), 0) scale(1); }
+  68% { opacity: .4; }
+  84% { opacity: .85; }
+  100% { opacity: 0; transform: translate3d(calc(var(--dx) * -.4), calc(var(--rise) * -1), 0) scale(.8); }
+}
+/* Chiếc radio ngoài sân: quầng sáng ấm phập phồng, nốt nhạc bay lên tan vào trời đêm */
+.room.bloom .o-radio::before { content: ''; position: absolute; inset: -70% -45%; z-index: -1; border-radius: 50%; pointer-events: none; background: radial-gradient(closest-side, rgba(255, 200, 120, .42), rgba(255, 180, 100, .12) 55%, rgba(255, 180, 100, 0)); animation: halo 4.2s ease-in-out infinite; }
+@keyframes halo { 50% { opacity: .55; transform: scale(1.08); } }
+.room.bloom .o-radio.on svg { filter: drop-shadow(0 0 6px rgba(255, 200, 110, .8)); }
+.v3 .notes { position: absolute; left: 77%; top: 50%; z-index: 6; width: 9%; height: 20%; pointer-events: none; opacity: 0; transition: opacity 3s; }
+.room.bloom .v3 .notes { opacity: 1; }
+.v3 .notes i { position: absolute; bottom: 0; left: var(--x); font: 600 2.8vmin/1 'Be Vietnam Pro', sans-serif; font-style: normal; color: #FFE6B0; text-shadow: 0 0 6px rgba(255, 200, 120, .9); opacity: 0; }
+.room.bloom .v3 .notes i { animation: note 7.6s ease-in-out var(--k) infinite; }
+@keyframes note {
+  0% { opacity: 0; transform: translate3d(0, 0, 0) rotate(-10deg); }
+  18% { opacity: .9; }
+  70% { opacity: .55; }
+  100% { opacity: 0; transform: translate3d(var(--dx), -16vmin, 0) rotate(12deg); }
+}
+@media (prefers-reduced-motion: reduce) { .room.bloom .glim i, .room.bloom .v3 .notes i { animation-duration: 0s; animation-iteration-count: 1; opacity: .6; } }
 /* Tìm thấy cuộn băng thật: cả căn nhà ấm lên (đèn sáng hơn, tường hửng màu ấm) */
 .view::after { content: ''; position: absolute; inset: 0; z-index: 6; pointer-events: none; border-radius: 6px; background: radial-gradient(70% 70% at 40% 45%, rgba(255, 170, 90, .14), rgba(255, 170, 90, 0) 70%); opacity: 0; transition: opacity 4s; }
 .room.warm .view.v1::after, .room.warm .view.v2::after { opacity: 1; }
@@ -976,7 +1034,7 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
   .icons button i { width: 28px; height: 20px; }
   .icons button i.txt, .icons button i.bin { width: 18px; height: 22px; }
   .win { max-height: none; margin-top: 6px; padding: 8px 10px; }
-  .desktop { min-height: 0; padding: 8px; }
+  .desktop { min-height: 56vh; padding: 8px; }
   .pwkb { gap: 4px; margin-top: 6px; }
   .pwkb button { height: 32px; }
   .keys { grid-template-columns: repeat(3, 52px); gap: 6px; }
@@ -1037,3 +1095,113 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .coach-tip span { font-size: 12.5px; color: #6E5A44; }
 .coach-target { z-index: 24 !important; }
 @keyframes tip-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* Màn hình khoá máy tính, giống máy thật của anh (Ubuntu 26.04, GNOME): phủ kín màn hình, hình nền Adwaita tối mờ,
+   đồng hồ to; chạm hoặc gõ phím thì đồng hồ trượt lên, hiện ảnh đại diện, tên, ô mật khẩu. */
+.look.full { padding: 0; background: #000; }
+.look.full .look-card { width: 100%; height: 100%; max-height: none; padding: 0; border-radius: 0; background: none; box-shadow: none; overflow: hidden; }
+.look.full .look-card > h2, .look.full .look-close { display: none; }
+.look.full .look-body { height: 100%; }
+.gl, .gd { position: relative; height: 100%; overflow: hidden; color: #fff; font-family: 'Be Vietnam Pro', sans-serif; user-select: none; -webkit-user-select: none; cursor: default; background: #2A2148; }
+/* Mờ sẵn trong ảnh (ảnh nhỏ 2 KB), không dùng filter blur: điện thoại yếu không bị giật khi mở máy, mở khoá */
+.gl-bg, .gl-sharp { position: absolute; inset: 0; z-index: 0; background: url('../assets/img/hinh-nen-hoang-hon-mo.webp') center / cover; }
+.gl-sharp { background-image: url('../assets/img/hinh-nen-hoang-hon.webp'); opacity: 0; transition: opacity .9s ease; will-change: opacity; }
+.gl { animation: gl-wake .5s ease-out both; }
+.gl-bg { animation: gl-wake-bg 1.2s cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes gl-wake { from { opacity: 0; } }
+@keyframes gl-wake-bg { from { transform: scale(1.06); } }
+.gl::after { content: ''; position: absolute; inset: 0; z-index: 0; background: rgba(0, 0, 0, .22); transition: background .5s; pointer-events: none; }
+.gl.up::after { background: rgba(0, 0, 0, .42); }
+.gl-bar { position: absolute; top: 0; left: 0; right: 0; z-index: 2; display: flex; align-items: center; justify-content: center; height: calc(var(--safe-top) + 30px); padding: var(--safe-top) calc(var(--safe-right) + 14px) 0 calc(var(--safe-left) + 14px); font-size: 13px; }
+.gl-bar b { font-weight: 700; white-space: pre; }
+.gl-bar span { position: absolute; right: calc(var(--safe-right) + 14px); display: flex; gap: 10px; }
+.gl-bar svg { width: 15px; height: 15px; fill: currentColor; color: #fff; }
+.gl-clock { position: absolute; inset: 0; z-index: 1; will-change: transform, opacity; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 6vh; text-shadow: 0 1px 6px rgba(0, 0, 0, .25); transition: transform .45s cubic-bezier(.3, .7, .2, 1), opacity .35s; }
+.gl-time { font-size: clamp(64px, 18vmin, 120px); font-weight: 300; line-height: 1; letter-spacing: -.02em; }
+.gl-date { margin-top: 8px; font-size: clamp(18px, 4.4vmin, 26px); font-weight: 500; }
+.gl-tap { position: absolute; bottom: calc(var(--safe-bottom) + 28px); font-size: 13px; color: rgba(255, 255, 255, .7); animation: gl-tap 2.4s ease-in-out infinite; }
+@keyframes gl-tap { 50% { opacity: .35; } }
+.gl.up .gl-clock { transform: translateY(-40%); opacity: 0; pointer-events: none; }
+.gl-auth { will-change: transform, opacity; position: absolute; inset: calc(var(--safe-top) + 30px) 0 calc(var(--safe-bottom) + 44px); z-index: 1; display: flex; align-items: center; align-content: center; justify-content: center; gap: 28px 56px; flex-wrap: wrap; padding: 8px 16px; opacity: 0; transform: translateY(24px); pointer-events: none; transition: transform .45s cubic-bezier(.3, .7, .2, 1), opacity .4s; }
+.gl.up .gl-auth { opacity: 1; transform: none; pointer-events: auto; }
+.gl-user { display: flex; flex-direction: column; align-items: center; width: min(300px, 100%); }
+.gl-av { display: grid; place-items: center; width: 86px; height: 86px; border-radius: 50%; background: #3584E4; font-size: 36px; font-weight: 600; box-shadow: 0 2px 10px rgba(0, 0, 0, .25); }
+.gl-name { margin: 12px 0 14px; font-size: 20px; font-weight: 700; }
+.gl-entry { position: relative; display: flex; align-items: center; width: 100%; height: 40px; padding: 0 14px; border-radius: 10px; background: rgba(255, 255, 255, .14); box-shadow: inset 0 0 0 2px rgba(120, 174, 237, .9); }
+.gl-dots { font-size: 11px; letter-spacing: 4px; }
+.gl-ph { color: rgba(255, 255, 255, .5); font-size: 14px; }
+.gl-entry.typed .gl-ph { display: none; }
+.gl-caret { width: 1.5px; height: 18px; margin-left: 2px; background: #fff; animation: gl-caret 1s steps(1) infinite; }
+@keyframes gl-caret { 50% { opacity: 0; } }
+.gl-err { min-height: 20px; margin-top: 10px; font-size: 13px; color: #fff; text-align: center; }
+.gl-hint { width: 100%; padding: 9px 12px; border-radius: 10px; background: rgba(0, 0, 0, .28); font-size: 13px; line-height: 1.5; text-align: center; color: rgba(255, 255, 255, .92); }
+.gl-hint b { display: block; margin-bottom: 2px; font-size: 11px; font-weight: 600; color: rgba(255, 255, 255, .6); }
+.gl-hint.in { animation: gl-hint .6s ease both; }
+@keyframes gl-hint { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.gl-keys { display: grid; grid-template-columns: repeat(3, 58px); gap: 10px 18px; }
+.gl-keys button { width: 58px; height: 58px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .13); color: #fff; font: 500 22px 'Be Vietnam Pro', sans-serif; transition: background .15s; }
+.gl-keys button:active { background: rgba(255, 255, 255, .3); }
+.gl-back { position: absolute; left: calc(var(--safe-left) + 14px); bottom: calc(var(--safe-bottom) + 10px); z-index: 2; padding: 7px 14px; border: 0; border-radius: 99px; background: rgba(255, 255, 255, .12); color: #fff; font: 600 13px 'Be Vietnam Pro', sans-serif; }
+.gl.ok .gl-auth, .gl.ok .gl-bar, .gl.ok .gl-back { opacity: 0; transform: scale(.97); transition: opacity .45s, transform .45s; }
+.gl.ok::after { background: rgba(0, 0, 0, 0); }
+.gl.ok .gl-sharp { opacity: 1; }
+/* Máy có bàn phím thật (máy tính): gõ phím như mở máy thật, không cần bàn phím số trên màn hình */
+@media (hover: hover) and (pointer: fine) { .gl-keys { display: none; } }
+/* Điện thoại xoay ngang: gọn lại cho vừa chiều cao */
+@media (max-height: 520px) and (orientation: landscape) {
+  .gl-av { width: 56px; height: 56px; font-size: 24px; }
+  .gl-name { margin: 6px 0 8px; font-size: 16px; }
+  .gl-entry { height: 36px; }
+  .gl-err { min-height: 16px; margin-top: 6px; font-size: 12px; }
+  .gl-hint { padding: 6px 10px; font-size: 12px; }
+  .gl-keys { grid-template-columns: repeat(3, 50px); gap: 6px 14px; }
+  .gl-keys button { width: 50px; height: 50px; font-size: 19px; }
+  .gl-auth { flex-wrap: nowrap; }
+}
+
+/* Màn hình chính sau khi mở khoá: phủ kín như máy thật (thanh trên, dock trái, biểu tượng, cửa sổ ở giữa) */
+.gd { --bar: calc(var(--safe-top) + 30px); --dock: calc(var(--safe-left) + 54px); min-height: 0; padding: 0; border-radius: 0; background: #2A2148 url('../assets/img/hinh-nen-hoang-hon.webp') center 70% / cover; font-size: 13px; animation: gd-in .45s ease both; }
+@keyframes gd-in { from { opacity: .4; } }
+.gd .gl-bar { background: rgba(0, 0, 0, .55); }
+.gd-out { position: absolute; left: calc(var(--safe-left) + 8px); padding: 3px 12px; border: 0; border-radius: 99px; background: rgba(255, 255, 255, .14); color: #fff; font: 600 12.5px 'Be Vietnam Pro', sans-serif; }
+.gd-dock { position: absolute; left: 0; top: var(--bar); bottom: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; width: var(--dock); padding: 10px 0 10px var(--safe-left); background: rgba(18, 16, 24, .72); }
+.gd-dock i { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; font: 700 13px ui-monospace, monospace; font-style: normal; color: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .35); }
+.gd-dock .d-files { background: linear-gradient(#F5C451 0 30%, #E9A23B 30%); }
+.gd-dock .d-web { border-radius: 50%; background: radial-gradient(circle at 50% 50%, #fff 0 22%, #3584E4 23%); }
+.gd-dock .d-term { background: #2D2D2D; color: #E6E6E6; font-size: 12px; }
+.gd-dock .d-music { background: #E66100; font-size: 18px; }
+.gd-dock .d-apps { margin-top: auto; background: radial-gradient(circle, #fff 1.6px, transparent 2px) 0 0 / 11px 11px; width: 33px; box-shadow: none; opacity: .85; }
+.gd .icons { position: absolute; top: calc(var(--bar) + 10px); left: calc(var(--dock) + 10px); bottom: 10px; display: flex; flex-direction: column; flex-wrap: wrap; align-content: flex-start; gap: 6px; animation: gd-icons .5s ease .15s both; }
+@keyframes gd-icons { from { opacity: 0; transform: translateY(6px); } }
+.gd .win { position: absolute; left: calc(var(--dock) + (100% - var(--dock)) / 2); top: calc(var(--bar) + (100% - var(--bar)) / 2); z-index: 2; display: flex; flex-direction: column; width: min(600px, calc(100% - var(--dock) - 24px)); max-height: calc(100% - var(--bar) - 24px); margin: 0; padding: 0; border-radius: 12px; overflow: hidden; background: #242424; box-shadow: 0 12px 40px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 255, 255, .06); white-space: normal; transform: translate(-50%, -50%); }
+.gd .win[hidden] { display: none; }
+.gd .win.pop { animation: win-pop .22s cubic-bezier(.2, .8, .3, 1); }
+@keyframes win-pop { from { opacity: 0; transform: translate(-50%, -50%) scale(.94); } }
+.win-h { display: flex; align-items: center; flex: none; height: 40px; padding: 0 6px 0 40px; background: #303030; }
+.win-h span { flex: 1; overflow: hidden; text-align: center; white-space: nowrap; text-overflow: ellipsis; font-weight: 700; }
+.win-x { flex: none; width: 28px; height: 28px; margin-left: 6px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .1); color: #fff; font-size: 12px; }
+.win-b { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 12px 14px; white-space: pre-line; line-height: 1.55; font-size: 13.5px; color: #EDEDED; }
+.gd .thumbs { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; white-space: normal; }
+.gd .thumbs button { padding: 0; border: 0; border-radius: 6px; overflow: hidden; background: #333; aspect-ratio: 1; }
+.gd .thumbs img { display: block; width: 100%; height: 100%; border-radius: 0; }
+.pv { display: grid; place-items: center; }
+.pv img { display: block; max-width: 100%; max-height: min(58vh, 560px); border-radius: 6px; object-fit: contain; filter: blur(3px); transition: filter .35s; }
+.pv img.sharp { filter: none; }
+.pv-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; white-space: nowrap; color: rgba(255, 255, 255, .7); font-size: 12.5px; }
+.pv-nav button { height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: rgba(255, 255, 255, .1); color: #fff; font: 600 13px 'Be Vietnam Pro', sans-serif; }
+.pv-go { display: flex; gap: 6px; }
+.pv-go button { width: 40px; padding: 0; font-size: 18px; }
+@media (max-height: 520px) and (orientation: landscape) {
+  .gd .win { width: min(600px, calc(100% - var(--dock) - 190px)); left: calc(100% - 10px - var(--safe-right)); transform: translate(-100%, -50%); }
+  .gd .win.pop { animation-name: win-pop-r; }
+  @keyframes win-pop-r { from { opacity: 0; transform: translate(-100%, -50%) scale(.94); } }
+  .pv img { max-height: calc(100vh - 160px); }
+  .win-b { padding: 8px 12px; }
+}
+@media (orientation: portrait) {
+  .gd .icons { flex-direction: row; bottom: auto; right: 10px; }
+  .gd .win { top: auto; bottom: 12px; left: calc(var(--dock) + (100% - var(--dock)) / 2); transform: translateX(-50%); max-height: calc(100% - var(--bar) - 110px); }
+  .gd .win.pop { animation-name: win-pop-b; }
+  @keyframes win-pop-b { from { opacity: 0; transform: translateX(-50%) translateY(16px); } }
+}
+

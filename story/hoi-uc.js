@@ -6,6 +6,9 @@
   const $ = (id) => document.getElementById(id);
   // Cuộn băng thật: ảnh, chú thích, bài hát, danh đề ở story/bang1.js (anh Quang sửa ở đó).
   const B = window.BANG1 || { shots: [], credits: [] };
+  // Xem thử bản dựng phim: ?phim=nhap-1 thì TV chiếu /_phim/nhap-1.mp4 (máy chủ thử tools/bang1-dung/may-chu.mjs)
+  const PHIM = (location.search.match(/[?&]phim=([\w-]+)/) || [])[1];
+  if (PHIM) B.video = '/_phim/' + PHIM + '.mp4';
   const SONG = Object.assign({ src: '../assets/sound/bang1.mp3', from: 0, bpm: 62, bar0: 0, vol: 0.85 }, B.song || {});
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const pad = (x) => String(x).padStart(2, '0');
@@ -19,8 +22,14 @@
   // Ảnh dư (hay thiếu) so với nhịp chuẩn dồn về đoạn có `more` lớn (điệp khúc), đoạn lời giữ nhịp chậm để kịp đọc chữ.
   // Trong một đoạn, các lần chuyển cảnh rơi trên lưới nửa ô nhịp (tính từ song.bar0), ưu tiên đầu ô nhịp.
   // t (giây trong bài) là lúc cảnh vào; kiểu cảnh: title | kb (ảnh trôi chậm) | duo | trio | pola | video.
+  // Phim dựng sẵn thành một video (B.video, tools/bang1-dung/dung.mjs): video chứa cả bài nhạc đã duyệt và chiếu hình
+  // tới B.videoEnd; phần sau giữ y như phim dựng từ ảnh: thẻ "Ngày thứ … bên nhau", tắt TV, danh đề theo nhịp nhạc.
   function plan() {
     const beat = 60 / SONG.bpm, minD = beat * 1.5;
+    if (B.video) {
+      const vend = B.videoEnd || SONG.end;
+      return { shots: [{ t: vend, kind: 'title', h: 'Ngày thứ ' + days, p: 'bên nhau', fx: 'fade', end: true }], end: SONG.credits ? Math.max(vend + 4, SONG.credits - 3.2) : vend + beat * 10 };
+    }
     // Các vạch lưới (bước u phách) cách hai đầu [a, b] ít nhất 1,5 phách
     const lines = (a, b, u) => {
       const out = [];
@@ -129,13 +138,13 @@
     }, every);
   }
   noiseCanvas($('grain'), Math.ceil(innerWidth / 3), Math.ceil(innerHeight / 3), 120);
-  noiseCanvas($('static'), 200, 140, 60, () => $('static').classList.contains('on') || $('static').classList.contains('soft'));
+  noiseCanvas($('static'), 200, 140, 60, () => ['on', 'soft', 'faint'].some((c) => $('static').classList.contains(c)));
 
   // ===== Lấy sẵn ảnh, nhạc: chỉ khi cuộn băng thật đã nằm trong đầu băng (trang trailer, người chưa tìm ra băng không phải tải) =====
   let ready = null;
   function preload() {
     if (ready) return ready;
-    if (!B.video) { audio.src = SONG.src; audio.preload = 'auto'; audio.load(); }
+    loadFilm();
     const files = [...new Set(PLAN.shots.flatMap((s) => s.n || []))];
     ready = Promise.all(files.map((f) => new Promise((res) => { const im = new Image(); im.onload = im.onerror = res; im.src = src(f); })));
     return ready;
@@ -186,9 +195,9 @@
   let relayT = [];
   function relayout() {
     layout();
-    if (zoomed) zoom(true);
+    if (zoomed) zoom(true, true);
     relayT.forEach(clearTimeout);
-    relayT = [80, 250, 600, 1200].map((ms) => setTimeout(() => { layout(); if (zoomed) zoom(true); }, ms));
+    relayT = [80, 250, 600, 1200].map((ms) => setTimeout(() => { layout(); if (zoomed) zoom(true, true); }, ms));
   }
   addEventListener('resize', relayout);
   addEventListener('orientationchange', relayout);
@@ -233,7 +242,8 @@
   // Đi thẳng ra loa, không qua bộ nén, để giữ nguyên độ dội của bản nhạc.
   function music(el, v) {
     let g = null;
-    if (ac) { try { g = ac.createGain(); g.gain.value = v; ac.createMediaElementSource(el).connect(g).connect(ac.destination); } catch (e) { g = null; } }
+    // Phim dựng sẵn (video, phát chia đoạn HLS) phát thẳng, không qua bộ trộn: Safari nối video HLS vào Web Audio thì câm
+    if (ac && el.tagName !== 'VIDEO') { try { g = ac.createGain(); g.gain.value = v; ac.createMediaElementSource(el).connect(g).connect(ac.destination); } catch (e) { g = null; } }
     if (!g) el.volume = v;
     return {
       to(v2, sec) {
@@ -421,6 +431,16 @@
         tone(t, d * L, f * k, f * k * 0.999, g); tone(t + 0.002, d * L * 0.9, f * k * 1.003, f * k * 1.002, g * 0.5);
       }
     },
+    // Cuộn băng thật vào đầu băng: căn phòng bừng sáng, một hợp âm ấm ngân lên rồi lắng (bốn cuộn giả không có)
+    bloom() {
+      if (!ac) return;
+      const t = ac.currentTime, f = ac.createBiquadFilter(), g = ac.createGain();
+      f.type = 'lowpass'; f.frequency.setValueAtTime(500, t); f.frequency.linearRampToValueAtTime(2400, t + 2.2);
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.09, t + 1.4); g.gain.linearRampToValueAtTime(0.0001, t + 5.5);
+      for (const fr of [130.81, 196, 261.63, 329.63, 392, 523.25]) { const o = ac.createOscillator(); o.type = 'triangle'; o.frequency.value = fr; o.detune.value = Math.random() * 8 - 4; const og = ac.createGain(); og.gain.value = 0.18; o.connect(og).connect(f); o.start(t); o.stop(t + 5.6); }
+      f.connect(g).connect(out);
+      tone(t + 0.9, 3, 1046.5, 1046.5, 0.025); tone(t + 1.2, 3, 1318.5, 1318.5, 0.018);
+    },
     // Mở màn hồi ức, lúc quay ngược: một nốt nền trầm ấm trôi xuống chậm (thời gian chùng lại), không rít, không vút
     drift(d) {
       if (!ac) return;
@@ -527,10 +547,13 @@
   // Mọi tiếng tự tạo, lên lịch trước vài trăm mili giây theo đồng hồ âm thanh nên không lệch nhịp khi máy bận.
   const amb = (() => {
     const MIX = {
-      lonely: { verb: 0.34, tone: 0.05, clock: { r1: 0.07, r2: 0.016, r3: 0 }, fan: { r1: 0.025, r2: 0.05, r3: 0 }, wind: { r1: 0.012, r2: 0.022, r3: 0.08 }, crick: { r1: 0.012, r2: 0.016, r3: 0.11 }, pad: 0, song: { r1: 0, r2: 0, r3: 0.035 }, drone: { r1: 0.05, r2: 0.045, r3: 0.03 } },
+      lonely: { verb: 0.34, tone: 0.05, clock: { r1: 0.07, r2: 0.016, r3: 0 }, fan: { r1: 0.025, r2: 0.05, r3: 0 }, wind: { r1: 0.012, r2: 0.022, r3: 0.08 }, crick: { r1: 0.012, r2: 0.016, r3: 0.11 }, pad: 0, song: { r1: 0.006, r2: 0.014, r3: 0.035 }, drone: { r1: 0.05, r2: 0.045, r3: 0.03 } },
       // Vừa nhặt cuộn băng thật (chưa mở thư): tiếng rợn dừng, ù trầm lắng xuống, căn nhà như nín thở chờ lá thư
-      hush: { verb: 0.22, tone: 0.05, clock: { r1: 0.07, r2: 0.016, r3: 0 }, fan: { r1: 0.025, r2: 0.05, r3: 0 }, wind: { r1: 0.012, r2: 0.022, r3: 0.08 }, crick: { r1: 0.012, r2: 0.016, r3: 0.11 }, pad: 0, song: { r1: 0, r2: 0, r3: 0.035 }, drone: { r1: 0.018, r2: 0.016, r3: 0.012 } },
-      warm: { verb: 0.1, tone: 0.03, clock: { r1: 0.035, r2: 0.008, r3: 0 }, fan: { r1: 0.018, r2: 0.03, r3: 0 }, wind: { r1: 0, r2: 0.008, r3: 0.04 }, crick: { r1: 0.008, r2: 0.01, r3: 0.07 }, pad: 0.022, song: { r1: 0.045, r2: 0.035, r3: 0.12 }, drone: { r1: 0, r2: 0, r3: 0 } },
+      hush: { verb: 0.22, tone: 0.05, clock: { r1: 0.07, r2: 0.016, r3: 0 }, fan: { r1: 0.025, r2: 0.05, r3: 0 }, wind: { r1: 0.012, r2: 0.022, r3: 0.08 }, crick: { r1: 0.012, r2: 0.016, r3: 0.11 }, pad: 0, song: { r1: 0.006, r2: 0.014, r3: 0.035 }, drone: { r1: 0.018, r2: 0.016, r3: 0.012 } },
+      warm: { verb: 0.1, tone: 0.03, clock: { r1: 0.035, r2: 0.008, r3: 0 }, fan: { r1: 0.018, r2: 0.03, r3: 0 }, wind: { r1: 0, r2: 0.008, r3: 0.04 }, crick: { r1: 0.008, r2: 0.01, r3: 0.07 }, pad: 0.022, song: { r1: 0.03, r2: 0.06, r3: 0.12 }, drone: { r1: 0, r2: 0, r3: 0 } },
+      // Cuộn băng thật đã vào đầu băng: căn nhà nhẹ bẫng và sáng lên. Tiếng đồng hồ, quạt lùi xa; một lớp ngân trong vắt
+      // lơ lửng như ánh sáng trôi, thỉnh thoảng một nốt chuông nhỏ lấp lánh; ngoài sân đình rõ nhất (cạnh radio, đom đóm)
+      glow: { verb: 0.16, tone: 0.02, clock: { r1: 0.022, r2: 0.005, r3: 0 }, fan: { r1: 0.01, r2: 0.018, r3: 0 }, wind: { r1: 0, r2: 0.005, r3: 0.028 }, crick: { r1: 0.005, r2: 0.007, r3: 0.045 }, pad: 0.026, song: { r1: 0.03, r2: 0.06, r3: 0.12 }, drone: { r1: 0, r2: 0, r3: 0 }, shimmer: { r1: 0.012, r2: 0.016, r3: 0.032 } },
     };
     let on = false, bus = null, room = 'r1', mood = 'lonely', radio = false, duck = 1, lift = false, lifted = false, timer = 0, L = null;
     let nextTick = 0, tickN = 0, chirp = [0, 0, 0];
@@ -581,6 +604,19 @@
       L.song = gainNode(0); L.songHp = ac.createBiquadFilter(); L.songHp.type = 'highpass'; L.songLp = ac.createBiquadFilter(); L.songLp.type = 'lowpass';
       L.songDip = gainNode(1); // hạ nhỏ một chút lúc radio quay lại đầu đoạn dạo, nghe như chỉnh sóng chứ không giật
       L.songHp.connect(L.songLp).connect(L.songDip).connect(L.song); L.song.connect(bus);
+      // Ánh sáng lơ lửng (chỉ khi cuộn thật đã vào máy): năm nốt cao của hợp âm Đô trưởng bảy, mỗi nốt tự phồng xẹp rất chậm
+      // theo nhịp riêng, rung nhẹ, rải hai bên tai, như những đốm sáng trôi qua lại
+      L.shimmer = gainNode(0); const sf = ac.createBiquadFilter(); sf.type = 'lowpass'; sf.frequency.value = 3800; sf.connect(L.shimmer); L.shimmer.connect(bus);
+      [1046.5, 1318.5, 1568, 1975.5, 2637].forEach((fr, i) => {
+        const o = ac.createOscillator(), g = gainNode(0.12), lf = ac.createOscillator(), lg = gainNode(0.11), v = ac.createOscillator(), vg = gainNode(fr * 0.003);
+        o.frequency.value = fr; o.detune.value = rnd(-5, 5);
+        lf.frequency.value = rnd(0.05, 0.16); lf.connect(lg).connect(g.gain);
+        v.frequency.value = rnd(3.5, 5); v.connect(vg).connect(o.frequency);
+        let node = o.connect(g);
+        if (ac.createStereoPanner) { const pn = ac.createStereoPanner(); pn.pan.value = [-0.6, 0.5, -0.2, 0.7, -0.5][i]; node = node.connect(pn); }
+        node.connect(sf);
+        o.start(); lf.start(); v.start();
+      });
     }
     let el = null, elSrc = null, wantPlay = false, startAt = null; // startAt: chỗ bắt đầu khi radio mới bật (null: ngẫu nhiên)
     const RADIO_END = 32.6; // hết đoạn dạo không lời (ban nhạc ngắt ở 32.9, lời 1 vào ở 35.77)
@@ -620,13 +656,18 @@
       L.crickF.frequency.setTargetAtTime(room === 'r3' ? 9000 : 2200, ac.currentTime, 0.3);
       set(L.clock, m.clock[room] * duck, sec);
       set(L.pad, m.pad * duck, sec);
-      set(L.drone, m.drone[room] * duck, mood === 'warm' ? 4 : sec);
+      set(L.drone, m.drone[room] * duck, mood === 'warm' || mood === 'glow' ? 4 : sec);
+      set(L.shimmer, (m.shimmer ? m.shimmer[room] : 0) * duck, Math.max(2.5, sec));
       // Đọc lá thư sau tấm ảnh: radio ngoài sân vặn to, trong nhà nghe rõ cả lời (bớt nghẹt qua tường), tiếng nền lùi lại
-      const sv = (lift ? 0.1 : (room === 'r3' ? (radio || mood === 'warm' ? m.song.r3 : 0) : m.song[room])) * duck;
-      set(L.song, sv, lift ? 1.4 : sec * 2);
-      if (lift) for (const n of [L.tone, L.fan, L.wind, L.clock, L.pad, L.drone]) set(n, 0, 1.5);
-      L.songHp.frequency.setTargetAtTime(room === 'r3' || lift ? 200 : 40, ac.currentTime, lift ? 1 : 0.3);
-      L.songLp.frequency.setTargetAtTime(room === 'r3' ? 3600 : lift ? 2600 : 620, ac.currentTime, lift ? 1 : 0.3);
+      // Radio đặt ngoài sân đình: càng lại gần càng to và rõ. Phòng khách xa nhất (nhỏ, nghẹt như vọng qua hai bức
+      // tường), phòng ngủ gần hơn (to hơn, bớt nghẹt), ra sân là đứng cạnh radio. Đi qua cửa thì to nhỏ, trong đục chuyển dần.
+      const radioOn = radio || mood === 'warm' || mood === 'glow';
+      const sv = (lift ? 0.1 : radioOn ? m.song[room] : 0) * duck;
+      set(L.song, sv, lift ? 1.4 : Math.max(1.2, sec));
+      if (lift) for (const n of [L.tone, L.fan, L.wind, L.clock, L.pad, L.drone, L.shimmer]) set(n, 0, 1.5);
+      const lp = lift ? 2600 : { r1: 480, r2: 1100, r3: 3600 }[room], hp = lift ? 200 : { r1: 40, r2: 90, r3: 200 }[room];
+      L.songHp.frequency.setTargetAtTime(hp, ac.currentTime, lift ? 1 : 0.9);
+      L.songLp.frequency.setTargetAtTime(lp, ac.currentTime, lift ? 1 : 0.9);
       song(sv > 0);
     }
     // Lên lịch tiếng trong khoảng 0,5 giây tới
@@ -695,6 +736,15 @@
           for (let k = 0; k < n; k++) { hiss(at + k * 0.38, 0.12, 'lowpass', 160, 0.8, 0.07 * duck, L.ev); blip(at + k * 0.38, 0.14, 90, 60, 0.05 * duck, 'sine', L.ev); }
         }
       }
+      // Ánh sáng lơ lửng: thỉnh thoảng một nốt chuông nhỏ trong vắt ngân lên rồi tan, lệch bên trái hoặc phải; ngoài sân dày hơn
+      if (mood === 'glow' && (at = due('twinkle', room === 'r3' ? 2.2 : 4.5, room === 'r3' ? 5.5 : 10))) {
+        const f = [1046.5, 1174.7, 1318.5, 1568, 1760, 2093][Math.floor(rnd(0, 6))], g = (room === 'r3' ? 0.03 : 0.018) * duck;
+        let to = L.ev;
+        if (ac.createStereoPanner) { const pn = ac.createStereoPanner(); pn.pan.value = rnd(-0.8, 0.8); pn.connect(L.ev); to = pn; }
+        blip(at, 2.6, f, f, g, 'sine', to);
+        blip(at + 0.004, 1.4, f * 2, f * 2, g * 0.25, 'sine', to);
+        if (Math.random() < 0.4) blip(at + 0.32, 2.2, f * 1.5, f * 1.5, g * 0.6, 'sine', to);
+      }
       // Ổ cứng máy tính lạch cạch rất khẽ
       if ((at = due('hdd', 4, 12)) && room === 'r2') for (let k = 0; k < 3; k++) hiss(at + k * 0.06, 0.008, 'highpass', 3000, 0.7, 0.025 * duck, L.ev);
     }
@@ -723,7 +773,8 @@
         if (lift) {
           sfx.glitch();
           // Lần đầu: từ tiếng piano đầu bài (radio chưa bật thì bật lên từ đầu; đang phát khẽ ngoài sân thì tua về đầu)
-          if (!lifted) { lifted = true; if (el) { try { el.currentTime = 0; } catch (e) { /* bỏ qua */ } } else startAt = 0; }
+          // Radio đang phát (vọng từ sân vào) thì giữ nguyên chỗ, chỉ to dần lên: không nghe như phát lại từ đầu
+          if (!lifted) { lifted = true; if (!el) startAt = 0; else if (el.paused) { try { el.currentTime = 0; } catch (e) { /* bỏ qua */ } } }
         }
         mix(lift ? 1.4 : 2.5);
       },
@@ -732,7 +783,9 @@
   })();
 
   // ===== Nhạc của cuộn băng thật: chỉ tải khi cuộn thật đã vào đầu băng; đi qua bộ trộn để tăng giảm được cả trên iPhone =====
-  const audio = new Audio();
+  // Phim dựng sẵn: chính video là "bản nhạc" của phim (đồng hồ, độ to, ngắt quãng đều dùng chung), nằm dưới lớp cảnh
+  // trên màn TV; hết hình (B.videoEnd) thì ẩn đi nhưng vẫn phát tiếp tiếng nhạc cho thẻ kết và danh đề.
+  const audio = B.video ? Object.assign(document.createElement('video'), { className: 'tape-video', playsInline: true }) : new Audio();
   audio.preload = 'none';
   let mix = null, wallT0 = 0, useWall = false;
   // ===== Bị gián đoạn: cuộc gọi đến, chuyển ứng dụng, khoá máy =====
@@ -782,18 +835,22 @@
   // ===== Tiến sát vào màn hình TV (phóng to để màn hình gần kín màn) =====
   const tv = $('tv'), screen = $('screen');
   let zoomed = false;
-  function zoom(on) {
+  // now: tính lại cho khớp màn hình mới (xoay máy) mà không chạy lại hiệu ứng phóng to. Trước đây mỗi lần xoay tính lại
+  // vài lần, lần nào TV cũng thu về rồi phóng to lại 1,8 giây: khung hình phồng ra từng nấc.
+  function zoom(on, now) {
     zoomed = on;
     if (!on) { tv.style.transform = ''; return; }
     tv.style.transition = 'none';
     tv.style.transform = '';
     const t = tv.getBoundingClientRect(), s = screen.getBoundingClientRect();
-    void tv.offsetWidth;
-    tv.style.transition = '';
     const k = Math.min(innerWidth / s.width, innerHeight / s.height) * 0.96;
     const cx = s.left + s.width / 2 - t.left, cy = s.top + s.height / 2 - t.top;
     const tx = innerWidth / 2 - t.left - cx * k, ty = innerHeight / 2 - t.top - cy * k;
-    tv.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + k + ')';
+    const to = 'translate(' + tx + 'px,' + ty + 'px) scale(' + k + ')';
+    if (now) { tv.style.transform = to; void tv.offsetWidth; tv.style.transition = ''; return; }
+    void tv.offsetWidth;
+    tv.style.transition = '';
+    tv.style.transform = to;
   }
 
   // Hiệu ứng chạy xong thì gỡ luôn class: phòng khách bị ẩn rồi hiện lại (chuyển phòng) thì trình duyệt chạy lại
@@ -876,22 +933,30 @@
     }
     await at(PLAN.end);
   }
-  // Anh Quang tự dựng bằng CapCut: chiếu file MP4 (có tiếng), hết thì thẻ "Ngày thứ … bên nhau"
-  async function playVideo() {
-    const v = document.createElement('video');
-    v.className = 'tape-video';
-    v.playsInline = true;
-    v.preload = 'auto';
-    v.src = B.video;
-    content.appendChild(v);
-    await v.play().catch(() => {});
-    await new Promise((res) => { v.addEventListener('ended', res, { once: true }); v.addEventListener('error', res, { once: true }); });
-    const el = build({ kind: 'title', h: 'Ngày thứ ' + days, p: 'bên nhau', end: true }, 6000);
-    content.appendChild(el);
-    el.classList.add('enter-fade');
-    countUp(el.querySelector('h2'));
-    setTimeout(() => v.remove(), 1000);
-    await sleep(5200);
+  // Nạp nhạc phim (hoặc phim dựng sẵn). Phim chia đoạn (.m3u8): trình duyệt tự phát được HLS (Safari, iPhone, Android)
+  // thì dùng luôn; còn lại (Chrome máy tính, Firefox) dùng hls.js trong story/vendor, chỉ tải khi cần
+  let filmLoad = null, wantFilm = false;
+  function loadFilm() {
+    if (filmLoad) return filmLoad;
+    audio.preload = 'auto';
+    const url = B.video || SONG.src;
+    if (!/\.m3u8$/.test(url) || audio.canPlayType('application/vnd.apple.mpegurl')) { audio.src = url; audio.load(); filmLoad = Promise.resolve(); return filmLoad; }
+    filmLoad = new Promise((res) => {
+      const s = document.createElement('script');
+      s.src = 'vendor/hls.light.min.js';
+      s.onload = () => { if (window.Hls && Hls.isSupported()) { const h = new Hls({ maxBufferLength: 40 }); h.loadSource(url); h.attachMedia(audio); } else audio.src = url; res(); };
+      s.onerror = () => { audio.src = url; res(); };
+      document.head.appendChild(s);
+    });
+    return filmLoad;
+  }
+  // iPhone chỉ cho video có tiếng phát khi đang chạm: "mồi" video ngay lúc bấm nút nguồn, lát sau mới chiếu
+  let primed = false;
+  function primeVideo() {
+    if (!B.video || primed) return;
+    primed = true;
+    preload();
+    audio.play().then(() => { if (!wantFilm) audio.pause(); }).catch(() => {});
   }
 
   // ===== Bật TV, chiếu, tắt TV, danh đề =====
@@ -912,7 +977,11 @@
     $('static').classList.add('on');
     if (!mix) mix = music(audio, 0);
     await sleep(1500);
-    $('static').classList.replace('on', 'soft');
+    // Phim thật: hết nhiễu lúc bật máy thì chỉ còn một lớp nhiễu rất mờ, vạch quét mảnh, không nhấp nháy: vẫn thấy hoài
+    // cổ như băng cũ mà hình vẫn nét (nhiễu phủ trong game, không in vào video nên file nhẹ, ảnh gốc không bị nhoè)
+    $('static').classList.replace('on', 'faint');
+    tv.classList.add('real');
+    document.body.classList.add('film-real');
     $('osd').hidden = false;
     $('osd-date').textContent = pad(now.getDate()) + '.' + pad(now.getMonth() + 1) + '.' + now.getFullYear();
     const t0 = performance.now();
@@ -920,8 +989,8 @@
       const sec = Math.floor((performance.now() - t0) / 1000);
       $('osd-tc').textContent = '00:' + pad(Math.floor(sec / 60)) + ':' + pad(sec % 60);
     }, 250);
-    if (B.video) await playVideo();
-    else {
+    {
+      if (B.video) { audio.style.visibility = ''; $('screen').insertBefore(audio, content); await loadFilm(); }
       // Trong lúc màn hình còn nhiễu: chờ nhạc đủ để phát liền và ảnh tải xong (tối đa 3 giây), rồi mới bắt đầu
       if (audio.readyState < 1) await new Promise((res) => { audio.addEventListener('loadedmetadata', res, { once: true }); setTimeout(res, 4000); });
       const enough = audio.readyState >= 3 ? null : new Promise((res) => { audio.addEventListener('canplay', res, { once: true }); });
@@ -929,6 +998,7 @@
       try { audio.currentTime = SONG.from; } catch (e) { /* bỏ qua */ }
       wallT0 = performance.now();
       useWall = false;
+      wantFilm = true;
       await audio.play().catch(() => { useWall = true; });
       filmOn = !useWall;
       mix.to(SONG.vol, 1.2);
@@ -936,7 +1006,7 @@
     }
     await powerOff();
     // Danh đề cuộn lên đúng lúc ban nhạc vào lại ở điệp khúc cuối
-    if (!B.video && SONG.credits) await Promise.race([at(SONG.credits), sleep(9000)]);
+    if (SONG.credits) await Promise.race([at(SONG.credits), sleep(9000)]);
     await credits();
     await finale();
   }
@@ -944,11 +1014,14 @@
   // Tắt TV; nhạc vẫn chạy nhỏ dần cho danh đề
   async function powerOff() {
     clearInterval(tcTimer);
+    if (B.video) audio.style.visibility = 'hidden'; // hình đã hết (thẻ kết đang che); tiếng nhạc vẫn phát tiếp
+    tv.classList.remove('real');
+    document.body.classList.remove('film-real');
     if (mix) mix.to(SONG.vol * 0.8, 2);
     sfx.off();
     $('osd').hidden = true;
     content.classList.add('squash');
-    $('static').classList.remove('soft', 'on');
+    $('static').classList.remove('soft', 'on', 'faint');
     $('crt-line').classList.remove('on');
     void $('crt-line').offsetWidth;
     $('crt-line').classList.add('off');
@@ -986,7 +1059,7 @@
     const vh = box.clientHeight, stopY = vh / 2 - (endEl.offsetTop + endEl.offsetHeight / 2), dist = vh - stopY;
     // Thời gian cuộn: vừa khít phần nhạc còn lại (bài của cuộn băng thật), không thì khoảng 40 px mỗi giây
     let sec = Math.max(28, dist / 40);
-    if (!B.video && SONG.credits && isFinite(audio.duration) && !useWall) sec = Math.max(28, audio.duration - audio.currentTime - 2.5);
+    if (SONG.credits && isFinite(audio.duration) && !useWall) sec = Math.max(28, audio.duration - audio.currentTime - 2.5);
     // Cuộn đều, 3 giây cuối chậm dần rồi dừng (vận tốc khớp nhau ở chỗ nối)
     const tail = Math.min(3, sec * 0.2), v = dist / (sec - tail + tail / 1.72), d1 = dist - v * tail / 1.72;
     const anim = roll.animate([
@@ -996,7 +1069,7 @@
     ], { duration: sec * 1000, fill: 'forwards' });
     // Danh đề bám theo đồng hồ của nhạc từng khung hình (nhạc khựng thì danh đề đứng, nhạc hết đúng lúc dòng cuối dừng
     // giữa màn). Không có nhạc thì tự cuộn theo giờ máy, dừng / chạy theo lúc ẩn hiện trang.
-    let driving = !B.video && SONG.credits && !useWall;
+    let driving = SONG.credits && !useWall;
     if (driving) {
       anim.pause();
       const a0 = clock();
@@ -1069,7 +1142,7 @@
     sfx.off();
     $('osd').hidden = true;
     content.classList.add('squash');
-    $('static').classList.remove('soft', 'on');
+    $('static').classList.remove('soft', 'on', 'faint');
     $('crt-line').classList.remove('on');
     void $('crt-line').offsetWidth;
     $('crt-line').classList.add('off');
@@ -1129,7 +1202,7 @@
     if (stay) return; // trailer: TV còn sáng cho cảnh báo tự huỷ
     sfx.off();
     $('osd').hidden = true;
-    $('static').classList.remove('soft', 'on');
+    $('static').classList.remove('soft', 'on', 'faint');
     $('crt-line').classList.remove('on');
     void $('crt-line').offsetWidth;
     $('crt-line').classList.add('off');
@@ -1167,7 +1240,7 @@
     if (tv.classList.contains('on')) {
       content.replaceChildren();
       $('osd').hidden = true;
-      $('static').classList.remove('soft', 'on');
+      $('static').classList.remove('soft', 'on', 'faint');
       $('static').style.opacity = '';
       $('crt-line').classList.remove('on');
       tv.classList.remove('on');
@@ -1317,6 +1390,7 @@
     void body.offsetWidth;
     body.classList.add('shake');
     audioOn(); // ngay lúc chạm, kẻo iPhone không cho bật tiếng sau khi chờ ảnh
+    primeVideo();
     preload().then(powerOn);
   });
   $('end-again').addEventListener('click', () => location.reload());
