@@ -1026,3 +1026,14 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 /* Tờ lịch lúc hiện ngày 6/8: hơi choáng, chao nghiêng vài nhịp rồi đứng lại */
 .in-cal.dizzy { animation: dizzy 2.4s ease-in-out both; }
 @keyframes dizzy { 0% { transform: rotate(-5deg) scale(1.06); filter: blur(1.4px); } 25% { transform: rotate(4deg) scale(.98); filter: blur(.8px); } 50% { transform: rotate(-2.5deg) scale(1.02); filter: blur(.4px); } 75% { transform: rotate(1deg); filter: none; } 100% { transform: none; filter: none; } }
+
+/* ===== Hướng dẫn lần đầu: màn tối, chỉ một nút được khoanh sáng (và bấm được), lời chỉ dẫn nhỏ ngay trên nút ===== */
+.coach { position: absolute; inset: 0; z-index: 23; background: rgba(4, 3, 8, .62); animation: s-fade .4s ease; transition: opacity .4s; }
+.coach.out { opacity: 0; pointer-events: none; }
+.coach-ring { position: absolute; border-radius: 999px; pointer-events: none; box-shadow: 0 0 0 2px rgba(233, 199, 123, .95), 0 0 24px 6px rgba(233, 199, 123, .45); animation: coach-pulse 1.6s ease-in-out infinite; }
+@keyframes coach-pulse { 50% { box-shadow: 0 0 0 2px rgba(233, 199, 123, .95), 0 0 34px 12px rgba(233, 199, 123, .25); } }
+.coach-tip { position: absolute; max-width: min(300px, calc(100% - 24px)); padding: 10px 14px; border-radius: 14px; background: #F3E9D6; color: #2B1A12; box-shadow: 0 10px 30px rgba(0, 0, 0, .5); display: flex; flex-direction: column; gap: 2px; animation: tip-in .5s cubic-bezier(.2, .8, .3, 1) .15s both; }
+.coach-tip b { font: 600 14px/1.35 'Be Vietnam Pro', sans-serif; }
+.coach-tip span { font-size: 12.5px; color: #6E5A44; }
+.coach-target { z-index: 24 !important; }
+@keyframes tip-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }

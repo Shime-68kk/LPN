@@ -23,12 +23,13 @@
   if (!TV) return;
   const TRAILER = !!TV.trailer; // đoạn phim giới thiệu: không đọc / ghi tiến độ thật
   // Xem thử một đoạn không cần chơi tới: ?thu=vali (khoá vali), ?thu=bang (bảng ghim), ?thu=maytinh (máy tính đã đăng nhập),
-  // ?thu=modau (xem lại đoạn mở màn quay ngược thời gian, lần nào cũng phát), ?thu=sach (vừa xem Băng 02: tìm cuốn từ điển trên giá sách, xoay đĩa), ?thu=dinh (trước cổng đình, đã có chìa), ?thu=thu (vừa mở khoá điện thoại: lấy băng thật và lá thư sau tấm ảnh),
+  // ?thu=nhinquanh (vừa xem xong Băng 01: hướng dẫn nút Nhìn quanh), ?thu=modau (xem lại đoạn mở màn quay ngược thời gian, lần nào cũng phát), ?thu=sach (vừa xem Băng 02: tìm cuốn từ điển trên giá sách, xoay đĩa), ?thu=dinh (trước cổng đình, đã có chìa), ?thu=thu (vừa mở khoá điện thoại: lấy băng thật và lá thư sau tấm ảnh),
   // ?thu=bangthat (băng thật đã trong đầu băng: bấm nguồn 3 lần). Không lưu gì.
-  const TRY = (location.search.match(/[?&]thu=(modau|sach|vali|bang|maytinh|dinh|thu|bangthat)\b/) || [])[1];
+  const TRY = (location.search.match(/[?&]thu=(nhinquanh|modau|sach|vali|bang|maytinh|dinh|thu|bangthat)\b/) || [])[1];
   const DRY = TRAILER || !!TRY;
   const ALL_DONE = { jig: true, book: true, cipher: true, pillow: true, board: true, case: true, gate: true, radio: true, words: true, pc: true, dir: true, robot: true, phone: true };
   const TRY_STATE = {
+    nhinquanh: { room: 'r1', lamp: true, tut: true, intro: true, coachBag: true, items: { A: true }, seen: { A: true }, done: {} },
     modau: { room: 'r1', lamp: false, tut: false, items: {}, seen: {}, done: {} },
     sach: { room: 'r1', lamp: true, tut: true, items: { A: true, B: true, wheel: true }, seen: { A: true, B: true }, done: { jig: true } },
     maytinh: { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true, wheel: true, note1: true, note2: true, key: true }, seen: { A: true, B: true, C: true, D: true }, done: { jig: true, book: true, cipher: true, pillow: true, pc: true } },
@@ -378,6 +379,7 @@
   addEventListener('resize', () => setTimeout(fitPortrait, 120));
   addEventListener('orientationchange', () => setTimeout(fitPortrait, 400));
   setInterval(() => {
+    coachCheck(); // hướng dẫn lần đầu: hiện khi không còn gì che (màn tai nghe, đoạn mở màn, hộp thoại, TV đang chiếu)
     if (TRAILER || TV.busy() || !$('look').hidden || $('room').hidden) return;
     idle++;
     if (idle === 40) guide();
@@ -425,6 +427,49 @@
     renderBag();
     if (!TV.busy()) $('hint').textContent = step().hint;
     guide();
+    setTimeout(coachCheck, 600);
+  }
+
+  // ===== Hướng dẫn lần đầu (mỗi cái một lần): màn tối lại, chỉ nút cần bấm được khoanh sáng và bấm được =====
+  // 1. Vừa nhặt Băng 01: giới thiệu Túi đồ. 2. Xem xong Băng 01 (bắt đầu tự tìm): giới thiệu nút Nhìn quanh.
+  let coachOn = null;
+  function coachCheck() {
+    if (coachOn || TRAILER || (TRY && TRY !== 'nhinquanh') || $('room').hidden || !$('look').hidden || TV.busy() || document.querySelector('.intro, .hp-gate')) return;
+    if (S.items.A && !S.seen.A && !S.coachBag && !sel && S.inVcr !== 'A' && $('bag').hidden) coach('bag-btn', 'Cuộn băng vừa vào túi đồ.', 'Chạm để mở túi.', 'coachBag');
+    else if (S.seen.A && !S.coachPeek) coach('peek-btn', 'Nhìn quanh: hiện tên mọi đồ vật trong phòng.', 'Bí thì chạm vào đây. Chạm thử nhé.', 'coachPeek');
+  }
+  function coach(id, title, sub, flag) {
+    const target = $(id);
+    if (!target || target.hidden) return;
+    const box = document.createElement('div');
+    box.className = 'coach';
+    box.innerHTML = '<i class="coach-ring"></i><div class="coach-tip"><b></b><span></span></div>';
+    box.querySelector('b').textContent = title;
+    box.querySelector('span').textContent = sub;
+    $('room').appendChild(box);
+    target.classList.add('coach-target');
+    coachOn = { box, target, flag };
+    const place = () => {
+      const r = target.getBoundingClientRect(), rb = $('room').getBoundingClientRect(), pad = 8;
+      const ring = box.querySelector('.coach-ring'), tip = box.querySelector('.coach-tip');
+      Object.assign(ring.style, { left: r.left - rb.left - pad + 'px', top: r.top - rb.top - pad + 'px', width: r.width + pad * 2 + 'px', height: r.height + pad * 2 + 'px' });
+      const tw = tip.offsetWidth;
+      tip.style.left = Math.max(12, Math.min(rb.width - tw - 12, r.left - rb.left + r.width / 2 - tw / 2)) + 'px';
+      tip.style.bottom = rb.bottom - r.top + 18 + 'px';
+    };
+    place();
+    addEventListener('resize', place);
+    TV.sfx.ui();
+    const done = () => {
+      removeEventListener('resize', place);
+      target.classList.remove('coach-target');
+      box.classList.add('out');
+      setTimeout(() => box.remove(), 400);
+      S[flag] = true;
+      save();
+      coachOn = null;
+    };
+    target.addEventListener('click', done, { once: true, capture: true });
   }
 
   // Đồ đã dùng xong thì biến khỏi túi (đĩa đã giải, giấy đã dò sóng, chìa đã mở cổng): túi gọn, đỡ bấm nhầm.
