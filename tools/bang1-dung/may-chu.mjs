@@ -15,7 +15,7 @@ const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif', '.ico': 'image/x-icon', '.mp3': 'audio/mpeg', '.mp4': 'video/mp4',
-  '.m3u8': 'application/vnd.apple.mpegurl', '.m4s': 'video/iso.segment', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.wasm': 'application/wasm',
+  '.m3u8': 'application/vnd.apple.mpegurl', '.m4s': 'video/iso.segment', '.ts': 'video/mp2t', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.wasm': 'application/wasm',
 };
 
 http.createServer((req, res) => {
@@ -27,6 +27,7 @@ http.createServer((req, res) => {
   try { if (fs.statSync(f).isDirectory()) f = path.join(f, 'index.html'); } catch (e) { /* xử lý ở dưới */ }
   let st;
   try { st = fs.statSync(f); } catch (e) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Không có ' + p); return; }
+  if (/tam-su|hoi-uc\.html|bang1\.js/.test(p)) console.log(new Date().toLocaleTimeString('vi-VN'), req.socket.remoteAddress, p, req.headers.range || '', (req.headers['user-agent'] || '').slice(0, 60));
   const head = { 'Content-Type': TYPES[path.extname(f).toLowerCase()] || 'application/octet-stream', 'Accept-Ranges': 'bytes', 'Cache-Control': 'no-cache' };
   const m = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
   if (m && (m[1] || m[2])) {
