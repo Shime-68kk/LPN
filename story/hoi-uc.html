@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="hoi-uc.css?v=87" />
+  <link rel="stylesheet" href="hoi-uc.css?v=89" />
 </head>
 <body>
   <!-- Bộ lọc làm nét ký hiệu hơi run như mực vẽ tay -->
@@ -210,15 +210,28 @@
   </section>
 
   <!-- Kết -->
+  <!-- Đoạn ghi thêm ở cuối băng (lời tâm sự): hiện sau danh đề, em chạm Xem thì mới phát -->
+  <section class="bonus" id="bonus" hidden>
+    <div class="ts-rec" aria-hidden="true"><i></i>REC</div>
+    <p class="end-line" id="ts-line">Cuối cuộn băng, anh còn ghi thêm một đoạn.</p>
+    <button class="end-btn ts-go" id="ts-go" type="button">▶ Xem</button>
+    <button class="link end-again" id="ts-skip" type="button">Để sau</button>
+  </section>
+  <div class="ts-player" id="ts-player" hidden>
+    <video id="ts-vid" playsinline></video>
+    <button class="ts-close" id="ts-close" type="button" aria-label="Đóng">✕</button>
+  </div>
+
   <section class="end" id="end" hidden>
     <p class="end-line" id="end-1"></p>
     <p class="end-line big" id="end-2">Đây là nơi mọi thứ bắt đầu.</p>
     <a class="end-btn" id="end-go" href="../legacy/">Về ngày đầu tiên</a>
     <button class="link end-again" id="end-again" type="button">Xem lại</button>
+    <button class="link end-again" id="end-ts" type="button" hidden>Xem lại lời anh</button>
   </section>
 
-  <script src="bang1.js?v=6"></script>
-  <script src="hoi-uc.js?v=62"></script>
+  <script src="bang1.js?v=8"></script>
+  <script src="hoi-uc.js?v=67"></script>
   <script src="hoi-uc-room.js?v=77"></script>
 </body>
 </html>

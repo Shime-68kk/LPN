@@ -414,6 +414,10 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .letter .sig { display: block; width: auto; height: 84px; max-width: 70%; margin: 0 0 0 auto; clip-path: inset(0 100% 0 0); animation: sig-write 2.4s cubic-bezier(.45, .1, .4, 1) 6.5s forwards; }
 @keyframes sig-write { to { clip-path: inset(0 0 0 0); } }
 .letter .sign { margin-top: 28px; text-indent: 0; text-align: right; font-size: 21px; color: #8C3B3B; }
+/* Màn hình thấp (điện thoại xoay ngang) có quy tắc chung thêm lề dưới cho đoạn văn trong khung nhìn gần: lá thư giữ lề 0
+   để chữ không trôi khỏi dòng kẻ */
+.look-body .letter p { margin: 0; }
+.look-body .letter .sign { margin-top: 28px; }
 .letter .hrt { position: relative; display: inline-block; width: 1.2em; height: 0; } /* cao 0: không đẩy dòng, giữ chữ đúng dòng kẻ */
 .letter .hrt svg { position: absolute; left: .08em; bottom: -.12em; width: 1.08em; height: 1.04em; overflow: visible; fill: none; stroke: #8C3B3B; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; transform: rotate(-6deg); }
 .letter .hrt path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: heart-draw 1.3s cubic-bezier(.5, .1, .4, 1) 5.1s forwards; }
@@ -695,6 +699,19 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .end-line.on, .end-btn.on, .end-again.on { opacity: 1; transform: none; }
 .end-btn { margin-top: 14px; padding: 14px 28px; border-radius: 999px; background: var(--cream); color: #3A2B3F; font-weight: 700; text-decoration: none; opacity: 0; transform: translateY(8px); transition: opacity 1.2s, transform 1.2s; box-shadow: 0 0 30px rgba(246, 238, 223, .2); }
 .end-again { opacity: 0; transition: opacity 1.2s; }
+/* Đoạn ghi thêm ở cuối băng: màn tối, "● REC" nháy ở góc như máy quay, một dòng chữ, nút Xem */
+.bonus { position: fixed; inset: 0; z-index: 11; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 0 28px; text-align: center; background: #050407; opacity: 0; transition: opacity 1.2s; }
+.bonus.on { opacity: 1; }
+.ts-rec { position: absolute; left: calc(var(--safe-left) + 22px); top: calc(var(--safe-top) + 18px); display: flex; align-items: center; gap: 8px; font: 700 13px ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: .14em; color: rgba(244, 255, 246, .85); }
+.ts-rec i { width: 10px; height: 10px; border-radius: 50%; background: #FF3B3B; box-shadow: 0 0 8px rgba(255, 59, 59, .8); animation: ts-rec 1.2s steps(1) infinite; }
+@keyframes ts-rec { 50% { opacity: 0; } }
+.bonus .end-line.on, .bonus .end-btn.on, .bonus .end-again.on { opacity: 1; transform: none; }
+/* Lời tâm sự: phát toàn màn hình, nền đen, video giữ nguyên tỉ lệ (quay dọc) */
+.ts-player { position: fixed; inset: 0; z-index: 13; background: #000; opacity: 0; transition: opacity .9s; }
+.ts-player.on { opacity: 1; }
+.ts-player video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+.ts-close { position: absolute; right: calc(var(--safe-right) + 14px); top: calc(var(--safe-top) + 12px); width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .12); color: #fff; font-size: 16px; opacity: 0; transition: opacity .8s; }
+.ts-close.on { opacity: .75; }
 
 @media (prefers-reduced-motion: reduce) {
   .tv { transition-duration: .4s; }
