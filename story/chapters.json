@@ -688,7 +688,7 @@
       "early": { "quang": "2026-11-01T00:00:00+07:00" },
       "scene": "dem",
       "cast": ["quang", "thuy"],
-      "announce": { "kicker": "Cốt truyện · Tối nay 20:00", "title": "Tối nay có chương mới!", "text": "Chương 17 · Cuộn băng số 1. Có một bí mật vừa được giấu lại, kỹ hơn lần trước. Hẹn em lúc 8 giờ tối nha.", "ok": "Xem đếm ngược", "later": "Để sau" },
+      "announce": { "theme": "tape", "kicker": "Băng số 1 · Tối nay 20:00", "title": "Tối nay có chương mới!", "text": "Chương 17 · Cuộn băng số 1. Có một bí mật vừa được giấu lại, kỹ hơn lần trước. Hẹn em lúc 8 giờ tối nha.", "ok": "Xem đếm ngược", "later": "Để sau" },
       "lines": [
         { "who": "none", "text": "01/11 · Tối" },
         { "who": "ke", "text": "Có những thứ không chụp lại được, cũng không gửi qua tin nhắn được." },

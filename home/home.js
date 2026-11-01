@@ -573,7 +573,7 @@
       const seen = store.get('lpn:news') || {};
       const ch = list.find((c) => c.announce && !done[c.id] && !seen[c.id]);
       const cs = list.find((c) => c.case && c.case.announce && done[c.id] && !flags[c.case.id + 'Done'] && !seen[c.case.announce.key]);
-      if (ch) this.item = { key: ch.id, a: ch.announce, href: '../story/?play=' + encodeURIComponent(ch.id) }; // chưa tới giờ mở: trang cốt truyện hiện đếm ngược
+      if (ch) this.item = { key: ch.id, a: ch.announce, href: '../story/?play=' + encodeURIComponent(ch.id), openAt: ch.openAt }; // chưa tới giờ mở: trang cốt truyện hiện đếm ngược
       else if (cs) this.item = { key: cs.case.announce.key, a: cs.case.announce, href: '../story/' + cs.case.page };
       this.show();
     },
@@ -581,6 +581,19 @@
       const it = this.item;
       if (!it || document.documentElement.classList.contains('need-lock') || !$('news').hidden) return;
       const a = it.a;
+      // Bảng báo kiểu cuộn băng (Băng số 1): nền phim tối, cuộn băng hai trục quay, đếm ngược tới giờ mở
+      const tape = a.theme === 'tape';
+      $('news').classList.toggle('is-tape', tape);
+      $('news-logo').hidden = tape;
+      $('news-art').hidden = !tape;
+      clearInterval(this.timer);
+      $('news-count').hidden = !(tape && it.openAt);
+      if (tape && it.openAt) {
+        const at = Date.parse(it.openAt), pad = (n) => String(n).padStart(2, '0');
+        const tick = () => { const s = Math.max(0, Math.round((at - Date.now()) / 1000)); $('news-count').textContent = s ? 'Còn ' + pad(Math.floor(s / 3600)) + ':' + pad(Math.floor(s % 3600 / 60)) + ':' + pad(s % 60) : 'Đã mở'; };
+        tick();
+        this.timer = setInterval(tick, 1000);
+      }
       if (a.logo) $('news-logo').src = a.logo;
       $('news-kicker').textContent = a.kicker || 'Cốt truyện · Chương mới';
       $('news-title').textContent = a.title;
@@ -765,7 +778,8 @@
   $('memory-link').hidden = true;
   (() => {
     const pill = $('days'), tape = $('tape-hide');
-    const open = Date.now() >= Date.parse('2026-11-01T20:00:00+07:00') || !location.hostname.endsWith('workers.dev');
+    // Máy anh Quang mở sớm để thử trước; máy Thủy đợi tới 20:00
+    const open = Date.now() >= Date.parse('2026-11-01T20:00:00+07:00') || !location.hostname.endsWith('workers.dev') || store.get('lpn:who') === 'quang' || localStorage.getItem('lpn:who') === 'quang';
     if (!pill || !tape || !open) return;
     const W = () => tape.offsetWidth + 10;
     let x0 = null, dx = 0, base = 0, moved = false, shown = false;

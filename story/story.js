@@ -191,8 +191,7 @@
 
   function renderMap() {
     setSky(liveSky, true);
-    // Băng số 1 (hồi ức): tạm ẩn ở mọi máy (30/10/2026), kể cả máy anh Quang.
-    $('tape-card').hidden = true;
+    tapeBanner();
     const path = $('path');
     path.querySelectorAll('.stop').forEach((n) => n.remove());
     path.style.height = CHAPTERS.length * SPACING + 'px';
@@ -230,11 +229,39 @@
     renderCase();
   }
 
-  // Thẻ hồ sơ vụ án trên bản đồ: hiện khi đã đọc xong chương mở vụ án.
+  // Banner Băng số 1 (thay banner hồ sơ vụ án đã phá xong): trước 20:00 ngày 1/11 đếm ngược, sau đó mời đọc Chương 17.
+  // Chạm vào: mở Chương 17 (chưa tới giờ thì hiện hộp đếm ngược). Cuộn băng thật vẫn phải tự tìm theo lời dặn trong chương.
+  let tbTimer = 0;
+  function tapeBanner() {
+    const i = CHAPTERS.findIndex((c) => c.id === 'c19');
+    const card = $('tape-card');
+    card.hidden = i < 0;
+    if (i < 0) return;
+    const draw = () => {
+      const left = waitLeft(i);
+      if (left > 0) {
+        $('tb-kicker').textContent = 'Băng số 1 · 20:00';
+        $('tb-title').textContent = 'Chương ' + chNo(i) + ' · ' + CHAPTERS[i].title;
+        $('tb-note').textContent = 'Mở sau ' + clock(left);
+      } else {
+        clearInterval(tbTimer);
+        $('tb-kicker').textContent = 'Băng số 1 · Đã mở';
+        $('tb-title').textContent = save.done.c19 ? 'Cuộn băng thật đang chờ em' : 'Chương ' + chNo(i) + ' · ' + CHAPTERS[i].title;
+        $('tb-note').textContent = save.done.c19 ? 'Lời dặn: đẩy con số anh đếm mỗi ngày sang một bên.' : 'Đeo tai nghe, tắt bớt đèn, rồi đọc nha.';
+      }
+    };
+    clearInterval(tbTimer);
+    draw();
+    if (waitLeft(i) > 0) tbTimer = setInterval(draw, 1000);
+    card.onclick = (e) => { e.preventDefault(); const st = status(i); if (st.wait) openWait(i); else if (st.state === 'current' || st.state === 'done') play(i); };
+  }
+
+  // Thẻ hồ sơ vụ án trên bản đồ: hiện khi đã đọc xong chương mở vụ án, đang điều tra dở. Phá xong rồi thì ẩn
+  // (banner Băng số 1 thế chỗ); xem lại hồ sơ vẫn vào được từ chương mở vụ án.
   function renderCase() {
     const card = $('case-card');
     const ch = CHAPTERS.find((c) => c.case && save.done[c.id]);
-    card.hidden = !ch;
+    card.hidden = !ch || caseProgress(ch.case).done;
     if (!ch) return;
     const c = ch.case, pr = caseProgress(c);
     card.href = c.page;

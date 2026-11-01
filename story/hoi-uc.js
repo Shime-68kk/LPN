@@ -153,7 +153,8 @@
   // Trailer (?trailer=1): đoạn phim tự chạy, ai cũng xem được, không chơi được và không lộ đáp án.
   const TRAILER = /[?&]trailer=1\b/.test(location.search);
   const LOCKED = !TRAILER && location.hostname.endsWith('workers.dev') && Date.now() < OPEN_AT && (() => {
-    try { return sessionStorage.getItem('lpn:tapePreview') !== '1'; } catch (e) { return true; }
+    // Máy anh Quang mở sớm để thử trước giờ ra mắt
+    try { return sessionStorage.getItem('lpn:tapePreview') !== '1' && localStorage.getItem('lpn:who') !== 'quang'; } catch (e) { return true; }
   })();
 
   // ===== Xoay ngang (điện thoại); máy tính hay đã xoay thì vào phòng luôn =====
@@ -391,7 +392,8 @@
     // Robot tỉnh dậy: mô-tơ rè rè rồi bíp bíp
     robot() { if (!ac) return; const t = ac.currentTime; tone(t, 0.35, 180, 360, 0.07, 'sawtooth'); tone(t + 0.4, 0.08, 1400, 1400, 0.08, 'square'); tone(t + 0.52, 0.08, 1900, 1900, 0.08, 'square'); },
     // Cửa gỗ: bản lề kẽo kẹt, rồi một bước chân
-    door() { if (!ac) return; const t = ac.currentTime; creak(t, 0.38, 230, 170, 0.22); noise(t + 0.42, 0.06, 'lowpass', 380, 0.7, 0.5); },
+    // Sang phòng: then cửa gỗ khẽ "cạch" rồi hai bước chân êm (không rít, không vút)
+    door() { if (!ac) return; const t = ac.currentTime; noise(t, 0.05, 'lowpass', 700, 0.7, 0.22); tone(t, 0.1, 150, 110, 0.1, 'triangle'); tone(t + 0.22, 0.09, 105, 80, 0.07); noise(t + 0.22, 0.05, 'lowpass', 300, 0.7, 0.12); tone(t + 0.48, 0.09, 100, 78, 0.05); noise(t + 0.48, 0.05, 'lowpass', 280, 0.7, 0.08); },
     // Cổng đình: then sắt kéo, bản lề nặng rít dài
     gate() {
       if (!ac) return;
@@ -406,6 +408,32 @@
 
     // ===== Trailer: đồng hồ điểm giờ, tua ngược =====
     // Kim giây (khi không có nhạc nền, nhạc tự có tiếng tích‑tắc)
+    // Mở màn hồi ức: chuông đồng hồ quả lắc (trầm, ngân dài: tiếng gõ búa, âm gốc, các họa âm lệch như chuông đồng thật).
+    // deep: tiếng chuông lúc về tới 23:38 đêm 6/8, thấp hơn một quãng năm, ngân lâu hơn.
+    bell(deep) {
+      if (!ac) return;
+      const t = ac.currentTime, f = deep ? 392 : 523.25, L = deep ? 1.5 : 1;
+      noise(t, 0.04, 'bandpass', 3200, 1.5, 0.35);
+      for (const [k, g, d] of [[0.5, 0.1, 4.5], [1, 0.22, 3.8], [1.19, 0.06, 2.2], [1.5, 0.05, 2.6], [2, 0.08, 2.0], [2.74, 0.04, 1.2], [3.76, 0.02, 0.8]]) {
+        tone(t, d * L, f * k, f * k * 0.999, g); tone(t + 0.002, d * L * 0.9, f * k * 1.003, f * k * 1.002, g * 0.5);
+      }
+    },
+    // Mở màn hồi ức, lúc quay ngược: một nốt nền trầm ấm trôi xuống chậm (thời gian chùng lại), không rít, không vút
+    drift(d) {
+      if (!ac) return;
+      const t = ac.currentTime, f = ac.createBiquadFilter(), g = ac.createGain();
+      f.type = 'lowpass'; f.frequency.value = 900;
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05, t + 1.2); g.gain.setValueAtTime(0.05, t + d - 1); g.gain.linearRampToValueAtTime(0.0001, t + d);
+      for (const [f0, k] of [[196, 1], [293.66, 0.5], [98, 0.7]]) {
+        const o = ac.createOscillator(), og = ac.createGain(), v = ac.createOscillator(), vg = ac.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * 0.5, t + d);
+        v.frequency.value = 4.5; vg.gain.value = f0 * 0.006; v.connect(vg).connect(o.frequency);
+        og.gain.value = k; o.connect(og).connect(f); o.start(t); v.start(t); o.stop(t + d + 0.05); v.stop(t + d + 0.05);
+      }
+      f.connect(g).connect(out);
+    },
+    // Một tờ lịch về chỗ: "tạch" giấy khẽ
+    page() { if (!ac) return; const t = ac.currentTime; noise(t, 0.025, 'bandpass', 2000, 1.5, 0.07); noise(t, 0.04, 'lowpass', 320, 0.7, 0.06); },
     // Mở màn hồi ức: tiếng gõ cửa gỗ (cốc), tiếng lật một tờ lịch bóc
     knock() { if (!ac) return; const t = ac.currentTime; noise(t, 0.09, 'lowpass', 900, 1.2, 0.9); tone(t, 0.12, 190, 110, 0.35, 'triangle'); noise(t + 0.004, 0.03, 'bandpass', 2200, 2, 0.25); },
     flick() { if (!ac) return; const t = ac.currentTime; noise(t, 0.06, 'highpass', 2600, 0.8, 0.22); noise(t + 0.03, 0.05, 'bandpass', 1400, 1, 0.12); },

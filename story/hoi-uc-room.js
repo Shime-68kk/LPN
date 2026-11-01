@@ -23,12 +23,13 @@
   if (!TV) return;
   const TRAILER = !!TV.trailer; // đoạn phim giới thiệu: không đọc / ghi tiến độ thật
   // Xem thử một đoạn không cần chơi tới: ?thu=vali (khoá vali), ?thu=bang (bảng ghim), ?thu=maytinh (máy tính đã đăng nhập),
-  // ?thu=sach (vừa xem Băng 02: tìm cuốn từ điển trên giá sách, xoay đĩa), ?thu=dinh (trước cổng đình, đã có chìa), ?thu=thu (vừa mở khoá điện thoại: lấy băng thật và lá thư sau tấm ảnh),
+  // ?thu=modau (xem lại đoạn mở màn quay ngược thời gian, lần nào cũng phát), ?thu=sach (vừa xem Băng 02: tìm cuốn từ điển trên giá sách, xoay đĩa), ?thu=dinh (trước cổng đình, đã có chìa), ?thu=thu (vừa mở khoá điện thoại: lấy băng thật và lá thư sau tấm ảnh),
   // ?thu=bangthat (băng thật đã trong đầu băng: bấm nguồn 3 lần). Không lưu gì.
-  const TRY = (location.search.match(/[?&]thu=(sach|vali|bang|maytinh|dinh|thu|bangthat)\b/) || [])[1];
+  const TRY = (location.search.match(/[?&]thu=(modau|sach|vali|bang|maytinh|dinh|thu|bangthat)\b/) || [])[1];
   const DRY = TRAILER || !!TRY;
   const ALL_DONE = { jig: true, book: true, cipher: true, pillow: true, board: true, case: true, gate: true, radio: true, words: true, pc: true, dir: true, robot: true, phone: true };
   const TRY_STATE = {
+    modau: { room: 'r1', lamp: false, tut: false, items: {}, seen: {}, done: {} },
     sach: { room: 'r1', lamp: true, tut: true, items: { A: true, B: true, wheel: true }, seen: { A: true, B: true }, done: { jig: true } },
     maytinh: { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true, wheel: true, note1: true, note2: true, key: true }, seen: { A: true, B: true, C: true, D: true }, done: { jig: true, book: true, cipher: true, pillow: true, pc: true } },
     dinh: { room: 'r3', lamp: true, tut: true, items: { A: true, B: true, C: true, wheel: true, key: true, note1: true, note2: true }, seen: { A: true, B: true, C: true }, done: { jig: true, book: true, cipher: true, pillow: true, board: true, case: true } },
@@ -154,10 +155,10 @@
     hpShown = true;
     const g = document.createElement('div');
     g.className = 'hp-gate';
-    g.innerHTML = '<p class="tips-k">Băng số 1 · Hồi ức</p><div class="tips-card hp-card"><span class="hp-big">' + HP_SVG + '</span><b>Đeo tai nghe</b><small>để có trải nghiệm trọn vẹn nhất</small></div><p class="hp-go">Chạm để bắt đầu</p>';
+    g.innerHTML = '<div class="hz"><span class="hz-ic hp-big">' + HP_SVG + '</span><b>Đeo tai nghe</b><i class="hz-line"></i><small>Trò chơi này nên được trải nghiệm với tai nghe</small></div><p class="hp-go">Chạm để tiếp tục</p>';
     document.body.appendChild(g);
     // Lần đầu vào game: phải chạm (mở khoá âm thanh cho đoạn mở màn), rồi mới quay ngược thời gian. Các lần sau tự tắt.
-    const intro = !S.intro && !S.lamp && !DRY;
+    const intro = (!S.intro && !S.lamp && !DRY) || TRY === 'modau';
     const close = () => {
       if (!g.isConnected || g.classList.contains('out')) return;
       g.classList.add('out');
@@ -168,45 +169,70 @@
     if (!intro) setTimeout(close, 4500);
   }
 
-  // ===== Mở màn: quay ngược thời gian về đêm 6/8 (chỉ lần đầu vào game, có nút Bỏ qua) =====
-  // Màn đen, một màn hình nhỏ chập chờn: tiếng gõ "cốc… cốc…", hỏi giờ. Đồng hồ hiện giờ lúc này, điểm "tinh". Rồi vòng
-  // xoáy thời gian cuộn mở, băng tua ngược: kim quay ngược vùn vụt, tờ lịch bóc lật ngược từng ngày về 6 · Tháng 8,
-  // kim khớp 23:38, "tinh", chớp sáng: "Đêm ấy." rồi mờ vào căn phòng tối. Lời chữ: bản nháp, anh Quang sửa thoải mái.
+  // ===== Mở màn: quay ngược thời gian về đêm 6/8 (lần đầu vào game, trước căn phòng; có nút Bỏ qua) =====
+  // Màn đen. Một màn hình nhỏ chập chờn: tiếng gõ "cốc… cốc…", hỏi giờ. Đồng hồ chỉ đúng lúc người chơi bấm vào (kèm buổi,
+  // thứ, ngày), chuông đồng hồ điểm. Rồi như phim: cắt qua lại giữa cảnh tờ lịch và cảnh đồng hồ, nhanh dần theo tiếng băng
+  // tua; kim quay ngược, các tờ lịch đã xé bị hút ngược về dán lại lên tập lịch, lùi từng ngày tới 6 · Tháng 8; cắt sang
+  // đồng hồ khớp 23:38, chuông trầm, chớp sáng: "Đêm ấy." rồi mới mờ vào căn phòng tối. Lời chữ: bản nháp, anh Quang sửa.
   const WD = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'];
+  const buoi = (h) => (h < 4 ? 'đêm' : h < 11 ? 'sáng' : h < 13 ? 'trưa' : h < 18 ? 'chiều' : h < 22 ? 'tối' : 'đêm');
   async function runIntro() {
-    if (S.intro || TRAILER) return;
+    if (S.intro && TRY !== 'modau' || TRAILER) return;
     const fx = TV.sfx, p2 = (n) => String(n).padStart(2, '0');
     let skipped = false;
     const wait = (ms) => new Promise((res, rej) => setTimeout(() => (skipped ? rej(new Error('skip')) : res()), ms));
     const box = document.createElement('div');
     box.className = 'intro';
     box.innerHTML = '<div class="in-vortex"></div><div class="in-crt"><p></p></div>'
-      + '<div class="in-stage"><div class="tr-clock in-clock">' + clockFace() + '<div class="tr-clock-t"></div></div>'
-      + '<div class="in-cal"><i class="cal-ring"></i><div class="cal-page"><small></small><b></b><span></span></div></div></div>'
-      + '<p class="in-cap"></p><div class="in-flash"></div><button class="in-skip" type="button">Bỏ qua ›</button>';
+      + '<div class="in-scene in-s-clk"><div class="tr-clock in-clock">' + clockFace() + '</div><p class="in-time"><b></b><span></span></p></div>'
+      + '<div class="in-scene in-s-cal"><div class="in-cal"><i class="cal-ring"></i><div class="cal-page"><small></small><b></b><span></span></div></div></div>'
+      + '<p class="in-cap"></p><div class="in-dip"></div><div class="in-flash"></div><button class="in-skip" type="button">Bỏ qua ›</button>';
     document.body.appendChild(box);
     const $$ = (q) => box.querySelector(q);
     const crt = $$('.in-crt'), crtP = $$('.in-crt p'), clk = $$('.in-clock'), cal = $$('.in-cal'), cap = $$('.in-cap');
+    const sClk = $$('.in-s-clk'), sCal = $$('.in-s-cal');
     const [hh, mh, sh] = ['.hh', '.mh', '.sh'].map((q) => clk.querySelector(q));
     const hands = (h, m, sc) => { hh.style.transform = 'rotate(' + h + 'deg)'; mh.style.transform = 'rotate(' + m + 'deg)'; sh.style.transform = 'rotate(' + sc + 'deg)'; };
-    const page = (d) => { const pg = $$('.cal-page'); pg.querySelector('small').textContent = 'Tháng ' + (d.getMonth() + 1) + ' · ' + d.getFullYear(); pg.querySelector('b').textContent = d.getDate(); pg.querySelector('span').textContent = WD[d.getDay()]; };
+    const fill = (pg, d) => { pg.querySelector('small').textContent = 'Tháng ' + (d.getMonth() + 1) + ' · ' + d.getFullYear(); pg.querySelector('b').textContent = d.getDate(); pg.querySelector('span').textContent = WD[d.getDay()]; };
+    const timeText = (d, h, m) => { $$('.in-time b').textContent = p2(h) + ':' + p2(m) + ' · ' + buoi(h); $$('.in-time span').textContent = WD[d.getDay()] + ' · ' + p2(d.getDate()) + '.' + p2(d.getMonth() + 1) + '.' + d.getFullYear(); };
     const type = async (el, text, per) => { el.textContent = ''; for (const ch of text) { el.textContent += ch; await wait(per || 55); } };
+    // Chuyển cảnh: hai cảnh mờ dần vào nhau (không chớp đen, không giật), thời gian mờ ms tuỳ nhịp lúc đó
+    const show = (which, ms) => {
+      box.style.setProperty('--fade', (ms || 900) + 'ms');
+      sClk.classList.toggle('on', which === 'clk');
+      sCal.classList.toggle('on', which === 'cal');
+    };
+    // Một tờ lịch đã xé bị hút ngược về, dán lên tập lịch (lùi một ngày)
+    const suck = (d) => {
+      const pg = document.createElement('div');
+      pg.className = 'cal-page cal-in';
+      pg.innerHTML = '<small></small><b></b><span></span>';
+      fill(pg, d);
+      const ang = Math.random() * Math.PI * 2, dist = 160 + Math.random() * 120;
+      pg.style.setProperty('--fx', Math.cos(ang) * dist + '%');
+      pg.style.setProperty('--fy', Math.sin(ang) * dist + '%');
+      pg.style.setProperty('--fr', (Math.random() * 120 - 60).toFixed(0) + 'deg');
+      cal.appendChild(pg);
+      const pages = cal.querySelectorAll('.cal-in');
+      if (pages.length > 4) pages[0].remove();
+    };
     const finish = () => {
       if (box.classList.contains('out')) return;
-      S.intro = true;
-      save();
+      if (!DRY) { S.intro = true; save(); }
       TV.amb.duck(1);
       box.classList.add('out');
-      setTimeout(() => box.remove(), 1300);
+      setTimeout(() => box.remove(), 1500);
     };
     $$('.in-skip').addEventListener('click', () => { skipped = true; finish(); });
+    // Lúc người chơi bấm vào
     const now = new Date();
     now.setSeconds(0, 0);
     const day0 = new Date(2026, 7, 6), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const back = Math.max(1, Math.round((today - day0) / 864e5));
+    const H = now.getHours(), M = now.getMinutes();
     try {
-      TV.amb.duck(0.25);
-      await wait(700);
+      TV.amb.duck(0.2);
+      await wait(800);
       crt.classList.add('on'); fx.glitch();
       await wait(900);
       fx.knock(); await wait(380); fx.knock();
@@ -215,64 +241,111 @@
       await type(crtP, 'Bây giờ là mấy giờ rồi nhỉ?');
       await wait(1500);
       crt.classList.add('out'); fx.glitch();
-      await wait(500);
-      // Đồng hồ và tờ lịch của hôm nay
+      await wait(600);
+      // Cảnh đồng hồ: đúng giờ lúc này
       let sec = 0;
-      const h0 = (now.getHours() % 12 + now.getMinutes() / 60) * 30, m0 = now.getMinutes() * 6;
+      const h0 = (H % 12 + M / 60) * 30, m0 = M * 6;
       hands(h0, m0, 0);
-      page(now);
-      $$('.in-stage').classList.add('on'); clk.classList.add('on');
+      timeText(now, H, M);
+      fill($$('.cal-page'), now);
+      show('clk', 1200);
       for (let i = 0; i < 3; i++) { await wait(1000); sec++; hands(h0, m0, sec * 6); fx.tock(); }
-      fx.chime();
-      clk.querySelector('.tr-clock-t').textContent = p2(now.getHours()) + ':' + p2(now.getMinutes()) + ' · ' + p2(now.getDate()) + '.' + p2(now.getMonth() + 1) + '.' + now.getFullYear();
-      clk.classList.add('strike');
-      await wait(1400);
+      fx.bell();
+      $$('.in-time').classList.add('on');
+      await wait(2200);
+      // Cảnh tờ lịch hôm nay, rồi lời mời quay lại
+      show('cal', 1000);
+      await wait(1100);
       await type(cap, 'Vậy thì… mình quay lại một chút nhé.');
-      await wait(1600);
+      await wait(1500);
       cap.textContent = '';
-      // Quay ngược: vòng xoáy cuộn mở, máy quay áp sát, kim quay ngược, lịch lật ngược từng ngày
-      const D = 4800;
-      box.classList.add('rew'); clk.classList.add('rew'); clk.classList.remove('strike');
-      fx.rewind(D / 1000);
-      const hEnd = (11 + 38 / 60) * 30 - 360 * 3, mEnd = 38 * 6 - 360 * 24, sEnd = -360 * 50;
-      const t0 = performance.now();
-      let shown = 0, lastFly = 0;
+      // Quay ngược, ít lần chuyển cảnh, chậm rồi nhanh dần; hai cảnh mờ dần vào nhau, không nháy:
+      //   A đồng hồ lùi chậm (3,2 s) → B tờ lịch treo tường, các tờ đã xé bay ngược về, chậm rồi nhanh (3,6 s)
+      //   → C đồng hồ lùi nhanh hơn (2,4 s) → D lịch hút về dồn dập (2,4 s) → E đồng hồ chậm lại, khớp 23:38, "đinh… đong".
+      // Tiếng: tích tắc của chính chiếc đồng hồ thưa rồi dồn, nốt nền trầm trôi xuống; tờ lịch về chỗ "tạch" khẽ.
+      const PH = [['clk', 3200, 900], ['cal', 3600, 1100], ['clk', 2400, 800], ['cal', 2400, 700], ['clk', 2200, 700]];
+      const D = PH.reduce((x, p) => x + p[1], 0);
+      const starts = PH.reduce((m, p) => (m.push(m[m.length - 1] + p[1]), m), [0]);
+      box.classList.add('rew');
+      $$('.in-time').classList.remove('on');
+      fx.drift(D / 1000);
+      const hEnd = (11 + 38 / 60) * 30 - 360 * 4, mEnd = 38 * 6 - 360 * 30, sEnd = -360 * 60;
+      // Kim: lùi theo đường chậm - nhanh - chậm lại lúc gần tới (A 0→0.18, C 0.18→0.88, E 0.88→1)
+      const handP = (ms) => {
+        const seg = (x0, x1, a, b, ease) => a + (b - a) * ease(Math.min(1, Math.max(0, (ms - x0) / (x1 - x0))));
+        if (ms < starts[1]) return seg(0, starts[1], 0, 0.12, (x) => x * x);
+        if (ms < starts[2]) return seg(starts[1], starts[2], 0.12, 0.3, (x) => x);
+        if (ms < starts[3]) return seg(starts[2], starts[3], 0.3, 0.86, (x) => x * x);
+        if (ms < starts[4]) return seg(starts[3], starts[4], 0.86, 0.97, (x) => x);
+        return seg(starts[4], D, 0.97, 1, (x) => 1 - Math.pow(1 - x, 3));
+      };
+      // Lịch: số ngày đã lùi (B: tới 45%, D: tới hết trừ ngày 6/8 để dành cho đoạn cuối), chậm rồi nhanh trong từng cảnh
+      const dayP = (ms) => {
+        if (ms < starts[1]) return 0;
+        if (ms < starts[2]) return 0.45 * Math.pow((ms - starts[1]) / PH[1][1], 2);
+        if (ms < starts[3]) return 0.45;
+        if (ms < starts[4]) return 0.45 + 0.55 * Math.pow((ms - starts[3]) / PH[3][1], 1.6);
+        return 1;
+      };
+      const vx = $$('.in-vortex');
+      let ph = -1, shown = 0, ang = 0, last = performance.now(), lastTick = 0, lastPage = 0, prevM = m0;
+      const t0 = last;
       await new Promise((res) => {
         const f = (tm) => {
           if (skipped) { res(); return; }
-          const k = Math.min(1, (tm - t0) / D), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
-          hands(h0 + (hEnd - h0) * e, m0 + (mEnd - m0) * e, sec * 6 + (sEnd - sec * 6) * e);
-          const n = Math.round(back * e);
+          const ms = tm - t0, k = Math.min(1, ms / D);
+          const pNow = starts.findIndex((x, i) => ms >= x && ms < (starts[i + 1] ?? Infinity));
+          if (pNow !== ph && pNow < PH.length) { ph = pNow; show(PH[ph][0], PH[ph][2]); }
+          const hp = handP(ms);
+          const mA = m0 + (mEnd - m0) * hp;
+          hands(h0 + (hEnd - h0) * hp, mA, sec * 6 + (sEnd - sec * 6) * hp);
+          // Tích tắc theo tốc độ kim phút: thưa khi chậm, dồn khi nhanh (tối đa ~12 tiếng mỗi giây)
+          const speed = Math.abs(mA - prevM) / Math.max(1, tm - last); prevM = mA;
+          const ivl = Math.max(85, 650 - speed * 260);
+          if (tm - lastTick > ivl && ph !== 1 && ph !== 3) { lastTick = tm; fx.tock(); }
+          // Máy quay tiến sát rất chậm: chỉ phóng cảnh đang hiện (cảnh ẩn không phải vẽ lại)
+          const cam = 'scale(' + (1 + 0.12 * k).toFixed(4) + ')';
+          (ph % 2 ? sCal : sClk).style.transform = cam;
+          ang -= (tm - last) * (0.03 + 0.35 * Math.pow(k, 2)); last = tm;
+          vx.style.transform = 'rotate(' + ang.toFixed(1) + 'deg) scale(' + (0.75 + 0.4 * k).toFixed(3) + ')';
+          vx.style.opacity = Math.min(0.7, k * 1.6).toFixed(2);
+          const n = Math.min(back - 1, Math.round((back - 1) * dayP(ms)));
           if (n !== shown) {
-            // Tờ của ngày đang hiện bay đi (lật ngược lên), lộ ra ngày trước đó; nhanh quá thì chỉ bay vài tờ
-            if (tm - lastFly > 70) {
-              lastFly = tm;
-              const fly = $$('.cal-page').cloneNode(true);
-              fly.className = 'cal-page cal-fly';
-              cal.appendChild(fly);
-              setTimeout(() => fly.remove(), 700);
-              fx.flick();
-            }
             shown = n;
-            page(new Date(today.getFullYear(), today.getMonth(), today.getDate() - n));
-            clk.querySelector('.tr-clock-t').textContent = p2(new Date(today - n * 864e5).getDate()) + '.' + p2(new Date(today - n * 864e5).getMonth() + 1);
+            const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - n);
+            if (sCal.classList.contains('on') && tm - lastPage > 120) { lastPage = tm; suck(d); fx.page(); }
+            fill($$('.cal-page'), d);
           }
           if (k < 1) requestAnimationFrame(f); else res();
         };
         requestAnimationFrame(f);
       });
       if (skipped) return;
-      // Tới nơi: 23:38 đêm 6/8
-      page(day0);
+      // Tới nơi: đồng hồ khớp 23:38, chuông "đinh… đong"
+      box.classList.remove('rew');
+      vx.style.opacity = '0';
       hands(hEnd, mEnd, 0);
-      box.classList.remove('rew'); clk.classList.remove('rew');
-      clk.querySelector('.tr-clock-t').textContent = '23:38 · 06.08.2026';
+      timeText(day0, 23, 38);
+      $$('.in-time b').textContent = '23:38 · đêm';
+      $$('.in-time span').textContent = '';
+      $$('.in-time').classList.add('on', 'lit');
       clk.classList.add('lit');
-      fx.thunk(); fx.chime();
+      fx.bell();
+      setTimeout(() => { if (!skipped) fx.bell(true); }, 700);
       $$('.in-flash').classList.add('go');
+      await wait(2200);
+      await type(cap, 'Bây giờ là ngày bao nhiêu vậy?');
+      await wait(1400);
+      cap.textContent = '';
+      // Tờ lịch: hơi choáng (chao nghiêng, chập chờn rồi đứng lại), tờ 6 · Tháng 8 bị hút về dán lên trên cùng
+      show('cal', 900);
+      cal.classList.add('dizzy');
+      await wait(900);
+      suck(day0); fill($$('.cal-page'), day0); fx.page(); fx.thunk();
+      await wait(1600);
+      cal.classList.remove('dizzy');
+      await type(cap, 'Đêm 6 tháng 8.', 80);
       await wait(1800);
-      await type(cap, 'Đêm ấy.', 110);
-      await wait(1900);
       finish();
     } catch (e) { /* bỏ qua giữa chừng */ }
   }

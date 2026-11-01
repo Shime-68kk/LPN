@@ -58,10 +58,26 @@ body.night .shop-icon { color: #9FE0B2; }
 }
 .case-card[hidden] { display: none; }
 .case-card img { flex: none; width: 56px; height: 56px; }
-.tape-card { margin-top: 10px; }
-.tape-ic { flex: none; width: 56px; height: 56px; fill: #3A2A1E; stroke: none; }
-.tape-ic .lbl { fill: #F3E3C3; }
-.tape-ic circle { fill: #120B06; stroke: #E9DCC4; stroke-width: 3; }
+/* Banner Băng số 1: tấm phim tối, cuộn băng hai trục quay, chấm REC đỏ nhấp nháy, hạt nhiễu */
+.tape-banner { position: relative; display: flex; align-items: center; gap: 14px; margin: -8px 0 22px; padding: 12px 14px 12px 12px; overflow: hidden; border-radius: 20px; text-decoration: none; color: #ECE6DA; background: radial-gradient(120% 140% at 0% 0%, rgba(181, 70, 47, .22), rgba(0, 0, 0, 0) 55%), linear-gradient(135deg, #17121C, #0A080D); box-shadow: inset 0 0 0 1px rgba(236, 230, 218, .1), 0 10px 26px rgba(10, 6, 14, .35); }
+.tape-banner[hidden] { display: none; }
+.tape-banner::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(255, 255, 255, .025) 0 1px, rgba(0, 0, 0, 0) 1px 3px); }
+.tape-banner:active { transform: scale(.985); }
+.tb-art { flex: none; display: grid; place-items: center; width: 70px; height: 52px; border-radius: 10px; background: rgba(236, 230, 218, .05); box-shadow: inset 0 0 0 1px rgba(236, 230, 218, .08); }
+.cas { width: 60px; height: 40px; }
+.cas-b { fill: #241C17; stroke: rgba(236, 230, 218, .25); stroke-width: 1; }
+.cas-l { fill: #ECE3CF; } .cas text { font: 700 6.4px 'Be Vietnam Pro', sans-serif; letter-spacing: .1em; fill: #8C3B3B; text-anchor: middle; }
+.cas-w { fill: #0B0806; }
+.reel circle { fill: #3A302A; stroke: #ECE3CF; stroke-width: 1.4; } .reel path { stroke: #ECE3CF; stroke-width: 1.1; }
+.reel { transform-box: fill-box; transform-origin: center; animation: reel 2.4s linear infinite; }
+@keyframes reel { to { transform: rotate(-360deg); } }
+.tb-meta { position: relative; z-index: 1; flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.tb-meta small { display: flex; align-items: center; gap: 7px; font: 600 10.5px 'Be Vietnam Pro', sans-serif; letter-spacing: .18em; text-transform: uppercase; color: rgba(236, 230, 218, .6); }
+.rec { width: 7px; height: 7px; border-radius: 50%; background: #E0453A; box-shadow: 0 0 8px rgba(224, 69, 58, .9); animation: rec 1.2s steps(1) infinite; }
+@keyframes rec { 50% { opacity: .2; } }
+.tb-meta b { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; color: #F4EEE2; }
+.tb-meta span { font-size: 12.5px; color: rgba(236, 230, 218, .62); font-variant-numeric: tabular-nums; }
+.tape-banner .case-go { position: relative; z-index: 1; color: rgba(236, 230, 218, .8); }
 .case-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .case-meta small { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #B0412E; }
 .case-meta b { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; }
