@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="hoi-uc.css?v=47" />
+  <link rel="stylesheet" href="hoi-uc.css?v=60" />
 </head>
 <body>
   <!-- Bộ lọc làm nét ký hiệu hơi run như mực vẽ tay -->
@@ -31,8 +31,10 @@
 
   <!-- Điện thoại đang dọc: nhờ xoay ngang -->
   <section class="rotate" id="rotate" hidden>
-    <div class="phone-ic" aria-hidden="true"><i></i></div>
-    <p>Xoay ngang điện thoại để có trải nghiệm tốt hơn</p>
+    <p class="tips-k">Băng số 1 · Hồi ức</p>
+    <div class="tips-card">
+      <div class="tip"><span class="tip-ic"><span class="phone-ic" aria-hidden="true"><i></i></span></span><span class="tip-tx"><b>Xoay ngang điện thoại</b><small>để có trải nghiệm tốt hơn</small></span></div>
+    </div>
     <button class="link" id="btn-portrait" type="button">Xem dọc cũng được</button>
   </section>
 
@@ -75,7 +77,7 @@
           <svg viewBox="0 0 50 90" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><g class="stems"><path d="M25 55V20M25 55L14 26M25 55l11-29M25 55L8 36M25 55l17-19M25 55L19 16M25 55l6-39" /></g><g class="lotus"><circle cx="25" cy="18" r="5" /><circle cx="14" cy="24" r="5" /><circle cx="36" cy="24" r="5" /><circle cx="8" cy="34" r="4.5" /><circle cx="42" cy="34" r="4.5" /><circle cx="19" cy="13" r="4" /><circle cx="31" cy="13" r="4" /></g><path class="vase" d="M14 52h22l-3 8c6 6 6 24-4 28H21c-10-4-10-22-4-28z" /></svg>
         </button>
         <button class="obj o-phone" data-obj="phone" type="button" aria-label="Điện thoại">
-          <svg viewBox="0 0 30 16" aria-hidden="true"><rect class="dk" x="1" y="1" width="28" height="14" rx="3" /><rect class="screen-ph" x="4" y="3" width="22" height="10" rx="1" /></svg>
+          <svg viewBox="0 0 40 22" aria-hidden="true"><rect class="ph-body" x="1" y="1" width="38" height="20" rx="4" /><rect class="screen-ph" x="5" y="3.2" width="28" height="15.6" rx="1.6" /><path class="ph-lock" d="M17.4 10.6V9a1.9 1.9 0 0 1 3.8 0v1.6" /><rect class="ph-lock-b" x="16.4" y="10.4" width="5.8" height="4.6" rx="1" /><circle class="ph-led" cx="36" cy="5" r="1.1" /></svg>
         </button>
         <button class="obj o-vcr" data-obj="vcr" type="button" aria-label="Đầu băng">
           <span class="vcr-slot"></span><span class="vcr-label" id="vcr-label"></span><i class="vcr-led" id="vcr-led"></i>
@@ -121,6 +123,8 @@
         </button>
         <div class="rug r2rug" aria-hidden="true"></div>
         <div class="wbeam" aria-hidden="true"></div><div class="lamp-cone" aria-hidden="true"></div>
+        <!-- Phòng chìm trong tối, chỉ còn đèn bàn học; robot chạy thì mắt nó toả sáng thành nguồn sáng chính -->
+        <div class="v2-shade" aria-hidden="true"></div><div class="robot-light" aria-hidden="true"></div>
         <div class="motes m2" aria-hidden="true"><i style="left:10%;top:50%;--d:11.9s;--k:-6.3s;--dx:5.6px"></i><i style="left:16%;top:58%;--d:11.1s;--k:-3.2s;--dx:15.2px"></i><i style="left:22%;top:66%;--d:12.7s;--k:-0.9s;--dx:17px"></i><i style="left:14%;top:70%;--d:12.8s;--k:-8s;--dx:-16.4px"></i><i style="left:26%;top:60%;--d:12.4s;--k:-1.5s;--dx:16.9px"></i><i style="left:60%;top:34%;--d:11s;--k:-0.7s;--dx:-12px"></i><i style="left:66%;top:40%;--d:10.8s;--k:-6.8s;--dx:8.9px"></i><i style="left:72%;top:30%;--d:12.6s;--k:-2.6s;--dx:-17.9px"></i></div>
         <div class="desk" aria-hidden="true"></div>
         <div class="mug" aria-hidden="true"><i class="steam s1"></i><i class="steam s2"></i></div>
@@ -173,11 +177,17 @@
         </div>
         <button class="door d-left" data-go="r2" type="button" aria-label="Vào nhà"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg><span>Vào nhà</span></button>
       </div>
+      <!-- Trước khi tìm ra cuộn băng thật: cả căn nhà ngả lạnh, tối dần về góc như ống kính phim, mắt tự tìm vào giữa -->
+      <div class="mood-shade" aria-hidden="true"></div>
     </div>
     <p class="hint" id="hint"></p>
     <!-- Túi đồ: chạm để mở, chọn một món rồi chạm vào chỗ cần dùng -->
     <button class="bag-btn" id="bag-btn" type="button" aria-label="Túi đồ" hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2" /></svg><span>Túi đồ</span><b id="bag-count"></b>
+    </button>
+    <!-- Nhìn quanh: hiện tên mọi đồ vật trong phòng vài giây (khỏi nhầm giá sách, điện thoại, đầu băng…) -->
+    <button class="peek-btn" id="peek-btn" type="button" aria-label="Nhìn quanh: hiện tên đồ vật" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg><span>Nhìn quanh</span>
     </button>
     <div class="bag" id="bag" hidden><div class="bag-items" id="bag-items"></div></div>
   </section>
@@ -205,8 +215,8 @@
     <button class="link end-again" id="end-again" type="button">Xem lại</button>
   </section>
 
-  <script src="bang1.js?v=3"></script>
-  <script src="hoi-uc.js?v=36"></script>
-  <script src="hoi-uc-room.js?v=37"></script>
+  <script src="bang1.js?v=4"></script>
+  <script src="hoi-uc.js?v=44"></script>
+  <script src="hoi-uc-room.js?v=50"></script>
 </body>
 </html>

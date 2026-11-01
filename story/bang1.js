@@ -26,6 +26,7 @@ window.BANG1 = {
   // Thư mục ảnh. Ảnh mẫu hiện tại dùng 18 ảnh có sẵn trong assets/img/.
   dir: '../assets/img/',
   song: {
+    // ĐÃ DUYỆT 31/10/2026 (anh Quang): nhạc, các mốc và độ to dưới đây giữ nguyên, đừng đổi. Ảnh, chú thích thì cứ thêm.
     // Bản phim của "Giữ Mãi Yêu Thương Gần Kề", cắt từ bài gốc bằng tools/trailer-music/bang1.mjs (bỏ điệp khúc 1 và
     // đoạn rap, ghép liền "…ta nắm tay là không sai" với "Vì anh em sẽ chiến thắng được thời gian…"). Dài 2:55.
     src: '../assets/sound/bang1.mp3',

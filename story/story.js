@@ -659,6 +659,7 @@
         const st = status(wi);
         if (st.state === 'current' || st.state === 'done') play(wi);
         else if (st.state === 'buy') openBuy(wi);
+        else if (st.wait) openWait(wi); // chưa tới giờ mở: hiện đồng hồ đếm ngược
       }
     })
     .catch(() => { $('map-sub').textContent = 'Chưa tải được cốt truyện, em thử lại sau nha.'; });

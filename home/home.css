@@ -205,7 +205,12 @@ body[data-weather="mua"] .l-heart { opacity: 0; }
 .intro { display: flex; flex-direction: column; gap: 6px; }
 .intro-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .date { font-size: 13px; font-weight: 500; color: var(--muted); }
-.days { display: flex; align-items: center; gap: 6px; min-height: 32px; font-size: 13px; font-weight: 600; color: var(--accent-ink); text-decoration: none; }
+.days-wrap { position: relative; display: flex; align-items: center; }
+.tape-hide { position: absolute; right: 0; top: 50%; display: flex; align-items: center; gap: 6px; padding: 5px 10px 5px 6px; border-radius: 999px; transform: translateY(-50%); background: #1B1520; color: #F6EEDF; font-size: 12px; font-weight: 700; text-decoration: none; white-space: nowrap; opacity: 0; pointer-events: none; box-shadow: 0 0 0 1px rgba(233, 199, 123, .45), 0 6px 16px rgba(0, 0, 0, .25); }
+.tape-hide svg { width: 26px; height: 16px; }
+.tape-hide.on { pointer-events: auto; animation: tape-peek 2.4s ease-in-out infinite; }
+@keyframes tape-peek { 50% { box-shadow: 0 0 0 1px rgba(233, 199, 123, .8), 0 0 16px rgba(233, 199, 123, .45); } }
+.days { position: relative; z-index: 1; display: flex; align-items: center; gap: 6px; min-height: 32px; font-size: 13px; font-weight: 600; color: var(--accent-ink); text-decoration: none; }
 .days svg { width: 14px; height: 14px; fill: #F0284A; stroke: none; animation: beat 1.8s ease-in-out infinite; }
 body.night .days svg { fill: #FF6B81; }
 @keyframes beat { 0%, 60%, 100% { transform: scale(1); } 15% { transform: scale(1.22); } 30% { transform: scale(1.05); } 45% { transform: scale(1.16); } }

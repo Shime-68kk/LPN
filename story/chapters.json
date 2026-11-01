@@ -678,6 +678,29 @@
         { "who": "ke", "text": "Chỉ là xa nhau một chút thôi. Một chút thôi mà." },
         { "who": "ke", "text": "Vậy mà sao lòng cậu, trống đến thế." }
       ]
+    },
+    {
+      "id": "c19",
+      "title": "Cuộn băng số 1",
+      "cost": 0,
+      "anyOrder": true,
+      "openAt": "2026-11-01T20:00:00+07:00",
+      "early": { "quang": "2026-11-01T00:00:00+07:00" },
+      "scene": "dem",
+      "cast": ["quang", "thuy"],
+      "announce": { "kicker": "Cốt truyện · Tối nay 20:00", "title": "Tối nay có chương mới!", "text": "Chương 17 · Cuộn băng số 1. Có một bí mật vừa được giấu lại, kỹ hơn lần trước. Hẹn em lúc 8 giờ tối nha.", "ok": "Xem đếm ngược", "later": "Để sau" },
+      "lines": [
+        { "who": "none", "text": "01/11 · Tối" },
+        { "who": "ke", "text": "Có những thứ không chụp lại được, cũng không gửi qua tin nhắn được." },
+        { "who": "ke", "text": "Nên cậu làm một cuộn băng." },
+        { "who": "ke", "text": "Một căn nhà cũ. Một chiếc TV đen trắng. Ba căn phòng, năm cuộn băng nằm rải rác. Chỉ một cuộn là thật." },
+        { "who": "ke", "text": "Cậu giấu căn nhà ấy trong app. Em tìm ra mất rồi." },
+        { "who": "ke", "text": "Thế nên cậu giấu lại. Lần này, kỹ hơn một chút." },
+        { "who": "ke", "text": "Rồi để lại một lời dặn, viết vội trên mẩu giấy:" },
+        { "who": "none", "text": "“Cuộn băng nằm phía sau con số anh đếm mỗi ngày, từ đêm 23 giờ 38 phút ấy.”" },
+        { "who": "none", "text": "“Đừng chạm vào con số. Hãy đẩy nó sang một bên.”" },
+        { "who": "ke", "text": "Đeo tai nghe vào. Tắt bớt đèn. Rồi đi tìm nhé." }
+      ]
     }
   ]
 }

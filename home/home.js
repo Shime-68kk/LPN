@@ -573,7 +573,7 @@
       const seen = store.get('lpn:news') || {};
       const ch = list.find((c) => c.announce && !done[c.id] && !seen[c.id]);
       const cs = list.find((c) => c.case && c.case.announce && done[c.id] && !flags[c.case.id + 'Done'] && !seen[c.case.announce.key]);
-      if (ch) this.item = { key: ch.id, a: ch.announce, href: '../story/?play=' + encodeURIComponent(ch.id) };
+      if (ch) this.item = { key: ch.id, a: ch.announce, href: '../story/?play=' + encodeURIComponent(ch.id) }; // chưa tới giờ mở: trang cốt truyện hiện đếm ngược
       else if (cs) this.item = { key: cs.case.announce.key, a: cs.case.announce, href: '../story/' + cs.case.page };
       this.show();
     },
@@ -758,8 +758,38 @@
     : guessByClock();
   Weather.apply();
   document.querySelector('.wx-partner-tag').textContent = IS_QUANG ? 'Chỗ em' : 'Chỗ anh';
-  // Băng số 1 (hồi ức trên TV): tạm ẩn chữ "hồi ức" ở mọi máy (30/10/2026), kể cả máy anh Quang.
+  // Băng số 1 (hồi ức trên TV): chữ "hồi ức" cũ ở cuối trang ẩn hẳn (Thủy đã biết chỗ đó).
+  // Chỗ giấu mới (Chương 17 dặn): phía sau viên "Ngày thứ … bên nhau". Chạm vào viên thì vẫn mở trang widget như cũ;
+  // đẩy viên sang trái thì nó trượt ra, lộ cuộn băng nhỏ "Hồi ức" nằm phía sau. Mở từ 20:00 ngày 1/11/2026
+  // (trên máy chạy thử ở nhà thì lúc nào cũng mở). Sau này muốn xem lại, cứ đẩy chỗ đó là thấy.
   $('memory-link').hidden = true;
+  (() => {
+    const pill = $('days'), tape = $('tape-hide');
+    const open = Date.now() >= Date.parse('2026-11-01T20:00:00+07:00') || !location.hostname.endsWith('workers.dev');
+    if (!pill || !tape || !open) return;
+    const W = () => tape.offsetWidth + 10;
+    let x0 = null, dx = 0, base = 0, moved = false, shown = false;
+    const set = (x, anim) => { pill.style.transition = anim ? 'transform .35s cubic-bezier(.3, 1.3, .5, 1)' : 'none'; pill.style.transform = x ? 'translateX(' + -x + 'px)' : ''; tape.style.opacity = Math.min(1, x / W()); tape.classList.toggle('on', x >= W() - 1); $('today').style.opacity = 1 - Math.min(1, x / W()); }; // ngày tháng mờ đi để viên trượt qua không đè chữ
+    const reveal = (on) => { shown = on; set(on ? W() : 0, true); if (on) store.set('lpn:tapeFound', 1); };
+    pill.addEventListener('pointerdown', (e) => { x0 = e.clientX; base = shown ? W() : 0; dx = 0; moved = false; });
+    addEventListener('pointermove', (e) => {
+      if (x0 === null) return;
+      dx = x0 - e.clientX;
+      if (!moved && Math.abs(dx) < 6) return;
+      moved = true;
+      set(Math.max(0, Math.min(W() + 16, base + dx)), false);
+    });
+    addEventListener('pointerup', () => { if (x0 === null) return; x0 = null; if (moved) reveal(base + dx > W() / 2); });
+    addEventListener('pointercancel', () => { x0 = null; if (moved) reveal(shown); });
+    // Vừa đẩy thì không tính là chạm (không mở trang widget); đang mở mà chạm vào viên thì đóng lại
+    pill.addEventListener('click', (e) => { if (moved || shown) { e.preventDefault(); if (!moved) reveal(false); moved = false; } });
+    pill.style.touchAction = 'pan-y';
+  })();
+  // Thẻ trailer: tới giờ mở thì đổi lời, gợi ý đọc Chương 17 để tìm cuộn băng thật
+  if (Date.now() >= Date.parse('2026-11-01T20:00:00+07:00')) {
+    const tc = document.querySelector('.trailer-card');
+    if (tc) { tc.querySelector('.eyebrow').textContent = 'Băng số 1 · Đã mở'; tc.querySelector('.tr-sub').textContent = 'Cuộn băng thật đang trốn đâu đó. Đọc Chương 17 nha.'; }
+  }
   fetch('../game/beatmaps/index.json')
     .then((r) => r.json())
     .then((d) => {

@@ -42,7 +42,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="home.css?v=32" />
+  <link rel="stylesheet" href="home.css?v=33" />
 </head>
 <body data-weather="nang">
   <script>document.body.dataset.weather = LPN_SKY; document.body.classList.toggle('night', LPN_NIGHT); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
@@ -118,10 +118,14 @@
     <div class="intro">
       <div class="intro-row">
         <span class="date" id="today"></span>
+        <span class="days-wrap">
+        <!-- Chỗ giấu cuộn băng "Hồi ức" (Chương 17): đẩy viên "Ngày thứ …" sang trái là lộ ra -->
+        <a class="tape-hide" id="tape-hide" href="../story/hoi-uc" aria-label="Hồi ức · Băng số 1"><svg viewBox="0 0 40 24" aria-hidden="true"><rect x="1" y="1" width="38" height="22" rx="3" fill="#1D1A1A" /><rect x="5" y="4" width="30" height="6" rx="1" fill="#F3E3C3" /><circle cx="13" cy="16" r="3.5" fill="#4A4440" stroke="#E9DCC4" stroke-width="1.2" /><circle cx="27" cy="16" r="3.5" fill="#4A4440" stroke="#E9DCC4" stroke-width="1.2" /></svg><span>Hồi ức</span></a>
         <a class="days" id="days" href="widget.html" title="Đưa số ngày lên màn hình khoá iPhone">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg>
           <span id="days-text"></span>
         </a>
+        </span>
       </div>
       <h1 id="greet">Chào em</h1>
       <p class="lede" id="lede"></p>
@@ -354,7 +358,7 @@
   <script src="sync.js?v=8"></script>
   <script src="push.js?v=1"></script>
   <script src="diary.js?v=8"></script>
-  <script src="home.js?v=28"></script>
+  <script src="home.js?v=29"></script>
   <script src="../shop/skins.js?v=24"></script>
   <script>
     // Tiệm Sâu đang có sự kiện thì gắn nhãn lên ô; máy này chưa xem thì nhãn nhấp nháy.

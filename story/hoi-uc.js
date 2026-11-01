@@ -142,8 +142,9 @@
   }
 
   // ===== Ai được xem =====
-  // Tạm ẩn (30/10/2026): Thủy đã biết, nên trên trang thật máy nào cũng chỉ thấy cuộn băng khoá, kể cả máy anh Quang.
-  // Anh Quang xem thử bằng link ?mo=q0608: chỉ mở trong tab đó, đóng tab là khoá lại, máy không nhớ.
+  // Mở cho mọi máy từ 20:00 ngày 1/11/2026 (cùng lúc Chương 17 · Cuộn băng số 1). Trước giờ đó trên trang thật máy nào
+  // cũng chỉ thấy cuộn băng khoá; anh Quang xem thử bằng link ?mo=q0608 (chỉ mở trong tab đó, đóng tab là khoá lại).
+  const OPEN_AT = Date.parse('2026-11-01T20:00:00+07:00');
   // Server ở nhà (không phải workers.dev) thì ai cũng xem được để thử.
   try {
     localStorage.removeItem('lpn:tapePreview'); // khoá cũ (?xem=anh) từng lưu hẳn trên máy
@@ -151,7 +152,7 @@
   } catch (e) { /* bỏ qua */ }
   // Trailer (?trailer=1): đoạn phim tự chạy, ai cũng xem được, không chơi được và không lộ đáp án.
   const TRAILER = /[?&]trailer=1\b/.test(location.search);
-  const LOCKED = !TRAILER && location.hostname.endsWith('workers.dev') && (() => {
+  const LOCKED = !TRAILER && location.hostname.endsWith('workers.dev') && Date.now() < OPEN_AT && (() => {
     try { return sessionStorage.getItem('lpn:tapePreview') !== '1'; } catch (e) { return true; }
   })();
 
@@ -260,6 +261,7 @@
     o.connect(g).connect(out);
     o.start(t); o.stop(t + dur);
   }
+  let tint = 'dark'; // 'dark' trước khi đọc lá thư (rợn, bí ẩn), 'bright' sau đó (trong trẻo); đặt theo tâm trạng căn nhà
   const sfx = {
     click() { if (!ac) return; const t = ac.currentTime; noise(t, 0.04, 'bandpass', 2600, 1, 0.9); noise(t + 0.13, 0.05, 'bandpass', 1700, 1, 0.7); },
     on() { if (!ac) return; const t = ac.currentTime; tone(t, 0.6, 70, 40, 0.5); tone(t, 1.6, 7600, 7400, 0.015); noise(t + 0.05, 1.1, 'highpass', 1500, 0.4, 0.4); },
@@ -331,7 +333,20 @@
     // Gối, chăn: sột soạt vải dày, chậm hơn túi
     cloth() { if (!ac) return; const t = ac.currentTime; for (let i = 0; i < 5; i++) noise(t + i * 0.07 + Math.random() * 0.03, 0.12, 'bandpass', 1200 + Math.random() * 1200, 0.6, 0.22); },
     // Tìm thấy đồ: hai nốt chuông nhỏ trong trẻo
-    find() { if (!ac) return; const t = ac.currentTime; tone(t, 0.5, 1318.5, 1318.5, 0.12); tone(t + 0.11, 0.7, 1975.5, 1975.5, 0.1); },
+    // Tìm thấy đồ, giải xong câu đố. Hai thái cực: nhà còn vắng (chưa đọc thư) thì là một nhịp trầm và hai nốt lệch nhau
+    // gợn gợn, ngân trong phòng trống, kèm hơi gió; nhà đã ấm (đọc thư rồi) thì chuông trong trẻo.
+    find() {
+      if (!ac) return;
+      const t = ac.currentTime;
+      if (tint === 'dark') {
+        noise(t, 0.5, 'lowpass', 160, 0.7, 0.35); tone(t, 0.9, 98, 70, 0.22);
+        tone(t + 0.05, 2.2, 293.66, 293.66, 0.05, 'triangle'); tone(t + 0.05, 2.2, 311.13, 311.13, 0.045, 'triangle');
+        tone(t + 0.25, 2.6, 1174.7, 1140, 0.012);
+        sweep(t + 0.1, 1.6, 'bandpass', 500, 1500, 0.06, true);
+        return;
+      }
+      tone(t, 0.6, 1318.5, 1318.5, 0.1); tone(t + 0.09, 0.8, 1975.5, 1975.5, 0.08); tone(t + 0.18, 1.1, 2637, 2637, 0.035);
+    },
     // Lật ảnh, giở giấy: tiếng giấy phẩy
     paper() { if (!ac) return; const t = ac.currentTime; sweep(t, 0.16, 'highpass', 1800, 5200, 0.3); noise(t + 0.1, 0.04, 'bandpass', 3000, 0.8, 0.2); },
     // Con lăn khoá vali: ba nấc kim loại nhỏ
@@ -363,7 +378,13 @@
       tone(t, 0.13, hi, hi, 0.11);
     },
     // Mở khoá máy / điện thoại: hai nốt điện tử đi lên
-    unlock() { if (!ac) return; const t = ac.currentTime; tone(t, 0.09, 880, 880, 0.07, 'square'); tone(t + 0.1, 0.16, 1320, 1320, 0.07, 'square'); },
+    // Mở khoá: nhà vắng thì tiếng then kim loại nặng, ngân lạnh; nhà ấm thì hai tiếng bíp nhỏ
+    unlock() {
+      if (!ac) return;
+      const t = ac.currentTime;
+      if (tint === 'dark') { noise(t, 0.03, 'highpass', 2500, 0.7, 0.8); tone(t, 0.18, 420, 160, 0.18, 'triangle'); noise(t + 0.12, 0.3, 'lowpass', 300, 0.7, 0.4); tone(t + 0.14, 1.4, 1046.5, 1010, 0.015); return; }
+      tone(t, 0.09, 880, 880, 0.07, 'square'); tone(t + 0.1, 0.16, 1320, 1320, 0.07, 'square');
+    },
     // Chip cắm vào ổ: "cạch" nhỏ và bíp; rút ra thì bíp đi xuống
     chip() { if (!ac) return; const t = ac.currentTime; noise(t, 0.015, 'highpass', 3500, 0.7, 0.7); tone(t + 0.03, 0.07, 2000, 2000, 0.06, 'square'); },
     chipOut() { if (!ac) return; const t = ac.currentTime; noise(t, 0.015, 'highpass', 3000, 0.7, 0.5); tone(t, 0.08, 1500, 900, 0.05, 'square'); },
@@ -385,6 +406,9 @@
 
     // ===== Trailer: đồng hồ điểm giờ, tua ngược =====
     // Kim giây (khi không có nhạc nền, nhạc tự có tiếng tích‑tắc)
+    // Mở màn hồi ức: tiếng gõ cửa gỗ (cốc), tiếng lật một tờ lịch bóc
+    knock() { if (!ac) return; const t = ac.currentTime; noise(t, 0.09, 'lowpass', 900, 1.2, 0.9); tone(t, 0.12, 190, 110, 0.35, 'triangle'); noise(t + 0.004, 0.03, 'bandpass', 2200, 2, 0.25); },
+    flick() { if (!ac) return; const t = ac.currentTime; noise(t, 0.06, 'highpass', 2600, 0.8, 0.22); noise(t + 0.03, 0.05, 'bandpass', 1400, 1, 0.12); },
     tock() { if (!ac) return; const t = ac.currentTime; noise(t, 0.02, 'bandpass', 3200, 4, 0.5); tone(t, 0.025, 1800, 1700, 0.06); },
     // Chuông điểm giờ: một tiếng ngân như đồng hồ quả lắc
     chime() { if (!ac) return; const t = ac.currentTime; for (const [k, g, d] of [[1, 0.2, 2.6], [2, 0.08, 1.6], [2.76, 0.05, 1.1], [5.4, 0.03, 0.6]]) tone(t, d, 880 * k, 880 * k * 0.998, g); },
@@ -472,8 +496,10 @@
   // Mọi tiếng tự tạo, lên lịch trước vài trăm mili giây theo đồng hồ âm thanh nên không lệch nhịp khi máy bận.
   const amb = (() => {
     const MIX = {
-      lonely: { verb: 0.34, tone: 0.05, clock: { r1: 0.07, r2: 0.016, r3: 0 }, fan: { r1: 0.025, r2: 0.05, r3: 0 }, wind: { r1: 0.012, r2: 0.022, r3: 0.08 }, crick: { r1: 0.012, r2: 0.016, r3: 0.11 }, pad: 0, song: { r1: 0, r2: 0, r3: 0.045 } },
-      warm: { verb: 0.1, tone: 0.03, clock: { r1: 0.035, r2: 0.008, r3: 0 }, fan: { r1: 0.018, r2: 0.03, r3: 0 }, wind: { r1: 0, r2: 0.008, r3: 0.04 }, crick: { r1: 0.008, r2: 0.01, r3: 0.07 }, pad: 0.022, song: { r1: 0.06, r2: 0.05, r3: 0.16 } },
+      lonely: { verb: 0.34, tone: 0.05, clock: { r1: 0.07, r2: 0.016, r3: 0 }, fan: { r1: 0.025, r2: 0.05, r3: 0 }, wind: { r1: 0.012, r2: 0.022, r3: 0.08 }, crick: { r1: 0.012, r2: 0.016, r3: 0.11 }, pad: 0, song: { r1: 0, r2: 0, r3: 0.035 }, drone: { r1: 0.05, r2: 0.045, r3: 0.03 } },
+      // Vừa nhặt cuộn băng thật (chưa mở thư): tiếng rợn dừng, ù trầm lắng xuống, căn nhà như nín thở chờ lá thư
+      hush: { verb: 0.22, tone: 0.05, clock: { r1: 0.07, r2: 0.016, r3: 0 }, fan: { r1: 0.025, r2: 0.05, r3: 0 }, wind: { r1: 0.012, r2: 0.022, r3: 0.08 }, crick: { r1: 0.012, r2: 0.016, r3: 0.11 }, pad: 0, song: { r1: 0, r2: 0, r3: 0.035 }, drone: { r1: 0.018, r2: 0.016, r3: 0.012 } },
+      warm: { verb: 0.1, tone: 0.03, clock: { r1: 0.035, r2: 0.008, r3: 0 }, fan: { r1: 0.018, r2: 0.03, r3: 0 }, wind: { r1: 0, r2: 0.008, r3: 0.04 }, crick: { r1: 0.008, r2: 0.01, r3: 0.07 }, pad: 0.022, song: { r1: 0.045, r2: 0.035, r3: 0.12 }, drone: { r1: 0, r2: 0, r3: 0 } },
     };
     let on = false, bus = null, room = 'r1', mood = 'lonely', radio = false, duck = 1, lift = false, lifted = false, timer = 0, L = null;
     let nextTick = 0, tickN = 0, chirp = [0, 0, 0];
@@ -510,6 +536,11 @@
       L.crick = gainNode(0); L.crickF = ac.createBiquadFilter(); L.crickF.type = 'lowpass'; L.crickF.frequency.value = 9000; L.crickF.connect(L.crick); L.crick.connect(bus);
       L.clock = gainNode(0); L.clock.connect(bus);
       L.ev = gainNode(1); L.ev.connect(bus); // tiếng lẻ: giọt nước, cót két, tắc kè, rung cửa sổ, ổ cứng
+      // Ù trầm rợn người (chỉ lúc nhà vắng): La trầm lệch nhau 0,6 Hz rung chậm, thêm một nốt cách quãng ba cung,
+      // lọc trầm mở ra khép vào rất chậm như căn nhà đang thở
+      L.drone = gainNode(0); const dl = ac.createBiquadFilter(); dl.type = 'lowpass'; dl.frequency.value = 320; dl.connect(L.drone); L.drone.connect(bus);
+      for (const [fr, g] of [[55, 0.5], [55.6, 0.5], [82.4, 0.28], [116.5, 0.12]]) { const o = ac.createOscillator(); o.type = 'triangle'; o.frequency.value = fr; const og = gainNode(g); o.connect(og).connect(dl); o.start(); }
+      const dlfo = ac.createOscillator(); dlfo.frequency.value = 0.05; const dlg = gainNode(140); dlfo.connect(dlg).connect(dl.frequency); dlfo.start();
       // Nền nhạc ấm: hợp âm Đô trưởng bảy rất khẽ, phồng xẹp chậm
       L.pad = gainNode(0); const pf = ac.createBiquadFilter(); pf.type = 'lowpass'; pf.frequency.value = 900; const pAm = gainNode(0.8);
       for (const fr of [130.81, 196, 246.94, 329.63]) { const o = ac.createOscillator(); o.type = 'triangle'; o.frequency.value = fr; o.detune.value = rnd(-6, 6); const g = gainNode(0.22); o.connect(g).connect(pf); o.start(); }
@@ -517,15 +548,30 @@
       pf.connect(pAm).connect(L.pad); L.pad.connect(bus);
       // Bài hát trên radio: ngoài sân nghe qua loa radio (cắt trầm, cắt cao), trong nhà vọng qua tường (chỉ còn trầm)
       L.song = gainNode(0); L.songHp = ac.createBiquadFilter(); L.songHp.type = 'highpass'; L.songLp = ac.createBiquadFilter(); L.songLp.type = 'lowpass';
-      L.songHp.connect(L.songLp).connect(L.song); L.song.connect(bus);
+      L.songDip = gainNode(1); // hạ nhỏ một chút lúc radio quay lại đầu đoạn dạo, nghe như chỉnh sóng chứ không giật
+      L.songHp.connect(L.songLp).connect(L.songDip).connect(L.song); L.song.connect(bus);
     }
-    let el = null, elSrc = null, wantPlay = false;
+    let el = null, elSrc = null, wantPlay = false, startAt = null; // startAt: chỗ bắt đầu khi radio mới bật (null: ngẫu nhiên)
+    const RADIO_END = 32.6; // hết đoạn dạo không lời (ban nhạc ngắt ở 32.9, lời 1 vào ở 35.77)
     function song(play) {
       if (play && !el) {
         el = new Audio(SONG.src);
         el.loop = true; el.preload = 'auto';
         try { elSrc = ac.createMediaElementSource(el); elSrc.connect(L.songHp); } catch (e) { el = null; return; }
-        el.addEventListener('loadedmetadata', () => { try { el.currentTime = Math.random() * Math.max(0, el.duration - 30); } catch (e) { /* bỏ qua */ } }, { once: true });
+        // Radio chỉ phát đoạn dạo đầu không lời của bài (trước lời 1): không lộ lời bài hát của cuộn băng thật.
+        // Gần hết đoạn dạo thì nhỏ dần, quay lại đầu, to dần.
+        el.addEventListener('loadedmetadata', () => { try { el.currentTime = startAt !== null ? startAt : Math.random() * (RADIO_END - 8); } catch (e) { /* bỏ qua */ } }, { once: true });
+        let wrapping = false;
+        el.addEventListener('timeupdate', () => {
+          if (wrapping || el.currentTime < RADIO_END - 1.2) return;
+          wrapping = true;
+          L.songDip.gain.setTargetAtTime(0, ac.currentTime, 0.25);
+          setTimeout(() => {
+            try { el.currentTime = 0; } catch (e) { /* bỏ qua */ }
+            L.songDip.gain.setTargetAtTime(1, ac.currentTime + 0.1, 0.6);
+            wrapping = false;
+          }, 1000);
+        });
       }
       if (!el) return;
       wantPlay = play;
@@ -543,10 +589,11 @@
       L.crickF.frequency.setTargetAtTime(room === 'r3' ? 9000 : 2200, ac.currentTime, 0.3);
       set(L.clock, m.clock[room] * duck, sec);
       set(L.pad, m.pad * duck, sec);
+      set(L.drone, m.drone[room] * duck, mood === 'warm' ? 4 : sec);
       // Đọc lá thư sau tấm ảnh: radio ngoài sân vặn to, trong nhà nghe rõ cả lời (bớt nghẹt qua tường), tiếng nền lùi lại
-      const sv = (lift ? 0.24 : (room === 'r3' ? (radio || mood === 'warm' ? m.song.r3 : 0) : m.song[room])) * duck;
+      const sv = (lift ? 0.1 : (room === 'r3' ? (radio || mood === 'warm' ? m.song.r3 : 0) : m.song[room])) * duck;
       set(L.song, sv, lift ? 1.4 : sec * 2);
-      if (lift) for (const n of [L.tone, L.fan, L.wind, L.clock, L.pad]) set(n, 0, 1.5);
+      if (lift) for (const n of [L.tone, L.fan, L.wind, L.clock, L.pad, L.drone]) set(n, 0, 1.5);
       L.songHp.frequency.setTargetAtTime(room === 'r3' || lift ? 200 : 40, ac.currentTime, lift ? 1 : 0.3);
       L.songLp.frequency.setTargetAtTime(room === 'r3' ? 3600 : lift ? 2600 : 620, ac.currentTime, lift ? 1 : 0.3);
       song(sv > 0);
@@ -593,6 +640,30 @@
         g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(0.03 * duck, at + 0.12); g.gain.linearRampToValueAtTime(0.0001, at + 0.6);
         o.connect(fl).connect(g).connect(L.ev); o.start(at); o.stop(at + 0.65);
       }
+      if (mood === 'lonely') {
+        // Tiếng thì thào xa xa: gió lọc hẹp trôi lên, lệch hẳn về một bên tai
+        if ((at = due('whisper', 26, 55))) {
+          const s2 = ac.createBufferSource(), fl = ac.createBiquadFilter(), g = ac.createGain(), pn = ac.createStereoPanner ? ac.createStereoPanner() : null;
+          s2.buffer = noiseBuf(); fl.type = 'bandpass'; fl.Q.value = 5;
+          fl.frequency.setValueAtTime(rnd(600, 900), at); fl.frequency.linearRampToValueAtTime(rnd(1200, 1800), at + 2.6);
+          g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(0.045 * duck * (room === 'r3' ? 0.6 : 1), at + 1.3); g.gain.linearRampToValueAtTime(0.0001, at + 3);
+          let node = s2.connect(fl).connect(g);
+          if (pn) { pn.pan.value = Math.random() < 0.5 ? -0.8 : 0.8; node = node.connect(pn); }
+          node.connect(L.ev); s2.start(at, rnd(0, 2), 3.1);
+        }
+        // Một nốt cao mảnh như ai miết vành ly, chùng xuống rồi tắt
+        if ((at = due('glass', 40, 80))) {
+          const o = ac.createOscillator(), g = ac.createGain(), f = [1568, 1661.2, 1760][Math.floor(rnd(0, 3))];
+          o.frequency.setValueAtTime(f, at); o.frequency.linearRampToValueAtTime(f * 0.985, at + 4);
+          g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(0.012 * duck, at + 1.6); g.gain.linearRampToValueAtTime(0.0001, at + 4);
+          o.connect(g).connect(L.ev); o.start(at); o.stop(at + 4.1);
+        }
+        // Tiếng gõ trầm ở phòng bên cạnh: hai, ba tiếng rồi im
+        if ((at = due('knock', 50, 110)) && room !== 'r3') {
+          const n = 2 + (Math.random() < 0.4 ? 1 : 0);
+          for (let k = 0; k < n; k++) { hiss(at + k * 0.38, 0.12, 'lowpass', 160, 0.8, 0.07 * duck, L.ev); blip(at + k * 0.38, 0.14, 90, 60, 0.05 * duck, 'sine', L.ev); }
+        }
+      }
       // Ổ cứng máy tính lạch cạch rất khẽ
       if ((at = due('hdd', 4, 12)) && room === 'r2') for (let k = 0; k < 3; k++) hiss(at + k * 0.06, 0.008, 'highpass', 3000, 0.7, 0.025 * duck, L.ev);
     }
@@ -610,16 +681,18 @@
       set(r, md, rd) {
         const moodChanged = md && md !== mood;
         room = r || room; mood = md || mood; radio = !!rd;
+        tint = mood === 'lonely' ? 'dark' : 'bright';
         if (on) mix(moodChanged ? 6 : 1.2);
       },
       duck(k) { duck = k; if (on) mix(0.6); },
-      // Radio to lên (lúc đọc thư) rồi nhỏ lại. Lần đầu vặn to thì phát từ lời 1 "Cứ như đôi hạt nắng…", có tiếng rè lúc vặn.
+      // Radio to lên (lúc đọc thư) rồi nhỏ lại. Lần đầu vặn to thì phát từ tiếng piano đầu bài (đoạn dạo không lời), có tiếng rè lúc vặn.
       lift(up) {
         if (!on || lift === !!up) return;
         lift = !!up;
         if (lift) {
           sfx.glitch();
-          if (el && !lifted) { lifted = true; try { el.currentTime = SONG.parts[1].at - 0.4; } catch (e) { /* bỏ qua */ } }
+          // Lần đầu: từ tiếng piano đầu bài (radio chưa bật thì bật lên từ đầu; đang phát khẽ ngoài sân thì tua về đầu)
+          if (!lifted) { lifted = true; if (el) { try { el.currentTime = 0; } catch (e) { /* bỏ qua */ } } else startAt = 0; }
         }
         mix(lift ? 1.4 : 2.5);
       },
@@ -651,11 +724,29 @@
   addEventListener('pointerdown', wake, true);
   audio.addEventListener('pause', () => { if (filmOn && rollAnim) rollAnim.pause(); });
   audio.addEventListener('playing', () => { if (filmOn && rollAnim && rollAnim.playState === 'paused') rollAnim.play(); });
-  // Chờ tới giây t của bài hát: đồng hồ là chính bản nhạc (ảnh chuyển đúng phách); nhạc không phát được thì theo giờ máy.
-  const at = (t) => new Promise((res) => {
-    const f = () => { const cur = useWall ? SONG.from + (performance.now() - wallT0) / 1000 : audio.currentTime; if (cur >= t) res(); else requestAnimationFrame(f); };
-    f();
-  });
+  // ===== Đồng hồ của phim (nhạc và ảnh của cuộn băng thật đã duyệt 31/10/2026: chỉ làm cho khớp hơn, không đổi mốc) =====
+  // Là vị trí bản nhạc ĐANG NGHE, không phải vị trí trình duyệt đang đọc:
+  // - trừ độ trễ ra loa / tai nghe (AirPods, loa Bluetooth trễ 0,15–0,3 giây: không trừ thì ảnh chuyển trước phách);
+  // - nội suy giữa hai lần trình duyệt cập nhật currentTime (có máy chỉ cập nhật vài lần mỗi giây);
+  // - nhạc khựng lại để tải (mạng chậm) thì đồng hồ đứng, ảnh đứng chờ, chuyển động trên TV cũng dừng theo.
+  // Nhạc không phát được thì theo giờ máy.
+  let ctLast = -1, ctAt = 0;
+  function clock() {
+    if (useWall) return SONG.from + (performance.now() - wallT0) / 1000;
+    const ct = audio.currentTime, ms = performance.now();
+    if (ct !== ctLast) { ctLast = ct; ctAt = ms; }
+    const moving = !audio.paused && !stalled;
+    const est = moving ? ct + Math.min(0.25, (ms - ctAt) / 1000) * (audio.playbackRate || 1) : ct;
+    const lat = ac ? Math.min(0.5, (ac.outputLatency || 0) + (ac.baseLatency || 0)) : 0;
+    return est - lat;
+  }
+  const at = (t) => new Promise((res) => { const f = () => (clock() >= t ? res() : requestAnimationFrame(f)); f(); });
+  let stalled = false;
+  const stall = (on) => { stalled = on; const c = $('content'); if (c) c.classList.toggle('stall', on && filmOn); };
+  audio.addEventListener('waiting', () => stall(true));
+  audio.addEventListener('stalled', () => { if (audio.readyState < 3) stall(true); });
+  audio.addEventListener('playing', () => stall(false));
+  audio.addEventListener('canplay', () => { if (!audio.paused) stall(false); });
 
   // ===== Tiến sát vào màn hình TV (phóng to để màn hình gần kín màn) =====
   const tv = $('tv'), screen = $('screen');
@@ -800,7 +891,10 @@
     }, 250);
     if (B.video) await playVideo();
     else {
+      // Trong lúc màn hình còn nhiễu: chờ nhạc đủ để phát liền và ảnh tải xong (tối đa 3 giây), rồi mới bắt đầu
       if (audio.readyState < 1) await new Promise((res) => { audio.addEventListener('loadedmetadata', res, { once: true }); setTimeout(res, 4000); });
+      const enough = audio.readyState >= 3 ? null : new Promise((res) => { audio.addEventListener('canplay', res, { once: true }); });
+      await Promise.race([Promise.all([enough, ready]), sleep(3000)]);
       try { audio.currentTime = SONG.from; } catch (e) { /* bỏ qua */ }
       wallT0 = performance.now();
       useWall = false;
@@ -869,9 +963,23 @@
       { transform: 'translateY(' + (vh - d1) + 'px)', offset: (sec - tail) / sec, easing: 'cubic-bezier(0, 0, .58, 1)' },
       { transform: 'translateY(' + stopY + 'px)' },
     ], { duration: sec * 1000, fill: 'forwards' });
-    rollAnim = anim;
+    // Danh đề bám theo đồng hồ của nhạc từng khung hình (nhạc khựng thì danh đề đứng, nhạc hết đúng lúc dòng cuối dừng
+    // giữa màn). Không có nhạc thì tự cuộn theo giờ máy, dừng / chạy theo lúc ẩn hiện trang.
+    let driving = !B.video && SONG.credits && !useWall;
+    if (driving) {
+      anim.pause();
+      const a0 = clock();
+      const drive = () => {
+        if (!driving) return;
+        const t = (clock() - a0) * 1000;
+        if (t >= sec * 1000) { driving = false; anim.finish(); return; }
+        anim.currentTime = Math.max(0, t);
+        requestAnimationFrame(drive);
+      };
+      requestAnimationFrame(drive);
+    } else rollAnim = anim;
     const skip = $('skip');
-    skip.onclick = () => anim.finish();
+    skip.onclick = () => { driving = false; anim.finish(); };
     setTimeout(() => box.classList.add('skippable'), 4000);
     await anim.finished.catch(() => {});
     rollAnim = null;

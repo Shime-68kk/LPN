@@ -2,16 +2,19 @@
 // Năm cuộn băng, một cuộn thật. Cuộn nào cũng xem theo đúng ba bước: chọn trong túi đồ → chạm đầu băng → bấm
 // nút nguồn TV (cuộn đầu có hướng dẫn sáng từng bước, để tới cuộn thật thì đã quen tay).
 // Chuỗi câu đố: mọi con số đều tìm hoặc giải ra ngay trong game, không bắt nhớ mốc trong truyện.
+// Câu nào cũng có thể giải tắt (xoay đĩa mò, thử chip, đoán khoá): bước sau xong thì hướng dẫn bỏ qua bước trước, không ép quay lại.
 //   đèn → Băng 01 (ảnh vỡ) → ghép tranh 3×3 → ngăn kéo: Băng 02 (mật thư) + đĩa xoay chữ
-//   → "Từ điển tiếng em" trên giá sách: trang ghi A → D → xoay đĩa 3 nấc: NHIN DUOI GOI
+//   → giá sách: hai cuốn sổ gáy trơn anh tự viết; cuốn nhật ký (đã đổi tên "Từ điển tiếng em") có trang cuối "Anh Yêu Em":
+//     ba chữ anh chỉ dám viết → xoay đĩa xuôi chiều kim đồng hồ 3 nấc, bấm Giải mã: NHIN DUOI GOI
+//     (sai 3 lần đĩa kẹt 20 giây, hé thêm gợi ý)
 //   → dưới gối: Băng 03 + nửa mẩu giấy → lật 4 tấm polaroid trên bảng ghim (số + hình) → khoá hình vali theo số
 //   → chìa khoá + nửa giấy → cổng đình → ghép giấy "tám mươi, chín mươi… ở giữa" → dò sóng 85.0
 //   → xếp câu "Tàn rồi, thì mình lại hẹn nhau một cuộc vui khác." → đèn lồng → Băng 04 (trống, chỉ sang con robot)
 //   → máy tính phòng ngủ (mật khẩu máy anh Quang, chỉ lưu mã băm) → file sơ đồ chip → kéo 4 chip vào robot
 //   → robot đọc mã 4719 → điện thoại → sau khung ảnh: băng thật + lá thư (radio ngoài sân to lên) → đầu băng → nút nguồn.
 // Đồ tìm thấy không tự vào túi: chỗ có đồ sáng nhẹ, mở ra thấy đồ phát sáng, chạm từng món để cầm lên (bay vào túi).
-// Chìa khoá cổng cũng phải cầm từ túi rồi chạm vào ổ khoá cổng đình. Đồ dùng xong tự biến khỏi túi; "Sổ ghi chép" giữ lại manh mối, cái nào giải xong có dấu ✓.
-// Tiến độ lưu trên máy (lpn:bang1). Chơi lại từ đầu: thêm ?moi=1 vào địa chỉ. Xem thử: ?thu=vali, bang, maytinh, dinh, thu, bangthat.
+// Chìa khoá cổng cũng phải cầm từ túi rồi chạm vào ổ khoá cổng đình. Đồ dùng xong tự biến khỏi túi (băng giả: khi câu đố của nó giải xong); "Sổ ghi chép" giữ lại manh mối, cái nào giải xong có dấu ✓.
+// Tiến độ lưu trên máy (lpn:bang1). Chơi lại từ đầu: thêm ?moi=1 vào địa chỉ. Xem thử: ?thu=sach, vali, bang, maytinh, dinh, thu, bangthat.
 'use strict';
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -20,12 +23,13 @@
   if (!TV) return;
   const TRAILER = !!TV.trailer; // đoạn phim giới thiệu: không đọc / ghi tiến độ thật
   // Xem thử một đoạn không cần chơi tới: ?thu=vali (khoá vali), ?thu=bang (bảng ghim), ?thu=maytinh (máy tính đã đăng nhập),
-  // ?thu=dinh (trước cổng đình, đã có chìa), ?thu=thu (vừa mở khoá điện thoại: lấy băng thật và lá thư sau tấm ảnh),
+  // ?thu=sach (vừa xem Băng 02: tìm cuốn từ điển trên giá sách, xoay đĩa), ?thu=dinh (trước cổng đình, đã có chìa), ?thu=thu (vừa mở khoá điện thoại: lấy băng thật và lá thư sau tấm ảnh),
   // ?thu=bangthat (băng thật đã trong đầu băng: bấm nguồn 3 lần). Không lưu gì.
-  const TRY = (location.search.match(/[?&]thu=(vali|bang|maytinh|dinh|thu|bangthat)\b/) || [])[1];
+  const TRY = (location.search.match(/[?&]thu=(sach|vali|bang|maytinh|dinh|thu|bangthat)\b/) || [])[1];
   const DRY = TRAILER || !!TRY;
   const ALL_DONE = { jig: true, book: true, cipher: true, pillow: true, board: true, case: true, gate: true, radio: true, words: true, pc: true, dir: true, robot: true, phone: true };
   const TRY_STATE = {
+    sach: { room: 'r1', lamp: true, tut: true, items: { A: true, B: true, wheel: true }, seen: { A: true, B: true }, done: { jig: true } },
     maytinh: { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true, wheel: true, note1: true, note2: true, key: true }, seen: { A: true, B: true, C: true, D: true }, done: { jig: true, book: true, cipher: true, pillow: true, pc: true } },
     dinh: { room: 'r3', lamp: true, tut: true, items: { A: true, B: true, C: true, wheel: true, key: true, note1: true, note2: true }, seen: { A: true, B: true, C: true }, done: { jig: true, book: true, cipher: true, pillow: true, board: true, case: true } },
     thu: { room: 'r1', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true, wheel: true, note1: true, note2: true, key: true }, seen: { A: true, B: true, C: true, D: true }, done: ALL_DONE },
@@ -42,7 +46,7 @@
   // ===== Đồ vật trong túi =====
   const TAPES = {
     A: { label: 'Băng 01', ch: 'CH 01', date: '05.2026', lines: ['Mưa gõ trên mái tôn.', 'Có một bức ảnh vỡ trên tường.', 'Ghép lại đi.'] },
-    B: { label: 'Băng 02', ch: 'CH 02', date: '07.2026', lines: ['Mật thư:', 'QKLQ GXRL JRL', 'Số nấc xoay nằm trong cuốn từ điển không hiệu sách nào bán.'] },
+    B: { label: 'Băng 02', ch: 'CH 02', date: '07.2026', lines: ['Mật thư:', 'QKLQ GXRL JRL', 'Xoay xuôi chiều kim đồng hồ, như thời gian mình bên nhau cứ đi tới.', 'Số nấc xoay = số chữ anh chỉ dám viết, chưa dám nói thành lời.', 'Anh viết những chữ ấy ở trang cuối một cuốn sổ trên giá sách.'] },
     C: { label: 'Băng 03', ch: 'CH 03', date: '10.2026', lines: ['Bốn tấm ảnh trên tường phòng ngủ.', 'Lật mặt sau.', '…', 'Khoá vali đọc theo số.'] },
     D: { label: 'Băng số 1', ch: 'CH 06', date: '--.--.2026', lines: ['Băng số 1.', '…', 'Ơ. Băng trống.', 'Cuộn thật ở chỗ chiếc điện thoại chỉ.', 'Mật mã điện thoại? Hỏi con robot trong phòng ngủ.'] },
     E: { label: 'Băng số 1 ♥', real: true },
@@ -82,16 +86,17 @@
     const d = S.done, it = S.items;
     if (!S.lamp) return { room: 'r1', t: '[data-obj="lamp"]', hint: 'Tối quá… tìm cái đèn.' };
     if (!it.A) return { room: 'r1', t: '[data-obj="lamp"]', hint: 'Dưới chân đèn có một cuộn băng. Chạm để cầm lên.' };
+    if (S.inVcr && S.inVcr !== 'E' && S.seen[S.inVcr]) return { room: 'r1', t: '#power', hint: 'Bấm nút nguồn để xem lại ' + TAPES[S.inVcr].label + '.' };
     if (!S.seen.A) return tapeStep('A', 'Mở túi đồ, chọn Băng 01.');
     if (!d.jig) return { room: 'r1', t: '[data-obj="frame"]', hint: 'Ghép lại bức ảnh vỡ.' };
     if (!it.B || !it.wheel) return { room: 'r1', t: '[data-obj="drawer"]', hint: 'Ngăn kéo kệ TV vừa bật ra.' };
     if (!S.seen.B) return tapeStep('B');
-    if (!d.book) return { room: 'r1', t: '[data-obj="shelf"]', hint: 'Cuốn từ điển không hiệu sách nào bán.' };
+    if (!d.book && !d.cipher) return { room: 'r1', t: '[data-obj="shelf"]', hint: 'Đếm số chữ anh chỉ dám viết, chưa dám nói: trang cuối một cuốn sổ trên giá sách.' };
     if (!d.cipher) return { t: '#bag-btn', id: 'wheel', hint: 'Dùng đĩa xoay chữ trong túi.' };
     if (!d.pillow) return { room: 'r2', t: '[data-obj="pillow"]', hint: 'Nhìn dưới gối.' };
     if (!it.C || !it.note1) return { room: 'r2', t: '[data-obj="pillow"]', hint: 'Dưới gối có đồ. Cầm lên.' };
-    if (!S.seen.C) return tapeStep('C');
-    if (!d.board) return { room: 'r2', t: '[data-obj="board"]', hint: 'Bốn tấm ảnh trên bảng ghim. Lật mặt sau.' };
+    if (!S.seen.C && !d.case) return tapeStep('C');
+    if (!d.board && !d.case) return { room: 'r2', t: '[data-obj="board"]', hint: 'Bốn tấm ảnh trên bảng ghim. Lật mặt sau.' };
     if (!d.case) return { room: 'r2', t: '[data-obj="case"]', hint: 'Khoá vali đọc theo số sau ảnh.' };
     if (!it.key || !it.note2) return { room: 'r2', t: '[data-obj="case"]', hint: 'Trong vali còn đồ. Cầm lên.' };
     // Cổng đình: lần đầu dùng đồ không phải băng, nên sáng từng bước ngay (cầm chìa trong túi → chạm ổ khoá)
@@ -103,10 +108,11 @@
     if (!d.radio) return { room: 'r3', t: '[data-obj="radio"]', hint: 'Đọc mẩu giấy ghép, rồi dò sóng.' };
     if (!d.words) return { room: 'r3', t: '[data-obj="radio"]', hint: 'Xếp lại câu radio vừa đọc.' };
     if (!it.D) return { room: 'r3', t: '[data-obj="bench"]', hint: 'Đèn lồng soi xuống bậc thềm.' };
-    if (!S.seen.D) return tapeStep('D');
-    if (!d.pc) return { room: 'r2', t: '[data-obj="pc"]', hint: 'Máy tính của anh. Em biết mật khẩu mà.' };
-    if (!d.dir) return { room: 'r2', t: '[data-obj="pc"]', hint: 'Thư mục Đồ án khoá. Lục trong máy xem.' };
-    if (!d.robot) return { room: 'r2', t: '[data-obj="robot"]', hint: 'Con robot còn thiếu chip.' };
+    const robotDone = d.robot || d.phone; // mò ra mật mã điện thoại thì không cần robot nữa
+    if (!S.seen.D && !robotDone) return tapeStep('D');
+    if (!d.pc && !robotDone) return { room: 'r2', t: '[data-obj="pc"]', hint: 'Máy tính của anh. Em biết mật khẩu mà.' };
+    if (!d.dir && !robotDone) return { room: 'r2', t: '[data-obj="pc"]', hint: 'Thư mục Đồ án khoá. Lục trong máy xem.' };
+    if (!robotDone) return { room: 'r2', t: '[data-obj="robot"]', hint: 'Con robot còn thiếu chip.' };
     if (!d.phone) return { room: 'r1', t: '[data-obj="phone"]', hint: 'Mật mã con robot vừa đọc.' };
     if (!it.E) return { room: 'r1', t: '[data-obj="frame"]', hint: 'Sau tấm ảnh em vừa ghép.' };
     if (!it.letter && S.inVcr !== 'E') return { room: 'r1', t: '[data-obj="frame"]', hint: 'Sau tấm ảnh còn kẹp một lá thư.' };
@@ -121,10 +127,183 @@
     if (TRAILER) return;
     const st = step();
     if (S.tut && idle < 40 && !st.now) return;
-    if (st.room && st.room !== S.room) { const door = document.querySelector('.view:not([hidden]) .door[data-go="' + st.room + '"]') || document.querySelector('.view:not([hidden]) .door'); if (door) door.classList.add('glow'); return; }
+    if (st.room && st.room !== S.room) { const door = document.querySelector('.view:not([hidden]) .door[data-go="' + st.room + '"]') || document.querySelector('.view:not([hidden]) .door'); if (door) { door.classList.add('glow'); reveal(door); } return; }
     const t = document.querySelector('#bag:not([hidden]) .bag-items button[data-id="' + (st.id || '') + '"]') || document.querySelector(st.t);
-    if (t) t.classList.add('glow');
+    if (t) { t.classList.add('glow'); reveal(t); }
   }
+
+  // ===== Màn hình dọc: căn phòng phóng cao gần kín màn, vuốt ngang để nhìn quanh (như quay đầu nhìn) =====
+  // Kéo bằng thuộc tính translate (không đụng transform của máy quay trailer); TV phóng to lúc chiếu vẫn tính đúng vị trí.
+  // Chỗ cần tới đang khuất thì khung nhìn tự lướt tới (mỗi chỗ một lần, không giật khi đang tự nhìn quanh).
+  const scene = $('scene');
+  let panX = 0, panMax = 0, drag = null, dragged = false, revealed = null, toldSwipe = false;
+  function setPan(x, smooth) {
+    panX = Math.max(-panMax, Math.min(panMax, x));
+    scene.style.transition = smooth ? 'translate .5s cubic-bezier(.3, .7, .3, 1)' : 'none';
+    scene.style.translate = panMax ? panX + 'px 0' : '';
+    $('room').classList.toggle('more-l', panMax > 0 && panX < panMax - 6);
+    $('room').classList.toggle('more-r', panMax > 0 && panX > -panMax + 6);
+  }
+  // Nhắc khi vào phòng (một lần mỗi lượt mở trang): đeo tai nghe; đang cầm dọc thì nhắc thêm xoay ngang.
+  const HP_SVG = '<svg class="hp" viewBox="0 0 48 48" aria-hidden="true"><path class="wave w1" d="M5 22a10 10 0 0 0 0 12" /><path class="wave w2" d="M1 18a16 16 0 0 0 0 20" /><path class="wave w1" d="M43 22a10 10 0 0 1 0 12" /><path class="wave w2" d="M47 18a16 16 0 0 1 0 20" /><path class="band" d="M11 29v-5a13 13 0 0 1 26 0v5" /><rect class="cup" x="9" y="27" width="7" height="12" rx="3" /><rect class="cup" x="32" y="27" width="7" height="12" rx="3" /></svg>';
+  // Màn "Đeo tai nghe" (cùng kiểu thẻ với màn xoay ngang): hiện một lần khi vừa vào phòng, tai nghe rung nhẹ, sóng âm lan ra.
+  // Chạm để bắt đầu (lần chạm này cũng mở âm thanh của căn nhà) hoặc tự tắt sau 4,5 giây.
+  let hpShown = false;
+  function hpGate() {
+    if (hpShown || TRAILER || $('room').hidden) return;
+    hpShown = true;
+    const g = document.createElement('div');
+    g.className = 'hp-gate';
+    g.innerHTML = '<p class="tips-k">Băng số 1 · Hồi ức</p><div class="tips-card hp-card"><span class="hp-big">' + HP_SVG + '</span><b>Đeo tai nghe</b><small>để có trải nghiệm trọn vẹn nhất</small></div><p class="hp-go">Chạm để bắt đầu</p>';
+    document.body.appendChild(g);
+    // Lần đầu vào game: phải chạm (mở khoá âm thanh cho đoạn mở màn), rồi mới quay ngược thời gian. Các lần sau tự tắt.
+    const intro = !S.intro && !S.lamp && !DRY;
+    const close = () => {
+      if (!g.isConnected || g.classList.contains('out')) return;
+      g.classList.add('out');
+      setTimeout(() => g.remove(), 700);
+      if (intro) { TV.audioOn(); runIntro(); }
+    };
+    g.addEventListener('click', close);
+    if (!intro) setTimeout(close, 4500);
+  }
+
+  // ===== Mở màn: quay ngược thời gian về đêm 6/8 (chỉ lần đầu vào game, có nút Bỏ qua) =====
+  // Màn đen, một màn hình nhỏ chập chờn: tiếng gõ "cốc… cốc…", hỏi giờ. Đồng hồ hiện giờ lúc này, điểm "tinh". Rồi vòng
+  // xoáy thời gian cuộn mở, băng tua ngược: kim quay ngược vùn vụt, tờ lịch bóc lật ngược từng ngày về 6 · Tháng 8,
+  // kim khớp 23:38, "tinh", chớp sáng: "Đêm ấy." rồi mờ vào căn phòng tối. Lời chữ: bản nháp, anh Quang sửa thoải mái.
+  const WD = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'];
+  async function runIntro() {
+    if (S.intro || TRAILER) return;
+    const fx = TV.sfx, p2 = (n) => String(n).padStart(2, '0');
+    let skipped = false;
+    const wait = (ms) => new Promise((res, rej) => setTimeout(() => (skipped ? rej(new Error('skip')) : res()), ms));
+    const box = document.createElement('div');
+    box.className = 'intro';
+    box.innerHTML = '<div class="in-vortex"></div><div class="in-crt"><p></p></div>'
+      + '<div class="in-stage"><div class="tr-clock in-clock">' + clockFace() + '<div class="tr-clock-t"></div></div>'
+      + '<div class="in-cal"><i class="cal-ring"></i><div class="cal-page"><small></small><b></b><span></span></div></div></div>'
+      + '<p class="in-cap"></p><div class="in-flash"></div><button class="in-skip" type="button">Bỏ qua ›</button>';
+    document.body.appendChild(box);
+    const $$ = (q) => box.querySelector(q);
+    const crt = $$('.in-crt'), crtP = $$('.in-crt p'), clk = $$('.in-clock'), cal = $$('.in-cal'), cap = $$('.in-cap');
+    const [hh, mh, sh] = ['.hh', '.mh', '.sh'].map((q) => clk.querySelector(q));
+    const hands = (h, m, sc) => { hh.style.transform = 'rotate(' + h + 'deg)'; mh.style.transform = 'rotate(' + m + 'deg)'; sh.style.transform = 'rotate(' + sc + 'deg)'; };
+    const page = (d) => { const pg = $$('.cal-page'); pg.querySelector('small').textContent = 'Tháng ' + (d.getMonth() + 1) + ' · ' + d.getFullYear(); pg.querySelector('b').textContent = d.getDate(); pg.querySelector('span').textContent = WD[d.getDay()]; };
+    const type = async (el, text, per) => { el.textContent = ''; for (const ch of text) { el.textContent += ch; await wait(per || 55); } };
+    const finish = () => {
+      if (box.classList.contains('out')) return;
+      S.intro = true;
+      save();
+      TV.amb.duck(1);
+      box.classList.add('out');
+      setTimeout(() => box.remove(), 1300);
+    };
+    $$('.in-skip').addEventListener('click', () => { skipped = true; finish(); });
+    const now = new Date();
+    now.setSeconds(0, 0);
+    const day0 = new Date(2026, 7, 6), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const back = Math.max(1, Math.round((today - day0) / 864e5));
+    try {
+      TV.amb.duck(0.25);
+      await wait(700);
+      crt.classList.add('on'); fx.glitch();
+      await wait(900);
+      fx.knock(); await wait(380); fx.knock();
+      await type(crtP, 'Cốc… cốc…', 90);
+      await wait(1300);
+      await type(crtP, 'Bây giờ là mấy giờ rồi nhỉ?');
+      await wait(1500);
+      crt.classList.add('out'); fx.glitch();
+      await wait(500);
+      // Đồng hồ và tờ lịch của hôm nay
+      let sec = 0;
+      const h0 = (now.getHours() % 12 + now.getMinutes() / 60) * 30, m0 = now.getMinutes() * 6;
+      hands(h0, m0, 0);
+      page(now);
+      $$('.in-stage').classList.add('on'); clk.classList.add('on');
+      for (let i = 0; i < 3; i++) { await wait(1000); sec++; hands(h0, m0, sec * 6); fx.tock(); }
+      fx.chime();
+      clk.querySelector('.tr-clock-t').textContent = p2(now.getHours()) + ':' + p2(now.getMinutes()) + ' · ' + p2(now.getDate()) + '.' + p2(now.getMonth() + 1) + '.' + now.getFullYear();
+      clk.classList.add('strike');
+      await wait(1400);
+      await type(cap, 'Vậy thì… mình quay lại một chút nhé.');
+      await wait(1600);
+      cap.textContent = '';
+      // Quay ngược: vòng xoáy cuộn mở, máy quay áp sát, kim quay ngược, lịch lật ngược từng ngày
+      const D = 4800;
+      box.classList.add('rew'); clk.classList.add('rew'); clk.classList.remove('strike');
+      fx.rewind(D / 1000);
+      const hEnd = (11 + 38 / 60) * 30 - 360 * 3, mEnd = 38 * 6 - 360 * 24, sEnd = -360 * 50;
+      const t0 = performance.now();
+      let shown = 0, lastFly = 0;
+      await new Promise((res) => {
+        const f = (tm) => {
+          if (skipped) { res(); return; }
+          const k = Math.min(1, (tm - t0) / D), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+          hands(h0 + (hEnd - h0) * e, m0 + (mEnd - m0) * e, sec * 6 + (sEnd - sec * 6) * e);
+          const n = Math.round(back * e);
+          if (n !== shown) {
+            // Tờ của ngày đang hiện bay đi (lật ngược lên), lộ ra ngày trước đó; nhanh quá thì chỉ bay vài tờ
+            if (tm - lastFly > 70) {
+              lastFly = tm;
+              const fly = $$('.cal-page').cloneNode(true);
+              fly.className = 'cal-page cal-fly';
+              cal.appendChild(fly);
+              setTimeout(() => fly.remove(), 700);
+              fx.flick();
+            }
+            shown = n;
+            page(new Date(today.getFullYear(), today.getMonth(), today.getDate() - n));
+            clk.querySelector('.tr-clock-t').textContent = p2(new Date(today - n * 864e5).getDate()) + '.' + p2(new Date(today - n * 864e5).getMonth() + 1);
+          }
+          if (k < 1) requestAnimationFrame(f); else res();
+        };
+        requestAnimationFrame(f);
+      });
+      if (skipped) return;
+      // Tới nơi: 23:38 đêm 6/8
+      page(day0);
+      hands(hEnd, mEnd, 0);
+      box.classList.remove('rew'); clk.classList.remove('rew');
+      clk.querySelector('.tr-clock-t').textContent = '23:38 · 06.08.2026';
+      clk.classList.add('lit');
+      fx.thunk(); fx.chime();
+      $$('.in-flash').classList.add('go');
+      await wait(1800);
+      await type(cap, 'Đêm ấy.', 110);
+      await wait(1900);
+      finish();
+    } catch (e) { /* bỏ qua giữa chừng */ }
+  }
+  function fitPortrait() {
+    const on = !TRAILER && innerHeight > innerWidth;
+    $('room').classList.toggle('portrait', on);
+    panMax = on ? Math.max(0, (scene.offsetWidth - innerWidth) / 2 + 10) : 0;
+    setPan(panX);
+    if (on && panMax && S.lamp && !toldSwipe && !$('room').hidden) { toldSwipe = true; setTimeout(() => say('Vuốt ngang để nhìn quanh phòng.', 4500), 600); }
+    if (!$('room').hidden) hpGate();
+  }
+  function reveal(el) {
+    if (!panMax || !el || !scene.contains(el) || el === revealed) return;
+    revealed = el;
+    const r = el.getBoundingClientRect(), pad = 28;
+    if (r.left < pad) setPan(panX + (pad - r.left) + Math.min(r.width, 60), true);
+    else if (r.right > innerWidth - pad) setPan(panX - (r.right - innerWidth + pad) - Math.min(r.width, 60), true);
+  }
+  scene.addEventListener('pointerdown', (e) => { if (!panMax || TV.busy()) return; drag = { x: e.clientX, p: panX, id: e.pointerId }; dragged = false; });
+  addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x;
+    if (!dragged && Math.abs(dx) < 8) return;
+    dragged = true;
+    setPan(drag.p + dx);
+  });
+  for (const ev of ['pointerup', 'pointercancel']) addEventListener(ev, () => { drag = null; });
+  // Vừa vuốt xong thì không tính là chạm vào đồ vật dưới ngón tay
+  scene.addEventListener('click', (e) => { if (dragged) { e.stopPropagation(); e.preventDefault(); dragged = false; } }, true);
+  addEventListener('resize', () => setTimeout(fitPortrait, 120));
+  addEventListener('orientationchange', () => setTimeout(fitPortrait, 400));
   setInterval(() => {
     if (TRAILER || TV.busy() || !$('look').hidden || $('room').hidden) return;
     idle++;
@@ -140,11 +319,13 @@
     room.classList.toggle('warm', !!S.items.E); // tìm thấy cuộn băng thật: căn nhà ấm lên
     for (const v of document.querySelectorAll('.view')) v.hidden = v.dataset.room !== S.room;
     $('bag-btn').hidden = !S.lamp;
+    $('peek-btn').hidden = !S.lamp || TRAILER;
     const q = (o) => document.querySelector('[data-obj="' + o + '"]');
     q('drawer').classList.toggle('open', !!S.done.jig);
     q('frame').classList.toggle('fixed', !!S.done.jig);
     q('frame').classList.toggle('open', !!S.done.phone);
     q('frame').classList.toggle('has-tape', !!S.done.phone && !S.items.E);
+    q('frame').classList.toggle('has-letter', !!S.done.phone && !!S.items.E && !S.items.letter); // lá thư còn kẹp sau ảnh
     q('pillow').classList.toggle('lifted', !!S.done.pillow);
     q('case').classList.toggle('open', !!S.done.case);
     q('gate').classList.toggle('open', !!S.done.gate);
@@ -155,6 +336,7 @@
     v3.classList.toggle('lit2', !!S.done.words);
     v3.classList.toggle('warm', !!S.items.E);
     q('pc').classList.toggle('on', !!S.done.pc);
+    q('phone').classList.toggle('ring', !!S.done.robot && !S.done.phone);
     q('robot').classList.toggle('alive', !!S.done.robot);
     document.querySelector('.v2').classList.toggle('robot-done', !!S.done.robot);
     // Chỗ còn đồ chưa cầm lên thì sáng nhẹ, như gợi ý: có gì đó ở đây
@@ -165,16 +347,19 @@
     $('vcr-led').classList.toggle('on', !!S.inVcr);
     TV.armReal(S.inVcr === 'E');
     // Âm thanh nền theo phòng; tìm thấy cuộn băng thật thì căn nhà ấm lại (radio ngoài sân bật từ lúc xếp xong câu)
-    TV.amb.set(S.room, S.items.E ? 'warm' : 'lonely', !!S.done.words);
+    // Căn nhà ấm lại (radio phát khẽ khắp nhà) từ lúc mở lá thư, không phải lúc nhặt băng: nhạc vào đúng một lần, khi đọc thư
+    TV.amb.set(S.room, S.items.letter ? 'warm' : S.items.E ? 'hush' : 'lonely', !!S.done.words);
     renderBag();
     if (!TV.busy()) $('hint').textContent = step().hint;
     guide();
   }
 
-  // Đồ đã dùng xong thì biến khỏi túi (băng giả đã xem, đĩa đã giải, giấy đã dò sóng, chìa đã mở cổng): túi gọn, đỡ bấm nhầm.
+  // Đồ đã dùng xong thì biến khỏi túi (đĩa đã giải, giấy đã dò sóng, chìa đã mở cổng): túi gọn, đỡ bấm nhầm.
+  // Băng giả ở lại tới khi câu đố của chính nó giải xong, để xem lại manh mối bao nhiêu lần cũng được.
+  const TAPE_DONE = { A: (d) => d.jig, B: (d) => d.cipher, C: (d) => d.case, D: (d) => d.robot || d.phone, E: () => false };
   function bagList() {
     const list = [];
-    for (const id of ['A', 'B', 'C', 'D', 'E']) if (S.items[id] && S.inVcr !== id && !S.seen[id]) list.push({ id, label: TAPES[id].label, icon: ICON.tape, tape: true, fresh: !TAPES[id].real });
+    for (const id of ['A', 'B', 'C', 'D', 'E']) if (S.items[id] && S.inVcr !== id && !TAPE_DONE[id](S.done)) list.push({ id, label: TAPES[id].label + (S.seen[id] ? ' (xem lại)' : ''), icon: ICON.tape, tape: true, fresh: !TAPES[id].real && !S.seen[id] });
     if (S.items.wheel && !S.done.cipher) list.push({ id: 'wheel', label: OTHER.wheel, icon: ICON.wheel, fresh: S.done.book });
     if (!S.done.radio) {
       if (S.items.note1 && S.items.note2) list.push({ id: 'note', label: OTHER.note, icon: ICON.note, fresh: true });
@@ -208,6 +393,41 @@
     if (sel && !held) { held = document.createElement('div'); held.className = 'held'; $('room').appendChild(held); }
     if (held) { if (sel) held.textContent = 'Đang cầm: ' + nameOf(sel); else held.remove(); }
   }
+  // Nhìn quanh: gắn nhãn tên lên mọi đồ vật chạm được trong phòng đang đứng, 3 giây rồi tắt.
+  // Sân đình khi cổng còn khoá: chỉ ghi cổng, không lộ đồ bên trong.
+  let peekT = 0;
+  function peek() {
+    TV.sfx.ui();
+    $('bag').hidden = true;
+    for (const t of document.querySelectorAll('.peek-tag')) t.remove();
+    const room = $('scene'), rb = room.getBoundingClientRect(); // nhãn gắn vào cảnh: vuốt ngang thì trôi theo
+    for (const o of document.querySelectorAll('.view:not([hidden]) [data-obj], .view:not([hidden]) #power')) {
+      if (!S.done.gate && o.closest('.inner')) continue;
+      const r = o.getBoundingClientRect();
+      if (!r.width || !o.getAttribute('aria-label')) continue;
+      const tag = document.createElement('span');
+      tag.className = 'peek-tag';
+      tag.textContent = o.getAttribute('aria-label');
+      tag.style.left = r.left + r.width / 2 - rb.left + 'px';
+      tag.style.top = r.top + Math.min(r.height / 2, 18) - rb.top + 'px';
+      room.appendChild(tag);
+      // Hai nhãn chồng nhau (đèn bàn, bình hoa đứng sát) thì đẩy nhãn sau xuống dưới
+      for (let k = 0; k < 4; k++) {
+        const a = tag.getBoundingClientRect();
+        const hit = [...document.querySelectorAll('.peek-tag')].some((x) => { if (x === tag) return false; const b = x.getBoundingClientRect(); return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom; });
+        if (!hit) break;
+        tag.style.top = parseFloat(tag.style.top) + a.height + 4 + 'px';
+      }
+    }
+    clearTimeout(peekT);
+    peekT = setTimeout(() => {
+      for (const t of document.querySelectorAll('.peek-tag')) t.classList.add('out');
+      peekT = setTimeout(() => { for (const t of document.querySelectorAll('.peek-tag')) t.remove(); }, 500);
+    }, 3200);
+  }
+  $('peek-btn').addEventListener('click', peek);
+  // Sang phòng khác thì nhãn của phòng cũ tắt luôn
+  for (const d of document.querySelectorAll('#scene .door')) d.addEventListener('click', () => { for (const t of document.querySelectorAll('.peek-tag')) t.remove(); });
   $('bag-btn').addEventListener('click', () => { $('bag').hidden = !$('bag').hidden; TV.sfx.bag(!$('bag').hidden); renderBag(); guide(); });
 
   function useItem(it) {
@@ -264,7 +484,12 @@
 
   // ===== Nhìn gần =====
   let onClose = null; // việc cần làm khi đóng khung nhìn gần (vd. radio nhỏ lại sau khi đọc thư)
+  // Việc hẹn giờ (mở tiếp màn sau, tự đóng) chỉ chạy nếu khung nhìn gần vẫn y như lúc hẹn: người chơi đã đóng hay mở
+  // thứ khác thì bỏ, không đè lên hộp thoại đang mở. Đồ chưa lấy vẫn nằm đó (chỗ đó sáng nhẹ), chạm lại là ra.
+  let lookGen = 0;
+  const later = (ms, fn) => { const g = lookGen; setTimeout(() => { if (g === lookGen) fn(); }, ms); };
   function look(title, html, setup) {
+    lookGen++;
     if (onClose) { const f = onClose; onClose = null; f(); }
     $('look-title').textContent = title;
     $('look-body').innerHTML = html;
@@ -272,6 +497,7 @@
     if (setup) setup($('look-body'));
   }
   function closeLook() {
+    lookGen++;
     $('look').hidden = true;
     render();
     if (onClose) { const f = onClose; onClose = null; f(); }
@@ -324,8 +550,8 @@
           render();
           if ([...box.children].some((x) => !x.classList.contains('taken'))) return;
           body.querySelector('.find-tip').textContent = 'Đã cất vào túi đồ.';
-          if (after) setTimeout(() => after(body), 700);
-          else setTimeout(closeLook, 1100);
+          if (after) later(700, () => after(body));
+          else later(1100, closeLook);
         });
         box.appendChild(b);
       }
@@ -412,7 +638,7 @@
               grid.classList.add('done');
               S.done.jig = true;
               win(() => msg(body, 'Liền rồi. Có tiếng “tách” dưới kệ TV.'));
-              setTimeout(closeLook, 1800);
+              later(1800, closeLook);
             }
           });
           grid.appendChild(b);
@@ -423,23 +649,56 @@
   }
 
   // Đĩa xoay chữ: xoay vòng trong, chữ trong mật thư lùi theo số bước.
+  // Đĩa xoay chữ: xoay vòng trong rồi bấm "Giải mã". Không hiện chữ theo từng nấc (xoay bừa không ra); sai 3 lần thì
+  // đĩa kẹt một lúc, mỗi lần kẹt hé thêm một chút gợi ý. Số nấc là ba chữ "Anh Yêu Em" ở trang cuối cuốn nhật ký
+  // ("những chữ anh chỉ dám viết, chưa dám nói", chương 5): mỗi chữ lùi 3.
+  const CIPHER = { miss: 0, jams: 0, until: 0 };
+  const JAM_HINT = [
+    'Trên giá sách có hai cuốn sổ anh tự viết. Chuyện chỉ dám viết, chưa dám nói nằm ở cuốn nào?',
+    'Cuốn sổ bìa nâu là nhật ký. Lật tới trang cuối.',
+    'Đếm số chữ viết hoa ở trang cuối cuốn nhật ký.',
+  ];
   function cipherTool() {
     if (!S.seen.B) { look('Đĩa xoay chữ', '<p>Hai vòng chữ cái lồng nhau. Chưa có mật thư nào để giải.</p>'); return; }
-    // Số nấc là trang "A → D" trong Từ điển tiếng em (lùi 3).
     const CT = 'QKLQ GXRL JRL';
-    let k = 0;
-    look('Đĩa xoay chữ', '<div class="cipher"><div class="ct">' + CT + '</div><div class="pt"></div><div class="rings"><button type="button" aria-label="Xoay trái">◀</button><div class="disc"></div><button type="button" aria-label="Xoay phải">▶</button></div></div>', (body) => {
-      const pt = body.querySelector('.pt'), disc = body.querySelector('.disc');
-      const show = () => {
-        disc.textContent = k;
-        disc.style.transform = 'rotate(' + k * -13.85 + 'deg)';
-        pt.textContent = CT.replace(/[A-Z]/g, (c) => String.fromCharCode(((c.charCodeAt(0) - 65 - k + 26) % 26) + 65));
-        if (k === 3 && !S.done.cipher) { S.done.cipher = true; win(() => msg(body, 'Nhìn dưới gối.')); }
-      };
+    const dec = (k) => CT.replace(/[A-Z]/g, (c) => String.fromCharCode(((c.charCodeAt(0) - 65 - k + 26) % 26) + 65));
+    let k = 0, timer = 0;
+    look('Đĩa xoay chữ', '<div class="cipher"><p class="riddle">Xoay xuôi chiều kim đồng hồ, như thời gian mình bên nhau cứ đi tới.<br />Số nấc xoay = <b>số chữ</b> anh chỉ dám viết, chưa dám nói thành lời.<br />Anh viết những chữ ấy ở trang cuối một cuốn sổ trên giá sách.</p><div class="ct">' + CT + '</div><div class="pt">· · · ·  · · · ·  · · ·</div><div class="rings"><button type="button" aria-label="Xoay ngược chiều kim đồng hồ">↺</button><div class="disc"></div><button type="button" aria-label="Xoay xuôi chiều kim đồng hồ">↻</button></div><div class="lk-btns" style="justify-content:center"><button type="button" class="primary">Giải mã</button></div><p class="say cipher-say">Xoay đúng số nấc rồi bấm Giải mã.</p></div>', (body) => {
+      const pt = body.querySelector('.pt'), disc = body.querySelector('.disc'), go = body.querySelector('.primary'), say2 = body.querySelector('.cipher-say');
       const [l, , r] = body.querySelector('.rings').children;
-      l.addEventListener('click', () => { k = (k + 25) % 26; TV.sfx.notch(); show(); });
-      r.addEventListener('click', () => { k = (k + 1) % 26; TV.sfx.notch(); show(); });
-      show();
+      // Đĩa xoay, con số ở giữa luôn đứng thẳng cho dễ đọc
+      // ↻ quay đĩa xuôi chiều kim đồng hồ (k tăng); số nấc đếm theo chiều xuôi. Xoay ngược 3 nấc là k = 23: sai.
+      let deg = 0; // góc thật của đĩa (cộng dồn, không nhảy vòng khi qua 0)
+      const turn = () => { disc.innerHTML = '<b style="display:inline-block;transition:transform .3s;transform:rotate(' + -deg + 'deg)">' + k + '</b>'; disc.style.transform = 'rotate(' + deg + 'deg)'; };
+      const jammed = () => {
+        const left = Math.ceil((CIPHER.until - Date.now()) / 1000);
+        const on = left > 0 && body.isConnected;
+        for (const b of [l, r, go]) b.disabled = on;
+        if (on) { say2.textContent = 'Đĩa kẹt rồi… ' + left + ' giây. ' + JAM_HINT[Math.min(CIPHER.jams, JAM_HINT.length) - 1]; timer = setTimeout(jammed, 500); }
+        else if (CIPHER.until && body.isConnected) { CIPHER.until = 0; say2.textContent = JAM_HINT[Math.min(CIPHER.jams, JAM_HINT.length) - 1]; }
+        return on;
+      };
+      l.addEventListener('click', () => { k = (k + 25) % 26; deg -= 13.85; TV.sfx.notch(); turn(); });
+      r.addEventListener('click', () => { k = (k + 1) % 26; deg += 13.85; TV.sfx.notch(); turn(); });
+      go.addEventListener('click', () => {
+        if (jammed()) return;
+        pt.textContent = dec(k);
+        if (k === 3) {
+          S.done.cipher = true;
+          pt.classList.add('ok');
+          for (const b of [l, r, go]) b.disabled = true;
+          win(() => { say2.textContent = 'Nhìn dưới gối.'; });
+          return;
+        }
+        wrong(pt);
+        TV.sfx.glitch();
+        CIPHER.miss++;
+        if (CIPHER.miss % 3 === 0) { CIPHER.jams++; CIPHER.until = Date.now() + 20000; jammed(); return; }
+        say2.textContent = 'Chữ vẫn lộn xộn. Sai số nấc rồi.';
+      });
+      turn();
+      if (S.done.cipher) { k = 3; deg = 3 * 13.85; turn(); pt.textContent = dec(3); pt.classList.add('ok'); for (const b of [l, r, go]) b.disabled = true; say2.textContent = 'Nhìn dưới gối.'; }
+      else jammed();
     });
   }
 
@@ -479,7 +738,7 @@
         if (cur.every((v, i) => SYM[v] === ANS[i])) {
           S.done.case = true;
           win(() => { body.innerHTML = '<p>Tách. Nắp vali bật lên.</p>'; }, 'latch');
-          setTimeout(openCase, 800);
+          later(800, openCase);
           return;
         }
         wrong(row);
@@ -509,7 +768,7 @@
         if (f === 85 && !S.done.radio) {
           S.done.radio = true;
           save();
-          setTimeout(words, 900);
+          later(900, words);
           msg(body, 'Bắt được sóng rồi…');
         }
       };
@@ -582,32 +841,82 @@
     });
   }
 
-  // Giá sách: sáu cuốn, cuốn cần tìm là "Từ điển tiếng em". Trong đó có trang ghi khoá xoay chữ.
+  // Giá sách: Băng 02 bảo tìm "một cuốn sổ" anh viết, trang cuối là "những chữ anh chỉ dám viết, chưa dám nói".
+  // Trên giá có hai cuốn sổ gáy trơn, đều chữ anh: sổ ghi chép môn học (trang cuối "Còn 5 bài tập": số gây nhiễu) và
+  // cuốn nhật ký. Chuyện chỉ dám viết, chưa dám nói là chuyện tình cảm: nằm trong nhật ký. Mở ra, nhật ký đã đổi tên
+  // thành "Từ điển tiếng em" (chương 5); trang cuối: "…là Anh Yêu Em." Ba chữ, ba nấc. Các trang giữa có số gây nhiễu.
+  // Mục nào cũng lấy từ lời trong chương 5; không cần nhớ truyện, mọi thứ cần đều nằm trong cuốn sổ.
+  const DIARY = {
+    title: 'Từ điển tiếng em',
+    cover: '<div class="dict-cover"><s>Nhật ký thay đổi bản thân</s><b>Từ điển tiếng em ❤️</b><small>đổi tên đêm 18/7</small></div>',
+    pages: [
+      ['Ất', 'tính từ', 'Khô khan. Nói chuyện như thằng ất dở hơi.\nVí dụ: anh, hồi đầu.'],
+      ['Chuỗi', 'danh từ', 'Số ngày liền mình nhắn tin cho nhau.\nNgày 18/7 đã chuỗi 8. Em muốn chuỗi 80, rồi 800 cơ.'],
+      ['Con người', 'tính từ', 'Nói chuyện có cảm xúc, không khô khan.\nEm dặn: anh nói chuyện “con người” hơn nữa vào.'],
+      ['Xì tin', 'tính từ', 'Hợp mốt, trẻ trung.\nMạng xã hội của anh: bà ngoại em còn xì tin hơn.'],
+    ],
+    last: '<p class="dict-love">Từ lúc này, xin được nói trong nhật kí là Anh Yêu Em.</p><small class="dict-foot">Chỉ dám viết trong nhật ký thôi. Nói ra, sợ mất em.</small>',
+  };
+  const STUDY = {
+    title: 'Sổ ghi chép',
+    cover: '<div class="dict-cover"><b class="plain">Ghi chép · Tín hiệu &amp; Hệ thống</b><small>Lương Quang · Điện tử Viễn thông</small></div>',
+    pages: [
+      ['Chương 3', 'Biến đổi Fourier', 'Tín hiệu nào cũng tách được thành nhiều sóng sin nhỏ.\nCông thức dài hai trang. Học lại!'],
+      ['Chương 4', 'Lấy mẫu', 'Tần số lấy mẫu phải gấp đôi tần số cao nhất của tín hiệu.'],
+    ],
+    last: '<p class="dict-love plain">Còn 5 bài tập chưa làm. Mai nộp.</p>',
+  };
+  // Lật từng trang một cuốn sổ (0 là bìa, trang cuối là `last`)
+  function notebook(book, page) {
+    let at = page || 0;
+    const last = book.pages.length + 1;
+    look(book.title, '<div class="dict"><div class="dict-page"></div><div class="dict-nav"><button type="button" aria-label="Trang trước">◀</button><span></span><button type="button" aria-label="Trang sau">▶</button></div></div>', (body) => {
+      const pg = body.querySelector('.dict-page'), [prev, , next] = body.querySelector('.dict-nav').children, no = body.querySelector('.dict-nav span');
+      const show = () => {
+        pg.classList.remove('turn'); void pg.offsetWidth; pg.classList.add('turn');
+        if (at === 0) pg.innerHTML = book.cover;
+        else if (at === last) pg.innerHTML = book.last;
+        else {
+          const [w, kind, def] = book.pages[at - 1];
+          pg.innerHTML = '<h3></h3><i></i><p></p>';
+          pg.querySelector('h3').textContent = w;
+          pg.querySelector('i').textContent = '(' + kind + ')';
+          pg.querySelector('p').textContent = def;
+        }
+        pg.classList.toggle('folded', at === last);
+        no.textContent = at === 0 ? 'Bìa' : 'Trang ' + at + '/' + last;
+        prev.disabled = at === 0;
+        next.disabled = at === last;
+        if (book === DIARY && at === last && !S.done.book) { S.done.book = true; save(); render(); }
+      };
+      prev.addEventListener('click', () => { if (at > 0) { at--; TV.sfx.paper(); show(); } });
+      next.addEventListener('click', () => { if (at < last) { at++; TV.sfx.paper(); show(); } });
+      show();
+    });
+  }
   function bookshelf() {
-    if (S.done.book) { look('Từ điển tiếng em', '<p class="hand">A → D</p><p class="say">Từ lúc này, xin được nói trong nhật kí là Anh Yêu Em.</p>'); return; }
+    // Gáy trơn (không chữ): hai cuốn sổ anh tự viết. Gáy có chữ: sách in, và bài văn của em.
     const books = [
-      ['Nhật ký thay đổi bản thân', '#5E4B3C', 'Sổ tay thường. Hiệu sách nào cũng có.'],
-      ['Kỹ thuật Viễn thông', '#3E5C76', 'Giáo trình. Khô khan lắm.'],
-      ['Từ điển Anh – Việt', '#4F6B4A', 'Từ điển này ngoài hiệu sách đầy.'],
-      ['Sóng · Xuân Quỳnh', '#8C3B3B', 'Thơ hay. Nhưng không phải từ điển.'],
-      ['Từ điển tiếng em', '#B5462F', null],
-      ['Truyện Kiều', '#6A4428', 'Dày quá. Không phải từ điển.'],
+      ['Kỹ thuật Viễn thông', '#3E5C76', 'Giáo trình in. Khô khan lắm.'],
+      ['', '#3F6E73', STUDY, 'Cuốn sổ bìa xanh, gáy trơn'],
+      ['Từ điển Anh – Việt', '#4F6B4A', 'Sách in, ngoài hiệu sách đầy.'],
+      ['Sóng · Xuân Quỳnh', '#8C3B3B', 'Thơ in. Hay, nhưng không phải sổ anh viết.'],
+      ['', '#6B4A33', DIARY, 'Cuốn sổ bìa nâu, gáy trơn'],
+      ['Tín hiệu & Hệ thống', '#5B5470', 'Giáo trình in. Dày cộp.'],
+      ['Bài văn hội văn · Lệ Thủy', '#6A4428', 'Bài văn em viết cho hội văn. Văn hay, chữ lại đẹp. Nhưng là chữ em, không phải chữ anh.'],
     ];
     look('Giá sách', '<p>Chạm vào gáy để rút ra.</p><div class="books"></div>', (body) => {
       const row = body.querySelector('.books');
-      for (const [name, color, no] of books) {
+      for (const [name, color, what, label] of books) {
         const b = document.createElement('button');
         b.type = 'button';
         b.textContent = name;
         b.style.background = color;
+        if (!name) { b.classList.add('plain'); b.setAttribute('aria-label', label); }
         b.addEventListener('click', () => {
           TV.sfx.book();
-          if (no) { msg(body, no); return; }
-          S.done.book = true;
-          win(() => {
-            $('look-title').textContent = 'Từ điển tiếng em';
-            body.innerHTML = '<p>Một trang được gấp góc:</p><p class="hand" style="font-size:30px">A → D</p><p class="say">Từ lúc này, xin được nói trong nhật kí là Anh Yêu Em.</p>';
-          });
+          if (typeof what === 'string') { msg(body, what); return; }
+          notebook(what, what === DIARY && S.done.book ? what.pages.length + 1 : 0);
         });
         row.appendChild(b);
       }
@@ -840,8 +1149,8 @@
     const d = S.done;
     const rows = [
       [S.seen.A, 'Băng 01: ghép lại bức ảnh vỡ.', d.jig],
-      [S.seen.B, 'Băng 02: mật thư QKLQ GXRL JRL. Số nấc ở cuốn từ điển không hiệu sách nào bán.', d.cipher],
-      [d.book, 'Từ điển tiếng em: A → D.', d.cipher],
+      [S.seen.B, 'Băng 02: mật thư QKLQ GXRL JRL. Xoay xuôi chiều kim đồng hồ; số nấc = số chữ anh chỉ dám viết, chưa dám nói thành lời (trang cuối một cuốn sổ trên giá sách).', d.cipher],
+      [d.book, 'Trang cuối cuốn nhật ký: “Anh Yêu Em”.', d.cipher],
       [d.cipher, 'Giải ra: NHÌN DƯỚI GỐI.', d.pillow],
       [S.seen.C, 'Băng 03: lật bốn tấm ảnh, khoá vali đọc theo số.', d.case],
       [S.items.note1 && S.items.note2, 'Mẩu giấy: tám mươi, chín mươi cây số. Sóng ở giữa.', d.radio],
@@ -866,7 +1175,7 @@
       S.lamp = true;
       TV.audioOn();
       win(() => say('Sáng rồi.', 2500), 'lamp');
-      setTimeout(lampTape, 900);
+      later(900, lampTape);
     },
     frame() {
       if (!S.seen.A) { say('Bức ảnh vỡ mất rồi.'); return; }
@@ -894,7 +1203,7 @@
     robot,
     pillow() {
       if (!S.done.cipher) { say('Gối êm lắm. Chưa phải lúc.'); return; }
-      if (!S.done.pillow) { S.done.pillow = true; win(() => {}, 'cloth'); setTimeout(() => OBJ.pillow(), 700); return; }
+      if (!S.done.pillow) { S.done.pillow = true; win(() => {}, 'cloth'); later(700, () => OBJ.pillow()); return; }
       if (!S.items.C || !S.items.note1) { pickup('Dưới gối', 'Một cuộn băng, và nửa mẩu giấy. Gối vẫn còn mùi tóc em.', ['C', 'note1']); return; }
       say('Gối vẫn còn mùi tóc em.');
     },
@@ -929,7 +1238,7 @@
     },
   };
   // Chạm lần đầu ở bất kỳ đâu: bật âm thanh, căn nhà bắt đầu "thở" (tiếng nền theo phòng)
-  if (!TRAILER) addEventListener('pointerdown', () => { TV.audioOn(); TV.amb.start(); TV.amb.set(S.room, S.items.E ? 'warm' : 'lonely', !!S.done.words); }, { once: true });
+  if (!TRAILER) addEventListener('pointerdown', () => { TV.audioOn(); TV.amb.start(); TV.amb.set(S.room, S.items.letter ? 'warm' : S.items.E ? 'hush' : 'lonely', !!S.done.words); }, { once: true });
   for (const b of document.querySelectorAll('#scene [data-obj]')) {
     b.addEventListener('click', () => {
       if (TV.busy()) return;
@@ -947,6 +1256,9 @@
       v.style.setProperty('--from', d.classList.contains('d-right') ? '24px' : '-24px');
       S.room = to;
       $('bag').hidden = true;
+      // Màn hình dọc: vào phòng mới thì đứng ở mép cửa vừa đi qua (đi sang phải thì thấy mép trái phòng mới)
+      if (panMax) setPan(d.classList.contains('d-right') ? panMax : -panMax);
+      revealed = null;
       save();
       render();
     });
@@ -964,12 +1276,13 @@
     room.classList.add('trailer');
     const ov = document.createElement('div');
     ov.className = 'tr-ov';
-    ov.innerHTML = '<div class="tr-bloom" id="tr-bloom"></div><div class="tr-vig"></div><div class="tr-grain"></div><div class="tr-black" id="tr-black"></div><div class="tr-dip" id="tr-dip"></div><div class="tr-crt"></div><div class="tr-glitch" id="tr-glitch"><i></i><i></i><i></i></div><div class="tr-bar t"></div><div class="tr-bar b"></div><div class="tr-card" id="tr-card"><h1></h1><p></p></div><div class="tr-flash" id="tr-flash"></div><button class="tr-start" id="tr-start" type="button"><b>▶</b>Xem trailer</button><div class="tr-end" id="tr-end" hidden><button type="button" id="tr-again">Xem lại</button><a href="../home/">Về nhà</a></div>';
+    ov.innerHTML = '<div class="tr-bloom" id="tr-bloom"></div><div class="tr-vig"></div><div class="tr-grain"></div><div class="tr-black" id="tr-black"></div><div class="tr-dip" id="tr-dip"></div><div class="tr-crt"></div><div class="tr-glitch" id="tr-glitch"><i></i><i></i><i></i></div><div class="tr-bar t"></div><div class="tr-bar b"></div><div class="tr-card" id="tr-card"><h1></h1><p></p></div><div class="tr-flash" id="tr-flash"></div><button class="tr-start" id="tr-start" type="button"><b>▶</b>Xem trailer</button><p class="tr-hp" id="tr-hp">' + HP_SVG + 'Đeo tai nghe để cảm nhận trọn vẹn</p><div class="tr-end" id="tr-end" hidden><button type="button" id="tr-again">Xem lại</button><a href="../home/">Về nhà</a></div>';
     room.appendChild(ov);
     const music = new Audio('../assets/sound/trailer.mp3');
     music.preload = 'auto'; // tải sẵn trong lúc chờ bấm, để nhạc vào ngay
     await new Promise((res) => $('tr-start').addEventListener('click', res, { once: true }));
     $('tr-start').remove();
+    $('tr-hp').remove();
     TV.audioOn();
     const mix = TV.music(music, 0.85);
     music.play().catch(() => {});
@@ -1231,6 +1544,8 @@
 
   window.HoiUcRoom = { say, power };
   render();
+  fitPortrait();
+  new MutationObserver(fitPortrait).observe($('room'), { attributes: true, attributeFilter: ['hidden'] });
   if (TRAILER) runTrailer();
   const tryOpen = TRY && ({ vali: symbolLock, bang: board, maytinh: pc })[TRY];
   if (tryOpen) tryOpen();
