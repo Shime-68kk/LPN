@@ -39,7 +39,13 @@
     chobang: { room: 'r1', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true, E: true, letter: true, wheel: true, note1: true, note2: true, key: true }, seen: { A: true, B: true, C: true, D: true }, done: ALL_DONE },
     bangthat: { room: 'r1', lamp: true, tut: true, tour: { r1: true, r2: true, r3: true }, items: { A: true, B: true, C: true, D: true, E: true, letter: true, wheel: true, note1: true, note2: true, key: true }, seen: { A: true, B: true, C: true, D: true }, done: ALL_DONE, inVcr: 'E' },
   }[TRY === 'cuoiphim' ? 'bangthat' : TRY] || { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true, wheel: true, note1: true }, seen: { A: true, B: true, C: true }, done: { jig: true, book: true, cipher: true, pillow: true } };
-  try { if (/[?&]moi=1\b/.test(location.search)) localStorage.removeItem(KEY); } catch (e) { /* bỏ qua */ }
+  // Xoá xong thì bỏ ?moi=1 khỏi địa chỉ, để lỡ tải lại trang giữa chừng không bị xoá tiến độ lần nữa.
+  try {
+    if (/[?&]moi=1\b/.test(location.search)) {
+      localStorage.removeItem(KEY);
+      history.replaceState(null, '', location.pathname + location.search.replace(/[?&]moi=1\b/, '').replace(/^&/, '?') + location.hash);
+    }
+  } catch (e) { /* bỏ qua */ }
   const load = () => { if (TRY) return TRY_STATE; if (TRAILER) return {}; try { const v = JSON.parse(localStorage.getItem(KEY)); return v && v.v === 2 ? v : {}; } catch (e) { return {}; } };
   const S = Object.assign({ v: 2, room: 'r1', lamp: false, tut: false, items: {}, seen: {}, done: {}, inVcr: null }, load());
   // Thoát giữa lúc chiếu băng giả: băng về lại túi, không kẹt trong máy.

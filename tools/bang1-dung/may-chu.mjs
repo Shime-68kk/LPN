@@ -3,6 +3,8 @@
 //
 // Cách dùng: node tools/bang1-dung/may-chu.mjs [cổng, mặc định 8080]
 //   Game xem thử bản dựng trên TV: http://<IP máy>:8080/story/hoi-uc.html?thu=bangthat&phim=nhap-1
+//   Thêm ?xemthu vào link bất kỳ: máy đó vào chế độ xem thử (không đồng bộ Firebase) và ví thử có 20.000 đốt cây,
+//   quay / mở hộp thoải mái mà không đụng ví thật. ?xemthat để thôi.
 import fs from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
@@ -17,6 +19,13 @@ const TYPES = {
   '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif', '.ico': 'image/x-icon', '.mp3': 'audio/mpeg', '.mp4': 'video/mp4',
   '.m3u8': 'application/vnd.apple.mpegurl', '.m4s': 'video/iso.segment', '.ts': 'video/mp2t', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.wasm': 'application/wasm',
 };
+
+// Chèn ngay đầu <head> của mọi trang, chạy trước home/sync.js.
+const XEMTHU = '<script>(function(){try{var q=location.search,L=localStorage;'
+  + 'if(/[?&]xemthat\\b/.test(q)){L.removeItem("lpn:preview");return;}'
+  + 'if(!/[?&]xemthu\\b/.test(q))return;L.setItem("lpn:preview","1");'
+  + 'var w=JSON.parse(L.getItem("lpn:wallet")||"{}");if(!(w.dot>=1500)){w.dot=20000;L.setItem("lpn:wallet",JSON.stringify(w));}'
+  + '}catch(e){}})();</script>';
 
 http.createServer((req, res) => {
   let p;
@@ -38,6 +47,12 @@ http.createServer((req, res) => {
     res.writeHead(206, { ...head, 'Content-Range': `bytes ${a}-${b}/${st.size}`, 'Content-Length': b - a + 1 });
     if (req.method === 'HEAD') { res.end(); return; }
     fs.createReadStream(f, { start: a, end: b }).pipe(res);
+    return;
+  }
+  if (path.extname(f).toLowerCase() === '.html') {
+    const html = Buffer.from(fs.readFileSync(f, 'utf8').replace(/<head>/i, '<head>' + XEMTHU));
+    res.writeHead(200, { ...head, 'Content-Length': html.length });
+    res.end(req.method === 'HEAD' ? undefined : html);
     return;
   }
   res.writeHead(200, { ...head, 'Content-Length': st.size });

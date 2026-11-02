@@ -144,6 +144,29 @@
       memory: 'Lâu đài trên đồi, đèn bí ngô sáng cả đêm, chờ người cùng đi chơi Halloween.',
       bg: { kind: 'castle', theme: { night: true, sky: '#140A2A', cloud: '#3D2A5C', mote: null, stars: false, rain: false, leaf: '#FF9A3C', leafLight: '#FFC07A', leafDark: '#B8561A', stem: '#6B4A8C' } } },
 
+    // ---------- Sự kiện Băng số 1 · Hồi Ức (Chương 17 · Cuộn băng số 1) ----------
+    { id: 'cuon-bang', slot: 'skin', name: 'Sâu Cuộn Băng', rarity: 'huyenthoai', price: 1500, ch: 17, ev: 'bang1',
+      memory: 'Có những thứ không chụp lại được, cũng không gửi qua tin nhắn được. Nên cậu làm một cuộn băng.',
+      pal: { body: '#3A3440', body2: '#2F2A35', head: '#4A4352', feet: '#1C1820', ant: '#1C1820', antTip: '#E8453C', eye: '#FFF4D6', mouth: '#FFF4D6', blush: 'rgba(255,111,142,0.45)', mark: '#F3E9D2', shine: 'rgba(255,255,255,0.14)', cocoon: '#4A4352', cocoonLine: '#F3E9D2' },
+      acc: 'vhs', pattern: 'tape', mark: 'reel', glow: '#FFD9A0', idle: 'rec' },
+    { id: 'canh-bang-tu', slot: 'wing', name: 'Cánh Băng Từ', rarity: 'suthi', price: 600, ch: 17, ev: 'bang1',
+      memory: 'Ba căn phòng, năm cuộn băng nằm rải rác. Chỉ một cuộn là thật.',
+      wing: { top: '#3A3440', bottom: '#2F2A35', pattern: 'tape', mark: 'reel', markColor: '#F3E9D2', spot: '#E8453C', body: '#1C1820', glow: true } },
+    { id: 'bang-tu', slot: 'fx', name: 'Cuộn Băng Nhỏ', rarity: 'hiem', price: 250, ch: 17, ev: 'bang1',
+      memory: 'Cuộn băng nằm phía sau con số anh đếm mỗi ngày, từ đêm 23 giờ 38 phút ấy.',
+      fx: { kind: 'tape', colors: ['#3A3440', '#E8453C', '#F3E9D2'] } },
+    { id: 'tai-nghe', slot: 'skin', name: 'Sâu Tai Nghe', rarity: 'suthi', price: 600, ch: 17, ev: 'bang1',
+      memory: 'Đeo tai nghe vào. Tắt bớt đèn. Rồi đi tìm nhé.',
+      pal: { body: '#5B4B8A', body2: '#6A5A9C', head: '#6A5A9C', feet: '#2E2550', ant: '#2E2550', antTip: '#FFD27A', eye: '#FFF4D6', mouth: '#FFF4D6', mark: '#FFD27A', shine: 'rgba(255,255,255,0.18)', cocoon: '#7A6AAE', cocoonLine: '#FFD27A' },
+      acc: 'phones', mark: 'note', glow: '#FFD27A', idle: 'music' },
+    { id: 'tv-den-trang', slot: 'skin', name: 'Sâu TV Đen Trắng', rarity: 'hiem', price: 250, ch: 17, ev: 'bang1',
+      memory: 'Một căn nhà cũ. Một chiếc TV đen trắng.',
+      pal: { body: '#DCDCD6', body2: '#C8C8C1', head: '#E6E6E0', feet: '#55534F', ant: '#8E8E94', antTip: '#D0D0D6', eye: '#2A2A2A', mouth: '#3A3A3A', blush: 'rgba(150,150,150,0.4)', tongue: '#9A9A9A', mark: '#E8453C', cocoon: '#EDEDE8', cocoonLine: '#B0B0AA' },
+      acc: 'rabbit', pattern: 'scan', mark: 'rec', glow: '#CFE8FF', antLen: 2, idle: 'static' },
+    { id: 'nhieu-song', slot: 'fx', name: 'Nhiễu Sóng', rarity: 'thuong', price: 80, ch: 17, ev: 'bang1',
+      memory: 'Thế nên cậu giấu lại. Lần này, kỹ hơn một chút.',
+      fx: { kind: 'static', colors: ['#FFFFFF', '#8E8E94', '#C8C8C1', '#E8453C'] } },
+
     // ---------- Phần thưởng vụ án (không bán, không có trong hộp quà) ----------
     { id: 'tham-tu', slot: 'skin', name: 'Sâu Thám Tử', rarity: 'huyenthoai', price: 0, reward: 'vlts', ch: 11,
       memory: 'Thám tử Thủy phá vụ án đầu tiên: vạch lá, tìm ra Sâu Tím, mở hộp quà bằng đúng giờ em nhận lời.',
@@ -390,7 +413,7 @@
       short: 'Sa Pa',
       tagline: 'Vòng quay đã ra mắt!',
       start: Date.parse('2026-10-21T00:00:00+07:00'),
-      end: Date.parse('2026-11-21T00:00:00+07:00'),
+      end: Date.parse('2026-11-02T00:00:00+07:00'), // đóng sớm (anh Quang, 2/11) để nhường chỗ cho Băng số 1
       price: 100,     // đốt mỗi lượt quay
       pity: 25,       // tối đa 25 lượt là có món Huyền thoại của sự kiện
       refund: 50,     // trúng món đã có thì hoàn lại
@@ -421,7 +444,7 @@
       start: Date.parse('2026-10-26T00:00:00+07:00'),
       // Máy của anh Quang được chơi thử trước từ hôm nay; máy của Thủy vẫn chờ tới ngày mở.
       early: { quang: Date.parse('2026-10-21T00:00:00+07:00') },
-      end: Date.parse('2026-11-10T00:00:00+07:00'),
+      end: Date.parse('2026-11-02T00:00:00+07:00'), // đóng sớm (anh Quang, 2/11)
       style: 'spooky',
       price: 100,
       pity: 25,
@@ -439,6 +462,33 @@
         { item: 'bg:nen-lau-dai', w: 8 },
         { item: 'fx:doi-bay', w: 12 },
         { dot: 100, w: 14 },
+      ],
+    },
+    {
+      // Chương 17 · Cuộn băng số 1: chương đặc biệt nên mỗi lượt đắt gấp đôi vòng thường (200 đốt cây).
+      id: 'bang1',
+      name: 'Băng số 1 · Hồi Ức',
+      short: 'Băng số 1',
+      tagline: 'Vòng quay Băng số 1 đã mở!',
+      start: Date.parse('2026-11-02T00:00:00+07:00'),
+      end: Date.parse('2026-12-02T00:00:00+07:00'),
+      style: 'tape',
+      price: 200,
+      pity: 25,
+      refund: 100,
+      sets: [
+        { id: 'cuon-bang', name: 'Bộ Cuộn Băng', items: ['skin:cuon-bang', 'wing:canh-bang-tu', 'fx:bang-tu'] },
+        { id: 'tim-bang', name: 'Bộ Đêm Tìm Băng', items: ['skin:tai-nghe', 'skin:tv-den-trang', 'fx:nhieu-song'] },
+      ],
+      wheel: [
+        { item: 'skin:cuon-bang', w: 4 },
+        { item: 'fx:nhieu-song', w: 14 },
+        { item: 'wing:canh-bang-tu', w: 8 },
+        { dot: 80, w: 26 },
+        { item: 'skin:tv-den-trang', w: 12 },
+        { item: 'fx:bang-tu', w: 10 },
+        { item: 'skin:tai-nghe', w: 8 },
+        { dot: 200, w: 18 },
       ],
     },
     {
@@ -1781,8 +1831,42 @@
         x.beginPath(); x.moveTo(-r * 0.1, my - r * 0.03); x.quadraticCurveTo(-r * 0.05, my + r * 0.06, 0, my - r * 0.02); x.quadraticCurveTo(r * 0.05, my + r * 0.06, r * 0.1, my - r * 0.03); x.stroke();
       }
     }
+    if (skin.idle === 'static') {
+      // TV đen trắng: vạch quét mờ trên mặt, cứ vài giây mất sóng một thoáng
+      x.save();
+      x.beginPath(); x.ellipse(0, 0, r, r * 0.94, 0, 0, TAU); x.clip();
+      x.fillStyle = 'rgba(40,40,44,0.08)';
+      for (let y = -r; y < r; y += r * 0.16) x.fillRect(-r, y + ((t * 12) % (r * 0.16)), r * 2, r * 0.05);
+      if (t % 6 > 5.65) {
+        for (let i = 0; i < 40; i++) {
+          x.fillStyle = (i + Math.floor(t * 30)) % 3 ? 'rgba(255,255,255,0.8)' : 'rgba(40,40,44,0.6)';
+          x.fillRect(Math.sin(i * 12.9 + t * 40) * r, Math.cos(i * 7.3 + t * 33) * r, r * 0.09, r * 0.09);
+        }
+      }
+      x.restore();
+    }
     drawAccessory(x, skin.acc, r, S, t, false, st);
     if (st.mood) moodExtras(x, r, st, S, t);
+    if (skin.idle === 'rec' && Math.floor(t * 1.4) % 2) {
+      // chấm REC đỏ nhấp nháy bên cạnh đầu, như máy quay đang ghi
+      x.fillStyle = '#E8453C';
+      x.beginPath(); x.arc(r * 1.02, -r * 0.62, r * 0.09, 0, TAU); x.fill();
+      x.font = '800 ' + Math.round(r * 0.22) + 'px system-ui, sans-serif';
+      x.textAlign = 'left'; x.textBaseline = 'middle';
+      x.fillText('REC', r * 1.15, -r * 0.62);
+    }
+    if (skin.idle === 'music') {
+      // nốt nhạc bay ra từ tai nghe
+      for (let k = 0; k < 2; k++) {
+        const ph = ((t + k * 1.1) % 2.2) / 2.2, side = k ? -1 : 1;
+        x.globalAlpha = Math.sin(ph * Math.PI) * 0.9;
+        x.fillStyle = skin.glow || '#FFD27A';
+        x.font = '700 ' + Math.round(r * (0.32 + ph * 0.1)) + 'px system-ui, sans-serif';
+        x.textAlign = 'center'; x.textBaseline = 'middle';
+        x.fillText(k ? '♪' : '♫', side * (r * 1.15 + ph * r * 0.3), -r * 0.1 - ph * r * 0.9);
+      }
+      x.globalAlpha = 1;
+    }
     if (dream) {
       // một trái tim nhỏ bay lên bên vành nón lúc mơ màng
       const k = (t % 7 - 5.7) / 1.3;
@@ -1877,6 +1961,21 @@
         x.strokeStyle = 'rgba(110, 74, 20, 0.35)';
         x.lineWidth = 0.9 * S;
         x.beginPath(); x.moveTo(-R * 1.1, y0 + H * 0.3); x.quadraticCurveTo(0, y0 - H * 0.3, R * 1.1, y0 + H * 0.3); x.stroke();
+      }
+    } else if (kind === 'tape') {
+      // vỏ băng VHS: cánh trên dán nhãn giấy kem có vạch đỏ và dòng kẻ, cánh dưới có dải băng từ nâu chạy qua
+      if (top) {
+        x.fillStyle = '#F3E9D2';
+        x.fillRect(-R, -H * 0.62, R * 2, H * 0.5);
+        x.fillStyle = '#E8453C';
+        x.fillRect(-R, -H * 0.62, R * 2, H * 0.1);
+        x.strokeStyle = 'rgba(58,52,64,0.35)';
+        x.lineWidth = 0.8 * S;
+        x.beginPath(); x.moveTo(-R * 0.6, -H * 0.36); x.lineTo(R * 0.6, -H * 0.36); x.moveTo(-R * 0.6, -H * 0.22); x.lineTo(R * 0.3, -H * 0.22); x.stroke();
+      } else {
+        x.strokeStyle = '#7A4A2A';
+        x.lineWidth = 2.2 * S;
+        x.beginPath(); x.moveTo(-R * 1.1, H * 0.2); x.bezierCurveTo(-R * 0.3, -H * 0.8, R * 0.3, H * 0.9, R * 1.1, -H * 0.1); x.stroke();
       }
     } else if (kind === 'tweed') {
       // vải dạ kẻ ô của áo thám tử: sọc nâu đậm, chỉ vàng mảnh, một sợi hồng, mép khâu chỉ
@@ -2197,7 +2296,8 @@
   // ================= Hạt hiệu ứng khi ăn lá =================
   // Trả về danh sách hạt {kind, vx, vy, life, size, color}; game và tiệm tự nhân với S và vị trí.
   // kind: 0 vụn lá, 1 tim, 4 cánh hoa, 5 mây, 6 sao, 7 nốt nhạc, 8 pháo giấy, 9 hoa văn trám, 10 hạt lúa,
-  // 11 dơi, 12 kẹo, 13 trang giấy, 14 chữ, 15 tia điện, 16 số 0 / 1, 17 kính lúp, 18 dấu chân, 19 dấu hỏi
+  // 11 dơi, 12 kẹo, 13 trang giấy, 14 chữ, 15 tia điện, 16 số 0 / 1, 17 kính lúp, 18 dấu chân, 19 dấu hỏi,
+  // 20 cuộn băng, 21 sợi băng từ, 22 hạt nhiễu sóng
   // (3 là vòng sáng loang ra).
   const VAN_GLYPHS = ['ơ', 'thơ', 'ư', 'ê', 'yêu', 'ô', 'ă', '♡', 'đ', 'em'];
   function eatBurst(fxItem, n, S, leafColors) {
@@ -2231,6 +2331,16 @@
         else if (i % 2) out.push({ kind: 19, vx: (Math.random() - 0.5) * 80 * S, vy: -(60 + Math.random() * 80) * S, life: 0.75 + Math.random() * 0.35, size: (11 + Math.random() * 5) * S, color: c });
         else out.push({ kind: 18, vx: Math.cos(a) * sp * 0.7, vy: Math.sin(a) * sp * 0.7, life: 0.7 + Math.random() * 0.3, size: (2.6 + Math.random() * 1.2) * S, color: '#8A5A33' });
       }
+      else if (fx.kind === 'tape') {
+        // cuộn băng nhỏ xíu bật ra, kèm mấy sợi băng từ xoăn
+        if (i % 3 === 0) out.push({ kind: 20, vx: Math.cos(a) * sp * 0.6, vy: Math.sin(a) * sp * 0.6, life: 0.8 + Math.random() * 0.35, size: (4 + Math.random() * 1.6) * S, color: '#3A3440' });
+        else out.push({ kind: 21, vx: Math.cos(a) * sp * 0.8, vy: Math.sin(a) * sp * 0.8, life: 0.6 + Math.random() * 0.3, size: (5 + Math.random() * 3) * S, color: '#7A4A2A' });
+      }
+      else if (fx.kind === 'static') {
+        // hạt nhiễu sóng đen trắng chớp chớp như màn hình TV mất tín hiệu
+        if (i === 0) out.push({ kind: 3, vx: 0, vy: 0, life: 0.45, size: 5 * S, color: '#C8C8C1' });
+        else out.push({ kind: 22, vx: Math.cos(a) * sp * 0.7, vy: Math.sin(a) * sp * 0.7, life: 0.4 + Math.random() * 0.35, size: (2.6 + Math.random() * 3) * S, color: c });
+      }
       else if (fx.kind === 'candy') out.push({ kind: 12, vx: Math.cos(a) * sp * 0.85, vy: Math.sin(a) * sp * 0.85, life: 0.65 + Math.random() * 0.35, size: (3.4 + Math.random() * 1.6) * S, color: c });
       else out.push({ kind: 8, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.55 + Math.random() * 0.35, size: (2.4 + Math.random() * 2) * S, color: c });
     }
@@ -2256,6 +2366,9 @@
     else if (p.kind === 17) { p.vx *= 1 - 2.2 * dt; p.vy = p.vy * (1 - 2.2 * dt) + 90 * S * dt; p.rot += p.vr * dt * 0.8; }
     else if (p.kind === 18) { p.vx *= 1 - 5 * dt; p.vy *= 1 - 5 * dt; }
     else if (p.kind === 19) { p.vx = Math.sin(p.life * 5) * 26 * S; }
+    else if (p.kind === 20) { p.vy += 380 * S * dt; p.vx *= 1 - 1.2 * dt; p.rot += p.vr * dt * 0.6; }
+    else if (p.kind === 21) { p.vx *= 1 - 2.4 * dt; p.vy = p.vy * (1 - 2.4 * dt) + 80 * S * dt; p.rot += p.vr * dt; }
+    else if (p.kind === 22) { p.vx *= 1 - 3 * dt; p.vy *= 1 - 3 * dt; }
   }
   function drawParticle(x, p, S) {
     const k = p.life / p.max;
@@ -2384,6 +2497,30 @@
       x.lineWidth = s * 0.25;
       x.beginPath(); x.moveTo(-s * 0.45, -s * 0.5); x.lineTo(s * 0.15, s * 0.6); x.stroke();
       x.restore();
+    } else if (p.kind === 20) {
+      // cuộn băng VHS bé: vỏ đen, nhãn kem vạch đỏ, hai bánh cuộn
+      const s = p.size;
+      x.save(); x.translate(p.x, p.y); x.rotate(p.rot);
+      x.fillRect(-s * 1.5, -s, s * 3, s * 2);
+      x.fillStyle = '#F3E9D2';
+      x.fillRect(-s * 1.2, -s * 0.8, s * 2.4, s * 0.6);
+      x.fillStyle = '#E8453C';
+      x.fillRect(-s * 1.2, -s * 0.8, s * 2.4, s * 0.16);
+      x.fillStyle = '#F3E9D2';
+      x.beginPath(); x.arc(-s * 0.6, s * 0.35, s * 0.32, 0, TAU); x.arc(s * 0.6, s * 0.35, s * 0.32, 0, TAU); x.fill();
+      x.restore();
+    } else if (p.kind === 21) {
+      // sợi băng từ xoăn
+      const s = p.size;
+      x.save(); x.translate(p.x, p.y); x.rotate(p.rot);
+      x.strokeStyle = p.color;
+      x.lineWidth = Math.max(1, s * 0.22);
+      x.lineCap = 'round';
+      x.beginPath(); x.moveTo(-s, 0); x.bezierCurveTo(-s * 0.4, -s * 0.9, s * 0.1, s * 0.9, s, -s * 0.2); x.stroke();
+      x.restore();
+    } else if (p.kind === 22) {
+      x.globalAlpha *= Math.sin(p.life * 60 + p.rot * 3) > -0.3 ? 1 : 0.15;
+      x.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
     }
     x.globalAlpha = 1;
   }
@@ -3480,7 +3617,7 @@
         const rr = (14 + (i % 3) * 8) * S;
         p.x = Math.cos(a) * rr;
         p.y = Math.sin(a) * rr * 0.8 + Math.sin(t * 2 + i) * 2 * S;
-        p.max = 1; p.life = 1; p.rot = a + t; p.g = i; p.size *= p.kind === 7 ? 1.3 : 1.25;
+        p.max = 1; p.life = 1; p.rot = a + t; p.g = i; p.size *= p.kind === 7 ? 1.3 : p.kind === 22 ? 2.2 : 1.25;
         if (p.kind === 3) { p.life = 0.5 + 0.5 * Math.abs(Math.sin(t * 1.5)); p.x = 0; p.y = 0; }
         drawParticle(x, p, S);
       });

@@ -39,7 +39,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Dancing+Script:wght@600;700&display=swap" />
   <link rel="stylesheet" href="../home/home.css?v=14" />
-  <link rel="stylesheet" href="shop.css?v=16" />
+  <link rel="stylesheet" href="shop.css?v=25" />
 </head>
 <body data-weather="nang">
   <script>document.body.classList.toggle('night', LPN_NIGHT); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
@@ -154,6 +154,18 @@
         <i class="spooky-strip" aria-hidden="true"></i>
       </div>
 
+      <div class="ev-banner ev-bang1" data-ev="bang1" hidden>
+        <canvas class="ev-art" id="ev-key-bang1" aria-hidden="true"></canvas>
+        <div class="ev-text">
+          <span class="ev-kicker">Sự kiện giới hạn</span>
+          <h2></h2>
+          <p class="ev-tagline"></p>
+          <span class="ev-time"></span>
+        </div>
+        <span class="ev-feat">Nổi bật · <b>Sâu Cuộn Băng</b></span>
+        <i class="tape-strip" aria-hidden="true"></i>
+      </div>
+
       <div class="ev-banner ev-destiny" data-ev="dinh-menh" hidden>
         <svg class="ev-art" viewBox="0 0 360 170" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
           <defs>
@@ -239,8 +251,8 @@
         <button class="wheel-hub" id="wheel-hub" type="button" aria-label="Quay 1 lần">Quay</button>
       </div>
       <div class="spin-btns">
-        <button class="btn primary" id="spin-1" type="button"></button>
-        <button class="btn" id="spin-10" type="button"></button>
+        <button class="gacha-btn" id="spin-1" type="button"></button>
+        <button class="gacha-btn gold" id="spin-10" type="button"></button>
       </div>
       <p class="box-note" id="ev-need" hidden></p>
       <div class="pity">
@@ -255,41 +267,26 @@
 
     <!-- Hộp quà may mắn -->
     <section class="tab-panel box-panel" id="tab-box">
-      <button class="giftbox" id="giftbox" type="button" aria-label="Mở hộp quà">
-        <svg viewBox="0 0 160 150" aria-hidden="true">
-          <ellipse class="gb-shadow" cx="80" cy="140" rx="52" ry="7" />
-          <g class="gb-body">
-            <rect x="26" y="64" width="108" height="72" rx="12" class="gb-box" />
-            <rect x="72" y="64" width="16" height="72" class="gb-ribbon" />
-            <path d="M26 92h108" class="gb-shade" />
-          </g>
-          <g class="gb-lid">
-            <rect x="18" y="46" width="124" height="24" rx="10" class="gb-box gb-top" />
-            <rect x="72" y="46" width="16" height="24" class="gb-ribbon" />
-            <path d="M80 46c-8-20-34-26-34-10c0 10 18 10 34 10M80 46c8-20 34-26 34-10c0 10-18 10-34 10" class="gb-bow" />
-          </g>
-        </svg>
-      </button>
+      <div class="box-hero" id="box-hero" role="button" tabindex="0" aria-label="Mở một hộp quà">
+        <canvas class="box-hero-art" id="box-hero-art" aria-hidden="true"></canvas>
+        <div class="box-hero-text">
+          <span class="ev-kicker">Hộp quà may mắn</span>
+          <h2>Mở quà, gom kỷ niệm</h2>
+          <p>Huyền thoại 3% · chắc chắn có trong 40 hộp</p>
+        </div>
+        <div class="box-hero-pity">
+          <div class="pity-row"><span>Sử thi</span><b id="pity-epic"></b></div>
+          <div class="pity-bar"><i id="pity-epic-bar"></i></div>
+          <div class="pity-row"><span>Huyền thoại</span><b id="pity-legend"></b></div>
+          <div class="pity-bar legend"><i id="pity-legend-bar"></i></div>
+        </div>
+      </div>
       <button class="btn free-btn" id="btn-free" type="button" hidden></button>
-      <div class="qty" role="group" aria-label="Số hộp muốn mở">
-        <button class="qty-step" id="qty-minus" type="button" aria-label="Bớt một hộp">−</button>
-        <span class="qty-num"><b id="qty">1</b> hộp</span>
-        <button class="qty-step" id="qty-plus" type="button" aria-label="Thêm một hộp">+</button>
+      <div class="gacha-row">
+        <button class="gacha-btn" id="btn-open-1" type="button"><b>Mở 1 hộp</b><small></small></button>
+        <button class="gacha-btn gold" id="btn-open-10" type="button"><b>Mở 10 hộp</b><small></small></button>
       </div>
-      <div class="qty-chips" id="qty-chips">
-        <button type="button" data-q="1">×1</button>
-        <button type="button" data-q="5">×5</button>
-        <button type="button" data-q="10">×10</button>
-        <button type="button" data-q="20">×20</button>
-      </div>
-      <button class="btn primary open-btn" id="btn-open" type="button"></button>
       <p class="box-note" id="box-need" hidden></p>
-      <div class="pity">
-        <div class="pity-row"><span>Bảo đảm Sử thi</span><b id="pity-epic"></b></div>
-        <div class="pity-bar"><i id="pity-epic-bar"></i></div>
-        <div class="pity-row"><span>Bảo đảm Huyền thoại</span><b id="pity-legend"></b></div>
-        <div class="pity-bar legend"><i id="pity-legend-bar"></i></div>
-      </div>
       <ul class="odds" id="odds"></ul>
       <p class="box-note">Món chưa có luôn được ưu tiên. Trùng món đã có thì hoàn lại <b id="refund"></b> đốt.</p>
     </section>
@@ -345,24 +342,37 @@
     </div>
   </div>
 
-  <!-- Mở nhiều hộp / 10 lượt quay -->
+  <!-- Màn mở quà kiểu gacha: hộp rơi, chạm mở, từng món hiện ra, rồi tổng kết -->
   <div class="pack" id="pack" role="dialog" aria-modal="true" aria-labelledby="pack-title" hidden>
+    <canvas class="sm-sky" id="sm-sky" aria-hidden="true"></canvas>
     <header class="pack-head">
-      <b id="pack-title"></b>
-      <span id="pack-count"></span>
+      <div><b id="pack-title"></b><span id="pack-count"></span></div>
+      <button class="sm-skip" id="pack-all" type="button">Bỏ qua</button>
     </header>
-    <div class="pack-grid" id="pack-grid"></div>
-    <p class="pack-banner" id="pack-banner" aria-live="polite"></p>
-    <div class="pack-sum" id="pack-sum" hidden>
-      <p id="pack-sum-text"></p>
-      <div class="pack-new" id="pack-new"></div>
+    <div class="sm-show" id="sm-cap" aria-live="polite" hidden>
+      <div class="sm-big" id="sm-big">
+        <div class="sm-flip">
+          <div class="sm-back"><i></i></div>
+          <div class="sm-front">
+            <canvas class="sm-art" id="sm-art"></canvas>
+            <div class="sm-plate"><small id="sm-rar"></small><b id="sm-name"></b></div>
+          </div>
+        </div>
+      </div>
+      <div class="sm-stars" id="sm-stars"></div>
+      <span class="sm-tag" id="sm-tag"></span>
+      <p class="sm-memory" id="sm-memory"></p>
     </div>
-    <div class="pack-actions">
-      <button class="btn primary" id="pack-all" type="button">Mở hết</button>
-      <button class="btn primary" id="pack-again" type="button" hidden></button>
+    <div class="pack-sum" id="pack-sum" hidden>
+      <div class="pack-grid" id="pack-grid"></div>
+      <p class="sm-sum-text" id="pack-sum-text"></p>
+    </div>
+    <p class="sm-hint" id="pack-hint" hidden></p>
+    <div class="pack-actions" id="pack-actions" hidden>
+      <button class="gacha-btn" id="pack-use" type="button" hidden><b>Dùng ngay</b></button>
+      <button class="gacha-btn gold" id="pack-again" type="button" hidden></button>
       <button class="btn ghost" id="pack-done" type="button">Xong</button>
     </div>
-    <p class="pack-hint" id="pack-hint">Chạm từng hộp để mở, hoặc bấm Mở hết</p>
   </div>
 
   <!-- Hoạt cảnh khi mặc skin Định mệnh (chạm để bỏ qua) -->
@@ -406,7 +416,7 @@
 
   <script src="../home/sync.js?v=8"></script>
   <script src="../home/wallet.js?v=12"></script>
-  <script src="skins.js?v=28"></script>
-  <script src="shop.js?v=21"></script>
+  <script src="skins.js?v=34"></script>
+  <script src="shop.js?v=29"></script>
 </body>
 </html>

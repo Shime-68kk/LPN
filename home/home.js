@@ -801,6 +801,19 @@
     // Vừa đẩy thì không tính là chạm (không mở trang widget); đang mở mà chạm vào viên thì đóng lại
     pill.addEventListener('click', (e) => { if (moved || shown) { e.preventDefault(); if (!moved) reveal(false); moved = false; } });
     pill.style.touchAction = 'pan-y';
+    // Máy tính: viên là một đường link nên trình duyệt hay "kéo link" mất khi giữ chuột kéo; tắt kéo link để đẩy
+    // được bằng chuột. Touchpad vuốt ngang hai ngón cũng đẩy viên ra / vào.
+    pill.draggable = false;
+    pill.addEventListener('dragstart', (e) => e.preventDefault());
+    pill.style.userSelect = 'none';
+    let wheelT = 0;
+    pill.addEventListener('wheel', (e) => {
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY) || Math.abs(e.deltaX) < 8) return;
+      e.preventDefault();
+      if (performance.now() - wheelT < 400) return;
+      wheelT = performance.now();
+      reveal(e.deltaX > 0);
+    }, { passive: false });
   })();
   // Thẻ trailer: tới giờ mở thì đổi lời, gợi ý đọc Chương 17 để tìm cuộn băng thật
   if (!TAPE_HOLD && Date.now() >= Date.parse('2026-11-01T20:00:00+07:00')) {

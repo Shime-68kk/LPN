@@ -1081,7 +1081,7 @@
       this.sk = { charge: 0, on: 0, ready: false, told: false, fx: null, hit: 0, cnt: 0, net: 0, lotus: 0, label: '', sup: TRY_DOMAIN ? DOMAIN_NEED : 0 };
       this.grace = 0; this.graceHit = 0;
       this.vmul = 1;
-      this.bonusDot = 0; this.bonusBanked = 0;
+      this.bonusDot = 0; this.bonusBanked = 0; this.domDot = 0; this.domLost = 0;
       VAC.length = 0;
       STARS.length = 0;
       UI.count(null);
@@ -1285,7 +1285,7 @@
         if (fx.harvest) {
           this.bonusDot += fx.harvest;
           const at = via ? viaPos(via, n) : { x: Sau.headX, y: Sau.headY };
-          popup('+' + fx.harvest + ' đốt', at.x + 26 * S, at.y - HEAD_R * 3.2, T.night ? '#9BE58A' : '#2E8B3E', 15);
+          popup('+' + fx.harvest + ' đốt cây', at.x + 26 * S, at.y - HEAD_R * 3.2, T.night ? '#9BE58A' : '#2E8B3E', 15);
         }
         // Sao Băng: bé tự đớp một lá thì sao bay đi đớp giùm lá kế tiếp (sao không gọi thêm sao).
         if (fx.star && via !== 'star') { launchStar(this.songT); if (fx.star2) launchStar(this.songT); }
@@ -2311,9 +2311,10 @@
       const leaves = Math.max(1, Math.round(300 * f));
       let pts = Math.round((300000 * f) / 100) * 100;
       if (DM.x2pts) pts *= 2;
-      // mỗi lá thu về là 1 đốt cộng thẳng vào ví (×2 ĐỐT thì gấp đôi); điểm thì vẫn quy ra đốt như thường
+      // mỗi lá thu về là 1 đốt cây (×2 ĐỐT thì gấp đôi), cộng thẳng vào ván đang chơi (hiện dưới điểm);
+      // cuối bài cùng điểm vào ví một lượt
       const dot = leaves * (DM.x2dot ? 2 : 1);
-      if (!TRY_DOMAIN) { Game.score += pts; Game.bonusDot += dot; }
+      if (!TRY_DOMAIN) { Game.score += pts; Game.bonusDot += dot; Game.domDot = (Game.domDot || 0) + dot; }
       Game.domLeaves = (Game.domLeaves || 0) + leaves;
       Sau.segs += Math.round(leaves / 15);
       DM.reward = { leaves, pts, dot, t: 0 };
@@ -2346,9 +2347,9 @@
   function domainHit() {
     DM.hits++;
     DM.inv = 0.5;
-    let lost = 0;
-    if (window.Wallet && !TRY_DOMAIN) Wallet.update((w) => { lost = Math.min(60, w.dot); w.dot -= lost; });
-    else lost = 60;
+    // trừ vào đốt cây của ván này (hiện dưới điểm), cuối bài mới tính vào ví
+    const lost = 60;
+    if (!TRY_DOMAIN) { Game.bonusDot -= lost; Game.domLost = (Game.domLost || 0) + lost; UI.hud(Game); }
     DM.lost += lost;
     DM.flash = 0.9;
     DM.flashCol = '#FF3B6B';
@@ -2356,7 +2357,7 @@
     Sau.sad = 0.6;
     Sound.lzHit();
     buzz([40, 30, 60]);
-    popup('−60 đốt', Sau.headX, Sau.headY - HEAD_R * 2.4, '#FF6F8E', 22);
+    popup('−60 đốt cây', Sau.headX, Sau.headY - HEAD_R * 2.4, '#FF6F8E', 22);
   }
   function domainTap() {
     if (Game.state !== 'domain' || DM.phase !== 'spam') return;
@@ -2814,7 +2815,7 @@
       }
       const fy = H - 46 * S;
       bar(fy, 1 - DM.pt / DM_T.dodge, '#5FFFE0');
-      const info = [DM.hits ? 'Trúng ' + DM.hits + ' · −' + fmtNum(DM.lost) + ' đốt' : 'Chưa trúng tia nào', DM.x2pts && '×2 ĐIỂM', DM.x2dot && '×2 ĐỐT'].filter(Boolean).join('  ·  ');
+      const info = [DM.hits ? 'Trúng ' + DM.hits + ' · −' + fmtNum(DM.lost) + ' đốt cây' : 'Chưa trúng tia nào', DM.x2pts && '×2 ĐIỂM', DM.x2dot && '×2 ĐỐT'].filter(Boolean).join('  ·  ');
       banner(info, fy - 16 * S, 13, DM.hits ? '#FF8FA3' : '#9BE5D5');
     } else if (ph === 'ram') banner('HÚC!', by, 30, '#FFE08A');
     else if (ph === 'spam') {
@@ -2826,7 +2827,7 @@
       const r = DM.reward, u = clamp(r.t / 0.8, 0, 1);
       banner('+' + Math.round(r.leaves * u) + ' lá', by - 10 * S, 30, '#9BE58A');
       banner('+' + fmtNum(Math.round((r.pts * u) / 100) * 100) + ' điểm' + (DM.x2pts ? ' (×2)' : ''), by + 30 * S, 22, '#FFE08A');
-      banner('+' + fmtNum(Math.round(r.dot * u)) + ' đốt' + (DM.x2dot ? ' (×2)' : ''), by + 64 * S, 20, '#9BE58A');
+      banner('+' + fmtNum(Math.round(r.dot * u)) + ' đốt cây' + (DM.x2dot ? ' (×2)' : ''), by + 64 * S, 20, '#9BE58A');
       if (TRY_DOMAIN) banner('(chơi thử nên không cộng vào ví)', by + 92 * S, 12, '#9BE5D5');
     }
     if (DM.flash > 0) {
@@ -3098,6 +3099,7 @@
       score: $('score'), scoreBox: $('score').parentElement, length: $('length'), hearts: $('hearts'), combo: $('combo'), comboNum: $('combo-num'),
       progress: $('progress-fill'), songs: $('songs'), pstars: $('pstars'), speed: $('speed'), wallet: $('wallet'),
       skill: $('skill'), skillFill: $('skill-fill'), skillIc: $('skill-ic'), skillSup: $('skill-sup'),
+      dot: $('hud-dot'),
     },
     last: {},
     show(name) { this.els[name].hidden = false; },
@@ -3106,6 +3108,15 @@
       const e = this.els;
       if (this.last.score !== gm.score) { e.score.textContent = gm.score.toLocaleString('vi-VN'); this.last.score = gm.score; }
       if (this.last.segs !== Sau.segs) { e.length.textContent = Sau.segs; this.last.segs = Sau.segs; }
+      // đốt cây thưởng / phạt trong ván (Lãnh Địa, Được Mùa): hiện ngay dưới điểm, cuối bài mới vào ví
+      const bd = gm.bonusDot || 0;
+      if (this.last.bd !== bd) {
+        e.dot.hidden = !bd;
+        e.dot.textContent = (bd > 0 ? '+' : '−') + Math.abs(bd).toLocaleString('vi-VN') + ' đốt cây';
+        e.dot.classList.toggle('neg', bd < 0);
+        e.dot.classList.remove('bump'); void e.dot.offsetWidth; e.dot.classList.add('bump');
+        this.last.bd = bd;
+      }
       if (this.last.hearts !== gm.hearts) {
         e.hearts.replaceChildren();
         for (let i = 0; i < Math.max(3, gm.hearts); i++) e.hearts.appendChild(svgIcon(PATH_HEART, i < gm.hearts ? (i >= 3 ? 'bonus' : '') : 'lost'));
@@ -3186,7 +3197,7 @@
       const ok = dot >= step.dot;
       const btn = $('btn-revive');
       btn.disabled = !ok;
-      btn.textContent = 'Hồi sinh · ' + step.dot + ' đốt';
+      btn.textContent = 'Hồi sinh · ' + step.dot + ' đốt cây';
       const need = $('rv-need');
       need.hidden = false;
       need.textContent = ok ? 'Ví đang có ' + fmtNum(dot) + ' đốt cây' : 'Em đang có ' + fmtNum(dot) + ' đốt, còn thiếu ' + fmtNum(step.dot - dot) + ' đốt nữa.';
@@ -3320,9 +3331,12 @@
       });
       bank();
       const left = window.Wallet ? Wallet.get().points : 0;
+      const dom = gm.domDot || gm.domLost
+        ? 'Lãnh Địa: +' + fmtNum(gm.domDot || 0) + ' đốt cây' + (gm.domLost ? ', trúng laze −' + fmtNum(gm.domLost) : '') + '. '
+        : '';
       $('res-wallet').textContent = (gm.score
-        ? '+' + fmtNum(gm.score) + ' điểm' + (gm.dotGot ? ' = +' + gm.dotGot + ' đốt cây' : '') + '. '
-        : 'Ván này chưa có điểm. ') + walletText()
+        ? '+' + fmtNum(gm.score) + ' điểm' + (gm.dotGot ? ' = ' + (gm.dotGot > 0 ? '+' : '−') + fmtNum(Math.abs(gm.dotGot)) + ' đốt cây' : '') + '. '
+        : 'Ván này chưa có điểm. ') + dom + walletText()
         + (left ? ' (dư ' + fmtNum(left) + ' điểm để dành ván sau).' : '.');
       this.hide('hud');
       this.show('result');
@@ -3334,8 +3348,8 @@
   function bank() {
     // Được Mùa: đốt cây thưởng cộng thẳng vào ví.
     const extra = (Game.bonusDot || 0) - (Game.bonusBanked || 0);
-    if (extra > 0 && window.Wallet) {
-      Wallet.update((w) => { w.dot += extra; });
+    if (extra && window.Wallet) {
+      Wallet.update((w) => { w.dot = Math.max(0, w.dot + extra); });
       Game.bonusBanked = Game.bonusDot;
       Game.dotGot = (Game.dotGot || 0) + extra;
     }
@@ -3676,7 +3690,7 @@
       + fmtNum(w.points) + ' điểm, thêm ' + fmtNum(Wallet.PACK_POINTS - w.points) + ' điểm nữa là được +' + Wallet.PACK_DOT + ' đốt.';
     const ex = $('btn-w-exchange');
     ex.hidden = !can;
-    ex.textContent = 'Đổi ' + fmtNum(w.points) + ' điểm ra ' + can + ' đốt';
+    ex.textContent = 'Đổi ' + fmtNum(w.points) + ' điểm ra ' + can + ' đốt cây';
     UI.show('wallet');
   }
   $('menu-wallet').addEventListener('click', () => { Sound.unlock(); Sound.click(); showWallet(); });

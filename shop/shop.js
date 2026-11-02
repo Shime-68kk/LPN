@@ -125,8 +125,7 @@
   }
 
   // ================= Trạng thái =================
-  const UI = { tab: 'box', trying: null, sheet: null, reveal: null, revealCtx: 'single', confirmBuy: 0, confirmUp: 0, qty: 1 };
-  try { UI.qty = Math.max(1, Math.min(MAX_QTY, parseInt(sessionStorage.getItem('lpn:boxQty'), 10) || 1)); } catch (e) { /* bỏ qua */ }
+  const UI = { tab: 'box', trying: null, sheet: null, reveal: null, revealCtx: 'single', confirmBuy: 0, confirmUp: 0 };
   const look = () => {
     const eq = Wallet.equipped();
     const pick = (slot) => (UI.trying && UI.trying.slot === slot ? UI.trying : Skins.get(slot, eq[slot]));
@@ -747,52 +746,30 @@
     });
     return ok ? results : null;
   }
-  function setQty(n) {
-    UI.qty = Math.max(1, Math.min(MAX_QTY, n));
-    try { sessionStorage.setItem('lpn:boxQty', String(UI.qty)); } catch (e) { /* bỏ qua */ }
-    renderBox();
-  }
   function renderBox() {
     const w = Wallet.get();
-    const n = UI.qty, cost = n * BOX_PRICE;
     const fb = $('btn-free');
     fb.hidden = !w.freeBoxes;
     if (w.freeBoxes) {
       const k = Math.min(MAX_QTY, w.freeBoxes);
-      fb.textContent = '🎁 Mở ' + (k === 1 ? 'hộp quà tặng' : k + ' hộp quà tặng') + ' · Miễn phí';
+      fb.textContent = 'Mở ' + (k === 1 ? 'hộp quà tặng' : k + ' hộp quà tặng') + ' · Miễn phí';
     }
-    $('qty').textContent = n;
-    $('qty-minus').disabled = n <= 1;
-    $('qty-plus').disabled = n >= MAX_QTY;
-    document.querySelectorAll('#qty-chips button').forEach((b) => {
-      const q = +b.dataset.q;
-      b.setAttribute('aria-pressed', String(q === n));
-      b.classList.toggle('short', q * BOX_PRICE > w.dot);
-    });
-    const btn = $('btn-open');
-    btn.textContent = (n === 1 ? 'Mở hộp' : 'Mở ' + n + ' hộp') + ' · ' + fmt(cost) + ' đốt';
+    for (const [id, n] of [['btn-open-1', 1], ['btn-open-10', 10]]) {
+      $(id).querySelector('small').textContent = fmt(n * BOX_PRICE);
+      $(id).classList.toggle('short', w.dot < n * BOX_PRICE);
+    }
     const need = $('box-need');
-    if (w.dot < cost) {
-      need.hidden = false;
-      need.replaceChildren('Còn thiếu ' + fmt(cost - w.dot) + ' đốt. ');
-      const can = Math.min(MAX_QTY, Math.floor(w.dot / BOX_PRICE));
-      if (can >= 1) {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'link-btn';
-        b.textContent = 'Mở ' + can + ' hộp thôi';
-        b.addEventListener('click', () => { SFX.click(); setQty(can); });
-        need.appendChild(b);
-      } else {
-        const a = document.createElement('a');
-        a.href = '../game/';
-        a.textContent = 'Chơi Sâu Tím kiếm thêm';
-        need.appendChild(a);
-      }
-    } else need.hidden = true;
+    need.hidden = w.dot >= BOX_PRICE;
+    if (!need.hidden) {
+      need.replaceChildren('Còn thiếu ' + fmt(BOX_PRICE - w.dot) + ' đốt. ');
+      const a = document.createElement('a');
+      a.href = '../game/';
+      a.textContent = 'Chơi Sâu Tím kiếm thêm';
+      need.appendChild(a);
+    }
     const leftE = PITY_EPIC - w.pityEpic, leftL = PITY_LEGEND - w.pityLegend;
-    $('pity-epic').textContent = 'còn tối đa ' + leftE + ' hộp';
-    $('pity-legend').textContent = 'còn tối đa ' + leftL + ' hộp';
+    $('pity-epic').textContent = 'còn ' + leftE + ' hộp';
+    $('pity-legend').textContent = 'còn ' + leftL + ' hộp';
     $('pity-epic-bar').style.width = (w.pityEpic / PITY_EPIC) * 100 + '%';
     $('pity-legend-bar').style.width = (w.pityLegend / PITY_LEGEND) * 100 + '%';
     $('refund').textContent = DUP_REFUND;
@@ -812,10 +789,123 @@
       odds.appendChild(li);
     }
   }
+  // Băng-rôn Hộp quà: trời đêm, hộp quà phát sáng bồng bềnh giữa hai món Huyền thoại chưa có (hoặc đẹp nhất).
+  let HERO = null;
+  function drawHero(t) {
+    const c = $('box-hero-art');
+    const [W, H] = sizeCanvas(c);
+    const x = c.getContext('2d');
+    x.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (!HERO) {
+      const w = Wallet.get();
+      const leg = ITEMS.filter((i) => inBox(i) && i.rarity === 'huyenthoai');
+      const pick = leg.filter((i) => !Wallet.owns(i.slot, i.id, w)).concat(leg);
+      HERO = [pick.find((i) => i.slot === 'skin') || pick[0], pick.find((i) => i.slot !== 'skin') || pick[1]].filter(Boolean);
+    }
+    drawSky(x, W, H, t, ['#3A2A78', '#140E2C']);
+    const cx = W / 2, cy = H * 0.6, s = Math.min(W * 0.25, H * 0.33);
+    softGlow(x, cx, cy, s * 2.2, '#FFD27A', 0.28);
+    HERO.forEach((it, i) => {
+      const side = i ? 1 : -1, sz = s * 1.35;
+      x.save();
+      x.translate(cx + side * W * 0.3 - sz / 2, cy - sz * 0.55 + Math.sin(t * 1.6 + i * 2) * 5);
+      x.globalAlpha = 0.95;
+      const g = x.createRadialGradient(sz / 2, sz / 2, 0, sz / 2, sz / 2, sz * 0.55);
+      g.addColorStop(0, 'rgba(255,201,77,0.45)'); g.addColorStop(1, 'rgba(255,201,77,0)');
+      x.fillStyle = g; x.beginPath(); x.arc(sz / 2, sz / 2, sz * 0.55, 0, TAU); x.fill();
+      Skins.drawPreview(x, it, sz, sz, t);
+      x.restore();
+    });
+    drawGiftBox(x, cx, cy + Math.sin(t * 2.2) * 5, s, BOXC.box, 0, 0.25 + 0.1 * Math.sin(t * 3), '#FFE3A0');
+    for (let k = 0; k < 6; k++) {
+      const a = t * 0.8 + k * (TAU / 6), r = s * (0.95 + 0.1 * Math.sin(t * 3 + k));
+      x.globalAlpha = 0.5 + 0.5 * Math.sin(t * 4 + k);
+      x.fillStyle = k % 2 ? '#FFE27A' : '#FFFFFF';
+      Skins.heartPath(x, cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.55, 3 + (k % 3));
+      x.fill();
+    }
+    x.globalAlpha = 1;
+  }
+
+  // Băng-rôn Băng số 1: căn phòng tối, chiếc TV đen trắng đang sáng (vạch quét chạy, thỉnh thoảng nháy),
+  // Sâu Cuộn Băng đứng trước TV, bụi li ti bay trong ánh màn hình, một cuộn băng nằm dưới sàn.
+  const KEY_ITEM = Skins.byKey('skin:cuon-bang');
+  const MOTES = Array.from({ length: 18 }, () => [Math.random(), Math.random(), 0.5 + Math.random()]);
+  function drawKeyBang1(t) {
+    const c = $('ev-key-bang1');
+    if (!c || !c.offsetParent) return;
+    const [W, H] = sizeCanvas(c);
+    const x = c.getContext('2d');
+    x.setTransform(DPR, 0, 0, DPR, 0, 0);
+    let g = x.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#1B1522'); g.addColorStop(0.72, '#120E18'); g.addColorStop(0.72, '#231B26'); g.addColorStop(1, '#17121A');
+    x.fillStyle = g;
+    x.fillRect(0, 0, W, H);
+    const flick = Math.floor(t * 7) % 23 === 0 ? 0.7 : 1;
+    const tw = Math.min(W * 0.3, H * 0.52), th = tw * 0.8, tx = W - tw * 0.56 - 4, ty = H * 0.36;
+    // ánh màn hình hắt ra phòng
+    softGlow(x, tx, ty, H * 1.15, '#BFD9FF', 0.32 * flick);
+    // bụi bay trong ánh sáng
+    for (const [mx, my, sp] of MOTES) {
+      const px = tx - W * 0.45 + mx * W * 0.7 + Math.sin(t * sp + my * 9) * 6;
+      const py = ((my - t * 0.02 * sp) % 1 + 1) % 1 * H;
+      x.globalAlpha = 0.25 + 0.35 * Math.sin(t * 2 * sp + mx * 7);
+      x.fillStyle = '#E8F1FF';
+      x.beginPath(); x.arc(px, py, 1 + sp * 0.6, 0, TAU); x.fill();
+    }
+    x.globalAlpha = 1;
+    // ăng-ten tai thỏ
+    x.strokeStyle = '#8E8E94'; x.lineWidth = 2.4; x.lineCap = 'round';
+    x.beginPath(); x.moveTo(tx - tw * 0.08, ty - th * 0.5); x.lineTo(tx - tw * 0.3, ty - th * 0.95); x.moveTo(tx + tw * 0.06, ty - th * 0.5); x.lineTo(tx + tw * 0.28, ty - th * 0.98); x.stroke();
+    // vỏ TV gỗ
+    g = x.createLinearGradient(tx - tw / 2, 0, tx + tw / 2, 0);
+    g.addColorStop(0, '#6A5040'); g.addColorStop(1, '#3E2E24');
+    x.fillStyle = g; rr(x, tx - tw / 2, ty - th / 2, tw, th, tw * 0.1); x.fill();
+    x.fillStyle = '#2A1F18'; x.fillRect(tx - tw * 0.36, ty + th / 2, tw * 0.08, H * 0.06); x.fillRect(tx + tw * 0.28, ty + th / 2, tw * 0.08, H * 0.06);
+    // màn hình
+    const sw = tw * 0.66, sh = th * 0.74, sx = tx - tw / 2 + tw * 0.07, sy = ty - sh / 2;
+    g = x.createRadialGradient(sx + sw / 2, sy + sh / 2, 0, sx + sw / 2, sy + sh / 2, sw * 0.7);
+    g.addColorStop(0, 'rgba(240,246,250,' + flick + ')'); g.addColorStop(1, 'rgba(150,160,170,' + flick + ')');
+    x.fillStyle = g; rr(x, sx, sy, sw, sh, tw * 0.08); x.fill();
+    x.save();
+    rr(x, sx, sy, sw, sh, tw * 0.08); x.clip();
+    x.fillStyle = 'rgba(40,40,48,0.12)';
+    for (let yy = sy + ((t * 14) % 5); yy < sy + sh; yy += 5) x.fillRect(sx, yy, sw, 1.6);
+    x.fillStyle = 'rgba(255,255,255,0.18)';
+    x.fillRect(sx, sy + ((t * 40) % (sh + 30)) - 15, sw, 10);
+    x.fillStyle = '#E8453C';
+    Skins.heartPath(x, sx + sw / 2, sy + sh / 2 + 2, sh * 0.16 * (1 + 0.06 * Math.sin(t * 4)));
+    x.fill();
+    x.restore();
+    // núm vặn
+    x.fillStyle = '#2A1F18';
+    x.beginPath(); x.arc(tx + tw * 0.36, ty - th * 0.18, tw * 0.05, 0, TAU); x.arc(tx + tw * 0.36, ty + th * 0.08, tw * 0.05, 0, TAU); x.fill();
+    // cuộn băng dưới sàn
+    x.save();
+    x.translate(W - 40, H * 0.8); x.rotate(-0.12);
+    x.fillStyle = '#2F2A35'; rr(x, -22, -12, 44, 24, 3); x.fill();
+    x.fillStyle = '#F3E9D2'; x.fillRect(-17, -9, 34, 7);
+    x.fillStyle = '#E8453C'; x.fillRect(-17, -9, 34, 2);
+    x.fillStyle = '#F3E9D2'; x.beginPath(); x.arc(-8, 5, 3.5, 0, TAU); x.arc(8, 5, 3.5, 0, TAU); x.fill();
+    x.restore();
+    // Sâu Cuộn Băng đứng trước TV
+    if (KEY_ITEM) {
+      const sz = H * 0.6;
+      x.save();
+      x.translate(Math.max(W * 0.6, tx - tw * 0.75) - sz / 2, H * 0.86 - sz + Math.sin(t * 2) * 2);
+      Skins.drawPreview(x, KEY_ITEM, sz, sz, t);
+      x.restore();
+    }
+    // tối dần sang trái cho chữ dễ đọc
+    g = x.createLinearGradient(0, 0, W * 0.62, 0);
+    g.addColorStop(0, 'rgba(14,10,20,0.85)'); g.addColorStop(1, 'rgba(14,10,20,0)');
+    x.fillStyle = g;
+    x.fillRect(0, 0, W, H);
+  }
+
   let opening = false;
-  function openBox() {
+  function openBox(n) {
     if (opening || PK.on) return;
-    const n = UI.qty;
     const before = Wallet.get().dot;
     if (before < n * BOX_PRICE) { SFX.no(); toast('Chưa đủ đốt, chơi Sâu Tím thêm nha'); return; }
     const results = buyBoxes(n);
@@ -823,38 +913,11 @@
     bumpDot();
     // Đốt hoàn lại khi trùng chỉ cộng vào số hiện trên màn hình sau khi mở xong.
     $('dot').textContent = fmt(before - n * BOX_PRICE);
-    if (n > 1) {
-      openPack(results, {
-        theme: 'box',
-        title: n + ' hộp quà',
-        again: () => ({ label: 'Mở tiếp ' + n + ' hộp · ' + fmt(n * BOX_PRICE) + ' đốt', ok: Wallet.get().dot >= n * BOX_PRICE, run: openBox }),
-      });
-      return;
-    }
-    // Một hộp: lắc ngay trên trang. Hộp Sử thi / Huyền thoại đổi màu giữa chừng và lắc lâu hơn.
-    opening = true;
-    const res = results[0];
-    const box = $('giftbox');
-    const big = BIG(res.rar), legend = res.rar === 'huyenthoai';
-    const shakes = legend ? 2 : big ? 1.5 : 1; // số vòng lắc, mỗi vòng 0,9 giây
-    box.style.setProperty('--n', shakes);
-    box.classList.add('opening');
-    SFX.shake(shakes);
-    buzz(30);
-    if (big) {
-      setTimeout(() => {
-        box.classList.add('tell', 'tell-' + res.rar);
-        SFX.charge(res.rar);
-        buzz(legend ? [20, 60, 20, 60, 20] : 40);
-      }, 420);
-    }
-    setTimeout(() => {
-      box.classList.remove('opening', 'tell', 'tell-suthi', 'tell-huyenthoai');
-      opening = false;
-      if (big) { flash(res.rar); const [cx, cy] = centerOf(box); fxBurst(cx, cy, res.rar); }
-      showReveal(res, 'single');
-      renderAll();
-    }, shakes * 900 + 350);
+    openPack(results, {
+      theme: 'box',
+      title: n === 1 ? 'Hộp quà may mắn' : n + ' hộp quà',
+      again: () => ({ label: (n === 1 ? 'Mở tiếp' : 'Mở tiếp ' + n + ' hộp') + ' · ' + fmt(n * BOX_PRICE) + ' đốt', ok: Wallet.get().dot >= n * BOX_PRICE, run: () => openBox(n) }),
+    });
   }
 
   // Hộp được tặng (phần thưởng phá án…): mở luôn một lượt tối đa 20 hộp, không mất đốt.
@@ -874,219 +937,351 @@
     });
   }
 
-  // ================= Mở nhiều hộp cùng lúc =================
-  const BOX_SVG = '<svg class="pb-svg" viewBox="0 0 160 150" aria-hidden="true">'
-    + '<ellipse class="gb-shadow" cx="80" cy="140" rx="52" ry="7" />'
-    + '<g class="gb-body"><rect x="26" y="64" width="108" height="72" rx="12" class="gb-box" /><rect x="72" y="64" width="16" height="72" class="gb-ribbon" /><path d="M26 92h108" class="gb-shade" /></g>'
-    + '<g class="gb-lid"><rect x="18" y="46" width="124" height="24" rx="10" class="gb-box gb-top" /><rect x="72" y="46" width="16" height="24" class="gb-ribbon" />'
-    + '<path d="M80 46c-8-20-34-26-34-10c0 10 18 10 34 10M80 46c8-20 34-26 34-10c0 10-18 10-34 10" class="gb-bow" /></g></svg>';
-  const PK = { on: false, res: [], cells: [], opened: [], done: [], auto: false, waiting: false, busy: 0, timer: 0, opts: null };
+  // ================= Màn mở quà (kiểu gacha) =================
+  // Sân khấu tối phủ cả màn hình: hộp quà rơi xuống, chạm để mở, hộp rung và đổi màu báo trước món hiếm nhất
+  // (trắng → xanh → tím → vàng → hồng), bung sáng, rồi từng món hiện ra với tia sáng và số sao theo độ hiếm.
+  // Mở nhiều hộp thì kết thúc ở màn tổng kết dạng thẻ. Vòng quay sự kiện (noBox) bỏ qua phần hộp.
+  const PK = { on: false, res: [], order: [], i: -1, phase: '', t0: 0, opts: null, best: null, lvl: 0, raf: 0, sky: null };
   const resRank = (r) => (r.item ? RANK.indexOf(r.rar) * 2 + (r.dup ? 0 : 1) : -1);
+  const STARS = { thuong: 1, hiem: 2, suthi: 3, huyenthoai: 4, dinhmenh: 5 };
+  const GLOW = { thuong: '#FFFFFF', hiem: '#6FB0FF', suthi: '#B57CFF', huyenthoai: '#FFC94D', dinhmenh: '#FF6FAE' };
+  // màu hộp theo nơi mở: hộp quà thường, Định Mệnh, vòng quay từng sự kiện
+  const BOXC = {
+    box: { a: '#B79CF0', b: '#8A6BD8', lid: '#C9B2F7', rib: '#FF8FA3', bow: '#FF6F8E', sky: ['#2A1F55', '#120C26'] },
+    destiny: { a: '#FF8FC4', b: '#C2408A', lid: '#FFB3DA', rib: '#5FFFE0', bow: '#2BC8B0', sky: ['#4A1F4F', '#140A1E'] },
+    bang1: { a: '#4A4352', b: '#2F2A35', lid: '#5A5262', rib: '#E8453C', bow: '#F3E9D2', sky: ['#2A2530', '#0E0B12'] },
+    sapa: { a: '#3E4CA0', b: '#2F3B85', lid: '#5160B8', rib: '#D62F45', bow: '#FFC93C', sky: ['#2A2160', '#120C26'] },
+    halloween: { a: '#FF9F43', b: '#E07A1F', lid: '#FFB86B', rib: '#5B3A8C', bow: '#2A1B3D', sky: ['#2B1850', '#0E0718'] },
+  };
+  const ease = (k) => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3);
+  const bounce = (k) => { k = Math.min(1, k); const n = 7.5625, d = 2.75; if (k < 1 / d) return n * k * k; if (k < 2 / d) return n * (k -= 1.5 / d) * k + 0.75; if (k < 2.5 / d) return n * (k -= 2.25 / d) * k + 0.9375; return n * (k -= 2.625 / d) * k + 0.984375; };
 
   function openPack(results, opts) {
-    Object.assign(PK, { on: true, res: results, opts, opened: results.map(() => false), done: results.map(() => false), auto: false, waiting: false, busy: 0 });
-    clearTimeout(PK.timer);
+    const best = results.reduce((a, b) => (resRank(b) > resRank(a) ? b : a));
+    // Món lần lượt hiện từ thấp lên cao, món hiếm nhất để cuối. Mở hơn 10 hộp thì chỉ hiện riêng các món Sử thi trở lên.
+    const idx = results.map((r, i) => i).sort((a, b) => resRank(results[a]) - resRank(results[b]) || a - b);
+    const order = results.length > 10 ? idx.filter((i) => results[i].item && BIG(results[i].rar)) : idx;
+    Object.assign(PK, { on: true, res: results, order, i: -1, opts, best, lvl: 0, t0: performance.now(), phase: opts.noBox ? 'burst' : 'drop' });
     const pack = $('pack');
     pack.className = 'pack theme-' + opts.theme;
     $('pack-title').textContent = opts.title;
-    const grid = $('pack-grid');
-    grid.replaceChildren();
-    const n = results.length;
-    const cols = n <= 3 ? n : n === 4 ? 2 : n <= 6 ? 3 : n <= 8 ? 4 : 5;
-    grid.style.setProperty('--cols', cols);
-    grid.style.maxWidth = Math.min(440, cols * (n <= 4 ? 132 : 96)) + 'px';
-    PK.cells = results.map((res, i) => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'pbox r-' + res.rar;
-      b.style.setProperty('--d', i * 45 + 'ms');
-      b.style.setProperty('--r', Skins.RARITY[res.rar].color);
-      b.innerHTML = '<span class="pb-rays"></span><span class="pb-glow"></span>' + BOX_SVG + '<canvas class="pb-art"></canvas><span class="pb-dot"></span><span class="pb-tag"></span>';
-      b.setAttribute('aria-label', 'Hộp ' + (i + 1) + ', chưa mở');
-      b.addEventListener('click', () => tapCell(i));
-      grid.appendChild(b);
-      return b;
-    });
+    $('pack-count').textContent = '';
+    $('sm-cap').hidden = true;
     $('pack-sum').hidden = true;
-    $('pack-again').hidden = true;
+    $('pack-actions').hidden = true;
     $('pack-all').hidden = false;
-    $('pack-all').textContent = 'Mở hết';
-    $('pack-hint').style.visibility = '';
-    $('pack-banner').className = 'pack-banner';
-    $('pack-banner').textContent = '';
-    updatePackCount();
+    $('pack-hint').hidden = true;
     pack.hidden = false;
-    SFX.drop(n);
+    if (opts.noBox) burstOpen();
+    else SFX.drop(Math.min(results.length, 10));
+    cancelAnimationFrame(PK.raf);
+    PK.raf = requestAnimationFrame(packFrame);
   }
-  function updatePackCount() {
-    const k = PK.done.filter(Boolean).length;
-    $('pack-count').textContent = 'Đã mở ' + k + '/' + PK.res.length;
+  const bestRar = () => PK.best.rar || 'thuong';
+  // Chạm sân khấu: mở hộp, hoặc sang món kế tiếp.
+  function packTap(e) {
+    if (!PK.on || e.target.closest('button, .sm-card')) return;
+    const t = performance.now() - PK.t0;
+    if (PK.phase === 'idle' || (PK.phase === 'drop' && t > 450)) {
+      PK.phase = 'charge'; PK.t0 = performance.now(); PK.lvl = 0;
+      $('pack-hint').hidden = true;
+      SFX.shake(1 + RANK.indexOf(bestRar()) * 0.4);
+      buzz(30);
+    } else if (PK.phase === 'item' && performance.now() > PK.ready) nextItem();
   }
-  function tapCell(i) {
-    const res = PK.res[i];
-    if (PK.done[i]) { if (res.item) { SFX.click(); showReveal(res, 'pack', true); } return; }
-    if (PK.auto || PK.opened[i]) return;
-    $('pack-hint').style.visibility = 'hidden';
-    openCell(i);
+  function chargeTime() { const r = RANK.indexOf(bestRar()); return 0.9 + r * 0.38; }
+  function burstOpen() {
+    PK.phase = 'burst'; PK.t0 = performance.now();
+    SFX.land();
+    buzz(30);
+    setTimeout(() => { if (PK.on && PK.phase === 'burst') nextItem(); }, PK.opts.noBox ? 120 : 560);
   }
-  // Mở một hộp; trả về số mili giây nên chờ trước khi mở hộp kế tiếp.
-  function openCell(i, quick) {
-    if (PK.opened[i]) return 0;
-    PK.opened[i] = true;
-    const res = PK.res[i], cell = PK.cells[i];
-    if (quick || !BIG(res.rar)) { revealCell(i, quick); return quick ? 0 : 190; }
-    // Hộp hiếm: đổi màu, toả sáng, rung mạnh dần rồi mới bung.
-    const legend = TOP(res.rar), destiny = res.rar === 'dinhmenh';
-    cell.classList.add('tell');
-    SFX.charge(res.rar);
-    buzz(legend ? [20, 60, 20, 60, 20] : 40);
-    if (legend) { $('pack').classList.add('dim'); cell.classList.add('focus'); }
-    PK.busy++;
-    const wait = destiny ? 2200 : legend ? 1500 : 760;
+  // Mỗi món là một lá bài: úp mặt sau (viền sáng theo độ hiếm), chờ một nhịp (món càng hiếm chờ càng lâu) rồi lật.
+  const FLIP_WAIT = { thuong: 120, hiem: 260, suthi: 620, huyenthoai: 1050, dinhmenh: 1350 };
+  function nextItem() {
+    PK.i++;
+    if (PK.i >= PK.order.length) { if (PK.res.length === 1) return; showSummary(); return; }
+    PK.phase = 'item'; PK.t0 = performance.now();
+    const res = PK.res[PK.order[PK.i]], rar = res.rar || 'thuong', wait = FLIP_WAIT[rar];
+    PK.ready = performance.now() + wait + 650;
+    const cap = $('sm-cap');
+    cap.hidden = false;
+    cap.className = 'sm-show r-' + rar;
+    cap.style.setProperty('--r', GLOW[rar]);
+    cap.style.setProperty('--wait', wait + 'ms');
+    void cap.offsetWidth;
+    cap.classList.add('flip');
+    const stars = $('sm-stars');
+    stars.replaceChildren();
+    for (let k = 0; k < STARS[rar]; k++) {
+      const st = document.createElement('i');
+      st.style.setProperty('--d', wait + 520 + k * 90 + 'ms');
+      stars.appendChild(st);
+    }
+    $('sm-rar').textContent = res.item ? Skins.RARITY[rar].name + ' · ' + SLOT_NAME[res.item.slot] : 'Đốt cây';
+    $('sm-name').textContent = res.item ? res.item.name : '+' + res.dot + ' đốt cây';
+    const tag = $('sm-tag');
+    tag.hidden = !res.item;
+    tag.textContent = res.dup ? 'Đã có · hoàn ' + res.refund + ' đốt cây' : 'Món mới';
+    tag.classList.toggle('dup', !!res.dup);
+    $('sm-memory').textContent = res.item ? res.item.memory || '' : 'Gom thêm đốt cây để quay tiếp nha.';
+    $('pack-count').textContent = PK.res.length > 1 ? (PK.i + 1) + ' / ' + PK.order.length : '';
+    $('pack-hint').hidden = true;
+    if (BIG(rar)) SFX.charge(rar);
+    // lúc lá bài lật xong
+    const i = PK.i;
     setTimeout(() => {
-      PK.busy--;
-      if (!PK.on) return;
-      $('pack').classList.remove('dim');
-      revealCell(i);
-      if (legend) { quake(); setTimeout(() => { if (PK.on) spotlight(res); }, 800); }
-      else bannerFor(res);
-      checkPackDone();
-    }, wait);
-    return wait + (legend ? 900 : 700);
+      if (!PK.on || PK.i !== i || PK.phase !== 'item') return;
+      const [cx, cy] = centerOf($('sm-big'));
+      if (TOP(rar)) { flash(rar); fxConfetti(cx, cy, rar === 'dinhmenh' ? 'huyenthoai' : rar); }
+      if (BIG(rar)) fxBurst(cx, cy, rar, 0.7);
+      if (res.dot) { SFX.coin(); fxLeaves(cx, cy, 12); }
+      else if (rar === 'dinhmenh') { SFX.destiny(); buzz([40, 50, 40, 50, 120]); }
+      else if (rar === 'huyenthoai') { SFX.legend(); buzz([30, 40, 80]); }
+      else if (rar === 'suthi') { SFX.epic(); buzz(40); }
+      else SFX.reveal(rar);
+      if (PK.res.length === 1) singleActions(res);
+      else {
+        $('pack-hint').hidden = false;
+        $('pack-hint').textContent = PK.i + 1 < PK.order.length ? 'Chạm để mở lá tiếp theo' : 'Chạm để xem tất cả';
+      }
+    }, wait + 380);
   }
-  function revealCell(i, quick) {
-    const res = PK.res[i], cell = PK.cells[i];
-    PK.done[i] = true;
-    cell.classList.remove('tell', 'focus');
-    cell.classList.add('open');
-    if (quick) cell.classList.add('instant');
-    const tag = cell.querySelector('.pb-tag');
-    if (res.item) {
-      drawThumb(cell.querySelector('.pb-art'), res.item);
-      tag.textContent = res.dup ? '+' + res.refund + ' đốt' : 'Mới';
-      tag.classList.toggle('dup', !!res.dup);
-      cell.setAttribute('aria-label', res.item.name + ', ' + Skins.RARITY[res.rar].name + (res.dup ? ', trùng, hoàn ' + res.refund + ' đốt' : ', món mới'));
-    } else {
-      const d = cell.querySelector('.pb-dot');
-      d.replaceChildren();
-      const b = document.createElement('b');
-      b.textContent = '+' + res.dot;
-      d.append(b, 'đốt');
-      cell.classList.add('is-dot');
-      cell.setAttribute('aria-label', 'Được ' + res.dot + ' đốt cây');
-    }
-    if (!quick) {
-      const [cx, cy] = centerOf(cell);
-      if (res.dot) fxLeaves(cx, cy, 10);
-      fxBurst(cx, cy, res.rar, BIG(res.rar) ? 1 : 0.8);
-      if (res.rar === 'dinhmenh') { SFX.destiny(); flash('dinhmenh'); buzz([40, 50, 40, 50, 120]); }
-      else if (res.rar === 'huyenthoai') { SFX.legend(); flash('huyenthoai'); buzz([30, 40, 80]); }
-      else if (res.rar === 'suthi') { SFX.epic(); flash('suthi'); buzz(40); }
-      else SFX.pop(PK.done.filter(Boolean).length);
-    }
-    updatePackCount();
-  }
-  function quake() {
-    const g = $('pack-grid');
-    g.classList.remove('quake');
-    void g.offsetWidth;
-    g.classList.add('quake');
-  }
-  function bannerFor(res) {
-    const el = $('pack-banner');
-    el.className = 'pack-banner';
-    void el.offsetWidth;
-    el.style.setProperty('--r', Skins.RARITY[res.rar].color);
-    el.textContent = Skins.RARITY[res.rar].name + ' · ' + res.item.name + (res.dup ? ' (đã có)' : '');
-    el.classList.add('show');
-  }
-  // Huyền thoại: dừng lại, hiện thẻ lớn giữa màn hình.
-  function spotlight(res) {
-    PK.waiting = true;
-    showReveal(res, 'pack', true);
-  }
-  function packStep() {
-    clearTimeout(PK.timer);
-    if (!PK.on || !PK.auto || PK.waiting) return;
-    const i = PK.opened.indexOf(false);
-    if (i < 0) { PK.auto = false; checkPackDone(); return; }
-    PK.timer = setTimeout(packStep, openCell(i));
+  // Mở một hộp: các nút nằm ngay dưới món vừa nhận.
+  function singleActions(res) {
+    $('pack-all').hidden = true;
+    $('pack-hint').hidden = true;
+    const w = Wallet.get();
+    const use = $('pack-use');
+    use.hidden = !res.item || !Wallet.owns(res.item.slot, res.item.id, w) || w.equip[res.item.slot] === res.item.id;
+    const again = PK.opts.again && PK.opts.again();
+    $('pack-again').hidden = !again || !again.ok;
+    if (again) $('pack-again').textContent = again.label;
+    $('pack-actions').hidden = false;
+    $('dot').textContent = fmt(w.dot);
+    if (res.refund) bumpDot();
   }
   function packAll() {
-    if (!PK.auto) {
-      PK.auto = true;
-      $('pack-all').textContent = 'Mở nhanh';
-      $('pack-hint').style.visibility = 'hidden';
-      packStep();
-      return;
-    }
-    // Mở nhanh: bung hết hộp còn lại một lúc, chỉ loé một lần theo món hiếm nhất.
-    clearTimeout(PK.timer);
-    PK.auto = false;
-    let best = null;
-    PK.opened.forEach((o, i) => {
-      if (o) return;
-      openCell(i, true);
-      if (!best || resRank(PK.res[i]) > resRank(best)) best = PK.res[i];
-    });
-    if (best) {
-      const [cx, cy] = centerOf($('pack-grid'));
-      fxBurst(cx, cy, best.rar, BIG(best.rar) ? 1 : 1.5);
-      if (BIG(best.rar)) flash(best.rar);
-      if (TOP(best.rar)) { if (best.rar === 'dinhmenh') SFX.destiny(); else SFX.legend(); setTimeout(() => { if (PK.on) spotlight(best); }, 600); }
-      else if (best.rar === 'suthi') { SFX.epic(); bannerFor(best); }
-      else SFX.pop(12);
-    }
-    checkPackDone();
+    if (!PK.on) return;
+    SFX.click();
+    if (PK.res.length === 1) { if (PK.phase !== 'item') { PK.i = -1; PK.phase = 'burst'; nextItem(); } return; }
+    if (PK.phase !== 'item' && PK.phase !== 'sum') flash(bestRar());
+    showSummary();
   }
-  function checkPackDone() {
-    if (!PK.on || PK.busy || PK.done.some((d) => !d) || !$('pack-sum').hidden) return;
-    PK.auto = false;
+  function showSummary() {
+    PK.phase = 'sum'; PK.t0 = performance.now();
+    $('sm-cap').hidden = true;
+    $('pack-hint').hidden = true;
     $('pack-all').hidden = true;
-    $('pack-hint').style.visibility = 'hidden';
-    const fresh = PK.res.filter((r) => r.item && !r.dup).sort((a, b) => resRank(b) - resRank(a));
+    $('pack-count').textContent = '';
+    const grid = $('pack-grid');
+    grid.replaceChildren();
+    const n = PK.res.length;
+    grid.style.setProperty('--cols', n <= 4 ? n : 5);
+    PK.res.forEach((res, i) => {
+      const rar = res.rar || 'thuong';
+      const c = document.createElement('button');
+      c.type = 'button';
+      c.className = 'sm-card r-' + rar + (res.dup ? ' dup' : '') + (res.item ? '' : ' is-dot');
+      c.style.setProperty('--r', GLOW[rar]);
+      c.style.setProperty('--d', i * 55 + 'ms');
+      const art = document.createElement('canvas');
+      const name = document.createElement('span');
+      name.className = 'sm-card-name';
+      name.textContent = res.item ? res.item.name : '+' + res.dot + ' đốt cây';
+      const tag = document.createElement('em');
+      tag.textContent = res.dup ? '+' + res.refund : res.item ? 'Mới' : '';
+      const st = document.createElement('small');
+      st.className = 'sm-card-stars';
+      st.style.setProperty('--n', STARS[rar]);
+      c.append(art, name, st, tag);
+      c.addEventListener('click', () => { if (res.item) { SFX.click(); showReveal(res, 'pack', true); } });
+      grid.appendChild(c);
+      if (res.item) requestAnimationFrame(() => drawThumb(art, res.item));
+    });
+    const fresh = PK.res.filter((r) => r.item && !r.dup).length;
     const dups = PK.res.filter((r) => r.dup).length;
     const back = PK.res.reduce((s, r) => s + (r.refund || 0) + (r.dot || 0), 0);
-    let text = fresh.length ? 'Có ' + fresh.length + ' món mới' : 'Không có món mới';
+    let text = fresh ? fresh + ' món mới' : 'Không có món mới';
     if (dups) text += ' · ' + dups + ' món trùng';
-    if (back) text += ' · nhận ' + fmt(back) + ' đốt';
+    if (back) text += ' · nhận ' + fmt(back) + ' đốt cây';
     $('pack-sum-text').textContent = text;
-    const box = $('pack-new');
-    box.replaceChildren();
-    // Nhiều món quá thì chỉ ghi tên vài món hiếm nhất.
-    const SHOW = 6;
-    for (const r of fresh.slice(0, SHOW)) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'chip';
-      b.style.setProperty('--r', Skins.RARITY[r.rar].color);
-      b.textContent = r.item.name;
-      b.addEventListener('click', () => { SFX.click(); showReveal(r, 'pack', true); });
-      box.appendChild(b);
-    }
-    if (fresh.length > SHOW) {
-      const more = document.createElement('span');
-      more.className = 'chip more';
-      more.textContent = 'và ' + (fresh.length - SHOW) + ' món khác';
-      box.appendChild(more);
-    }
-    const again = PK.opts.again && PK.opts.again();
-    const btn = $('pack-again');
-    btn.hidden = !again || !again.ok;
-    if (again) btn.textContent = again.label;
     $('pack-sum').hidden = false;
+    $('pack-use').hidden = true;
+    const again = PK.opts.again && PK.opts.again();
+    $('pack-again').hidden = !again || !again.ok;
+    if (again) $('pack-again').textContent = again.label;
+    $('pack-actions').hidden = false;
     $('dot').textContent = fmt(Wallet.get().dot);
     if (back) bumpDot();
+    SFX.pop(10);
   }
   function closePack() {
     if (!PK.on) return;
     PK.on = false;
-    PK.auto = false;
-    clearTimeout(PK.timer);
+    cancelAnimationFrame(PK.raf);
     $('pack').hidden = true;
-    $('pack').classList.remove('dim');
     renderAll();
     if (PK.opts && PK.opts.after) PK.opts.after();
+  }
+
+  // ---- vẽ sân khấu ----
+  // Nền: chuyển màu tối, vài đốm sáng mờ to trôi chậm (bokeh) và viền tối quanh mép, không có tia nan quạt.
+  const BOKEH = Array.from({ length: 12 }, (_, i) => ({ x: Math.random(), y: Math.random(), r: 0.08 + Math.random() * 0.16, sp: 0.01 + Math.random() * 0.02, ph: i * 1.7, warm: i % 3 === 0 }));
+  function drawSky(x, W, H, t, col, tint) {
+    const g = x.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, col[0]); g.addColorStop(1, col[1]);
+    x.fillStyle = g;
+    x.fillRect(0, 0, W, H);
+    const M = Math.max(W, H);
+    for (const b of BOKEH) {
+      const bx = ((b.x + Math.sin(t * b.sp * 6 + b.ph) * 0.05) % 1) * W;
+      const by = (((b.y - t * b.sp) % 1) + 1) % 1 * H;
+      const r = b.r * M;
+      const c = tint || (b.warm ? '255,214,150' : '190,170,255');
+      const rg = x.createRadialGradient(bx, by, 0, bx, by, r);
+      rg.addColorStop(0, 'rgba(' + c + ',0.10)'); rg.addColorStop(1, 'rgba(' + c + ',0)');
+      x.fillStyle = rg;
+      x.beginPath(); x.arc(bx, by, r, 0, TAU); x.fill();
+    }
+    const v = x.createRadialGradient(W / 2, H * 0.45, Math.min(W, H) * 0.3, W / 2, H * 0.45, M * 0.75);
+    v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.55)');
+    x.fillStyle = v;
+    x.fillRect(0, 0, W, H);
+  }
+  const rgbOf = (hex) => { const n = parseInt(hex.slice(1), 16); return ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255); };
+  // Quầng sáng mềm (dùng 'lighter' cho cảm giác ánh sáng thật).
+  function softGlow(x, cx, cy, r, hex, a) {
+    if (a <= 0) return;
+    const c = rgbOf(hex);
+    const g = x.createRadialGradient(cx, cy, 0, cx, cy, r);
+    g.addColorStop(0, 'rgba(' + c + ',' + a + ')'); g.addColorStop(0.35, 'rgba(' + c + ',' + a * 0.4 + ')'); g.addColorStop(1, 'rgba(' + c + ',0)');
+    x.save();
+    x.globalCompositeOperation = 'lighter';
+    x.fillStyle = g;
+    x.beginPath(); x.arc(cx, cy, r, 0, TAU); x.fill();
+    x.restore();
+  }
+  function rr(x, X, Y, w, h, r) { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w, Y, X + w, Y + h, r); x.arcTo(X + w, Y + h, X, Y + h, r); x.arcTo(X, Y + h, X, Y, r); x.arcTo(X, Y, X + w, Y, r); x.closePath(); }
+  // Hộp quà: thân có gradient, ruy băng, nắp và nơ; lid = độ bật nắp 0..1; leak = ánh sáng lọt qua khe nắp 0..1.
+  function drawGiftBox(x, cx, cy, s, c, lid, leak, hex) {
+    x.fillStyle = 'rgba(0,0,0,0.35)';
+    x.beginPath(); x.ellipse(cx, cy + s * 0.62, s * 0.62, s * 0.08, 0, 0, TAU); x.fill();
+    const bw = s * 1.04, bh = s * 0.7, bx = cx - bw / 2, by = cy - s * 0.1;
+    let g = x.createLinearGradient(bx, 0, bx + bw, 0);
+    g.addColorStop(0, c.a); g.addColorStop(1, c.b);
+    x.fillStyle = g; rr(x, bx, by, bw, bh, s * 0.1); x.fill();
+    x.fillStyle = 'rgba(0,0,0,0.14)'; x.fillRect(bx, by, bw, s * 0.07);
+    g = x.createLinearGradient(cx - s * 0.09, 0, cx + s * 0.09, 0);
+    g.addColorStop(0, c.rib); g.addColorStop(0.5, 'rgba(255,255,255,0.85)'); g.addColorStop(1, c.rib);
+    x.fillStyle = g; x.fillRect(cx - s * 0.08, by, s * 0.16, bh);
+    x.fillStyle = 'rgba(255,255,255,0.16)'; rr(x, bx + s * 0.06, by + s * 0.1, s * 0.1, bh - s * 0.18, s * 0.05); x.fill();
+    // ánh sáng lọt qua khe giữa nắp và thân
+    if (leak > 0 && hex) {
+      softGlow(x, cx, by, s * (0.7 + leak * 0.8), hex, 0.35 + leak * 0.5);
+      x.save();
+      x.globalCompositeOperation = 'lighter';
+      x.fillStyle = 'rgba(255,255,255,' + (0.4 + leak * 0.6) + ')';
+      x.fillRect(bx + s * 0.04, by - 1.5 - leak * 2, bw - s * 0.08, 3 + leak * 4);
+      x.restore();
+    }
+    const ly = by - s * 0.2 - lid * s * 1.3;
+    x.save();
+    x.globalAlpha = 1 - lid * 0.9;
+    x.translate(cx + lid * s * 0.5, ly + s * 0.1); x.rotate(-lid * 0.6);
+    g = x.createLinearGradient(-bw * 0.56, 0, bw * 0.56, 0);
+    g.addColorStop(0, c.lid); g.addColorStop(1, c.a);
+    x.fillStyle = g; rr(x, -bw * 0.56, -s * 0.1, bw * 1.12, s * 0.24, s * 0.08); x.fill();
+    x.fillStyle = c.rib; x.fillRect(-s * 0.08, -s * 0.1, s * 0.16, s * 0.24);
+    x.fillStyle = c.bow;
+    for (const side of [-1, 1]) { x.beginPath(); x.ellipse(side * s * 0.17, -s * 0.2, s * 0.17, s * 0.1, side * -0.5, 0, TAU); x.fill(); }
+    x.fillStyle = c.rib; x.beginPath(); x.arc(0, -s * 0.15, s * 0.07, 0, TAU); x.fill();
+    x.fillStyle = 'rgba(255,255,255,0.3)'; rr(x, -bw * 0.5, -s * 0.07, bw * 0.4, s * 0.05, s * 0.025); x.fill();
+    x.restore();
+  }
+  // Vài đốm sáng nhỏ bốc lên từ hộp khi sắp mở.
+  function drawEmbers(x, cx, cy, s, t, hex, a) {
+    x.save();
+    x.globalCompositeOperation = 'lighter';
+    for (let k = 0; k < 14; k++) {
+      const u = (t * (0.5 + (k % 5) * 0.12) + k * 0.37) % 1;
+      const ex = cx + Math.sin(k * 7.3 + t * 2) * s * 0.55, ey = cy - u * s * 1.4;
+      x.globalAlpha = a * Math.sin(u * Math.PI);
+      x.fillStyle = k % 3 ? hex : '#FFFFFF';
+      x.beginPath(); x.arc(ex, ey, 1.2 + (k % 3), 0, TAU); x.fill();
+    }
+    x.restore();
+  }
+  function packFrame(now) {
+    if (!PK.on) return;
+    PK.raf = requestAnimationFrame(packFrame);
+    const c = $('sm-sky');
+    const [W, H] = sizeCanvas(c);
+    const x = c.getContext('2d');
+    x.setTransform(DPR, 0, 0, DPR, 0, 0);
+    const t = now / 1000, k = (now - PK.t0) / 1000;
+    const C = BOXC[PK.opts.theme] || BOXC.box;
+    const cx = W / 2, cy = H * 0.46, s = Math.min(W * 0.4, H * 0.22, 180);
+    if (PK.phase === 'drop' || PK.phase === 'idle') {
+      drawSky(x, W, H, t, C.sky);
+      if (PK.phase === 'drop' && k > 0.75) { PK.phase = 'idle'; $('pack-hint').hidden = false; $('pack-hint').textContent = 'Chạm vào hộp để mở'; }
+      const y = PK.phase === 'drop' ? -s + (cy + s) * bounce(k / 0.7) : cy + Math.sin(t * 2.2) * 5;
+      softGlow(x, cx, cy, s * 1.6, '#FFFFFF', 0.12);
+      drawGiftBox(x, cx, y, s, C, 0, PK.phase === 'idle' ? 0.15 + 0.1 * Math.sin(t * 3) : 0, '#FFFFFF');
+    } else if (PK.phase === 'charge') {
+      drawSky(x, W, H, t, C.sky);
+      // ánh sáng trong hộp đổi màu từng bậc tới bậc của món hiếm nhất
+      const top = RANK.indexOf(bestRar()), T = chargeTime(), p = Math.min(1, k / T);
+      const lvl = Math.min(top, Math.floor(p * (top + 1)));
+      if (lvl > PK.lvl) { PK.lvl = lvl; SFX.charge(RANK[lvl]); buzz(20 + lvl * 15); }
+      const hex = GLOW[RANK[PK.lvl]];
+      const amp = (1 + p * 5) * Math.sin(t * 55);
+      softGlow(x, cx, cy, s * (1.6 + p), hex, 0.15 + p * 0.25);
+      drawEmbers(x, cx, cy, s, t, hex, 0.4 + p * 0.6);
+      x.save(); x.translate(cx, cy + s * 0.5); x.rotate(Math.sin(t * 40) * 0.02 * (0.3 + p)); x.translate(-cx, -cy - s * 0.5);
+      drawGiftBox(x, cx + amp, cy, s, C, 0, 0.3 + p * 0.7, hex);
+      x.restore();
+      if (k >= T) burstOpen();
+    } else if (PK.phase === 'burst') {
+      drawSky(x, W, H, t, C.sky);
+      const hex = GLOW[bestRar()];
+      if (!PK.opts.noBox) {
+        drawGiftBox(x, cx, cy, s, C, ease(k / 0.35), 1, hex);
+        // vòng sáng loang ra và một nhịp sáng trắng phủ màn hình
+        x.save();
+        x.globalCompositeOperation = 'lighter';
+        x.strokeStyle = 'rgba(' + rgbOf(hex) + ',' + Math.max(0, 0.9 - k * 1.6) + ')';
+        x.lineWidth = 3 + (1 - Math.min(1, k * 2)) * 6;
+        x.beginPath(); x.arc(cx, cy, s * 0.4 + ease(k / 0.5) * Math.max(W, H) * 0.6, 0, TAU); x.stroke();
+        x.restore();
+        softGlow(x, cx, cy, Math.max(W, H), hex, Math.max(0, 0.7 - k * 1.4));
+      }
+    } else if (PK.phase === 'item') {
+      const res = PK.res[PK.order[PK.i]], rar = res.rar || 'thuong';
+      const hex = GLOW[rar];
+      drawSky(x, W, H, t, C.sky, rar === 'thuong' ? null : rgbOf(hex));
+      const card = $('sm-big').getBoundingClientRect();
+      const ccx = card.left + card.width / 2, ccy = card.top + card.height / 2;
+      const flipped = now > PK.t0 + FLIP_WAIT[rar] + 380;
+      softGlow(x, ccx, ccy, card.height * (BIG(rar) ? 1.2 : 0.9), hex, flipped ? (BIG(rar) ? 0.4 : 0.2) : 0.12 + 0.3 * (k * 1000 / FLIP_WAIT[rar]));
+      if (!flipped && BIG(rar)) drawEmbers(x, ccx, ccy + card.height * 0.4, card.width * 0.7, t, hex, 0.8);
+      const art = $('sm-art');
+      if (res.item) drawThumb(art, res.item, t);
+      else if (k < 0.05) {
+        const [aw, ah] = sizeCanvas(art);
+        const ax = art.getContext('2d');
+        ax.setTransform(DPR, 0, 0, DPR, 0, 0);
+        ax.clearRect(0, 0, aw, ah);
+        ax.translate(aw / 2, ah / 2);
+        ax.fillStyle = '#62BC7C';
+        ax.beginPath(); ax.ellipse(0, 0, aw * 0.16, ah * 0.3, 0.5, 0, TAU); ax.fill();
+        ax.strokeStyle = '#2F7A49'; ax.lineWidth = 4;
+        ax.beginPath(); ax.moveTo(-aw * 0.1, ah * 0.2); ax.lineTo(aw * 0.1, -ah * 0.2); ax.stroke();
+      }
+    } else if (PK.phase === 'sum') {
+      drawSky(x, W, H, t, C.sky);
+      softGlow(x, cx, H * 0.42, Math.max(W, H) * 0.55, GLOW[bestRar()], 0.12);
+    }
   }
 
   // ================= Thẻ món vừa nhận =================
@@ -1118,7 +1313,7 @@
     card.style.animation = 'none';
     void card.offsetWidth;
     card.style.animation = '';
-    if (!quiet || PK.waiting) {
+    if (!quiet) {
       if (!quiet) SFX.reveal(item.rarity);
       buzz(TOP(item.rarity) ? [30, 40, 60] : 25);
       requestAnimationFrame(() => { const [cx, cy] = centerOf($('reveal-art')); fxConfetti(cx, cy, item.rarity); });
@@ -1126,16 +1321,10 @@
   }
   function closeReveal() {
     $('reveal').hidden = true;
-    const ctx = UI.revealCtx;
     UI.reveal = null;
     const after = UI.afterReveal;
     UI.afterReveal = null;
     if (after) after();
-    if (ctx === 'pack' && PK.waiting) {
-      PK.waiting = false;
-      if (PK.auto) PK.timer = setTimeout(packStep, 250);
-      checkPackDone();
-    }
   }
 
   // ================= Sự kiện: vòng quay =================
@@ -1196,17 +1385,24 @@
     return res;
   }
 
-  // Kiểu vòng quay: thổ cẩm (mặc định) và ma quái (Halloween: nền tối, mạng nhện, dơi bay quanh).
+  // Kiểu vòng quay (màu theo sự kiện, cùng một cách vẽ): vành kim loại có đèn, ô màu sâu viền vàng mảnh,
+  // ô Huyền thoại ánh vàng, ô đốt cây xanh lá chữ vàng. Halloween có thêm mạng nhện và dơi bay quanh.
   const WHEEL_STYLE = {
     default: {
-      rim: '#2F3B85', teeth: ['#D62F45', '#FFC93C'], sep: 'rgba(255,255,255,0.95)',
-      fill: { thuong: '#E6F4EA', hiem: '#E2EDFB', suthi: '#EEE3FF' }, legend: ['#FFF6D2', '#FFCF5A'],
-      dotFill: '#FFF6E6', dotText: '#2F7A49', bulbOn: '#FFF4C2', bulbOff: '#8C7FD6', pin: ['#D62F45', '#FFC93C'],
+      seg: ['#2B2E6E', '#343880'], fill: { hiem: '#1F4A86', suthi: '#4B2E8A' }, legend: ['#FFF0C2', '#F2B33D'],
+      dot: '#1E5A3C', dotText: '#FFE7A3', sep: 'rgba(255,226,150,0.85)', rim: ['#FFF3CF', '#E9B44C', '#8E5E14'],
+      bulbOn: '#FFF1BF', bulbOff: '#4A3D7A', pin: ['#D62F45', '#FFE7A3'], stage: ['#2A2160', '#120C26'],
     },
     spooky: {
-      rim: '#1E1230', teeth: ['#FF8A1F', '#7B4BC4'], sep: 'rgba(255,170,90,0.55)',
-      fill: { thuong: '#3B2D57', hiem: '#2E3366', suthi: '#4B2C6E' }, legend: ['#FFE0A3', '#FF8A1F'],
-      dotFill: '#2A2340', dotText: '#9FE0B2', bulbOn: '#FFB347', bulbOff: '#4A3A66', pin: ['#7B4BC4', '#FF8A1F'], web: true, bats: true,
+      seg: ['#2A1E42', '#33254F'], fill: { hiem: '#24345E', suthi: '#4B2C6E' }, legend: ['#FFE0A3', '#FF8A1F'],
+      dot: '#1F3D2E', dotText: '#FFC27A', sep: 'rgba(255,170,90,0.7)', rim: ['#FFD3A0', '#D9772A', '#5A2A0A'],
+      bulbOn: '#FFB347', bulbOff: '#4A3A66', pin: ['#7B4BC4', '#FF8A1F'], stage: ['#2B1850', '#0E0718'], web: true, bats: true,
+    },
+    // Băng số 1: ô đen như vỏ băng VHS, vành vàng, kim đỏ như chấm REC
+    tape: {
+      seg: ['#27222E', '#322B3B'], fill: { hiem: '#1E3354', suthi: '#3E2866' }, legend: ['#FFF0C2', '#E8A23A'],
+      dot: '#1C4232', dotText: '#FFE7A3', sep: 'rgba(233,196,106,0.8)', rim: ['#FFF3CF', '#E9B44C', '#8E5E14'],
+      bulbOn: '#FFE9A8', bulbOff: '#4A3A40', pin: ['#E8453C', '#FFE7A3'], stage: ['#2A2330', '#0F0C14'],
     },
   };
   const wheelStyle = () => WHEEL_STYLE[(EV && EV.style) || 'default'] || WHEEL_STYLE.default;
@@ -1230,46 +1426,43 @@
     const w = shownWallet();
     const ST = wheelStyle();
     const N = EV.wheel.length, seg = TAU / N;
-    // viền có răng cưa hai màu
-    x.fillStyle = ST.rim;
-    x.beginPath(); x.arc(0, 0, R + 11, 0, TAU); x.fill();
-    for (let i = 0; i < 40; i++) {
-      const a = (i / 40) * TAU, b = a + TAU / 40;
-      x.fillStyle = ST.teeth[i % 2];
-      x.beginPath();
-      x.moveTo(Math.cos(a) * (R + 1), Math.sin(a) * (R + 1));
-      x.lineTo(Math.cos((a + b) / 2) * (R + 7), Math.sin((a + b) / 2) * (R + 7));
-      x.lineTo(Math.cos(b) * (R + 1), Math.sin(b) * (R + 1));
-      x.closePath();
-      x.fill();
-    }
     for (let i = 0; i < N; i++) {
       const s = EV.wheel[i];
       const a0 = -Math.PI / 2 + i * seg, a1 = a0 + seg;
       const it = s.item ? Skins.byKey(s.item) : null;
       x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, R, a0, a1); x.closePath();
-      if (it && it.rarity === 'huyenthoai') {
-        const g = x.createRadialGradient(0, 0, R * 0.2, 0, 0, R);
-        g.addColorStop(0, ST.legend[0]); g.addColorStop(1, ST.legend[1]);
-        x.fillStyle = g;
-      } else x.fillStyle = it ? ST.fill[it.rarity] : ST.dotFill;
+      let fill;
+      if (it && TOP(it.rarity)) {
+        fill = x.createRadialGradient(0, 0, R * 0.15, 0, 0, R);
+        fill.addColorStop(0, ST.legend[0]); fill.addColorStop(1, ST.legend[1]);
+      } else {
+        const base = it ? ST.fill[it.rarity] || ST.seg[i % 2] : ST.dot;
+        fill = x.createRadialGradient(0, 0, R * 0.1, 0, 0, R);
+        fill.addColorStop(0, base); fill.addColorStop(1, shadeHex(base, -0.35));
+      }
+      x.fillStyle = fill;
       x.fill();
-      x.strokeStyle = ST.sep;
-      x.lineWidth = 2;
-      x.stroke();
       x.save();
       x.rotate(a0 + seg / 2 + Math.PI / 2);
       if (it) {
-        const box = R * 0.4;
+        const box = R * 0.42, cyI = -R * 0.63;
+        // đĩa sáng mờ sau món đồ cho nổi trên nền tối
+        const lg = x.createRadialGradient(0, cyI, 0, 0, cyI, box * 0.6);
+        lg.addColorStop(0, TOP(it.rarity) ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.22)'); lg.addColorStop(1, 'rgba(255,255,255,0)');
+        x.fillStyle = lg;
+        x.beginPath(); x.arc(0, cyI, box * 0.6, 0, TAU); x.fill();
         x.save();
-        x.translate(-box / 2, -R * 0.64 - box / 2);
+        x.translate(-box / 2, cyI - box / 2);
         Skins.drawPreview(x, it, box, box, 0.3);
         x.restore();
+        // chấm độ hiếm
         x.fillStyle = Skins.RARITY[it.rarity].color;
-        x.beginPath(); x.arc(0, -R * 0.36, 3.4, 0, TAU); x.fill();
+        x.strokeStyle = 'rgba(255,255,255,0.8)';
+        x.lineWidth = 1.2;
+        x.beginPath(); x.arc(0, -R * 0.33, 3.6, 0, TAU); x.fill(); x.stroke();
         if (owns(s.item, w)) {
-          const bx = box * 0.42, by = -R * 0.64 - box * 0.4;
-          x.fillStyle = '#3D8A57';
+          const bx = box * 0.42, by = cyI - box * 0.4;
+          x.fillStyle = '#3FB86A';
           x.beginPath(); x.arc(bx, by, 7, 0, TAU); x.fill();
           x.strokeStyle = '#FFFFFF';
           x.lineWidth = 1.8;
@@ -1280,16 +1473,25 @@
         x.fillStyle = ST.dotText;
         x.textAlign = 'center';
         x.textBaseline = 'middle';
+        x.shadowColor = 'rgba(0,0,0,0.4)'; x.shadowBlur = 4;
         x.font = '800 ' + Math.round(R * 0.15) + 'px "Be Vietnam Pro", system-ui, sans-serif';
-        x.fillText('+' + s.dot, 0, -R * 0.68);
-        x.font = '600 ' + Math.round(R * 0.085) + 'px "Be Vietnam Pro", system-ui, sans-serif';
-        x.fillText('đốt cây', 0, -R * 0.53);
+        x.fillText('+' + s.dot, 0, -R * 0.67);
+        x.font = '700 ' + Math.round(R * 0.075) + 'px "Be Vietnam Pro", system-ui, sans-serif';
+        x.fillText('ĐỐT CÂY', 0, -R * 0.52);
+        x.shadowBlur = 0;
       }
       x.restore();
     }
+    // vạch chia vàng mảnh
+    x.strokeStyle = ST.sep;
+    x.lineWidth = 1.6;
+    x.beginPath();
+    for (let i = 0; i < N; i++) { const a = -Math.PI / 2 + i * seg; x.moveTo(Math.cos(a) * R * 0.2, Math.sin(a) * R * 0.2); x.lineTo(Math.cos(a) * R, Math.sin(a) * R); }
+    x.stroke();
+    x.beginPath(); x.arc(0, 0, R * 0.2, 0, TAU); x.stroke();
     // mạng nhện mảnh giăng giữa các nan
     if (ST.web) {
-      x.strokeStyle = 'rgba(255,255,255,0.22)';
+      x.strokeStyle = 'rgba(255,255,255,0.18)';
       x.lineWidth = 1;
       for (const k of [0.3, 0.5, 0.92]) {
         x.beginPath();
@@ -1302,6 +1504,11 @@
       }
     }
     return c;
+  }
+  // Làm sáng / tối một mã màu hex (k âm là tối đi).
+  function shadeHex(hex, k) {
+    const n = parseInt(hex.slice(1), 16), T = k < 0 ? 0 : 255, a = Math.abs(k);
+    return 'rgb(' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.round(v + (T - v) * a)).join(',') + ')';
   }
   function drawWheel(now, dt) {
     const c = $('wheel');
@@ -1340,70 +1547,85 @@
     }
     WS.kick = Math.max(0, WS.kick - dt * 7);
 
+    // đèn rọi sau vòng quay
+    softGlow(x, cx, cy, R + 24, ST.bulbOn, WS.spinning ? 0.3 : 0.16);
     // bóng đổ
-    x.fillStyle = 'rgba(30, 20, 60, 0.18)';
-    x.beginPath(); x.ellipse(cx, cy + R + 14, R * 0.8, 7, 0, 0, TAU); x.fill();
+    x.fillStyle = 'rgba(0, 0, 0, 0.35)';
+    x.beginPath(); x.ellipse(cx, cy + R + 16, R * 0.75, 7, 0, 0, TAU); x.fill();
+    // vành kim loại
+    const rg = x.createLinearGradient(cx - R, cy - R, cx + R, cy + R);
+    rg.addColorStop(0, ST.rim[0]); rg.addColorStop(0.45, ST.rim[1]); rg.addColorStop(0.7, ST.rim[2]); rg.addColorStop(1, ST.rim[1]);
+    x.fillStyle = rg;
+    x.beginPath(); x.arc(cx, cy, R + 17, 0, TAU); x.fill();
+    x.fillStyle = 'rgba(0,0,0,0.55)';
+    x.beginPath(); x.arc(cx, cy, R + 5, 0, TAU); x.fill();
     x.save();
     x.translate(cx, cy);
     x.rotate(WS.angle);
     const F = R + 12;
     x.drawImage(WS.face, -F, -F, F * 2, F * 2);
-    // ô vừa trúng nhấp nháy sáng
+    // ô vừa trúng sáng lên
     if (WS.hl >= 0 && !WS.spinning) {
       const k = Math.max(0, 1 - (now - WS.hlT) / 2600);
       const pulse = 0.5 + 0.5 * Math.sin((now - WS.hlT) / 110);
       const a0 = -Math.PI / 2 + WS.hl * seg;
       x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, R, a0, a0 + seg); x.closePath();
-      x.fillStyle = 'rgba(255,255,255,' + (0.1 + 0.3 * pulse * k) + ')';
+      x.fillStyle = 'rgba(255,240,200,' + (0.08 + 0.3 * pulse * k) + ')';
       x.fill();
-      x.strokeStyle = ST.pin[1];
-      x.lineWidth = 3 + 2 * pulse * k;
+      x.strokeStyle = '#FFE7A3';
+      x.lineWidth = 2.5 + 2 * pulse * k;
       x.stroke();
     }
     x.restore();
-    // bóng đèn quanh viền: đứng yên thì nháy chậm, đang quay thì chạy vòng
-    const B = 18;
+    // vệt bóng loáng cố định phía trên (ánh đèn hắt xuống mặt vòng quay)
+    const gl = x.createLinearGradient(0, cy - R, 0, cy);
+    gl.addColorStop(0, 'rgba(255,255,255,0.16)'); gl.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = gl;
+    x.beginPath(); x.ellipse(cx, cy - R * 0.42, R * 0.86, R * 0.5, 0, Math.PI, TAU); x.fill();
+    // viền tối trong mép ô cho có chiều sâu
+    const vg = x.createRadialGradient(cx, cy, R * 0.7, cx, cy, R);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.35)');
+    x.fillStyle = vg;
+    x.beginPath(); x.arc(cx, cy, R, 0, TAU); x.fill();
+    // đèn trên vành: đứng yên thì chạy chậm, đang quay thì chạy nhanh, vừa trúng thì nháy cả loạt
+    const B = 24;
     for (let i = 0; i < B; i++) {
       const a = (i / B) * TAU - Math.PI / 2;
       let on;
-      if (WS.spinning) on = (i + Math.floor(now / 70)) % 3 === 0;
+      if (WS.spinning) on = (i + Math.floor(now / 60)) % 4 < 2;
       else if (WS.hl >= 0 && now - WS.hlT < 1600) on = Math.floor(now / 140) % 2 === 0;
-      else on = (i + Math.floor(now / 600)) % 2 === 0;
-      const bx = cx + Math.cos(a) * (R + 6), by = cy + Math.sin(a) * (R + 6);
-      if (on) {
-        x.fillStyle = ST.bulbOn;
-        x.globalAlpha = 0.4;
-        x.beginPath(); x.arc(bx, by, 6, 0, TAU); x.fill();
-        x.globalAlpha = 1;
-      }
-      x.fillStyle = on ? ST.bulbOn : ST.bulbOff;
-      x.beginPath(); x.arc(bx, by, 3, 0, TAU); x.fill();
+      else on = (i + Math.floor(now / 380)) % 3 !== 0;
+      const bx = cx + Math.cos(a) * (R + 11), by = cy + Math.sin(a) * (R + 11);
+      if (on) softGlow(x, bx, by, 9, ST.bulbOn, 0.55);
+      x.fillStyle = on ? '#FFFFFF' : ST.bulbOff;
+      x.beginPath(); x.arc(bx, by, 2.8, 0, TAU); x.fill();
+      if (on) { x.fillStyle = ST.bulbOn; x.beginPath(); x.arc(bx, by, 2, 0, TAU); x.fill(); }
     }
     // dơi bay vòng quanh vòng quay ma quái
     if (ST.bats) {
-      x.fillStyle = '#2A1B3D';
       for (let i = 0; i < 3; i++) {
         const a = now / 1000 * (0.5 + i * 0.13) + i * 2.1;
-        const rr = R + 16 + Math.sin(now / 700 + i) * 6;
-        const bx = cx + Math.cos(a) * rr, by = cy + Math.sin(a) * rr * 0.92;
+        const rr2 = R + 26 + Math.sin(now / 700 + i) * 6;
         x.save();
-        x.translate(bx, by);
+        x.translate(cx + Math.cos(a) * rr2, cy + Math.sin(a) * rr2 * 0.92);
         Skins.drawParticle(x, { kind: 11, x: 0, y: 0, size: 6 + i, life: now / 1000 + i, max: now / 1000 + i, color: '#2A1B3D' }, 1);
         x.restore();
       }
     }
-    // kim chỉ ở đỉnh, giật nhẹ mỗi lần lướt qua một ô
+    // kim chỉ: khung vàng, viên đá đỏ, giật nhẹ mỗi lần lướt qua một ô
     x.save();
-    x.translate(cx, cy - R - 8);
-    x.rotate(-WS.kick * 0.45);
-    x.fillStyle = ST.pin[0];
-    x.strokeStyle = ST.pin[1];
-    x.lineWidth = 2.5;
-    x.lineJoin = 'round';
-    x.beginPath(); x.moveTo(-11, -4); x.lineTo(11, -4); x.lineTo(0, 20); x.closePath();
-    x.fill(); x.stroke();
-    x.fillStyle = ST.pin[1];
-    x.beginPath(); x.arc(0, -4, 6.5, 0, TAU); x.fill();
+    x.translate(cx, cy - R - 12);
+    x.rotate(-WS.kick * 0.4);
+    x.shadowColor = 'rgba(0,0,0,0.45)'; x.shadowBlur = 6; x.shadowOffsetY = 3;
+    const pg = x.createLinearGradient(-13, 0, 13, 0);
+    pg.addColorStop(0, ST.rim[2]); pg.addColorStop(0.5, ST.rim[0]); pg.addColorStop(1, ST.rim[2]);
+    x.fillStyle = pg;
+    x.beginPath(); x.moveTo(-14, -6); x.quadraticCurveTo(0, -14, 14, -6); x.lineTo(0, 26); x.closePath(); x.fill();
+    x.shadowColor = 'transparent';
+    const gem = x.createRadialGradient(-2, -4, 1, 0, 0, 10);
+    gem.addColorStop(0, '#FFFFFF'); gem.addColorStop(0.25, ST.pin[0]); gem.addColorStop(1, shadeHex(ST.pin[0], -0.45));
+    x.fillStyle = gem;
+    x.beginPath(); x.moveTo(-8, -4); x.quadraticCurveTo(0, -9, 8, -4); x.lineTo(0, 15); x.closePath(); x.fill();
     x.restore();
   }
   function spinTo(idx, dur, done) {
@@ -1438,6 +1660,7 @@
       else {
         setTimeout(() => openPack(results, {
           theme: ev.id,
+          noBox: true,
           title: n + ' lượt quay · ' + ev.short,
           again: () => ({ label: 'Quay tiếp 10 lần · ' + fmt(10 * ev.price) + ' đốt', ok: Wallet.get().dot >= 10 * ev.price, run: () => spin(10) }),
         }), 450);
@@ -1458,10 +1681,15 @@
       bumpDot();
       return;
     }
-    if (BIG(res.rar)) { flash(res.rar); fxBurst(px, py, res.rar); }
-    if (res.rar === 'huyenthoai') SFX.legend();
-    else if (res.rar === 'suthi') SFX.epic();
-    setTimeout(() => { showReveal(res, 'wheel', BIG(res.rar)); renderAll(); }, BIG(res.rar) ? 450 : 200);
+    // trúng đồ: sang màn mở quà (không có hộp) như quay 10 lần
+    const ev = EV;
+    fxBurst(px, py, res.rar, 0.8);
+    setTimeout(() => openPack([res], {
+      theme: ev.id,
+      noBox: true,
+      title: ev.short,
+      again: () => ({ label: 'Quay tiếp · ' + fmt(ev.price) + ' đốt', ok: Wallet.get().dot >= ev.price, run: () => spin(1) }),
+    }), 350);
   }
 
   function leftText(ms) {
@@ -1533,13 +1761,14 @@
     $('ev-odds').hidden = !live;
     if (boxEv) { renderBoxEvent(Wallet.get()); return; }
     $('wheel-wrap').classList.toggle('spooky', EV.style === 'spooky');
+    $('ev-live').dataset.style = EV.style || 'default';
     if (live) {
       const st = evState(w);
       const label = (el, n) => {
         const b = document.createElement('b');
         b.textContent = 'Quay ' + n + ' lần';
         const s = document.createElement('small');
-        s.textContent = fmt(EV.price * n) + ' đốt';
+        s.textContent = fmt(EV.price * n);
         el.replaceChildren(b, s);
       };
       label($('spin-1'), 1);
@@ -2193,7 +2422,10 @@
       SPL.gift = null;
       $('splash-kicker').textContent = 'Sự kiện mới';
       $('splash-go').textContent = 'Đến vòng quay';
-      $('splash-text').textContent = ev.tagline + ' Có ' + names + ': skin, cánh, hiệu ứng và nền riêng của ' + ev.short + ', chỉ có đến hết ' + dayText(ev.end - 1) + '.';
+      // kể đúng loại đồ vòng quay này có (Băng số 1 không có nền)
+      const slots = ['skin', 'wing', 'fx', 'bg'].filter((sl) => ev.wheel.some((w) => w.item && w.item.startsWith(sl + ':'))).map((sl) => SLOT_NAME[sl].toLowerCase());
+      const kinds = slots.length > 1 ? slots.slice(0, -1).join(', ') + ' và ' + slots[slots.length - 1] : slots.join('');
+      $('splash-text').textContent = ev.tagline + ' Có ' + names + ': ' + kinds + ' riêng của ' + ev.short + ', chỉ có đến hết ' + dayText(ev.end - 1) + '.';
     }
     $('splash').querySelector('.splash-card').className = 'splash-card ev-' + ev.id;
     $('splash').hidden = false;
@@ -2378,12 +2610,10 @@
 
   // ================= Sự kiện bấm =================
   document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => { SFX.click(); switchTab(b.dataset.tab); }));
-  $('btn-open').addEventListener('click', openBox);
+  $('btn-open-1').addEventListener('click', () => openBox(1));
+  $('btn-open-10').addEventListener('click', () => openBox(10));
+  $('box-hero').addEventListener('click', (e) => { if (!e.target.closest('button')) openBox(1); });
   $('btn-free').addEventListener('click', openFree);
-  $('giftbox').addEventListener('click', openBox);
-  $('qty-minus').addEventListener('click', () => { SFX.click(); setQty(UI.qty - 1); });
-  $('qty-plus').addEventListener('click', () => { SFX.click(); setQty(UI.qty + 1); });
-  document.querySelectorAll('#qty-chips button').forEach((b) => b.addEventListener('click', () => { SFX.click(); setQty(+b.dataset.q); }));
   $('sheet-close').addEventListener('click', closeSheet);
   $('sheet-backdrop').addEventListener('click', closeSheet);
   $('sheet-action').addEventListener('click', sheetAction);
@@ -2394,7 +2624,7 @@
     if (ctx === 'gift') return;
     if (ctx === 'set') { if (UI.setGift) wearSet(UI.setGift.set, UI.setGift.items); return; }
     if (ctx === 'wheel') spin(1);
-    else { UI.qty = 1; openBox(); }
+    else openBox(1);
   });
   $('reveal-use').addEventListener('click', () => {
     const res = UI.reveal, ctx = UI.revealCtx;
@@ -2409,7 +2639,17 @@
   });
   $('cut').addEventListener('click', () => { if (performance.now() - CUT.t0 > 500) closeCut(); });
   $('pack-all').addEventListener('click', packAll);
+  $('pack').addEventListener('click', packTap);
   $('pack-done').addEventListener('click', closePack);
+  $('pack-use').addEventListener('click', () => {
+    const res = PK.res[0];
+    closePack();
+    if (!res || !res.item) return;
+    Wallet.equip(res.item.slot, res.item.id);
+    SFX.click();
+    if (!playCut(res.item)) toast('Đã dùng ' + res.item.name);
+    renderAll();
+  });
   $('pack-again').addEventListener('click', () => {
     const again = PK.opts.again && PK.opts.again();
     closePack();
@@ -2489,6 +2729,8 @@
     if (UI.sheet && !$('sheet').hidden) drawThumb(sheetArt, UI.sheet, t);
     if (UI.reveal && !$('reveal').hidden) drawThumb(revealArt, UI.reveal.item, t);
     if (isLive(EV) && (UI.tab === 'ev' || WS.spinning)) drawWheel(now, dt);
+    if (UI.tab === 'box' && !PK.on) drawHero(t);
+    if (UI.tab === 'ev' && EV && EV.id === 'bang1' && !PK.on) drawKeyBang1(t);
     if (SPL.on) drawSplash(t, dt);
     if (CUT.on) drawCut(now, dt);
     drawFx(dt);

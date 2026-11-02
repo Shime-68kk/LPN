@@ -677,3 +677,10 @@ body.night .rv-steps li.now { background: rgba(255, 79, 123, .16); }
   100% { transform: scale(.86); opacity: .25; }
 }
 @media (prefers-reduced-motion: reduce) { .count b.tick, .rv-hearts svg { animation: none; } }
+
+/* đốt cây thưởng / phạt trong ván (Lãnh Địa, Được Mùa) */
+.hud-dot { display: block; margin-top: 1px; font-size: 11px; font-weight: 800; color: #2F7A49 !important; font-variant-numeric: tabular-nums; }
+.hud-dot.neg { color: #D23A5A !important; }
+.hud-dot.bump { animation: hud-dot-bump .5s cubic-bezier(.2, 1.8, .4, 1); }
+@keyframes hud-dot-bump { from { transform: scale(1.6); } }
+body.night .hud-dot { color: #8FE0A8 !important; }
