@@ -324,18 +324,9 @@
       eat.blink = Math.max(0, eat.blink - dt);
 
       // thân bò uốn lượn phía dưới đầu
-      const seg = 16.5 * S, gap = 23 * S, n = 7;
-      for (let k = n; k >= 1; k--) {
-        const fromTail = n - k;
-        const sc = fromTail >= 3 ? 1 : 0.64 + fromTail * 0.12;
-        const sx = hx + Math.sin(t * 3 - k * 0.75) * 9 * S * Math.min(1, k / 2);
-        const sy = hy + k * gap;
-        x.save();
-        x.translate(sx, sy);
-        x.scale(sc, sc);
-        Skins.drawSegment(x, seg, L.skin, k % 5 === 0 ? 2 : k % 2, S);
-        x.restore();
-      }
+      const seg = 16.5 * S, gap = seg * 0.8, n = 6, body = [];
+      for (let k = 1; k <= n; k++) body.push([hx + Math.sin(t * 3 - k * 0.5) * 9 * S * Math.min(1, k / 2), hy + k * gap, seg * 1.02 * (1 - (k - 1) * 0.06) * (k === n ? 0.85 : 1)]);
+      Skins.drawWorm(x, L.skin, body, 0, 0, 0, null, S);
       // skin có tính cách: chạm, vuốt, giữ lâu thì bé phản ứng (xem Skins.makePet)
       const pet = petFor(L.skin);
       if (pet) { pet.update(dt); for (const e of pet.takeEvents()) petSound(e); }
@@ -1970,14 +1961,9 @@
   }
   // Vẽ một bé sâu đứng (đầu trên, thân vòng xuống) với nét mặt tuỳ ý.
   function drawWormAt(x, item, size, t, face) {
-    const S = size / 90, r = 21 * S, sr = 16.5 * S;
-    for (let k = 3; k >= 1; k--) {
-      x.save();
-      x.translate(Math.sin(t * 2 + k) * 2 * S + k * sr * 0.55, k * sr * 1.05);
-      Skins.drawSegment(x, sr, item, k === 3 ? 2 : k % 2, S);
-      x.restore();
-    }
-    Skins.drawHead(x, r, item, Object.assign({ t, ant: Math.sin(t * 2) * 2 * S, bob: 0, happy: 0, blink: 0, sad: 0, chew: 0, mouthOpen: 0 }, face || {}), S);
+    const S = size / 90, r = 21 * S, sr = 16.5 * S, body = [];
+    for (let k = 1; k <= 4; k++) body.push([Math.sin(t * 2 + k) * 2 * S + k * sr * 0.45, r * 0.2 + k * sr * 0.8, sr * (1 - (k - 1) * 0.07)]);
+    Skins.drawWorm(x, item, body, 0, 0, r, Object.assign({ t, ant: Math.sin(t * 2) * 2 * S, bob: 0, happy: 0, blink: 0, sad: 0, chew: 0, mouthOpen: 0 }, face || {}), S);
   }
   const easeOut = (k) => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3);
   const easeBack = (k) => { k = Math.min(1, Math.max(0, k)); const c = 1.7; return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2); };

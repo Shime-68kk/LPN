@@ -681,14 +681,6 @@
     });
     SPR.leafCY = pad + h;
 
-    const r = SEG_R, sp = r + 6 * S;
-    const seg = (variant) => makeSprite(sp * 2, sp * 2, (x) => {
-      x.translate(sp, sp);
-      Skins.drawSegment(x, r, LOOK.skin, variant, S);
-    });
-    SPR.segSize = sp * 2;
-    SPR.seg = [seg(0), seg(1), seg(2)];
-
     const cloud = (scale) => makeSprite(150 * S * scale, 60 * S * scale, (x) => {
       x.scale(S * scale, S * scale);
       x.fillStyle = T.cloud;
@@ -924,6 +916,7 @@
 
   // ================= Bé sâu =================
   const TRAIL_N = 512;
+  const BODY = 6; // số đốt thân vẽ ra; dài hơn thì thành vệt sao
   const Sau = {
     headX: 0, target: 0, vx: 0, headY: 0, segs: 4,
     trailT: new Float64Array(TRAIL_N), trailX: new Float32Array(TRAIL_N), trailI: 0, trailCount: 0,
@@ -967,9 +960,12 @@
     // theo tốc độ lá rơi) và đặt mỗi đốt cách nhau một khoảng cố định, nên thân luôn liền.
     const xs = drawSau.xs || (drawSau.xs = new Float32Array(401));
     const ys = drawSau.ys || (drawSau.ys = new Float32Array(401));
-    const maxSeg = Math.min(Sau.segs, 400);
+    const rs = drawSau.rs || (drawSau.rs = new Float32Array(BODY + 1));
+    // Đốt thân đặt sát nhau (thân liền); phần dài hơn BODY đốt thành vệt sao, mỗi đốt dư một sao cách hai bước.
+    const STEP = SEG_R * 0.8;
+    const maxSeg = Math.min(BODY + Math.max(0, Sau.segs - BODY) * 2, 400);
     const bottom = H + SEG_R * 2;
-    let px = hx, py = hy, need = SEG_GAP, k = 1;
+    let px = hx, py = hy, need = STEP, k = 1;
     for (let n = 1; n < Sau.trailCount && k <= maxSeg && py < bottom; n++) {
       const idx = (Sau.trailI - n + TRAIL_N) % TRAIL_N;
       const qx = Sau.trailX[idx], qy = hy + (clock - Sau.trailT[idx]) * speed;
@@ -979,33 +975,36 @@
         py += (dy * need) / len;
         xs[k] = px; ys[k] = py; k++;
         dx = qx - px; dy = qy - py; len = Math.hypot(dx, dy);
-        need = SEG_GAP;
+        need = STEP;
       }
       need -= len;
       px = qx; py = qy;
     }
-    while (k <= maxSeg && py < bottom) { py += SEG_GAP; xs[k] = px; ys[k] = py; k++; }
+    while (k <= maxSeg && py < bottom) { py += STEP; xs[k] = px; ys[k] = py; k++; }
     const visible = k - 1;
-    const size = SPR.segSize;
-    for (let k = visible; k >= 1; k--) {
-      const fromTail = Sau.segs - k;
-      let sc = fromTail >= 3 ? 1 : 0.64 + fromTail * 0.12;
+    const nb = Math.min(visible, BODY, Sau.segs);
+    for (let k = 1; k <= visible; k++) {
+      xs[k] += Math.sin(clock * 7 - k * 0.4) * (1.2 + pulse * 1.2) * S * Math.min(1, k / 2);
+      if (collapse > 0) { xs[k] = lerp(xs[k], hx, collapse); ys[k] = lerp(ys[k], hy, collapse); }
+    }
+    if (visible > nb + 1) {
+      g.save();
+      if (collapse > 0) g.globalAlpha = 1 - collapse;
+      Skins.drawTrail(g, xs, ys, nb + 2, visible, LOOK.skin, S, clock, 2);
+      g.restore();
+    }
+    for (let k = 1; k <= nb; k++) {
+      let sc = 1 - (k - 1) * 0.06;
+      if (Sau.segs <= BODY && k === nb) sc *= 0.82;
+      // lá vừa đớp trôi dọc thân thành một chỗ phình
       for (const gt of Sau.gulps) {
-        const pos = (clock - gt) * 26;
-        const d = k - pos;
+        const d = k - (clock - gt) * 14;
         if (d > -2 && d < 2) sc += 0.2 * Math.exp(-d * d);
       }
-      let x = xs[k] + Math.sin(clock * 7 - k * 0.55) * (1.4 + pulse * 1.4) * S;
-      let y = ys[k];
-      if (collapse > 0) {
-        x = lerp(x, hx, collapse);
-        y = lerp(y, hy, collapse);
-        sc *= 1 - collapse * 0.6;
-      }
-      const spr = SPR.seg[k % 5 === 0 ? 2 : k % 2];
-      const s = size * sc;
-      g.drawImage(spr, x - s / 2, y - s / 2, s, s);
+      if (collapse > 0) sc *= 1 - collapse * 0.6;
+      rs[k] = SEG_R * 1.02 * sc;
     }
+    Skins.drawBody(g, xs, ys, rs, nb, LOOK.skin, S);
     drawHead(hx, hy, pulse);
   }
 
@@ -1934,12 +1933,9 @@
     g.fillStyle = glow;
     g.beginPath(); g.arc(x, y, HEAD_R * 2.4, 0, TAU); g.fill();
     g.globalAlpha = 0.55 * k;
-    for (let i = 3; i >= 1; i--) {
-      g.save();
-      g.translate(x + Math.sin(clock * 3 - i) * 4 * S, y + i * SEG_GAP * 0.85);
-      Skins.drawSegment(g, SEG_R * (1 - i * 0.06), LOOK.skin, i % 2, S);
-      g.restore();
-    }
+    const cs = [];
+    for (let i = 1; i <= 4; i++) cs.push([x + Math.sin(clock * 3 - i) * 3 * S, y + i * SEG_R * 0.8, SEG_R * (1 - (i - 1) * 0.06)]);
+    Skins.drawWorm(g, LOOK.skin, cs, 0, 0, 0, null, S);
     g.restore();
     g.save();
     g.globalAlpha = 0.6 * k;
@@ -3821,7 +3817,9 @@
       // Bài "locked" chỉ hiện khi đã mở khoá trong cốt truyện (lpn:songs).
       let opened = {};
       try { opened = JSON.parse(localStorage.getItem('lpn:songs')) || {}; } catch (e) { /* bỏ qua */ }
-      SONGS = data.songs.filter((s) => !s.locked || opened[s.id]);
+      // Máy thử trong nhà (không phải workers.dev): hiện cả bài còn khoá để anh Quang xem trước
+      const lan = !location.hostname.endsWith('workers.dev');
+      SONGS = data.songs.filter((s) => !s.locked || opened[s.id] || lan);
       UI.renderSongs(SONGS);
       const auto = params.get('song');
       if (auto) {

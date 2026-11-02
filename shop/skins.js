@@ -571,6 +571,25 @@
     else if (kind === 'snow') { snowPath(x, cx, cy, s * 0.85, 1.6 * S); }
     else if (kind === 'drop') { dropPath(x, cx, cy, s * 0.8); x.fill(); }
     else if (kind === 'moon') { moonPath(x, cx, cy, s * 0.75); x.fill(); }
+    else if (kind === 'reel') {
+      // hai bánh cuộn của cuộn băng
+      for (const dx of [-s * 0.62, s * 0.62]) {
+        x.beginPath(); x.arc(cx + dx, cy, s * 0.48, 0, TAU); x.fill();
+        x.fillStyle = 'rgba(0, 0, 0, 0.55)';
+        x.beginPath(); x.arc(cx + dx, cy, s * 0.17, 0, TAU); x.fill();
+        x.fillStyle = color;
+      }
+    } else if (kind === 'rec') {
+      // chấm đỏ REC của máy quay
+      x.fillStyle = '#E8453C';
+      x.beginPath(); x.arc(cx, cy, s * 0.5, 0, TAU); x.fill();
+      x.fillStyle = 'rgba(255, 255, 255, 0.55)';
+      x.beginPath(); x.arc(cx - s * 0.16, cy - s * 0.16, s * 0.15, 0, TAU); x.fill();
+    } else if (kind === 'note') {
+      x.beginPath(); x.ellipse(cx - s * 0.2, cy + s * 0.42, s * 0.34, s * 0.26, -0.4, 0, TAU); x.fill();
+      x.lineWidth = s * 0.16;
+      x.beginPath(); x.moveTo(cx + s * 0.1, cy + s * 0.4); x.lineTo(cx + s * 0.1, cy - s * 0.62); x.quadraticCurveTo(cx + s * 0.55, cy - s * 0.45, cx + s * 0.62, cy - s * 0.1); x.stroke();
+    }
     else if (kind === 'diamond') {
       // hoa văn quả trám của thổ cẩm: trám vàng, lõi đỏ
       diamondPath(x, cx, cy, s); x.fill();
@@ -817,24 +836,47 @@
 
   // ================= Đốt thân =================
   // Vẽ một đốt tâm (0,0) bán kính r. variant: 0 màu chính, 1 màu phụ, 2 có dấu.
+  // Băng số 1 (Chương 17): nhãn giấy kem dán ngang thân như nhãn cuộn băng VHS, có kẻ dòng và một vạch đỏ
+  function tapeLabel(x, r, variant) {
+    x.save();
+    x.beginPath(); x.arc(0, 0, r, 0, TAU); x.clip();
+    x.fillStyle = '#F3E9D2';
+    x.fillRect(-r, -r * 0.42, r * 2, r * 0.58);
+    x.fillStyle = '#E8453C';
+    x.fillRect(-r, -r * 0.42, r * 2, r * 0.08);
+    x.strokeStyle = 'rgba(58, 52, 64, 0.35)';
+    x.lineWidth = r * 0.045;
+    for (const y of [-r * 0.16, r * 0.02]) { x.beginPath(); x.moveTo(-r * 0.62, y); x.lineTo(r * (variant === 1 ? 0.3 : 0.62), y); x.stroke(); }
+    x.restore();
+  }
+  // Băng số 1: vạch quét ngang mờ như màn hình TV đen trắng
+  function scanLines(x, r) {
+    x.save();
+    x.beginPath(); x.arc(0, 0, r, 0, TAU); x.clip();
+    x.fillStyle = 'rgba(40, 40, 44, 0.12)';
+    for (let y = -r; y < r; y += r * 0.2) x.fillRect(-r, y, r * 2, r * 0.07);
+    x.restore();
+  }
+  function segPattern(x, r, skin, variant, p) {
+    if (skin.pattern === 'brocade') brocadeBand(x, r, variant, false);
+    else if (skin.pattern === 'pumpkin') pumpkinRibs(x, r, false);
+    else if (skin.pattern === 'stripe') stockingStripes(x, r, false, p.feet);
+    else if (skin.pattern === 'coat') coatBelt(x, r, false, variant);
+    else if (skin.pattern === 'aodai') aodaiFloral(x, r, false, variant);
+    else if (skin.pattern === 'pcb') pcbTraces(x, r, false, variant);
+    else if (skin.pattern === 'tape') tapeLabel(x, r, variant);
+    else if (skin.pattern === 'scan') scanLines(x, r);
+  }
+  // Một đốt lẻ (tâm 0,0), cùng kiểu với thân liền ở drawBody: viền tối, không chân.
   function drawSegment(x, r, skin, variant, S) {
     const p = palette(skin);
-    x.fillStyle = p.feet;
-    x.beginPath(); x.ellipse(-r * 0.92, r * 0.35, r * 0.24, r * 0.17, 0.3, 0, TAU); x.fill();
-    x.beginPath(); x.ellipse(r * 0.92, r * 0.35, r * 0.24, r * 0.17, -0.3, 0, TAU); x.fill();
+    x.fillStyle = bodyOutline(skin);
+    x.beginPath(); x.arc(0, 0, r + 2.2 * S, 0, TAU); x.fill();
     x.fillStyle = variant === 1 ? p.body2 : p.body;
-    x.beginPath();
-    if (skin.shape === 'bean') x.ellipse(0, 0, r, r * 0.92, 0, 0, TAU);
-    else x.arc(0, 0, r, 0, TAU);
-    x.fill();
-    if (skin.pattern === 'brocade') brocadeBand(x, r, variant, skin.shape === 'bean');
-    else if (skin.pattern === 'pumpkin') pumpkinRibs(x, r, skin.shape === 'bean');
-    else if (skin.pattern === 'stripe') stockingStripes(x, r, skin.shape === 'bean', p.feet);
-    else if (skin.pattern === 'coat') coatBelt(x, r, skin.shape === 'bean', variant);
-    else if (skin.pattern === 'aodai') aodaiFloral(x, r, skin.shape === 'bean', variant);
-    else if (skin.pattern === 'pcb') pcbTraces(x, r, skin.shape === 'bean', variant);
-    x.fillStyle = p.shine;
-    x.beginPath(); x.ellipse(-r * 0.3, -r * 0.38, r * 0.42, r * 0.24, -0.4, 0, TAU); x.fill();
+    x.beginPath(); x.arc(0, 0, r, 0, TAU); x.fill();
+    segPattern(x, r, skin, variant, p);
+    x.fillStyle = 'rgba(255,255,255,0.28)';
+    x.beginPath(); x.ellipse(-r * 0.48, -r * 0.1, r * 0.16, r * 0.5, 0, 0, TAU); x.fill();
     if (variant === 2 && skin.mark !== 'none') drawMark(x, skin.mark || 'heart', 0, skin.pattern ? 0 : r * 0.05, skin.mark === 'jack' ? r * 0.62 : r * 0.32, p.mark, S);
   }
 
@@ -952,6 +994,55 @@
       x.beginPath(); x.arc(0, y + r * 0.22, r * 0.12, 0, TAU); x.fill();
       x.fillStyle = '#62BC7C';
       x.beginPath(); x.ellipse(0, y + r * 0.34, r * 0.7, r * 0.1, 0, 0, TAU); x.fill();
+    } else if (acc === 'vhs') {
+      // Băng số 1: một cuộn băng VHS nhỏ đội nghiêng trên đầu, nhãn kem có tim đỏ, hai bánh cuộn quay chậm
+      if (back) return;
+      x.save();
+      x.translate(r * 0.05, -r * 1.02);
+      x.rotate(-0.22);
+      const w = r * 1.5, h = r * 0.82;
+      x.fillStyle = '#26222B';
+      x.beginPath(); x.roundRect(-w / 2, -h / 2, w, h, r * 0.1); x.fill();
+      x.fillStyle = '#F3E9D2';
+      x.fillRect(-w * 0.4, -h * 0.4, w * 0.8, h * 0.3);
+      heartPath(x, w * 0.3, -h * 0.26, r * 0.09); x.fillStyle = '#E8453C'; x.fill();
+      x.fillStyle = '#4A4352';
+      x.beginPath(); x.roundRect(-w * 0.34, h * 0.0, w * 0.68, h * 0.34, r * 0.08); x.fill();
+      for (const dx of [-w * 0.18, w * 0.18]) {
+        x.fillStyle = '#F3E9D2';
+        x.beginPath(); x.arc(dx, h * 0.17, h * 0.13, 0, TAU); x.fill();
+        x.strokeStyle = '#26222B';
+        x.lineWidth = r * 0.05;
+        for (let k = 0; k < 3; k++) {
+          const a = (t || 0) * 1.6 + k * TAU / 3;
+          x.beginPath(); x.moveTo(dx, h * 0.17); x.lineTo(dx + Math.cos(a) * h * 0.11, h * 0.17 + Math.sin(a) * h * 0.11); x.stroke();
+        }
+      }
+      x.restore();
+    } else if (acc === 'phones') {
+      // Băng số 1: tai nghe chụp tai màu kem, đệm hồng ("Đeo tai nghe vào. Tắt bớt đèn.")
+      if (back) {
+        x.strokeStyle = '#F3E9D2';
+        x.lineWidth = r * 0.2;
+        x.beginPath(); x.arc(0, -r * 0.05, r * 1.06, Math.PI * 1.08, Math.PI * 1.92); x.stroke();
+        return;
+      }
+      for (const side of [-1, 1]) {
+        x.fillStyle = '#F3E9D2';
+        x.beginPath(); x.ellipse(side * r * 0.98, r * 0.02, r * 0.3, r * 0.42, 0, 0, TAU); x.fill();
+        x.fillStyle = '#FF9DB2';
+        x.beginPath(); x.ellipse(side * r * 0.86, r * 0.02, r * 0.14, r * 0.32, 0, 0, TAU); x.fill();
+      }
+      x.strokeStyle = '#D9CBB0';
+      x.lineWidth = r * 0.07;
+      x.beginPath(); x.arc(0, -r * 0.05, r * 1.06, Math.PI * 1.1, Math.PI * 1.9); x.stroke();
+    } else if (acc === 'rabbit') {
+      // Băng số 1: đế gỗ của ăng-ten tai thỏ trên đỉnh đầu; hai râu của sâu (màu kim loại, antLen dài) là hai thanh ăng-ten
+      if (back) return;
+      x.fillStyle = '#7A5638';
+      x.beginPath(); x.ellipse(0, -r * 0.98, r * 0.42, r * 0.2, 0, Math.PI, TAU); x.fill();
+      x.fillStyle = '#5E4029';
+      x.fillRect(-r * 0.42, -r * 0.99, r * 0.84, r * 0.07);
     } else if (acc === 'beanie') {
       if (back) {
         // khăn len quấn cổ, đuôi khăn bay theo nhịp
@@ -1508,33 +1599,110 @@
     }
   }
 
-  // ================= Đầu =================
-  // st: { ant, bob, happy, blink, sad, chew, mouthOpen, t, mood, look }
-  function drawHead(x, r, skin, st, S) {
-    const p = palette(skin);
-    const t = st.t || 0;
-    const bean = skin.shape === 'bean';
-    drawAccessory(x, skin.acc, r, S, t, true);
-    // Râu
-    x.strokeStyle = p.ant;
-    x.lineWidth = 2.2 * S;
+  // ================= Thân và đầu sâu =================
+  // Thân liền một khối như sticker: không chân, viền tối bao quanh, một dải tối bên phải và một dải sáng bên trái,
+  // nếp giữa các đốt chỉ còn vệt mờ. xs/ys/rs đánh số 1..n tính từ đầu xuống.
+  function shade(hex, to, k) {
+    const h = String(hex).replace('#', '');
+    if (!/^[0-9a-f]{3}([0-9a-f]{3})?$/i.test(h)) return hex;
+    const n = parseInt(h.length === 3 ? h.replace(/./g, (c) => c + c) : h, 16), T = to === 'w' ? 255 : 0;
+    return 'rgb(' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.round(v + (T - v) * k)).join(',') + ')';
+  }
+  function bodyOutline(skin) { const p = palette(skin); return shade(p.body2 || p.body, 'k', 0.45); }
+  function drawBody(x, xs, ys, rs, n, skin, S) {
+    if (n < 1) return;
+    const p = palette(skin), line = bodyOutline(skin);
+    x.fillStyle = 'rgba(0,0,0,0.16)';
+    for (let i = n; i >= 1; i--) { x.beginPath(); x.ellipse(xs[i] + 3 * S, ys[i] + 5 * S, rs[i], rs[i] * 0.9, 0, 0, TAU); x.fill(); }
+    x.fillStyle = line;
+    x.beginPath();
+    for (let i = n; i >= 1; i--) { x.moveTo(xs[i] + rs[i] + 2.2 * S, ys[i]); x.arc(xs[i], ys[i], rs[i] + 2.2 * S, 0, TAU); }
+    x.fill();
+    x.fillStyle = p.body;
+    x.beginPath();
+    for (let i = n; i >= 1; i--) { x.moveTo(xs[i] + rs[i], ys[i]); x.arc(xs[i], ys[i], rs[i], 0, TAU); }
+    x.fill();
+    x.save();
+    x.clip();
+    if (skin.pattern) {
+      // Skin có hoa văn: mỗi đốt tô màu xen kẽ và vẽ hoa văn riêng, đốt trước đè đốt sau như vảy.
+      for (let i = n; i >= 1; i--) {
+        x.save();
+        x.translate(xs[i], ys[i]);
+        x.fillStyle = i % 2 ? p.body : p.body2 || p.body;
+        x.beginPath(); x.arc(0, 0, rs[i], 0, TAU); x.fill();
+        segPattern(x, rs[i], skin, i === 2 ? 2 : i % 2, p);
+        x.restore();
+      }
+      x.fillStyle = 'rgba(0,0,0,0.1)';
+      x.beginPath();
+      for (let i = n; i >= 1; i--) { const r = rs[i]; x.moveTo(xs[i] + r * 1.3, ys[i] + r * 0.2); x.arc(xs[i] + r * 0.55, ys[i] + r * 0.2, r * 0.75, 0, TAU); }
+      x.fill();
+    } else {
+    x.fillStyle = shade(p.body2 || p.body, 'k', 0.14);
+    x.beginPath();
+    for (let i = n; i >= 1; i--) { const r = rs[i]; x.moveTo(xs[i] + r * 1.3, ys[i] + r * 0.2); x.arc(xs[i] + r * 0.55, ys[i] + r * 0.2, r * 0.75, 0, TAU); }
+    x.fill();
+    x.fillStyle = p.body;
+    x.beginPath();
+    for (let i = n; i >= 1; i--) { const r = rs[i]; x.moveTo(xs[i] + r * 0.66, ys[i] - r * 0.05); x.arc(xs[i] - r * 0.12, ys[i] - r * 0.05, r * 0.78, 0, TAU); }
+    x.fill();
+    }
+    x.fillStyle = 'rgba(255,255,255,0.28)';
+    x.beginPath();
+    for (let i = n; i >= 1; i--) { const r = rs[i]; x.ellipse(xs[i] - r * 0.48, ys[i] - r * 0.1, r * 0.16, r * 0.5, 0, 0, TAU); x.closePath(); }
+    x.fill();
+    x.restore();
+    x.strokeStyle = shade(p.body2 || p.body, 'k', 0.25);
+    x.globalAlpha = 0.16;
+    x.lineWidth = 1.4 * S;
     x.lineCap = 'round';
-    const bob = (st.bob || 0) * 3 * S;
+    x.beginPath();
+    for (let i = n; i >= 2; i--) { const r = rs[i]; x.moveTo(xs[i] + Math.cos(Math.PI * 1.25) * r * 0.8, ys[i] - r * 0.05 + Math.sin(Math.PI * 1.25) * r * 0.8); x.arc(xs[i], ys[i] - r * 0.05, r * 0.8, Math.PI * 1.25, Math.PI * 1.75); }
+    x.stroke();
+    x.globalAlpha = 1;
+    if (n >= 2 && skin.mark !== 'none') drawMark(x, skin.mark || 'heart', xs[2], ys[2] + (skin.pattern ? 0 : rs[2] * 0.1), skin.mark === 'jack' ? rs[2] * 0.62 : rs[2] * 0.32, p.mark, S);
+  }
+  // Phần đuôi dài hơn thân hiện ra thành vệt sao nhỏ lấp lánh, nhạt dần về cuối.
+  function drawTrail(x, xs, ys, from, to, skin, S, t, step) {
+    const glow = skin.glow || '#FFC94D', tip = palette(skin).antTip;
+    for (let i = from + Math.floor((to - from) / (step || 1)) * (step || 1); i >= from; i -= step || 1) {
+      const k = 1 - (i - from) / Math.max(1, to - from + 1);
+      const tw = 0.5 + 0.5 * Math.sin(t * 6 + i * 1.7);
+      x.globalAlpha = 0.3 + 0.7 * k * tw;
+      x.fillStyle = Math.floor(i / (step || 1)) % 2 ? glow : tip;
+      starPath(x, xs[i], ys[i], (2.5 + 4 * k) * S, (2.5 + 4 * k) * S * 0.36, 4);
+      x.fill();
+    }
+    x.globalAlpha = 1;
+  }
+  // Đầu to hơn đốt thân (r truyền vào là cỡ đầu cũ, vẽ to thêm HEAD_K), mắt to có đốm sáng, viền như sticker.
+  // st: { ant, bob, happy, blink, sad, chew, mouthOpen, t, mood, look }
+  const HEAD_K = 1.18;
+  function drawHead(x, r, skin, st, S) {
+    r *= HEAD_K;
+    const p = palette(skin), t = st.t || 0, line = bodyOutline(skin);
     // Ăng-ten của Sâu Vi Mạch: đèn đầu râu nháy xanh / đỏ so le, cứ vài giây phát hai vòng sóng.
     const signal = skin.idle === 'signal';
+    // Nàng Thơ thỉnh thoảng nhắm mắt mơ màng (như đang ngâm thơ); Vi Mạch thỉnh thoảng "bắt được sóng" mắt hoá tim.
+    const dream = !st.mood && skin.idle === 'poet' && t % 7 > 5.7 && !(st.sad > 0);
+    const heartEye = !st.mood && signal && t % 8.5 > 7.3 && !(st.happy > 0) && !(st.sad > 0) && !(st.blink > 0);
+    drawAccessory(x, skin.acc, r, S, t, true);
+    const bob = (st.bob || 0) * 3 * S;
+    x.lineCap = 'round';
     for (const side of skin.antHide ? [] : [-1, 1]) {
-      // antLen: râu dài hơn cho skin đội khăn cao, để râu vẫn nhô hẳn lên khỏi khăn
-      const tx = side * r * 0.8 + (st.ant || 0), ty = -r * (skin.antLen || (bean ? 1.7 : 1.6)) - bob;
-      x.beginPath();
-      x.moveTo(side * r * 0.4, -r * 0.75);
-      x.quadraticCurveTo(side * r * 0.45, -r * 1.35, tx, ty);
-      x.stroke();
+      const tx = side * r * 0.62 + (st.ant || 0), ty = -r * (skin.antLen ? skin.antLen * 0.85 : 1.42) - bob;
+      for (const [c, w] of [[line, 4.2], [p.ant, 2.2]]) {
+        x.strokeStyle = c; x.lineWidth = w * S;
+        x.beginPath(); x.moveTo(side * r * 0.3, -r * 0.8); x.quadraticCurveTo(side * r * 0.25, -r * 1.25, tx, ty); x.stroke();
+      }
       if (skin.glow) {
         x.fillStyle = skin.glow;
-        x.globalAlpha = 0.35 + 0.25 * Math.abs(Math.sin(t * 3 + side));
-        x.beginPath(); x.arc(tx, ty, (skin.antLen ? 5.5 : 7) * S, 0, TAU); x.fill();
+        x.globalAlpha = 0.3 + 0.2 * Math.abs(Math.sin(t * 3 + side));
+        x.beginPath(); x.arc(tx, ty, 7 * S, 0, TAU); x.fill();
         x.globalAlpha = 1;
       }
+      x.fillStyle = line; x.beginPath(); x.arc(tx, ty, 5.4 * S, 0, TAU); x.fill();
       x.fillStyle = p.antTip;
       if (signal) {
         if (st.mood === 'grumpy' || Math.floor(t * 2.5 + (side > 0 ? 1 : 0)) % 2) x.fillStyle = '#FF4F7B';
@@ -1547,91 +1715,71 @@
             const q = ph / 0.62 - k * 0.32;
             if (q <= 0 || q >= 1) continue;
             x.globalAlpha = 1 - q;
-            const rr = (4 + q * 11) * S;
+            const rr = (5 + q * 11) * S;
             x.beginPath(); x.arc(tx, ty, rr, side > 0 ? -1.15 : Math.PI + 0.15, side > 0 ? -0.15 : Math.PI + 1.15); x.stroke();
           }
           x.restore();
-          x.strokeStyle = p.ant;
-          x.lineWidth = 2.2 * S;
         }
       }
-      if (skin.id === 'be-hong') { heartPath(x, tx, ty, 3.6 * S); x.fill(); }
-      else { x.beginPath(); x.arc(tx, ty, 3.8 * S, 0, TAU); x.fill(); }
+      if (skin.id === 'be-hong') { heartPath(x, tx, ty, 3.8 * S); x.fill(); }
+      else { x.beginPath(); x.arc(tx, ty, 4 * S, 0, TAU); x.fill(); }
+      x.fillStyle = 'rgba(255,255,255,.7)'; x.beginPath(); x.arc(tx - 1.3 * S, ty - 1.3 * S, 1.3 * S, 0, TAU); x.fill();
     }
-    // Đầu
-    x.fillStyle = p.head;
-    x.beginPath();
-    if (bean) x.ellipse(0, -r * 0.06, r * 1.02, r * 1.12, 0, 0, TAU);
-    else x.arc(0, 0, r, 0, TAU);
-    x.fill();
+    x.fillStyle = line;
+    x.beginPath(); x.ellipse(0, 0, r + 2.4 * S, r * 0.94 + 2.4 * S, 0, 0, TAU); x.fill();
+    const g = x.createRadialGradient(-r * 0.35, -r * 0.45, r * 0.1, 0, 0, r * 1.05);
+    g.addColorStop(0, shade(p.head, 'w', 0.4)); g.addColorStop(0.6, p.head); g.addColorStop(1, shade(p.head, 'k', 0.1));
+    x.fillStyle = g;
+    x.beginPath(); x.ellipse(0, 0, r, r * 0.94, 0, 0, TAU); x.fill();
     if (skin.pattern === 'pumpkin') pumpkinRibs(x, r, false);
-    x.fillStyle = p.shine;
-    x.beginPath(); x.ellipse(-r * 0.34, -r * 0.42, r * 0.36, r * 0.2, -0.5, 0, TAU); x.fill();
+    x.fillStyle = 'rgba(255,255,255,0.35)';
+    x.beginPath(); x.ellipse(-r * 0.38, -r * 0.52, r * 0.34, r * 0.17, -0.5, 0, TAU); x.fill();
     x.fillStyle = p.blush;
-    x.beginPath(); x.ellipse(-r * 0.56, r * 0.24, r * 0.17, r * 0.11, 0, 0, TAU); x.fill();
-    x.beginPath(); x.ellipse(r * 0.56, r * 0.24, r * 0.17, r * 0.11, 0, 0, TAU); x.fill();
-    // Mắt
-    x.fillStyle = p.eye;
-    x.strokeStyle = p.eye;
-    x.lineWidth = 2 * S;
-    const sleepy = skin.eyes === 'sleepy';
-    // Nàng Thơ thỉnh thoảng nhắm mắt mơ màng (như đang ngâm thơ); Vi Mạch thỉnh thoảng "bắt được sóng" mắt hoá tim.
-    const dream = !st.mood && skin.idle === 'poet' && t % 7 > 5.7 && !(st.sad > 0);
-    const heartEye = !st.mood && skin.idle === 'signal' && t % 8.5 > 7.3 && !(st.happy > 0) && !(st.sad > 0) && !(st.blink > 0);
+    for (const side of [-1, 1]) { x.beginPath(); x.ellipse(side * r * 0.62, r * 0.32, r * 0.17, r * 0.1, 0, 0, TAU); x.fill(); }
     if (st.mood) moodFace(x, r, p, skin, st, S, t);
     else {
-    for (const side of [-1, 1]) {
-      const ex = side * r * 0.32, ey = -r * 0.1;
-      if (heartEye) {
-        x.fillStyle = '#FF4F7B';
-        heartPath(x, ex, ey + r * 0.02, r * 0.14 * (1 + 0.12 * Math.sin(t * 14)));
-        x.fill();
-        x.fillStyle = p.eye;
-      } else if (st.happy > 0 || dream) {
-        x.beginPath(); x.moveTo(ex - r * 0.12, ey + r * 0.04); x.quadraticCurveTo(ex, ey - r * 0.14, ex + r * 0.12, ey + r * 0.04); x.stroke();
-      } else if (st.blink > 0 || (sleepy && !(st.sad > 0))) {
-        // Lim dim: mắt cong xuống như đang ngủ gật
-        x.beginPath(); x.moveTo(ex - r * 0.12, ey - r * 0.02); x.quadraticCurveTo(ex, ey + r * 0.1, ex + r * 0.12, ey - r * 0.02); x.stroke();
+      const dot = p.eye !== BASE.eye && /^#[ef]/i.test(p.eye) ? '#2A1E3D' : '#FFFFFF';
+      x.strokeStyle = p.eye; x.lineWidth = 2.4 * S;
+      for (const side of [-1, 1]) {
+        const ex = side * r * 0.36, ey = r * 0.06;
+        if (heartEye) {
+          x.fillStyle = '#FF4F7B';
+          heartPath(x, ex, ey + r * 0.02, r * 0.17 * (1 + 0.12 * Math.sin(t * 14)));
+          x.fill();
+        } else if (st.happy > 0 || dream) {
+          x.beginPath(); x.moveTo(ex - r * 0.15, ey + r * 0.05); x.quadraticCurveTo(ex, ey - r * 0.17, ex + r * 0.15, ey + r * 0.05); x.stroke();
+        } else if (st.blink > 0 || (skin.eyes === 'sleepy' && !(st.sad > 0))) {
+          x.beginPath(); x.moveTo(ex - r * 0.15, ey); x.quadraticCurveTo(ex, ey + r * 0.12, ex + r * 0.15, ey); x.stroke();
+        } else {
+          const k = st.sad > 0 ? 0.8 : 1;
+          x.fillStyle = p.eye;
+          x.beginPath(); x.ellipse(ex, ey, r * 0.17 * k, r * 0.22 * k, 0, 0, TAU); x.fill();
+          x.fillStyle = dot;
+          x.beginPath(); x.arc(ex + r * 0.05, ey - r * 0.08, r * 0.075 * k, 0, TAU); x.fill();
+          x.beginPath(); x.arc(ex - r * 0.06, ey + r * 0.08, r * 0.035 * k, 0, TAU); x.fill();
+          if (st.sad > 0) { x.beginPath(); x.moveTo(ex - side * r * 0.2, ey - r * 0.34); x.lineTo(ex + side * r * 0.06, ey - r * 0.26); x.stroke(); }
+        }
+        if (skin.eyes === 'lash' && !(st.happy > 0)) {
+          x.lineWidth = 1.6 * S;
+          for (let i = 0; i < 2; i++) {
+            const a = -Math.PI / 2 + side * (0.75 + i * 0.4);
+            x.beginPath(); x.moveTo(ex + Math.cos(a) * r * 0.2, ey + Math.sin(a) * r * 0.24); x.lineTo(ex + Math.cos(a) * r * 0.3, ey + Math.sin(a) * r * 0.34); x.stroke();
+          }
+          x.lineWidth = 2.4 * S;
+        }
+      }
+      const my = r * 0.36;
+      x.strokeStyle = p.mouth; x.lineWidth = 2 * S;
+      if (st.sad > 0) {
+        x.beginPath(); x.moveTo(-r * 0.1, my + r * 0.05); x.quadraticCurveTo(0, my - r * 0.05, r * 0.1, my + r * 0.05); x.stroke();
+      } else if (st.chew > 0 || st.mouthOpen > 0.05) {
+        const open = st.chew > 0 ? 0.35 + 0.35 * Math.abs(Math.sin(st.chew * 38)) : st.mouthOpen;
+        x.fillStyle = p.mouth === BASE.mouth ? '#4A2B4F' : p.mouth;
+        x.beginPath(); x.ellipse(0, my, r * 0.14, r * (0.04 + 0.13 * open), 0, 0, TAU); x.fill();
+        if (open > 0.4) { x.fillStyle = p.tongue; x.beginPath(); x.ellipse(0, my + r * 0.07 * open, r * 0.075, r * 0.045, 0, 0, TAU); x.fill(); }
       } else {
-        const er = st.sad > 0 ? r * 0.09 : r * 0.115;
-        x.beginPath(); x.arc(ex, ey, er, 0, TAU); x.fill();
-        x.fillStyle = '#FFFFFF';
-        if (p.eye !== BASE.eye) x.fillStyle = '#2A1E3D';
-        x.beginPath(); x.arc(ex + er * 0.35, ey - er * 0.35, er * 0.38, 0, TAU); x.fill();
-        x.fillStyle = p.eye;
-        if (st.sad > 0) {
-          x.beginPath(); x.moveTo(ex - side * r * 0.16, ey - r * 0.3); x.lineTo(ex + side * r * 0.05, ey - r * 0.22); x.stroke();
-        }
+        x.beginPath(); x.moveTo(-r * 0.1, my - r * 0.03); x.quadraticCurveTo(-r * 0.05, my + r * 0.06, 0, my - r * 0.02); x.quadraticCurveTo(r * 0.05, my + r * 0.06, r * 0.1, my - r * 0.03); x.stroke();
       }
-      if (skin.eyes === 'lash' && !(st.happy > 0)) {
-        // Lông mi cong ra phía ngoài cho Bé Hồng
-        x.lineWidth = 1.5 * S;
-        for (let i = 0; i < 2; i++) {
-          const a = -Math.PI / 2 + side * (0.75 + i * 0.4);
-          x.beginPath();
-          x.moveTo(ex + Math.cos(a) * r * 0.12, ey + Math.sin(a) * r * 0.12);
-          x.lineTo(ex + Math.cos(a) * r * 0.22, ey + Math.sin(a) * r * 0.22);
-          x.stroke();
-        }
-        x.lineWidth = 2 * S;
-      }
-    }
-    // Miệng
-    const my = r * 0.36;
-    x.strokeStyle = p.mouth;
-    if (st.sad > 0) {
-      x.beginPath(); x.moveTo(-r * 0.12, my + r * 0.06); x.quadraticCurveTo(0, my - r * 0.06, r * 0.12, my + r * 0.06); x.stroke();
-    } else if (st.chew > 0 || st.mouthOpen > 0.05) {
-      const open = st.chew > 0 ? 0.35 + 0.35 * Math.abs(Math.sin(st.chew * 38)) : st.mouthOpen;
-      x.fillStyle = p.mouth === BASE.mouth ? '#4A2B4F' : p.mouth;
-      x.beginPath(); x.ellipse(0, my, r * 0.17, r * (0.05 + 0.15 * open), 0, 0, TAU); x.fill();
-      if (open > 0.4) {
-        x.fillStyle = p.tongue;
-        x.beginPath(); x.ellipse(0, my + r * 0.08 * open, r * 0.09, r * 0.05, 0, 0, TAU); x.fill();
-      }
-    } else {
-      x.beginPath(); x.moveTo(-r * 0.12, my - r * 0.02); x.quadraticCurveTo(0, my + r * 0.1, r * 0.12, my - r * 0.02); x.stroke();
-    }
     }
     drawAccessory(x, skin.acc, r, S, t, false, st);
     if (st.mood) moodExtras(x, r, st, S, t);
@@ -1644,6 +1792,18 @@
       x.fill();
       x.globalAlpha = 1;
     }
+  }
+  // Vẽ cả con sâu từ danh sách đốt [x, y, r] (đốt 1 sát đầu) rồi đầu ở (hx, hy); dùng cho ảnh xem trước.
+  const WORM = { xs: new Float32Array(9), ys: new Float32Array(9), rs: new Float32Array(9) };
+  function drawWorm(x, item, segs, hx, hy, r, st, S) {
+    const n = Math.min(8, segs.length);
+    for (let i = 0; i < n; i++) { WORM.xs[i + 1] = segs[i][0]; WORM.ys[i + 1] = segs[i][1]; WORM.rs[i + 1] = segs[i][2]; }
+    drawBody(x, WORM.xs, WORM.ys, WORM.rs, n, item, S);
+    if (!st) return;
+    x.save();
+    x.translate(hx, hy);
+    drawHead(x, r, item, st, S);
+    x.restore();
   }
 
   // ================= Kén =================
@@ -3259,23 +3419,20 @@
   // ================= Hình xem trước (thẻ món đồ) =================
   // Vẽ món đồ vào giữa khung w×h; t để có chuyển động nhẹ.
   const PREVIEW_BG = {}; // nền thu nhỏ đã vẽ sẵn, theo món và cỡ khung
+  // Ba đốt cong xuống bên phải dưới đầu, như bé sâu đang ngồi.
+  function previewSegs(r, sr) {
+    return [[r * 0.15, r * 0.85, sr], [sr * 0.75, r * 0.85 + sr * 0.75, sr * 0.92], [sr * 1.5, r * 0.85 + sr * 1.25, sr * 0.82]];
+  }
   function drawPreview(x, item, w, h, t) {
     x.save();
     x.translate(w / 2, h / 2);
-    const S = Math.min(w, h) / 90;
+    let S = Math.min(w, h) / 90;
     if (item.slot === 'skin') {
-      const r = 21 * S * 0.95, sr = 16.5 * S * 0.95;
-      x.save();
-      x.translate(-r * 0.15, r * 0.95);
-      for (let k = 2; k >= 1; k--) {
-        x.save();
-        x.translate(k * sr * 0.95, k * sr * 0.7);
-        drawSegment(x, sr, item, k === 2 ? 2 : 1, S);
-        x.restore();
-      }
-      x.restore();
-      x.translate(-r * 0.15, -r * 0.05);
-      drawHead(x, r, item, { t, ant: Math.sin(t * 2) * 2 * S, bob: 0, happy: 0, blink: 0, sad: 0, chew: 0, mouthOpen: 0 }, S);
+      // đầu to nên thu nhỏ hơn một chút để cả mũ lẫn đuôi nằm gọn trong khung
+      S = Math.min(w, h) / 108;
+      x.translate(-5 * S, -1 * S);
+      const r = 21 * S * 0.9, sr = 16.5 * S * 0.95;
+      drawWorm(x, item, previewSegs(r, sr), -r * 0.15, r * 0.05, r, { t, ant: Math.sin(t * 2) * 2 * S, bob: 0, happy: 0, blink: 0, sad: 0, chew: 0, mouthOpen: 0 }, S);
     } else if (item.slot === 'bg') {
       // Khung cảnh thu nhỏ bo góc; "Trời hôm nay" vẽ nửa ngày nửa đêm.
       const bw = w * 0.92, bh = h * 0.84, rr = Math.min(bw, bh) * 0.14;
@@ -3333,7 +3490,7 @@
 
   window.Skins = {
     ITEMS, RARITY, DEFAULT, BASE, EVENTS, get, byKey, palette, eventById, activeEvent, visibleEvents, itemState, startOf, isPreview, makePet,
-    drawSegment, drawHead, drawCocoon, drawButterfly, eatBurst, stepParticle, drawParticle, drawPreview, heartPath,
+    drawSegment, drawHead, drawAccessory, drawBody, drawTrail, drawWorm, previewSegs, drawCocoon, drawButterfly, eatBurst, stepParticle, drawParticle, drawPreview, heartPath,
     drawBackdrop, backdropTop, SKILLS, SKILL_RAND, skillOf, skillIcon, skillEffects, skillMax, UP_COST, BREAK, BREAK_GOALS, WEEK_USES,
   };
 })();

@@ -363,20 +363,8 @@
   // Như Skins.drawPreview nhưng chỉnh được nét mặt (vui, chớp mắt…).
   function drawWorm(x, item, size, t, face) {
     const S = size / 90;
-    const r = 21 * S * 0.95, sr = 16.5 * S * 0.95;
-    x.save();
-    x.translate(-r * 0.15, r * 0.95);
-    for (let k = 2; k >= 1; k--) {
-      x.save();
-      x.translate(k * sr * 0.95, k * sr * 0.7);
-      Skins.drawSegment(x, sr, item, k === 2 ? 2 : 1, S);
-      x.restore();
-    }
-    x.restore();
-    x.save();
-    x.translate(-r * 0.15, -r * 0.05);
-    Skins.drawHead(x, r, item, Object.assign({ t, ant: Math.sin(t * 2) * 2 * S, bob: 0, happy: 0, blink: 0, sad: 0, chew: 0, mouthOpen: 0 }, face || {}), S);
-    x.restore();
+    const r = 21 * S * 0.9, sr = 16.5 * S * 0.95;
+    Skins.drawWorm(x, item, Skins.previewSegs(r, sr), -r * 0.15, r * 0.05, r, Object.assign({ t, ant: Math.sin(t * 2) * 2 * S, bob: 0, happy: 0, blink: 0, sad: 0, chew: 0, mouthOpen: 0 }, face || {}), S);
   }
 
   // ================= Vạch lá (chặng 1 và 3) =================

@@ -27,7 +27,7 @@ http.createServer((req, res) => {
   try { if (fs.statSync(f).isDirectory()) f = path.join(f, 'index.html'); } catch (e) { /* xử lý ở dưới */ }
   let st;
   try { st = fs.statSync(f); } catch (e) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Không có ' + p); return; }
-  if (/tam-su|hoi-uc\.html|bang1\.js/.test(p)) console.log(new Date().toLocaleTimeString('vi-VN'), req.socket.remoteAddress, p, req.headers.range || '', (req.headers['user-agent'] || '').slice(0, 60));
+  if (/tam-su|hoi-uc\.html|bang1\.js|\/game\/(index\.html)?$|game\.js/.test(p)) console.log(new Date().toLocaleTimeString('vi-VN'), req.socket.remoteAddress, p, req.headers.range || '', (req.headers['user-agent'] || '').slice(0, 60));
   const head = { 'Content-Type': TYPES[path.extname(f).toLowerCase()] || 'application/octet-stream', 'Accept-Ranges': 'bytes', 'Cache-Control': 'no-cache' };
   const m = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
   if (m && (m[1] || m[2])) {
