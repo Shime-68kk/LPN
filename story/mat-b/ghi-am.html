@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0B0910" />
+<title>Ghi âm</title>
+<script>document.documentElement.style.background = '#0B0910';</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Caveat:wght@500;700&display=swap" />
+<link rel="stylesheet" href="chung.css?v=2" />
+<style>
+  #stage { transition: filter 6s; }
+  .warm { position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity 6s;
+    background: radial-gradient(ellipse 70% 80% at 60% 45%, rgba(255,190,110,.42), rgba(255,150,80,.12) 55%, transparent 80%); mix-blend-mode: screen; }
+  .motes { position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0; transition: opacity 4s; }
+  .motes i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: rgba(255,236,200,.8); animation: up linear infinite; }
+  @keyframes up { from { transform: translate(0, 0); opacity: 0; } 15% { opacity: 1; } to { transform: translate(18px, -260px); opacity: 0; } }
+  .phone { left: 345px; top: 10px; transition: transform 2.5s cubic-bezier(.3,.7,.2,1), filter 3s, opacity 3s; }
+  .phone.away { transform: translate(-200px, 40px) scale(.72) rotate(-6deg); filter: brightness(.5); }
+  .app { position: absolute; inset: 26px 0 0; background: #111214; }
+  .app h5 { margin: 4px 16px 2px; font-size: 22px; font-weight: 800; }
+  .bk2 { color: #E8453C; font-size: 12px; padding: 6px 12px 0; cursor: pointer; }
+  .dir { display: flex; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #222428; font-size: 13px; cursor: pointer; }
+  .dir span { color: #8A8F98; }
+  .ld { display: flex; justify-content: center; gap: 6px; margin-top: 26px; align-items: center; }
+  .ld .dial { width: 44px; } .ld .dial button { width: 44px; height: 26px; font-size: 13px; } .ld .dial b { font-size: 30px; }
+  .app .sub { margin: 0 16px 8px; color: #8A8F98; font-size: 11px; }
+  .list { position: absolute; top: 78px; bottom: 0; left: 0; right: 0; overflow-y: auto; touch-action: pan-y; }
+  .it { padding: 8px 16px; border-bottom: 1px solid #222428; cursor: pointer; }
+  .it .n { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .it .m { display: flex; justify-content: space-between; color: #8A8F98; font-size: 11px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .it.on { background: #1B1D21; }
+  .it .bar { height: 3px; background: #2A2D33; margin-top: 7px; border-radius: 2px; overflow: hidden; display: none; }
+  .it.on .bar { display: block; }
+  .it .bar i { display: block; height: 100%; width: 0; background: #E8453C; }
+  .player { position: absolute; inset: 26px 0 0; background: #0E0F12; display: none; flex-direction: column; align-items: center; padding-top: 40px; }
+  .player.on { display: flex; }
+  .player .t { font-size: 12px; font-weight: 600; padding: 0 18px; text-align: center; word-break: break-all; }
+  .player .d { color: #8A8F98; font-size: 11px; margin-top: 4px; }
+  .player canvas { width: 230px; height: 120px; margin-top: 40px; }
+  .player .clock { font-size: 34px; font-weight: 300; margin-top: 26px; font-variant-numeric: tabular-nums; }
+  .card { position: absolute; z-index: 30; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 560px; text-align: center; color: #F3EBDA; opacity: 0; transition: opacity 2s; pointer-events: none; }
+  .card .hand { color: #FFE3B0; font-size: 34px; }
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <div class="lamp"></div>
+  <div class="warm" id="warm"></div>
+  <div class="motes" id="motes"></div>
+  <div class="phone" id="phone"><div class="scr">
+    <div class="sb"><span>03:14</span><span>▮▮▮ 38%</span></div>
+    <div class="app" id="app"><div class="bk2" id="bk2">‹ Thư mục</div><h5 id="ttl">Tất cả bản ghi</h5><div class="sub" id="sub"></div><div class="list" id="list"></div></div><div class="app hidden" id="dirs"><h5>Thư mục</h5><div class="sub">Ghi âm</div><div class="list" id="dlist"></div></div>
+    <div class="player" id="player"><div class="t" id="pt"></div><div class="d" id="pd"></div><canvas id="wave" width="460" height="240"></canvas><div class="clock" id="clock">0:00</div></div>
+  </div></div>
+  <div class="card" id="card"></div>
+  <div class="grain"></div>
+  <div id="say"></div>
+</div></div>
+<div id="rot">Xoay ngang điện thoại nhé.</div>
+<script src="chung.js?v=2"></script>
+<script>
+// Chiếc điện thoại cũ trong túi bệnh án: 14 bản ghi âm. Người chơi biết ngày 24/5 (sổ tập đàn) và hôm ấy anh đánh trọn bài,
+// nên bản đúng là bản dài nhất của ngày 24/5: copy_9764D86C… 2:14 (đúng tên, đúng độ dài file thật).
+// Những lần tập hỏng phát một đoạn đàn rồi tắt ngang (chỗ vấp). Bản đúng: giọng anh qua loa điện thoại nhỏ,
+// lặng hai giây, rồi tiếng đàn tràn ra cả căn phòng. Tới chỗ đã chọn (bản nghe thử B), bài gốc có lời hoà vào: hai người cùng đánh.
+'use strict';
+(() => {
+  const { $, sfx, say, play, load } = MB;
+  // [tên, ngày, độ dài, loại, giây đàn bắt đầu, giây tắt ngang]
+  // Bản thật trà trộn trong danh sách chính, cùng nhiều lần tập cũng dài 2:14 (không khoá, không giấu thư mục).
+  // Biết ngày 24/5 (sổ tập đàn) thì còn vài bản; bản đúng là bản mở đầu bằng giọng anh, còn lại đều vấp.
+  const TAKES = [
+    ['copy_B1E9F0A2-7C31-4D0E-9A55-1E2B3C4D5E6F', '31 thg 5 · 00:12', '2:14', 'take', 14, 9.5],
+    ['copy_3D7C2E11-08A4-4B6F-8E0D-77A1B2C3D4E5', '26 thg 5 · 22:40', '2:14', 'take', 29, 7],
+    ['copy_5AC1E7B2-9D30-4F81-A6C4-2B7D90E15F3A', '24 thg 5 · 23:05', '2:14', 'take', 36, 8.5],
+    ['copy_9764D86C-91B0-45B8-BA2B-C324942B1DF5', '24 thg 5 · 22:47', '2:14', 'real'],
+    ['copy_08F2A9C4-5B6D-4E7F-8091-A2B3C4D5E6F7', '24 thg 5 · 22:31', '2:13', 'take', 9, 11],
+    ['copy_E5B03C7D-1A2B-4C3D-9E8F-0A1B2C3D4E5F', '24 thg 5 · 21:58', '2:14', 'take', 0, 13],
+    ['copy_9A11D2E3-F4A5-4B6C-8D7E-9F0A1B2C3D4E', '19 thg 5 · 23:47', '2:14', 'take', 22, 8],
+    ['copy_44AD8E9F-0A1B-4C2D-8E3F-4A5B6C7D8E9F', '17 thg 5 · 01:20', '2:14', 'take', 36, 6.5],
+    ['copy_C02E5F60-7A8B-4C9D-8E0F-1A2B3C4D5E6F', '10 thg 5 · 23:02', '2:12', 'take', 9, 7.5],
+    ['Ghi âm mới 7', '6 thg 5 · 13:15', '0:09', 'test'],
+    ['copy_7B33A4B5-C6D7-4E8F-9A0B-1C2D3E4F5A6B', '4 thg 5 · 22:18', '2:14', 'take', 4, 5.5],
+    ['copy_1F0AB2C3-D4E5-4F6A-8B7C-9D0E1F2A3B4C', '30 thg 4 · 23:30', '2:13', 'take', 0, 6],
+  ];
+  const LECT = [['Bài giảng Tín hiệu & HT', '20 thg 5 · 09:30', '51:40', 'lecture'], ['Bài giảng Vi xử lý', '13 thg 5 · 13:30', '48:12', 'lecture']];
+  let REC = TAKES;
+  const list = $('list');
+  let cur = null, curEl = null, raf = 0, busy = false;
+  function showList(name, recs) {
+    stopCur(); REC = recs; $('ttl').textContent = name; $('sub').textContent = recs.length + ' bản ghi'; list.innerHTML = '';
+    recs.forEach((r, i) => {
+      const el = document.createElement('div'); el.className = 'it';
+      el.innerHTML = '<div class="n">' + r[0] + '</div><div class="m"><span>' + r[1] + '</span><span>' + r[2] + '</span></div><div class="bar"><i></i></div>';
+      el.onclick = () => pick(i, el); list.appendChild(el);
+    });
+    $('dirs').classList.add('hidden'); $('app').classList.remove('hidden');
+  }
+  const toDirs = () => { stopCur(); sfx.tap(); $('app').classList.add('hidden'); $('dirs').classList.remove('hidden'); };
+  $('bk2').onclick = toDirs;
+  [['Tất cả bản ghi', TAKES.length, () => showList('Tất cả bản ghi', TAKES)], ['Bài giảng', LECT.length, () => showList('Bài giảng', LECT)], ['Đã xoá gần đây', 0, () => say('Trống.')]].forEach(([n, c, fn]) => {
+    const d = document.createElement('div'); d.className = 'dir'; d.innerHTML = n + '<span>' + c + ' ›</span>'; d.onclick = () => { sfx.tap(); fn(); }; $('dlist').appendChild(d);
+  });
+  showList('Tất cả bản ghi', TAKES);
+  load('tieng-dan.mp3'); load('giong-anh.mp3');
+
+  function stopCur() { if (cur) { cur.stop(0.08); cur = null; } if (curEl) curEl.classList.remove('on'); cancelAnimationFrame(raf); }
+  async function pick(i, el) {
+    if (busy) return;
+    MB.AC(); sfx.tap(); stopCur(); curEl = el; el.classList.add('on');
+    const r = REC[i], bar = el.querySelector('.bar i'); bar.style.width = '0';
+    if (r[3] === 'real') return real(r);
+    if (r[3] === 'test') { say('Một tiếng gõ thử mic. Hết.'); MB.sfx.key(); return; }
+    if (r[3] === 'lecture') {
+      // tiếng giảng đường xa xa: rì rầm, không rõ chữ
+      const a = MB.AC(), n = a.createBuffer(1, a.sampleRate * 5, a.sampleRate), d = n.getChannelData(0);
+      for (let k = 0, v = 0; k < d.length; k++) { v = v * 0.97 + (Math.random() * 2 - 1) * 0.03; d[k] = v * (0.6 + 0.4 * Math.sin(k / a.sampleRate * 7 + Math.sin(k / a.sampleRate * 1.3) * 3)); }
+      const s = a.createBufferSource(); s.buffer = n; const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 600; f.Q.value = 0.8; const g = a.createGain(); g.gain.value = 3;
+      s.connect(f).connect(g).connect(a.destination); s.start(); cur = { stop: () => { try { s.stop(); } catch (e) { /* bỏ qua */ } } };
+      say('Tiếng thầy giảng bài, rì rầm. Không phải bản này.'); return;
+    }
+    // một lần tập hỏng: đàn được một đoạn thì tắt ngang ở chỗ vấp
+    cur = await play('tieng-dan.mp3', { offset: r[4], phone: true, gain: 0.9 });
+    const t0 = performance.now(), len = r[5] * 1000;
+    const step = () => { const k = (performance.now() - t0) / len; bar.style.width = Math.min(100, k * 100 * (r[5] / 60)) + '%'; if (k < 1) raf = requestAnimationFrame(step); else { stopCur(); sfx.clack(); say('Vấp. Bản này dừng ở đây.'); } };
+    step();
+  }
+
+  // ===== Bản đúng =====
+  async function real(r) {
+    busy = true;
+    $('pt').textContent = r[0]; $('pd').textContent = r[1] + ' · ' + r[2];
+    $('player').classList.add('on');
+    const a = MB.AC(), an = a.createAnalyser(); an.fftSize = 256;
+    const voice = await play('giong-anh.mp3', { phone: true, gain: 3.2 }); // giọng nói nhỏ hơn tiếng đàn ~20 dB: kéo lên cho ngang
+    voice.gain.connect(an);
+    const t0 = a.currentTime;
+    const cv = $('wave'), g = cv.getContext('2d'), data = new Uint8Array(an.frequencyBinCount), hist = [];
+    let pianoAt = 0;
+    (function draw() {
+      an.getByteTimeDomainData(data); let m = 0; for (const v of data) m = Math.max(m, Math.abs(v - 128));
+      hist.push(m / 128); if (hist.length > 76) hist.shift();
+      g.clearRect(0, 0, 460, 240); g.fillStyle = '#E8453C';
+      hist.forEach((v, i) => { const h = Math.max(3, v * 220); g.fillRect(i * 6, 120 - h / 2, 4, h); });
+      const s = Math.floor(a.currentTime - t0); $('clock').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+      raf = requestAnimationFrame(draw);
+    })();
+    // hết giọng: lặng hai giây (đúng như file gốc), rồi tiếng đàn
+    voice.src.onended = async () => {
+      await new Promise((ok) => setTimeout(ok, 1500));
+      const piano = await play('tieng-dan.mp3', { phone: true, gain: 0.45, fade: 1.2 }); // vào nhỏ, ngang tiếng nói, rồi mới to dần khi tràn ra phòng
+      piano.gain.connect(an); pianoAt = a.currentTime;
+      // tiếng đàn tràn ra căn phòng: mở dải tần, thêm vang, điện thoại lùi lại, căn phòng ấm lên
+      setTimeout(() => {
+        piano.ramp(piano.hpf.frequency, 20, 5); piano.ramp(piano.lpf.frequency, 20000, 5); piano.ramp(piano.wet.gain, 0.38, 6); piano.ramp(piano.gain.gain, 1, 7); 
+        $('phone').classList.add('away'); $('warm').style.opacity = 1; $('motes').style.opacity = 1;
+        say('Tiếng đàn tràn ra khỏi chiếc loa nhỏ.', 5000);
+      }, 2600);
+      setTimeout(() => say('24/5. Bản anh đánh trọn, không vấp, rồi gửi em.', 6000), 9000);
+      setTimeout(() => say('Sau một tháng nghe đi nghe lại bài em đăng, mỗi đêm.', 6000), 16000);
+      // Ghi âm chỉ có tiếng đàn của anh, một mình, trọn tới nốt cuối. "Hai người cùng đánh" để dành cho tháng 7.
+      piano.src.onended = () => {
+        say('Bản đàn hết. Gửi đi rồi.', 5000);
+        setTimeout(() => { MB.done('ghiam'); $('card').innerHTML = '<div class="hand">Tháng 5 · Bản đàn gửi em</div>'; $('card').style.opacity = 1; }, 3000);
+      };
+    };
+    say('24 tháng 5.', 3000);
+  }
+
+  // bụi bay trong ánh đèn
+  for (let i = 0; i < 40; i++) { const m = document.createElement('i'); m.style.left = (30 + Math.random() * 60) + '%'; m.style.top = (40 + Math.random() * 60) + '%'; m.style.animationDuration = (8 + Math.random() * 8) + 's'; m.style.animationDelay = (-Math.random() * 12) + 's'; $('motes').appendChild(m); }
+  say('Chiếc điện thoại cũ trong túi. Rất nhiều bản ghi âm, tên toàn chữ số.', 4500);
+})();
+</script>
+</body>
+</html>

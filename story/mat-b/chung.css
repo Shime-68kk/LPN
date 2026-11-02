@@ -1,0 +1,34 @@
+/* Dùng chung cho các thùng thử của Mặt B: bàn gỗ dưới đèn, giấy, khoá, lời dẫn (cùng chất liệu với benh-an.html). */
+:root { --ink: #1F3C88; --red: #C8231F; --paper: #F4EFE3; }
+html, body { margin: 0; height: 100%; background: #0B0910; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
+#wrap { position: fixed; inset: 0; display: grid; place-items: center; }
+#stage { position: absolute; left: 50%; top: 50%; width: 960px; height: 540px; transform-origin: center; overflow: hidden; border-radius: 6px;
+  background:
+    radial-gradient(ellipse 60% 70% at 38% 30%, rgba(255,196,120,.30), transparent 70%),
+    repeating-linear-gradient(92deg, rgba(0,0,0,.10) 0 2px, transparent 2px 38px),
+    repeating-linear-gradient(90deg, #3A2417 0 120px, #352013 120px 240px), #3A2417;
+  box-shadow: inset 0 0 140px rgba(0,0,0,.85); }
+#stage::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 80% 80% at 45% 40%, transparent 50%, rgba(0,0,0,.55)); z-index: 49; }
+.grain { position: absolute; inset: 0; pointer-events: none; opacity: .13; mix-blend-mode: overlay; z-index: 50;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.lamp { position: absolute; left: 300px; top: -60px; width: 120px; height: 90px; background: radial-gradient(ellipse at 50% 100%, #FFE9B8, #E0A852 60%, #6B4420); border-radius: 60px 60px 12px 12px; box-shadow: 0 30px 80px 30px rgba(255,200,120,.25); z-index: 1; }
+.hidden { display: none !important; }
+#say { position: absolute; left: 0; right: 0; bottom: 14px; text-align: center; z-index: 70; color: #F3EBDA; font-size: 17px; text-shadow: 0 2px 8px #000, 0 0 2px #000; pointer-events: none; transition: opacity .6s; padding: 0 60px; }
+#zoom { position: absolute; inset: 0; z-index: 60; background: rgba(8,6,6,.82); display: none; place-items: center; }
+#zoom.on { display: grid; }
+#zoom .x { position: absolute; right: 18px; top: 12px; color: #EEE; font-size: 26px; cursor: pointer; padding: 6px 12px; z-index: 2; }
+.hand { font-family: 'Caveat', cursive; color: var(--ink); }
+.lockbox { background: linear-gradient(160deg, #46515B, #2C343B); padding: 26px 36px; border-radius: 16px; color: #DDE6EE; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,.6); }
+.dials { display: flex; gap: 14px; margin: 18px 0; justify-content: center; align-items: center; }
+.dial { width: 64px; text-align: center; }
+.dial button { width: 64px; height: 34px; border: 0; border-radius: 8px; background: #2B3238; color: #DDE6EE; font-size: 18px; cursor: pointer; }
+.dial b { display: block; font-size: 44px; color: #F2E6C8; margin: 6px 0; font-variant-numeric: tabular-nums; }
+.btn { padding: 10px 26px; border: 0; border-radius: 20px; background: #C9A24E; color: #2A1D08; font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit; }
+/* điện thoại cũ */
+.phone { position: absolute; width: 270px; height: 520px; border-radius: 36px; background: #0C0D10; box-shadow: 0 30px 60px rgba(0,0,0,.65), inset 0 0 0 3px #2A2E35; z-index: 10; }
+.phone .scr { position: absolute; inset: 12px; border-radius: 26px; overflow: hidden; background: #000; color: #fff; font-size: 12px; }
+.phone .sb { height: 26px; display: flex; justify-content: space-between; align-items: center; padding: 0 18px; font-size: 11px; font-weight: 600; }
+#rot { position: fixed; inset: 0; z-index: 99; background: #0B0910; color: #EEE; display: none; place-items: center; text-align: center; font-size: 15px; }
+@media (orientation: portrait) and (max-width: 700px) { #rot { display: grid; } }
+/* iPhone: phím, nút, ô chạm không bị hiểu là chạm hai lần để phóng to */
+button, a, .btn, .k, .kk, .bar, .ph, .box, .piano, #start, #phone, #hsend { touch-action: manipulation; }

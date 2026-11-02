@@ -25,7 +25,7 @@
   // Xem thử một đoạn không cần chơi tới: ?thu=vali (khoá vali), ?thu=bang (bảng ghim), ?thu=matkhau (màn hình khoá máy tính), ?thu=maytinh (máy tính đã đăng nhập),
   // ?thu=nhinquanh (vừa xem xong Băng 01: hướng dẫn nút Nhìn quanh), ?thu=modau (xem lại đoạn mở màn quay ngược thời gian, lần nào cũng phát), ?thu=sach (vừa xem Băng 02: tìm cuốn từ điển trên giá sách, xoay đĩa), ?thu=dinh (trước cổng đình, đã có chìa), ?thu=thu (vừa mở khoá điện thoại: lấy băng thật và lá thư sau tấm ảnh), ?thu=chobang (đã đọc thư, cầm cuộn thật cho vào máy: lời dẫn, cả nhà sáng lên),
   // ?thu=bangthat (băng thật đã trong đầu băng: bấm nguồn 3 lần). Không lưu gì.
-  const TRY = (location.search.match(/[?&]thu=(nhinquanh|modau|sach|vali|bang|matkhau|maytinh|dinh|thu|chobang|bangthat|cuoiphim)\b/) || [])[1];
+  const TRY = (location.search.match(/[?&]thu=(nhinquanh|modau|sach|vali|bang|matkhau|maytinh|dinh|thu|chobang|bangthat|cuoiphim|matb)\b/) || [])[1];
   const DRY = TRAILER || !!TRY;
   const ALL_DONE = { jig: true, book: true, cipher: true, pillow: true, board: true, case: true, gate: true, radio: true, words: true, pc: true, dir: true, robot: true, phone: true };
   const TRY_STATE = {
@@ -37,6 +37,7 @@
     dinh: { room: 'r3', lamp: true, tut: true, items: { A: true, B: true, C: true, wheel: true, key: true, note1: true, note2: true }, seen: { A: true, B: true, C: true }, done: { jig: true, book: true, cipher: true, pillow: true, board: true, case: true } },
     thu: { room: 'r1', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true, wheel: true, note1: true, note2: true, key: true }, seen: { A: true, B: true, C: true, D: true }, done: ALL_DONE },
     chobang: { room: 'r1', lamp: true, tut: true, items: { A: true, B: true, C: true, D: true, E: true, letter: true, wheel: true, note1: true, note2: true, key: true }, seen: { A: true, B: true, C: true, D: true }, done: ALL_DONE },
+    matb: { room: 'r1', lamp: true, tut: true, intro: true, coachBag: true, coachPeek: true, tour: { r1: true, r2: true, r3: true }, items: { A: true, B: true, C: true, D: true, E: true, letter: true, wheel: true, note1: true, note2: true, key: true }, seen: { A: true, B: true, C: true, D: true }, done: ALL_DONE, inVcr: 'E' },
     bangthat: { room: 'r1', lamp: true, tut: true, tour: { r1: true, r2: true, r3: true }, items: { A: true, B: true, C: true, D: true, E: true, letter: true, wheel: true, note1: true, note2: true, key: true }, seen: { A: true, B: true, C: true, D: true }, done: ALL_DONE, inVcr: 'E' },
   }[TRY === 'cuoiphim' ? 'bangthat' : TRY] || { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true, wheel: true, note1: true }, seen: { A: true, B: true, C: true }, done: { jig: true, book: true, cipher: true, pillow: true } };
   // Xoá xong thì bỏ ?moi=1 khỏi địa chỉ, để lỡ tải lại trang giữa chừng không bị xoá tiến độ lần nữa.
@@ -50,6 +51,14 @@
   const S = Object.assign({ v: 2, room: 'r1', lamp: false, tut: false, items: {}, seen: {}, done: {}, inVcr: null }, load());
   // Thoát giữa lúc chiếu băng giả: băng về lại túi, không kẹt trong máy.
   if (S.inVcr && S.inVcr !== 'E') S.inVcr = null;
+  // ===== Mặt B (cuộn băng còn lại) =====
+  // Chỉ hiện với người đã xem xong Mặt A (cuộn thật đã vào đầu băng), từ ngày anh Quang chốt (MATB_AT).
+  // Chưa tới ngày: chỉ xem trước bằng ?thu=matb. Gác xép và các thùng đồ nằm trong story/mat-b.
+  const MATB_AT = new Date('2026-11-03T00:00:00+07:00').getTime(); // mở cho Thủy từ 3/11/2026 (anh Quang: "up")
+  const MATB_DIR = 'mat-b/', MATB_URL = MATB_DIR + 'gac-xep.html';
+  const MATB = TRY === 'matb' || (!DRY && MATB_AT != null && Date.now() >= MATB_AT && !!S.done.phone && !!S.items.E);
+  const ANNIV = new Date('2026-08-06T23:38:58+07:00').getTime();
+  const dayN = () => Math.floor((Date.now() - ANNIV) / 864e5) + 1;
   let sel = null; // món đang cầm trên tay (chọn từ túi)
   const save = () => { if (DRY) return; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* bỏ qua */ } };
 
@@ -60,6 +69,7 @@
     C: { label: 'Băng 03', ch: 'CH 03', date: '10.2026', lines: ['Bốn tấm ảnh trên tường phòng ngủ.', 'Lật mặt sau.', '…', 'Khoá vali đọc theo số.'] },
     D: { label: 'Băng số 1', ch: 'CH 06', date: '--.--.2026', lines: ['Băng số 1.', '…', 'Ơ. Băng trống.', 'Cuộn thật ở chỗ chiếc điện thoại chỉ.', 'Mật mã điện thoại? Hỏi con robot trong phòng ngủ.'] },
     E: { label: 'Băng số 1 ♥', real: true },
+    F: { label: 'Băng số 1 · Mặt B', ch: 'CH 00', date: '06.2026', lines: ['Ngày thứ 0.', 'Trước ngày đầu tiên.', 'Trên gác xép có một cây đàn phủ khăn trắng.'] },
   };
   const OTHER = { wheel: 'Đĩa xoay chữ', note1: 'Nửa mẩu giấy', note2: 'Nửa mẩu giấy', note: 'Mẩu giấy', key: 'Chìa khoá cổng', log: 'Sổ ghi chép', letter: 'Thư của anh' };
   const PC_HASH = 'c1b7476d'; // mật khẩu máy tính anh Quang (Thủy biết), chỉ giữ mã băm
@@ -94,6 +104,10 @@
   };
   function step() {
     const d = S.done, it = S.items;
+    if (MATB && !it.F) return { room: 'r1', t: '[data-obj="clock"]', hint: 'Còn một cuộn băng nữa. Trong nhà có một thứ đã ngừng lại.' };
+    if (MATB && S.matbUp) return { room: 'r2', t: '[data-obj="hatch"]', hint: 'Trên trần phòng ngủ, cửa gác xép vừa mở.' };
+    if (MATB && S.inVcr !== 'F') return tapeStep('F', 'Mở túi đồ, chọn Băng số 1 · Mặt B.');
+    if (MATB) return { room: 'r1', t: '#power', hint: 'Bấm nút nguồn trên TV.' };
     if (!S.lamp) return { room: 'r1', t: '[data-obj="lamp"]', hint: 'Tối quá… tìm cái đèn.' };
     if (!it.A) return { room: 'r1', t: '[data-obj="lamp"]', hint: 'Dưới chân đèn có một cuộn băng. Chạm để cầm lên.' };
     if (S.inVcr && S.inVcr !== 'E' && S.seen[S.inVcr]) return { room: 'r1', t: '#power', hint: 'Bấm nút nguồn để xem lại ' + TAPES[S.inVcr].label + '.' };
@@ -468,6 +482,7 @@
     v3.classList.toggle('lit2', !!S.done.words);
     v3.classList.toggle('warm', !!S.items.E);
     q('pc').classList.toggle('on', !!S.done.pc);
+    if (MATB) q('hatch').classList.toggle('on', !!S.matbUp);
     q('phone').classList.toggle('ring', !!S.done.robot && !S.done.phone);
     q('robot').classList.toggle('alive', !!S.done.robot);
     document.querySelector('.v2').classList.toggle('robot-done', !!S.done.robot);
@@ -532,10 +547,11 @@
 
   // Đồ đã dùng xong thì biến khỏi túi (đĩa đã giải, giấy đã dò sóng, chìa đã mở cổng): túi gọn, đỡ bấm nhầm.
   // Băng giả ở lại tới khi câu đố của chính nó giải xong, để xem lại manh mối bao nhiêu lần cũng được.
-  const TAPE_DONE = { A: (d) => d.jig, B: (d) => d.cipher, C: (d) => d.case, D: (d) => d.robot || d.phone, E: () => false };
+  const TAPE_DONE = { A: (d) => d.jig, B: (d) => d.cipher, C: (d) => d.case, D: (d) => d.robot || d.phone, E: () => false, F: () => false };
   function bagList() {
     const list = [];
-    for (const id of ['A', 'B', 'C', 'D', 'E']) if (S.items[id] && S.inVcr !== id && !TAPE_DONE[id](S.done)) list.push({ id, label: TAPES[id].label + (S.seen[id] ? ' (xem lại)' : ''), icon: ICON.tape, tape: true, fresh: !TAPES[id].real && !S.seen[id] });
+    if (MATB && !S.items.F) list.push({ id: 'ghostF', label: 'Băng số 1 · Mặt B (chưa tìm thấy)', icon: ICON.tape, ghost: true, fresh: true });
+    for (const id of ['A', 'B', 'C', 'D', 'E', 'F']) if (S.items[id] && S.inVcr !== id && !TAPE_DONE[id](S.done)) list.push({ id, label: TAPES[id].label + (S.seen[id] ? ' (xem lại)' : ''), icon: ICON.tape, tape: true, fresh: !TAPES[id].real && !S.seen[id] });
     if (S.items.wheel && !S.done.cipher) list.push({ id: 'wheel', label: OTHER.wheel, icon: ICON.wheel, fresh: S.done.book });
     if (!S.done.radio) {
       if (S.items.note1 && S.items.note2) list.push({ id: 'note', label: OTHER.note, icon: ICON.note, fresh: true });
@@ -562,6 +578,7 @@
       b.querySelector('span').textContent = it.label;
       if (sel === it.id) b.classList.add('sel');
       if (it.fresh) b.classList.add('new');
+      if (it.ghost) b.classList.add('ghost');
       b.addEventListener('click', () => useItem(it));
       box.appendChild(b);
     }
@@ -608,6 +625,16 @@
 
   function useItem(it) {
     TV.sfx.ui();
+    if (it.ghost) {
+      // Chạm vào ô băng chưa tìm thấy: gợi ý chiếc đồng hồ đứng kim, đóng lại thì đồng hồ phòng khách sáng lên
+      $('bag').hidden = true;
+      look('Băng số 1 · Mặt B', '<p class="find-txt">Cuộn băng còn lại. Chưa tìm thấy.</p><p class="say">Đồng hồ trong phòng khách đứng kim từ hôm nào rồi. Thử quay ngược thời gian xem?</p>');
+      onClose = () => setTimeout(() => {
+        if (S.room !== 'r1') { say('Đồng hồ ở phòng khách.', 4000); return; }
+        const c = document.querySelector('[data-obj="clock"]'); if (c) { c.classList.add('glow'); reveal(c); }
+      }, 60);
+      return;
+    }
     if (it.tape) {
       sel = sel === it.id ? null : it.id;
       $('bag').hidden = true;
@@ -638,6 +665,7 @@
       sel = null;
       TV.audioOn();
       TV.sfx.tapeIn();
+      if (S.inVcr === 'F') eerieLoad();
       if (TAPES[S.inVcr].real) {
         // Cuộn thật vào máy: một luồng sáng ấm toả ra từ đầu băng, u tối tan dần, hợp âm ấm ngân lên
         setTimeout(() => TV.sfx.bloom(), 250);
@@ -664,12 +692,198 @@
     if (!S.inVcr) { TV.sfx.click(); say('Máy chưa có băng.'); return; }
     const id = S.inVcr;
     $('bag').hidden = true;
+    if (id === 'F') {
+      // Băng phát chừng nào chữ trên TV còn chạy (tính theo đúng nhịp gõ của playFake); hết chữ thì băng khựng
+      const len = TAPES.F.lines.reduce((t, l) => t + l.length * 56 + 1500, 0);
+      const h = eerie(1900);
+      setTimeout(tapeFilm, 1950);
+      setTimeout(() => h.then((x) => x && x.stall(1.5)), 220 + 1700 + len + 1000);
+      await TV.playFake(TAPES.F);
+      TV.sfx.rewind(2.4);
+      setTimeout(() => {
+        S.matbUp = true; save(); render();
+        TV.sfx.latch(); setTimeout(() => TV.sfx.gate(), 450);
+        say(S.room === 'r2' ? 'Cạch… Trên trần, cửa gác xép vừa bật mở.' : 'Cạch… Có thứ gì vừa mở ra, trên trần phòng ngủ.', 6500);
+      }, 2700);
+      return;
+    }
     await TV.playFake(TAPES[id]);
     S.seen[id] = true;
     S.tut = true;
     S.inVcr = null; // chiếu xong thì nhả băng về túi
     save();
     render();
+  }
+
+  // ===== Mặt B: chiếc đồng hồ treo tường =====
+  // Cả Mặt A đồng hồ chỉ để nhìn. Giờ nó đứng kim (kim giây nhích lên rồi bật lùi). Chạm: phóng to, dưới mặt số có ô
+  // "Ngày thứ N". Kéo kim phút quay ngược: mỗi vòng lùi một ngày, quay càng lâu số chạy càng nhanh, căn phòng lạnh dần.
+  // Về Ngày thứ 0: mặt đồng hồ bật ra, sau đó là cuộn băng Mặt B.
+  if (MATB) {
+    const c = document.querySelector('.v1 .clock');
+    c.dataset.obj = 'clock'; c.classList.add('obj', 'o-clock'); c.setAttribute('aria-label', 'Đồng hồ treo tường'); c.removeAttribute('aria-hidden');
+    c.classList.toggle('stuck', !S.items.F);
+    // Cửa gác xép trên trần phòng ngủ: thang gấp thả xuống, ánh sáng lạnh và bụi rơi từ trên gác
+    const h = document.createElement('button');
+    h.type = 'button'; h.className = 'obj o-hatch'; h.dataset.obj = 'hatch'; h.setAttribute('aria-label', 'Cửa gác xép');
+    const rungs = Array.from({ length: 9 }, (_, i) => { const y = 30 + i * 24, k = (y - 14) / 214; return '<line x1="' + (35 - 10 * k) + '" y1="' + y + '" x2="' + (65 + 10 * k) + '" y2="' + y + '"/>'; }).join('');
+    h.innerHTML = '<svg viewBox="0 0 100 230" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="hatchL" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#b9cdf5" stop-opacity=".42"/><stop offset="1" stop-color="#b9cdf5" stop-opacity="0"/></linearGradient></defs>'
+      + '<polygon class="hl" points="10,14 90,14 100,230 0,230" fill="url(#hatchL)"/><rect x="4" y="0" width="92" height="14" fill="#06070A" stroke="#3A2A1C" stroke-width="3"/>'
+      + '<polygon points="4,14 11,14 26,64 19,66" fill="#4A3220"/><g class="lad"><line class="rail" x1="35" y1="14" x2="25" y2="228"/><line class="rail" x1="65" y1="14" x2="75" y2="228"/><g class="rung">' + rungs + '</g></g>'
+      + Array.from({ length: 7 }, (_, i) => '<circle class="dust" r="' + (0.8 + Math.random()) + '" cx="' + (20 + Math.random() * 60) + '" cy="20" style="animation-delay:-' + (Math.random() * 4).toFixed(2) + 's;animation-duration:' + (3 + Math.random() * 3).toFixed(2) + 's"/>').join('') + '</svg>';
+    document.querySelector('.v2').appendChild(h);
+  }
+  function clockOpen() {
+    if (S.items.F) { say('Đồng hồ chạy lại rồi.'); return; }
+    const N = dayN();
+    look('Đồng hồ treo tường', '<div class="mbc"><div class="mbc-in"><div class="mbc-hole">' + ICON.tape + '</div><div class="mbc-lid">' + clockFace() + '</div></div><p class="mbc-day">Ngày thứ <b>' + N + '</b></p></div><p class="say mbc-say">Ngày đầu tiên của mình là ngày thứ 1. Còn trước đó?</p>', (body) => {
+      const box = body.querySelector('.mbc'), svg = box.querySelector('.mbc-lid svg'), mh = svg.querySelector('.mh'), hh = svg.querySelector('.hh'), sh = svg.querySelector('.sh'), num = box.querySelector('b');
+      const H0 = 300, M0 = 120; // 22:20 lúc kim đứng
+      let total = 0, last = null, shown = N, done = false, hinted = false, lastTick = 0;
+      const R = 5; // số vòng ngược để về 0: đầu chậm, sau nhanh dần
+      const draw = () => {
+        mh.setAttribute('transform', 'rotate(' + (M0 + total) + ' 100 100)');
+        hh.setAttribute('transform', 'rotate(' + (H0 + total / 12) + ' 100 100)');
+        sh.setAttribute('transform', 'rotate(' + (total * 3) + ' 100 100)');
+        const rev = Math.max(0, -total / 360), back = Math.min(N, Math.round(N * Math.pow(Math.min(1, rev / R), 1.8)) + Math.floor(Math.min(rev, 1)));
+        const d = Math.max(0, N - back);
+        if (d !== shown) { shown = d; num.textContent = d; const now = performance.now(); if (now - lastTick > 70) { TV.sfx.tick(); lastTick = now; } }
+        box.style.setProperty('--cold', (1 - d / N).toFixed(3));
+        if (d === 0 && !done) finish();
+      };
+      draw();
+      const ang = (e) => { const r = svg.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180 / Math.PI; };
+      svg.addEventListener('pointerdown', (e) => { if (done) return; e.preventDefault(); svg.setPointerCapture(e.pointerId); last = ang(e); TV.audioOn(); });
+      svg.addEventListener('pointermove', (e) => {
+        if (last == null || done) return;
+        const a = ang(e); let dA = a - last; if (dA > 180) dA -= 360; if (dA < -180) dA += 360; last = a;
+        total = Math.min(0, total + dA);
+        if (dA > 4 && !hinted) { hinted = true; body.querySelector('.mbc-say').textContent = 'Quay ngược lại. Về trước ngày đầu tiên.'; }
+        draw();
+      });
+      const up = () => { last = null; };
+      svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
+      function finish() {
+        done = true; last = null;
+        num.textContent = '0';
+        body.querySelector('.mbc-say').textContent = 'Ngày thứ 0.';
+        TV.sfx.unlock();
+        later(900, () => { box.classList.add('open'); TV.sfx.latch(); });
+        later(2600, () => pickup('Sau mặt đồng hồ', 'Một cuộn băng vỏ đen, không có trái tim. Nhãn viết tay: Mặt B.', ['F'], 'find', () => { document.querySelector('.v1 .clock').classList.remove('stuck'); closeLook(); say('Đồng hồ chạy lại rồi. Cuộn băng Mặt B đã vào túi.', 5000); }));
+      }
+    });
+    box0Hint();
+    function box0Hint() { setTimeout(() => { const p = document.querySelector('.mbc-say'); if (p && !$('look').hidden && p.textContent.startsWith('Ngày đầu tiên')) p.textContent = 'Kéo kim phút. Quay ngược lại.'; }, 9000); }
+  }
+  // Tiếng cuộn Mặt B: 15 giây đầu bài "Sinh Ra Đã Là Thứ Đối Lập Nhau", đúng đoạn em đăng trên tài khoản "lệ".
+  // Ba nhịp: (1) phát NGƯỢC, chậm, bóp nghẹt như vọng qua tường, chao đảo như băng giãn, rè, thỉnh thoảng hụt nhịp:
+  // rợn, chưa ai nhận ra; (2) tua ngược rè rè thật nhanh như cát-sét đang tua; (3) băng bắt được nhịp, phát XUÔI vài giây,
+  // vẫn méo và chao, đúng đoạn mở đầu bài em đăng: tới đây mới nhận ra. Hết chữ trên TV thì băng khựng, chậm dần rồi tắt.
+  // Không ma, không tiếng người lạ.
+  let eerieBuf = null;
+  function eerieLoad() {
+    const ac = TV.ctx && TV.ctx();
+    if (!ac) return Promise.resolve(null);
+    if (!eerieBuf) eerieBuf = fetch(MATB_DIR + 'le-15s.mp3').then((r) => r.arrayBuffer()).then((a) => new Promise((ok, no) => ac.decodeAudioData(a, ok, no))).then((b) => {
+      const r = ac.createBuffer(b.numberOfChannels, b.length, b.sampleRate);
+      for (let c = 0; c < b.numberOfChannels; c++) { const src = b.getChannelData(c), dst = r.getChannelData(c); for (let i = 0, n = src.length; i < n; i++) dst[i] = src[n - 1 - i]; }
+      return { fwd: b, rev: r };
+    }).catch(() => { eerieBuf = null; return null; });
+    return eerieBuf;
+  }
+  async function eerie(delay) {
+    const bufs = await eerieLoad(), ac = TV.ctx(), out = TV.out();
+    if (!bufs || !ac || !out) return null;
+    const t = ac.currentTime + delay / 1000, T_REV = 4.4, T_WHIR = 0.9, T_FWD = T_REV + T_WHIR;
+    const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 170;
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 1.1;
+    lp.frequency.setValueAtTime(850, t); lp.frequency.setValueAtTime(3800, t + T_REV); lp.frequency.setValueAtTime(1500, t + T_FWD); lp.frequency.linearRampToValueAtTime(2300, t + T_FWD + 2.5);
+    const sat = ac.createWaveShaper(), curve = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 511.5 - 1; curve[i] = Math.tanh(2.4 * x); } sat.curve = curve;
+    const flick = ac.createGain(), g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.55, t + 1.4); g.gain.setValueAtTime(0.55, t + T_REV - 0.05); g.gain.linearRampToValueAtTime(0.22, t + T_REV + 0.1); g.gain.setValueAtTime(0.22, t + T_FWD - 0.08); g.gain.linearRampToValueAtTime(0.6, t + T_FWD + 0.25);
+    hp.connect(lp).connect(sat).connect(flick).connect(g).connect(out);
+    // chao đảo của băng giãn: chung cho mọi đoạn
+    const wow = ac.createOscillator(), wowG = ac.createGain(); wow.frequency.value = 0.42; wowG.gain.value = 55; wow.connect(wowG);
+    const flt = ac.createOscillator(), fltG = ac.createGain(); flt.frequency.value = 6.3; fltG.gain.value = 13; flt.connect(fltG);
+    const play = (buf, at, off, dur, rate) => { const s2 = ac.createBufferSource(); s2.buffer = buf; s2.playbackRate.value = rate; wowG.connect(s2.detune); fltG.connect(s2.detune); s2.connect(hp); s2.start(at, off, dur); return s2; };
+    play(bufs.rev, t, 0.4, T_REV * 0.82 + 0.05, 0.82);                    // (1) ngược, chậm
+    play(bufs.rev, t + T_REV, 0.4 + T_REV * 0.82, T_WHIR * 3.4, 3.4);    // (2) tua ngược rè rè
+    const fwd = play(bufs.fwd, t + T_FWD, 0, 12, 0.93);                  // (3) xuôi, vẫn méo
+    // tiếng rè của băng từ
+    const nb = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), nd = nb.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    const hiss = ac.createBufferSource(); hiss.buffer = nb; hiss.loop = true;
+    const hf = ac.createBiquadFilter(); hf.type = 'bandpass'; hf.frequency.value = 4800; hf.Q.value = 0.6;
+    const hg = ac.createGain(); hg.gain.setValueAtTime(0.0001, t); hg.gain.linearRampToValueAtTime(0.035, t + 0.8); hg.gain.setValueAtTime(0.035, t + T_REV); hg.gain.linearRampToValueAtTime(0.07, t + T_REV + 0.2); hg.gain.linearRampToValueAtTime(0.03, t + T_FWD + 0.3);
+    hiss.connect(hf).connect(hg).connect(out);
+    // chập chờn: thỉnh thoảng tiếng hụt đi một nhịp như băng bị nhăn (lúc phát ngược và lúc phát xuôi, không lúc đang tua)
+    for (let k = t + 1.8; k < t + 14; k += 1.3 + Math.random() * 2) { if (k > t + T_REV - 0.4 && k < t + T_FWD + 0.8) continue; flick.gain.setValueAtTime(1, k); flick.gain.linearRampToValueAtTime(0.15, k + 0.05); flick.gain.setValueAtTime(0.15, k + 0.12 + Math.random() * 0.18); flick.gain.linearRampToValueAtTime(1, k + 0.4); }
+    wow.start(t); flt.start(t); hiss.start(t);
+    const stopAll = (at) => [wow, flt, hiss, fwd].forEach((n) => { try { n.stop(at); } catch (e) { /* bỏ qua */ } });
+    return {
+      stall(sec) {
+        const n = ac.currentTime;
+        fwd.playbackRate.cancelScheduledValues(n); fwd.playbackRate.setValueAtTime(fwd.playbackRate.value, n); fwd.playbackRate.linearRampToValueAtTime(0.06, n + sec);
+        g.gain.cancelScheduledValues(n); g.gain.setValueAtTime(g.gain.value, n); g.gain.linearRampToValueAtTime(0.0001, n + sec + 0.1);
+        hg.gain.cancelScheduledValues(n); hg.gain.setValueAtTime(hg.gain.value, n); hg.gain.linearRampToValueAtTime(0.0001, n + sec + 0.6);
+        stopAll(n + sec + 0.8);
+      },
+    };
+  }
+  // Hình của cuộn Mặt B: một đoạn băng quay cũ, đen trắng, giật, sọc dò băng chạy dọc. Ba cảnh, cắt bằng một cú nhiễu:
+  // cầu thang gỗ đi lên cửa gác (có chút sáng phía trên) → gác xép dưới trăng, bốn thùng đồ, cây đàn phủ khăn → cận khăn phủ đàn.
+  // Chữ của cuộn băng thành phụ đề phía dưới, đúng lúc câu "cây đàn phủ khăn trắng" thì hình đang ở cây đàn.
+  const FILM = [
+    // cầu thang
+    '<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><defs><radialGradient id="mbH" cx=".5" cy=".9" r=".9"><stop offset="0" stop-color="#e8e8e8"/><stop offset=".5" stop-color="#777" stop-opacity=".5"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>'
+      + '<rect width="160" height="100" fill="#090909"/><polygon points="0,0 58,18 58,100 0,100" fill="#141414"/><polygon points="160,0 102,18 102,100 160,100" fill="#111"/>'
+      + '<rect x="66" y="6" width="28" height="16" fill="url(#mbH)"/><rect x="66" y="6" width="28" height="16" fill="none" stroke="#2a2a2a" stroke-width="1.2"/>'
+      + Array.from({ length: 11 }, (_, i) => { const k = Math.pow(i / 10, 1.7), y = 22 + 78 * k, w = 13 + 47 * k, y2 = 22 + 78 * Math.pow((i + 1) / 10, 1.7); return '<polygon points="' + (80 - w) + ',' + y + ' ' + (80 + w) + ',' + y + ' ' + (80 + w) + ',' + Math.min(100, y + (y2 - y) * 0.35) + ' ' + (80 - w) + ',' + Math.min(100, y + (y2 - y) * 0.35) + '" fill="' + (i % 2 ? '#3a3a3a' : '#2c2c2c') + '"/>'; }).join('')
+      + '<line x1="30" y1="100" x2="64" y2="24" stroke="#4a4a4a" stroke-width="1.4"/><line x1="130" y1="100" x2="96" y2="24" stroke="#3a3a3a" stroke-width="1.2"/></svg>',
+    // gác xép dưới trăng
+    '<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="mbB" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#d8d8d8" stop-opacity=".45"/><stop offset="1" stop-color="#d8d8d8" stop-opacity="0"/></linearGradient></defs>'
+      + '<rect width="160" height="100" fill="#121212"/><polygon points="0,0 80,0 0,46" fill="#070707"/><polygon points="160,0 80,0 160,46" fill="#070707"/><rect y="20" width="160" height="4" fill="#1d1d1d"/><rect y="80" width="160" height="20" fill="#0c0c0c"/>'
+      + '<circle cx="118" cy="38" r="9" fill="#bdbdbd"/><circle cx="118" cy="38" r="9" fill="none" stroke="#2a2a2a" stroke-width="2"/><line x1="118" y1="29" x2="118" y2="47" stroke="#2a2a2a" stroke-width="1.4"/><line x1="109" y1="38" x2="127" y2="38" stroke="#2a2a2a" stroke-width="1.4"/>'
+      + '<polygon points="112,40 124,40 96,100 52,100" fill="url(#mbB)"/>'
+      + '<rect x="58" y="80" width="3" height="9" fill="#2a2a2a"/><rect x="99" y="80" width="3" height="9" fill="#2a2a2a"/>'
+      + '<path d="M56 81 L57 53 Q57 50 60 50 L100 50 Q103 50 103 53 L104 81 C98 83 94 80 88 82 C82 84 76 80 70 82 C64 84 60 80 56 81Z" fill="#d2d2d2"/><path d="M57 61 L103 61" stroke="#a8a8a8" stroke-width=".8"/><path d="M66 51 C67 64 66 74 64 82 M84 50 C85 64 84 74 85 82 M96 51 C97 64 96 74 98 81" stroke="#9a9a9a" stroke-width=".9" fill="none"/>'
+      + '<rect x="18" y="74" width="16" height="12" fill="#3a3a3a"/><rect x="36" y="77" width="15" height="10" fill="#333"/><rect x="110" y="77" width="15" height="10" fill="#333"/><rect x="128" y="74" width="16" height="12" fill="#3a3a3a"/></svg>',
+    // cận khăn phủ đàn: mép khăn hơi hở, thấy một dải phím
+    '<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="mbC" x1="0" x2="1"><stop offset="0" stop-color="#9a9a9a"/><stop offset=".55" stop-color="#e2e2e2"/><stop offset="1" stop-color="#888"/></linearGradient></defs>'
+      + '<rect width="160" height="100" fill="#0d0d0d"/><rect x="10" y="66" width="140" height="10" fill="#efefef"/>'
+      + Array.from({ length: 16 }, (_, i) => '<rect x="' + (13 + i * 8.6) + '" y="66" width="1" height="10" fill="#777"/>' + (i % 7 === 2 || i % 7 === 6 ? '' : '<rect x="' + (16.5 + i * 8.6) + '" y="66" width="4.6" height="6" fill="#111"/>')).join('')
+      + '<path d="M2 70 C4 20 30 6 80 6 C130 6 156 20 158 70 C140 64 128 72 112 66 C96 61 88 72 72 66 C56 60 44 71 28 65 C18 62 10 70 2 70Z" fill="url(#mbC)"/>'
+      + '<path d="M40 10 C46 30 42 52 36 66 M80 6 C84 30 82 50 80 66 M120 10 C116 30 120 52 126 66" stroke="#7a7a7a" stroke-width="1.6" fill="none"/>'
+      + '<polygon points="96,0 112,0 70,100 48,100" fill="#fff" opacity=".07"/></svg>',
+  ];
+  function tapeFilm() {
+    const c = $('content');
+    if (!c || !$('tv').classList.contains('on')) return;
+    c.classList.add('mb');
+    const v = document.createElement('div');
+    v.className = 'mbv';
+    v.innerHTML = FILM.map((svg, i) => '<div class="shot s' + (i + 1) + '">' + svg + '</div>').join('') + '<i class="tear"></i>';
+    c.prepend(v);
+    const shots = v.querySelectorAll('.shot'), tear = v.querySelector('.tear');
+    const cut = (i) => { shots.forEach((s, k) => s.classList.toggle('on', k === i)); v.classList.remove('hit'); void v.offsetWidth; v.classList.add('hit'); TV.sfx.glitch(); };
+    cut(0);
+    setTimeout(() => cut(1), 2300);
+    setTimeout(() => cut(2), 4900);
+    // thỉnh thoảng một vệt rách ngang chạy qua
+    const tick = setInterval(() => {
+      if (!v.isConnected) { clearInterval(tick); c.classList.remove('mb'); return; }
+      if (Math.random() < 0.35) { tear.style.top = (10 + Math.random() * 80) + '%'; tear.classList.add('on'); setTimeout(() => tear.classList.remove('on'), 90 + Math.random() * 120); }
+    }, 420);
+  }
+  // Cuộn Mặt B chiếu xong: TV tắt, tối dần, tiếng bước chân lên cầu thang gỗ, rồi lên gác xép
+  function goAttic() {
+    const ov = document.createElement('div');
+    ov.className = 'mb-up';
+    ov.innerHTML = '<p>Gác xép</p>';
+    document.body.appendChild(ov);
+    requestAnimationFrame(() => ov.classList.add('on'));
+    $('scene').classList.add('climb');
+    for (let i = 0; i < 6; i++) setTimeout(() => TV.sfx.knock(), 500 + i * 560);
+    setTimeout(() => { location.href = MATB_URL + (TRY ? '?moi' : ''); }, 4600);
   }
 
   // ===== Nhìn gần =====
@@ -1489,6 +1703,8 @@
       bookshelf();
     },
     cal() { say('Tháng 8. Một ngày khoanh đỏ.'); },
+    clock: clockOpen,
+    hatch() { if (!S.matbUp) return; goAttic(); },
     vase() { say('Mấy bông sen hồng.'); },
     board,
     pc,

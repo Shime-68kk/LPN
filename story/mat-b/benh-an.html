@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0B0910" />
+<title>Thùng bệnh án</title>
+<script>document.documentElement.style.background = '#0B0910';</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Dancing+Script:wght@500;700&family=Caveat:wght@500;700&display=swap" />
+<style>
+  :root { --ink: #1F3C88; --red: #C8231F; --paper: #F4EFE3; }
+  html, body { margin: 0; height: 100%; background: #0B0910; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
+  #wrap { position: fixed; inset: 0; display: grid; place-items: center; }
+  #stage { position: absolute; left: 50%; top: 50%; width: 960px; height: 540px; transform-origin: center; overflow: hidden; border-radius: 6px;
+    background:
+      radial-gradient(ellipse 60% 70% at 38% 30%, rgba(255,196,120,.30), transparent 70%),
+      repeating-linear-gradient(92deg, rgba(0,0,0,.10) 0 2px, transparent 2px 38px),
+      repeating-linear-gradient(90deg, #3A2417 0 120px, #352013 120px 240px),
+      #3A2417; box-shadow: inset 0 0 140px rgba(0,0,0,.85); }
+  #stage::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 80% 80% at 45% 40%, transparent 50%, rgba(0,0,0,.55)); }
+  .grain { position: absolute; inset: 0; pointer-events: none; opacity: .13; mix-blend-mode: overlay; z-index: 50;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  /* đèn bàn */
+  .lamp { position: absolute; left: 300px; top: -60px; width: 120px; height: 90px; background: radial-gradient(ellipse at 50% 100%, #FFE9B8, #E0A852 60%, #6B4420); border-radius: 60px 60px 12px 12px; box-shadow: 0 30px 80px 30px rgba(255,200,120,.25); z-index: 1; }
+  /* bìa hồ sơ */
+  .folder { position: absolute; left: 270px; top: 110px; width: 420px; height: 300px; z-index: 5; cursor: pointer; transition: transform .7s cubic-bezier(.3,.7,.2,1), opacity .5s; }
+  .folder .back { position: absolute; inset: 0; background: linear-gradient(160deg, #D9B77A, #C29A5B); border-radius: 6px 6px 8px 8px; box-shadow: 0 18px 40px rgba(0,0,0,.6); }
+  .folder .tab { position: absolute; left: 20px; top: -22px; width: 140px; height: 30px; background: #D2AE70; border-radius: 8px 8px 0 0; }
+  .folder .front { position: absolute; inset: 0; background: linear-gradient(170deg, #E6C78C, #CFA766); border-radius: 6px; padding: 28px 30px; box-sizing: border-box; transform-origin: top; transition: transform .8s; }
+  .folder .front h1 { margin: 0; font-size: 26px; letter-spacing: .12em; color: #5A3A16; font-weight: 800; }
+  .folder .front .lbl { margin-top: 26px; background: #F6EEDC; border: 1px solid #A98450; padding: 12px 16px; width: 290px; box-shadow: 0 2px 0 rgba(0,0,0,.08); }
+  .folder .front .lbl small { display: block; font-size: 11px; color: #7A5A30; letter-spacing: .08em; }
+  .folder .front .lbl b { font-family: 'Caveat', cursive; font-size: 34px; color: var(--ink); font-weight: 700; }
+  .folder .stamp { position: absolute; right: 26px; bottom: 26px; transform: rotate(-12deg); border: 3px solid var(--red); color: var(--red); font-weight: 800; padding: 4px 10px; font-size: 16px; letter-spacing: .1em; opacity: .75; border-radius: 4px; }
+  .folder.open { transform: translateY(330px) scale(.5); opacity: 0; pointer-events: none; }
+  /* thẻ giấy trên bàn */
+  .card { position: absolute; width: 120px; height: 160px; background: var(--paper); border-radius: 2px; box-shadow: 0 8px 18px rgba(0,0,0,.5); z-index: 10; cursor: grab; padding: 10px 9px; box-sizing: border-box; font-size: 8px; color: #333; transition: box-shadow .2s, transform .25s; touch-action: none; }
+  .card.drag { cursor: grabbing; box-shadow: 0 22px 40px rgba(0,0,0,.6); z-index: 40; transition: none; }
+  .card h3 { margin: 0 0 4px; font-size: 8.5px; font-weight: 800; letter-spacing: .04em; color: #1E2A44; }
+  .card .ln { height: 3px; background: rgba(0,0,0,.12); margin: 5px 0; border-radius: 2px; }
+  .card .hand { font-family: 'Caveat', cursive; color: var(--ink); font-size: 13px; line-height: 1; }
+  .card .date { position: absolute; left: 9px; bottom: 8px; font-size: 8px; color: #555; }
+  .card.hidden, .hidden { display: none !important; }
+  /* khay xếp theo ngày */
+  .tray { position: absolute; left: 150px; top: 382px; width: 660px; height: 150px; display: flex; gap: 12px; padding: 6px 12px; box-sizing: border-box; background: linear-gradient(#2A1A10, #20130B); border-radius: 10px; box-shadow: inset 0 4px 14px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.05); z-index: 3; }
+  .slot { flex: 1; border: 1.5px dashed rgba(240,220,190,.25); border-radius: 6px; position: relative; display: grid; place-items: end center; }
+  .slot i { font-style: normal; color: rgba(240,220,190,.35); font-size: 11px; margin-bottom: 4px; }
+  .tray .cap { position: absolute; left: 14px; top: -22px; font-size: 12px; color: rgba(240,225,200,.7); letter-spacing: .06em; }
+  .tray.ok { box-shadow: inset 0 4px 14px rgba(0,0,0,.7), 0 0 0 2px rgba(255,200,120,.6), 0 0 40px rgba(255,190,110,.35); }
+  .ring { display: inline-block; position: relative; }
+  .ring::after { content: ''; position: absolute; left: -3px; right: -3px; top: -2px; bottom: -2px; border: 1.4px solid var(--red); border-radius: 50%; transform: rotate(-8deg); opacity: .85; }
+  .tray.ok .card .ring::after { box-shadow: 0 0 6px rgba(255,80,60,.9); }
+  /* khung ghép phiếu siêu âm rách */
+  .frame { position: absolute; left: 708px; top: 42px; width: 220px; height: 300px; border: 1.5px dashed rgba(240,220,190,.3); border-radius: 6px; z-index: 4; }
+  .frame span { position: absolute; left: 0; right: 0; top: -22px; text-align: center; font-size: 12px; color: rgba(240,225,200,.7); }
+  .piece { position: absolute; width: 110px; height: 150px; z-index: 12; cursor: grab; touch-action: none; filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)); }
+  .piece.drag { z-index: 41; filter: drop-shadow(0 18px 24px rgba(0,0,0,.6)); }
+  .piece.set { cursor: default; filter: none; }
+  /* túi khoá số */
+  .pouch { position: absolute; left: 832px; top: 392px; width: 108px; height: 128px; z-index: 6; border-radius: 10px; background: linear-gradient(160deg, #5E6B78, #3A434C); box-shadow: 0 10px 22px rgba(0,0,0,.55); cursor: pointer; display: grid; place-items: center; color: #DDE6EE; font-size: 11px; text-align: center; }
+  .pouch .zip { position: absolute; top: 16px; left: 10px; right: 10px; height: 4px; background: repeating-linear-gradient(90deg, #A7B2BC 0 3px, #2B3238 3px 5px); border-radius: 2px; }
+  .pouch .lockic { width: 30px; height: 26px; border-radius: 4px; background: #C9A24E; position: relative; margin: 0 auto 6px; }
+  .pouch .lockic::before { content: ''; position: absolute; left: 6px; top: -12px; width: 18px; height: 16px; border: 3px solid #C9A24E; border-bottom: 0; border-radius: 10px 10px 0 0; box-sizing: border-box; }
+  .pouch.open .lockic::before { transform: translateY(-5px) rotate(-20deg); transform-origin: left bottom; }
+  /* lớp phóng to */
+  #zoom { position: absolute; inset: 0; z-index: 60; background: rgba(8,6,6,.82); display: none; place-items: center; }
+  #zoom.on { display: grid; }
+  #zoom .x { position: absolute; right: 18px; top: 12px; color: #EEE; font-size: 26px; cursor: pointer; padding: 6px 12px; }
+  .doc { position: relative; width: 700px; height: 470px; background: var(--paper); border-radius: 2px; box-shadow: 0 30px 60px rgba(0,0,0,.6); padding: 26px 34px; box-sizing: border-box; color: #262626; font-size: 14px; line-height: 1.5;
+    background-image: radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.6), transparent 60%), radial-gradient(ellipse at 90% 90%, rgba(150,120,70,.12), transparent 60%); }
+  .doc .hd { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #1E2A44; padding-bottom: 8px; margin-bottom: 12px; }
+  .doc .hd .org { font-size: 11px; letter-spacing: .06em; color: #333; line-height: 1.35; }
+  .doc .hd .org b { font-size: 13px; color: #1E2A44; }
+  .doc h2 { margin: 2px 0 10px; text-align: center; font-size: 20px; letter-spacing: .08em; color: #1E2A44; font-weight: 800; }
+  .doc .row { display: flex; gap: 18px; margin: 4px 0; }
+  .doc .f { color: #555; font-size: 12.5px; }
+  .doc .v { font-family: 'Caveat', cursive; color: var(--ink); font-size: 22px; line-height: 1; padding: 0 4px; border-bottom: 1px dotted #999; }
+  .doc .note { font-family: 'Caveat', cursive; color: var(--ink); font-size: 21px; line-height: 1.2; }
+  .doc .sign { position: absolute; right: 40px; bottom: 26px; text-align: center; font-size: 12px; color: #444; }
+  .doc .sign .sg { font-family: 'Dancing Script', cursive; font-size: 24px; color: var(--ink); }
+  .doc .seal { position: absolute; right: 150px; bottom: 30px; width: 86px; height: 86px; border: 3px solid rgba(200,35,31,.6); border-radius: 50%; color: rgba(200,35,31,.65); font-size: 9px; font-weight: 800; display: grid; place-items: center; text-align: center; transform: rotate(-14deg); letter-spacing: .05em; }
+  .scan { width: 230px; height: 170px; border-radius: 4px; background: #0A0A0A; position: relative; overflow: hidden; flex: none; }
+  .scan.us::before { content: ''; position: absolute; left: 50%; top: -20px; width: 300px; height: 210px; transform: translateX(-50%); background: radial-gradient(ellipse 40% 34% at 50% 58%, #7E7E7E, #4A4A4A 50%, #1A1A1A 80%); clip-path: polygon(50% 0, 100% 100%, 0 100%); filter: contrast(1.3); }
+  .scan.us::after { content: ''; position: absolute; left: 118px; top: 92px; width: 12px; height: 10px; border-radius: 50%; background: #FFF; box-shadow: 0 0 6px #fff, 0 14px 0 -2px #222; }
+  .scan .mk { position: absolute; color: #E8E8E8; font-size: 10px; font-family: monospace; }
+  .scan.heart::before { content: ''; position: absolute; left: 50%; top: -10px; width: 300px; height: 200px; transform: translateX(-50%); background: radial-gradient(ellipse 18% 22% at 44% 55%, #000 60%, transparent 62%), radial-gradient(ellipse 16% 20% at 58% 50%, #000 60%, transparent 62%), radial-gradient(ellipse 50% 46% at 50% 54%, #8A8A8A, #3A3A3A 60%, #111 85%); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  .scan.heart::after { content: ''; position: absolute; left: 112px; top: 96px; width: 22px; height: 16px; background: radial-gradient(circle, rgba(255,60,40,.9), rgba(40,90,255,.7) 60%, transparent 70%); filter: blur(2px); }
+  table.rx { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 8px; }
+  table.rx th, table.rx td { border: 1px solid #A8A08E; padding: 4px 6px; text-align: center; height: 26px; }
+  table.rx th { background: rgba(30,42,68,.07); font-size: 11.5px; }
+  table.rx td.h { font-weight: 700; color: #1E2A44; width: 76px; }
+  table.rx td.n { font-family: 'Caveat', cursive; color: var(--ink); font-size: 19px; }
+  table.rx tr.late td { background: rgba(200,35,31,.05); }
+  .exam td, .exam th { border: 1px solid #A8A08E; padding: 5px 8px; font-size: 13px; }
+  .exam { border-collapse: collapse; width: 100%; margin-top: 8px; }
+  /* khoá số */
+  .dials { display: flex; gap: 14px; margin: 18px 0; }
+  .dial { width: 64px; text-align: center; }
+  .dial button { width: 64px; height: 34px; border: 0; border-radius: 8px; background: #2B3238; color: #DDE6EE; font-size: 18px; cursor: pointer; }
+  .dial b { display: block; font-size: 44px; color: #F2E6C8; margin: 6px 0; font-variant-numeric: tabular-nums; font-family: 'Be Vietnam Pro', monospace; }
+  .lockbox { background: linear-gradient(160deg, #46515B, #2C343B); padding: 26px 36px; border-radius: 16px; color: #DDE6EE; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,.6); }
+  /* lời dẫn */
+  #say { position: absolute; left: 0; right: 0; bottom: 14px; text-align: center; z-index: 70; color: #F3EBDA; font-size: 17px; text-shadow: 0 2px 8px #000, 0 0 2px #000; pointer-events: none; transition: opacity .6s; padding: 0 60px; }
+  #rot { position: fixed; inset: 0; z-index: 99; background: #0B0910; color: #EEE; display: none; place-items: center; text-align: center; font-size: 15px; }
+  @media (orientation: portrait) and (max-width: 700px) { #rot { display: grid; } }
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <div class="lamp"></div>
+  <div class="folder" id="folder">
+    <div class="tab"></div><div class="back"></div>
+    <div class="front">
+      <h1>HỒ SƠ BỆNH ÁN</h1>
+      <div class="lbl"><small>HỌ VÀ TÊN BỆNH NHÂN</small><b>Lương Ngọc Quang</b></div>
+      <div class="lbl" style="width:200px;margin-top:12px"><small>LƯU TRỮ</small><b style="font-size:26px">Tháng 5 – 6</b></div>
+      <div class="stamp">LƯU TRỮ</div>
+    </div>
+  </div>
+
+  <div class="frame hidden" id="frame"><span>Phiếu siêu âm bị xé làm tư</span></div>
+  <div class="tray hidden" id="tray"><div class="cap">Xếp hồ sơ theo đúng thứ tự ngày</div></div>
+  <div class="pouch hidden" id="pouch"><div class="zip"></div><div><div class="lockic"></div>Túi khoá số</div></div>
+  <div class="grain"></div>
+  <div id="zoom"><div class="x" id="zx">✕</div><div id="zbody"></div></div>
+  <div id="say"></div>
+</div></div>
+<div id="rot">Xoay ngang điện thoại nhé.</div>
+
+<script>
+// Thùng "Tháng 6 · Bệnh án" (bản thử riêng, chưa gắn vào gác xép). Ngày giờ trên giấy là tạm, chờ anh Quang sửa cho đúng đời thật.
+'use strict';
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const stage = $('stage');
+  let K = 1;
+  function fit() { K = Math.min(innerWidth / 960, innerHeight / 540); stage.style.transform = 'translate(-50%, -50%) scale(' + K + ')'; }
+  addEventListener('resize', fit); fit();
+  // iPhone: chặn phóng to khi chạm nhanh hai lần / chụm hai ngón (giống chung.js)
+  let lastTouch = 0;
+  document.addEventListener('touchend', (e) => { const now = Date.now(), quick = now - lastTouch < 380; lastTouch = now; if (!quick || e.target.closest('input, textarea')) return; e.preventDefault(); const t = e.changedTouches[0]; e.target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window, clientX: t.clientX, clientY: t.clientY })); }, { passive: false });
+  ['gesturestart', 'gesturechange', 'gestureend', 'dblclick'].forEach((n) => document.addEventListener(n, (e) => e.preventDefault(), { passive: false }));
+
+  // ===== Âm thanh: lấy đúng bộ âm của mặt A (story/hoi-uc.js), giọng "tối" của căn nhà, không chuông chói =====
+  let ac, out;
+  const AC = () => { if (!ac) { ac = new (window.AudioContext || window.webkitAudioContext)(); out = ac.createGain(); out.gain.value = 0.9; out.connect(ac.destination); } if (ac.state === 'suspended') ac.resume(); return ac; };
+  function noise(t, dur, type, freq, q, gain) {
+    const buf = ac.createBuffer(1, Math.ceil(ac.sampleRate * dur), ac.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    s.buffer = buf; f.type = type; f.frequency.value = freq; f.Q.value = q;
+    g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(f).connect(g).connect(out); s.start(t);
+  }
+  function tone(t, dur, f0, f1, gain, type) {
+    const o = ac.createOscillator(), g = ac.createGain(); o.type = type || 'sine';
+    o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(out); o.start(t); o.stop(t + dur);
+  }
+  function sweep(t, dur, type, f0, f1, gain, swell) {
+    const buf = ac.createBuffer(1, Math.ceil(ac.sampleRate * dur), ac.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    src.buffer = buf; f.type = type; f.Q.value = 1.2; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    if (swell) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + dur * 0.95); g.gain.linearRampToValueAtTime(0, t + dur); }
+    else { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + dur * 0.4); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); }
+    src.connect(f).connect(g).connect(out); src.start(t);
+  }
+  const sfx = {
+    paper() { AC(); const t = ac.currentTime; sweep(t, 0.16, 'highpass', 1800, 5200, 0.3); noise(t + 0.1, 0.04, 'bandpass', 3000, 0.8, 0.2); },
+    page() { AC(); const t = ac.currentTime; noise(t, 0.025, 'bandpass', 2000, 1.5, 0.07); noise(t, 0.04, 'lowpass', 320, 0.7, 0.06); },
+    piece() { AC(); const t = ac.currentTime; noise(t, 0.03, 'lowpass', 900, 0.7, 0.7); tone(t, 0.04, 320, 220, 0.12); },
+    roller() { AC(); const t = ac.currentTime; for (let i = 0; i < 3; i++) noise(t + i * 0.035, 0.012, 'bandpass', 4200 - i * 300, 4, 0.7 - i * 0.15); tone(t, 0.05, 2600, 2400, 0.05); },
+    clack() { AC(); const t = ac.currentTime; tone(t, 0.06, 520, 300, 0.2, 'triangle'); noise(t, 0.03, 'bandpass', 1400, 1.5, 0.6); },
+    latch() { AC(); const t = ac.currentTime; noise(t, 0.02, 'highpass', 3000, 0.7, 1); tone(t, 0.12, 900, 300, 0.25, 'triangle'); noise(t + 0.08, 0.25, 'lowpass', 500, 0.7, 0.5); tone(t + 0.08, 0.3, 90, 60, 0.4); },
+    unlock() { AC(); const t = ac.currentTime; noise(t, 0.03, 'highpass', 2500, 0.7, 0.8); tone(t, 0.18, 420, 160, 0.18, 'triangle'); noise(t + 0.12, 0.3, 'lowpass', 300, 0.7, 0.4); tone(t + 0.14, 1.4, 1046.5, 1010, 0.015); },
+    find() { AC(); const t = ac.currentTime; noise(t, 0.5, 'lowpass', 160, 0.7, 0.35); tone(t, 0.9, 98, 70, 0.22); tone(t + 0.05, 2.2, 293.66, 293.66, 0.05, 'triangle'); tone(t + 0.05, 2.2, 311.13, 311.13, 0.045, 'triangle'); tone(t + 0.25, 2.6, 1174.7, 1140, 0.012); sweep(t + 0.1, 1.6, 'bandpass', 500, 1500, 0.06, true); },
+    cloth() { AC(); const t = ac.currentTime; for (let i = 0; i < 5; i++) noise(t + i * 0.07 + Math.random() * 0.03, 0.12, 'bandpass', 1200 + Math.random() * 1200, 0.6, 0.22); },
+  };
+
+  let sayT;
+  function say(s, ms = 4200) { const e = $('say'); e.textContent = s; e.style.opacity = 1; clearTimeout(sayT); sayT = setTimeout(() => { e.style.opacity = 0; }, ms); }
+
+  // ===== Hồ sơ (ngày, giờ, tên bác sĩ là tạm; chờ anh Quang sửa cho đúng đời thật) =====
+  // Mỗi tờ, ở một chỗ tự nhiên, có một mốc giờ anh còn thức, và muộn dần theo từng tuần:
+  //   08/05 đau quặn lúc 23h30 · 15/5 "ngồi máy tới khoảng 1 giờ sáng" · 22/5 Holter: nhịp nhanh 02:10
+  //   · 29/5 dấu nhà thuốc 24h 02:47 · 02/06 chân trang "In lúc 03:12".
+  // Khoá giờ của túi hỏi "đêm cuối cùng trong hồ sơ": phải xếp đúng ngày để biết tờ nào là cuối, rồi tự soi ra 03:12.
+  const DOCS = [
+    { id: 'us', order: 0, date: 'Ngày 08 tháng 05 năm 2026',
+      thumb: () => '<h3>PHIẾU SIÊU ÂM</h3><div class="ln"></div><div class="ln" style="width:70%"></div><div class="hand">Sỏi thận phải</div><div class="ln"></div><div class="date">08 tháng 05</div>',
+      body: () => `<div class="hd"><div class="org"><b>PHÒNG KHÁM ĐA KHOA</b><br>Khoa Chẩn đoán hình ảnh</div><div class="org" style="text-align:right">Số phiếu: 0508-114<br>Ngày 08 tháng 05 năm 2026</div></div>
+        <h2>PHIẾU SIÊU ÂM Ổ BỤNG</h2>
+        <div class="row"><span class="f">Họ tên:</span><span class="v">Lương Ngọc Quang</span><span class="f">Giới:</span><span class="v">Nam</span></div>
+        <div class="row"><span class="f">Bệnh sử:</span><span class="note" style="font-size:19px">đau quặn hông phải, khởi phát 23h30 đêm qua khi đang ngồi máy tính.</span></div>
+        <div class="row" style="gap:22px;margin-top:8px"><div class="scan us"><span class="mk" style="left:8px;top:6px">R-KIDNEY</span><span class="mk" style="right:8px;bottom:6px">6.2 mm</span></div>
+        <div><div class="f">KẾT LUẬN:</div><div class="note">Thận phải có 01 viên sỏi đài dưới, kích thước 6 mm. Chưa gây ứ nước.</div>
+        <div class="f" style="margin-top:10px">ĐỀ NGHỊ:</div><div class="note">Uống đủ 2,5 lít nước/ngày. Hạn chế thức khuya.</div></div></div>
+        <div class="sign">Bác sĩ siêu âm<div class="sg">Ng. T. Hà</div></div>` },
+    { id: 'tri', order: 1, date: '15/5/2026',
+      thumb: () => '<h3>PHIẾU KHÁM</h3><div class="ln"></div><div class="hand">Hậu môn – trực tràng</div><div class="ln" style="width:60%"></div><div class="date">15/5/2026</div>',
+      body: () => `<div class="hd"><div class="org"><b>PHÒNG KHÁM ĐA KHOA</b><br>Chuyên khoa Ngoại tiêu hoá</div><div class="org" style="text-align:right">Mã BN: LNQ-0315<br>15/5/2026</div></div>
+        <h2>PHIẾU KHÁM CHUYÊN KHOA</h2>
+        <div class="row"><span class="f">Họ tên:</span><span class="v">Lương Ngọc Quang</span><span class="f">Lý do khám:</span><span class="v">Đau, chảy máu khi đi ngoài</span></div>
+        <div class="f" style="margin-top:12px">CHẨN ĐOÁN:</div><div class="note">Trĩ nội độ II.</div>
+        <div class="f" style="margin-top:10px">BỆNH NHÂN KHAI:</div><div class="note">Làm việc liên tục từ tháng 4, ngồi máy tới khoảng 1 giờ sáng mỗi đêm.</div>
+        <div class="f" style="margin-top:10px">LỜI DẶN:</div><div class="note">Không ngồi lâu quá 2 tiếng. Ăn nhiều rau, uống đủ nước. Ngủ trước 23h.</div>
+        <div class="seal">PHÒNG<br>KHÁM<br>ĐÃ DUYỆT</div>
+        <div class="sign">Bác sĩ khám<div class="sg">Trần V. Minh</div></div>` },
+    { id: 'tim', order: 2, date: '2026-05-22',
+      thumb: () => '<h3>SIÊU ÂM TIM</h3><div class="ln"></div><div class="hand">Hở van hai lá</div><div class="ln" style="width:50%"></div><div class="date">2026-05-22</div>',
+      body: () => `<div class="hd"><div class="org"><b>PHÒNG KHÁM ĐA KHOA</b><br>Đơn vị Tim mạch</div><div class="org" style="text-align:right">ECHO #2205<br>2026-05-22</div></div>
+        <h2>SIÊU ÂM TIM · HOLTER 24 GIỜ</h2>
+        <div class="row" style="gap:22px"><div class="scan heart"><span class="mk" style="left:8px;top:6px">4CH</span><span class="mk" style="right:8px;bottom:6px">MR 1/4</span></div>
+        <div><div class="row"><span class="f">Họ tên:</span><span class="v">Lương Ngọc Quang</span></div>
+        <div class="f" style="margin-top:6px">KẾT LUẬN:</div><div class="note">Hở van hai lá nhẹ (1/4). Chức năng tâm thu thất trái bình thường.</div>
+        <div class="f" style="margin-top:6px">HOLTER:</div><div class="note" style="font-size:19px">Nhịp nhanh xoang lúc 02:10, 118 l/ph. Nhật ký BN: "đang làm đồ án".</div></div></div>
+        <div class="f" style="margin-top:10px">LỜI DẶN:</div><div class="note">Tránh căng thẳng kéo dài. Ngủ đủ giấc.</div>
+        <div class="sign">Bác sĩ<div class="sg">Lê Q. Anh</div></div>` },
+    { id: 'rx', order: 3, date: 'Thứ Sáu, 29.05.2026',
+      thumb: () => '<h3>ĐƠN THUỐC</h3><div class="ln"></div><div class="ln"></div><div class="hand">Uống theo giờ</div><div class="ln" style="width:40%"></div><div class="date">Thứ Sáu, 29.05</div>',
+      body: () => `<div class="hd"><div class="org"><b>PHÒNG KHÁM ĐA KHOA</b><br>Đơn thuốc ngoại trú</div><div class="org" style="text-align:right">Thứ Sáu, 29.05.2026</div></div>
+        <h2 style="margin-bottom:4px">ĐƠN THUỐC · <span style="font-size:14px;font-weight:600">Lương Ngọc Quang</span></h2>
+        <table class="rx"><tr><th>Giờ uống</th><th>Giảm đau</th><th>Lợi tiểu</th><th>Bổ tĩnh mạch</th><th>Men</th><th>Ghi chú</th></tr>
+        <tr><td class="h">07:00</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">sau ăn</td></tr>
+        <tr><td class="h">12:00</td><td class="n">—</td><td class="n">1</td><td class="n">1</td><td class="n">—</td><td class="n">—</td></tr>
+        <tr><td class="h">19:00</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">sau ăn</td></tr>
+        <tr><td class="h">23:00</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">đi ngủ</td></tr>
+        <tr class="late"><td class="h">03:00</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n" style="color:var(--red)">KHÔNG thức!</td></tr></table>
+        <div class="stamp2" style="position:absolute;left:46px;bottom:26px;transform:rotate(-7deg);border:2.5px solid rgba(40,90,170,.75);color:rgba(40,90,170,.8);padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;letter-spacing:.06em;line-height:1.35">NHÀ THUỐC 24H<br><span style="font-weight:600">ĐÃ BÁN · 02:47</span></div>
+        <div class="sign" style="bottom:14px">Bác sĩ kê đơn<div class="sg">Trần V. Minh</div></div>` },
+    { id: 'thi', order: 4, date: 'in 02/06/2026',
+      thumb: () => '<h3>LỊCH THI</h3><div class="ln"></div><div class="ln"></div><div class="ln"></div><div class="hand">4 môn / 9 ngày</div><div class="date">in 02/06</div>',
+      body: () => `<div class="hd"><div class="org"><b>TRƯỜNG ĐẠI HỌC</b><br>Phòng Đào tạo</div><div class="org" style="text-align:right">Học kỳ II · Năm học 2025–2026</div></div>
+        <h2>LỊCH THI KẾT THÚC HỌC PHẦN</h2>
+        <div class="row"><span class="f">Sinh viên:</span><span class="v">Lương Ngọc Quang</span></div>
+        <table class="exam"><tr><th>Ngày</th><th>Giờ</th><th>Học phần</th><th>Phòng</th></tr>
+        <tr><td>03/06</td><td>07:30</td><td>Điện tử số</td><td>A2-301</td></tr>
+        <tr><td>05/06</td><td>13:30</td><td>Vi xử lý</td><td>A2-204</td></tr>
+        <tr><td>08/06</td><td>07:30</td><td>Tín hiệu và hệ thống</td><td>B1-102</td></tr>
+        <tr><td>11/06</td><td>09:30</td><td>Đồ án thiết kế</td><td>Lab C4</td></tr></table>
+        <div class="note" style="position:absolute;right:46px;bottom:52px;transform:rotate(-4deg)">thi xong ngủ bù nha</div>
+        <div style="position:absolute;left:34px;right:34px;bottom:12px;display:flex;justify-content:space-between;font-size:10px;color:#888;font-family:monospace">
+          <span>sinhvien.daihoc.edu.vn/lichthi</span><span>In lúc 03:12 02/06/2026</span><span>Trang 1/1</span></div>` },
+  ];
+
+  // ===== Bố cục trên bàn =====
+  const POS = { tri: [40, 40], tim: [190, 70], rx: [340, 36], thi: [490, 64] };
+  const cards = {};
+  function mkCard(id, html, x, y, cls = '') {
+    const c = document.createElement('div'); c.className = 'card hidden ' + cls; c.dataset.id = id; c.innerHTML = html;
+    c.style.left = x + 'px'; c.style.top = y + 'px'; c.style.transform = 'rotate(' + (Math.random() * 8 - 4).toFixed(1) + 'deg)';
+    stage.appendChild(c); cards[id] = c; drag(c, onDrop, () => open(id)); return c;
+  }
+  for (const d of DOCS) if (d.id !== 'us') mkCard(d.id, d.thumb(), ...POS[d.id]);
+
+  // Phiếu siêu âm rách: 4 mảnh, ghép vào khung bên phải
+  const PIECES = [];
+  const pieceHTML = (q) => '<div style="position:absolute;inset:0;overflow:hidden;clip-path:' + ['polygon(0 0,100% 0,96% 40%,100% 62%,100% 100%,0 100%)', 'polygon(4% 0,100% 0,100% 100%,0 100%,0 64%,4% 38%)', 'polygon(0 0,100% 0,100% 100%,0 100%)', 'polygon(0 0,100% 0,100% 100%,0 100%)'][q] + '"><div class="card" style="position:absolute;left:' + (q % 2 ? -110 : 0) + 'px;top:' + (q > 1 ? -150 : 0) + 'px;width:220px;height:300px;cursor:inherit;box-shadow:none;transform:none;font-size:12px;padding:16px 14px">' +
+      '<h3 style="font-size:13px">PHIẾU SIÊU ÂM Ổ BỤNG</h3><div style="font-size:9px;color:#555">Ngày 08 tháng 05 năm 2026</div><div class="ln"></div><div class="scan us" style="width:190px;height:120px;margin:8px 0"></div><div class="hand" style="font-size:17px">Sỏi thận phải 6 mm</div><div class="ln"></div><div class="ln" style="width:60%"></div></div></div>';
+  const FX = 708, FY = 42;
+  [[612, 210], [470, 230], [640, 250], [520, 196]].forEach(([x, y], q) => {
+    const p = document.createElement('div'); p.className = 'piece hidden'; p.dataset.q = q; p.innerHTML = pieceHTML(q);
+    p.style.left = x + 'px'; p.style.top = y + 'px'; p.style.transform = 'rotate(' + (q * 7 - 9) + 'deg)';
+    stage.appendChild(p); PIECES.push(p);
+    drag(p, (el) => {
+      const tx = FX + (q % 2) * 110, ty = FY + (q > 1 ? 150 : 0);
+      if (Math.abs(parseFloat(el.style.left) - tx) < 34 && Math.abs(parseFloat(el.style.top) - ty) < 34) {
+        el.style.left = tx + 'px'; el.style.top = ty + 'px'; el.style.transform = 'none'; el.classList.add('set'); el.set = true; sfx.piece();
+        if (PIECES.every((x) => x.set)) setTimeout(joined, 500);
+      }
+    });
+  });
+  function joined() {
+    sfx.find(); for (const p of PIECES) p.remove(); $('frame').classList.add('hidden');
+    const c = mkCard('us', DOCS[0].thumb(), 760, 110); c.classList.remove('hidden');
+    say('Phiếu siêu âm liền lại rồi.');
+  }
+
+  // Khay 5 ô: xếp theo ngày. Đúng thì khay sáng nhẹ, không tự lộ đáp án.
+  const SLOTS = [];
+  for (let i = 0; i < 5; i++) { const s = document.createElement('div'); s.className = 'slot'; s.innerHTML = '<i>' + (i + 1) + '</i>'; $('tray').appendChild(s); SLOTS.push(s); }
+  const slotOf = {};
+  function onDrop(el) {
+    const id = el.dataset.id;
+    const r = el.getBoundingClientRect(), cx = (r.left + r.right) / 2, cy = (r.top + r.bottom) / 2;
+    delete slotOf[id];
+    SLOTS.forEach((s, i) => {
+      const bb = s.getBoundingClientRect();
+      if (cx > bb.left && cx < bb.right && cy > bb.top - 30 && cy < bb.bottom + 30) {
+        const other = Object.keys(slotOf).find((k) => slotOf[k] === i);
+        if (other) { cards[other].style.top = (250 + Math.random() * 30) + 'px'; cards[other].style.transform = 'rotate(2deg)'; delete slotOf[other]; }
+        const sr = stage.getBoundingClientRect();
+        el.style.left = ((bb.left - sr.left) / K + (bb.width / K - 120) / 2) + 'px'; el.style.top = ((bb.top - sr.top) / K - 10) + 'px'; el.style.transform = 'scale(.82)';
+        slotOf[id] = i; sfx.page();
+      }
+    });
+    checkTray();
+  }
+  let trayDone = false;
+  function checkTray() {
+    const full = Object.keys(slotOf).length === 5;
+    const ok = full && DOCS.every((d) => slotOf[d.id] === d.order);
+    $('tray').classList.toggle('ok', ok);
+    if (ok && !trayDone) { trayDone = true; sfx.find(); say('Đúng thứ tự ngày rồi.'); }
+    else if (full && !ok) say('Chưa đúng thứ tự. Mỗi tờ ghi ngày một kiểu, đọc kỹ.');
+  }
+
+  // ===== Phóng to một tờ =====
+  function open(id) {
+    const d = DOCS.find((x) => x.id === id); sfx.paper();
+    $('zbody').innerHTML = '<div class="doc">' + d.body() + '</div>';
+    $('zoom').classList.add('on');
+  }
+  $('zx').onclick = () => { $('zoom').classList.remove('on'); sfx.page(); };
+
+  // ===== Túi khoá giờ =====
+  const code = [0, 0, 0, 0];
+  let pouchOpen = false;
+  $('pouch').onclick = () => {
+    if (pouchOpen) return showInside();
+    const dial = (i) => '<div class="dial"><button data-i="' + i + '" data-d="1">▲</button><b id="d' + i + '">' + code[i] + '</b><button data-i="' + i + '" data-d="-1">▼</button></div>';
+    $('zbody').innerHTML = '<div class="lockbox"><div style="font-family:Caveat,cursive;font-size:26px;color:#F2E6C8">Đêm cuối cùng trong hồ sơ,<br>anh thức tới mấy giờ?</div><div class="dials" style="align-items:center">' + dial(0) + dial(1) + '<b style="font-size:40px;color:#F2E6C8">:</b>' + dial(2) + dial(3) + '</div><button id="try" style="padding:10px 26px;border:0;border-radius:20px;background:#C9A24E;color:#2A1D08;font-weight:700;font-size:15px;cursor:pointer">Mở</button></div>';
+    $('zoom').classList.add('on');
+    $('zbody').querySelectorAll('.dial button').forEach((bt) => bt.onclick = () => { const i = +bt.dataset.i; code[i] = (code[i] + +bt.dataset.d + 10) % 10; $('d' + i).textContent = code[i]; sfx.roller(); });
+    $('try').onclick = () => {
+      if (code.join('') === '0312') { pouchOpen = true; $('pouch').classList.add('open'); sfx.unlock(); setTimeout(() => { sfx.latch(); showInside(); }, 600); }
+      else { sfx.clack(); say('Khoá không nhúc nhích.'); }
+    };
+  };
+  function showInside() {
+    $('zbody').innerHTML = '<div class="lockbox" style="max-width:540px"><div style="font-size:13px;letter-spacing:.1em;opacity:.7">TRONG TÚI</div>' +
+      '<div style="margin:16px auto;width:120px;height:220px;border-radius:18px;background:#0D0F12;border:3px solid #2A2F35;position:relative;box-shadow:0 0 40px rgba(120,160,255,.2)"><div style="position:absolute;inset:14px 8px;border-radius:8px;background:linear-gradient(#1C2230,#0E1118);display:grid;place-items:center;color:#9FB6D8;font-size:11px">Ghi âm (14)</div></div>' +
+      '<div style="font-size:14px;line-height:1.9;font-variant-numeric:tabular-nums">08/05 · 23:30 &nbsp; 15/05 · 01:00 &nbsp; 22/05 · 02:10<br>29/05 · 02:47 &nbsp; 02/06 · <b style="color:#FFD9A0">03:12</b></div></div>';
+    $('zoom').classList.add('on');
+    say('Mỗi tuần, anh thức muộn thêm một chút.', 4200);
+    setTimeout(() => { say('03:12, ngày 2/6. Bốn tiếng trước đó, anh vừa nhắn cho em một tin, để im lặng.', 7500); try { if (parent !== window) parent.postMessage({ matb: 'benhan' }, '*'); } catch (e) { /* bỏ qua */ } }, 4600);
+  }
+
+  // ===== Kéo thả chung (toạ độ theo sân khấu đã thu phóng) =====
+  function drag(el, drop, tap, box) {
+    let sx, sy, ox, oy, moved = false, id = null;
+    el.addEventListener('pointerdown', (e) => {
+      e.stopPropagation(); AC(); id = e.pointerId; el.setPointerCapture(id); moved = false;
+      sx = e.clientX; sy = e.clientY; ox = parseFloat(el.style.left) || el.offsetLeft; oy = parseFloat(el.style.top) || el.offsetTop;
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== id) return;
+      const dx = (e.clientX - sx) / K, dy = (e.clientY - sy) / K;
+      if (!moved && Math.hypot(dx, dy) < 6) return;
+      if (!moved) { moved = true; el.classList.add('drag'); if (!el.classList.contains('set')) el.style.transform = el.classList.contains('piece') ? 'none' : 'rotate(0deg)'; sfx.paper(); }
+      if (el.classList.contains('set')) return;
+      el.style.left = (ox + dx) + 'px'; el.style.top = (oy + dy) + 'px';
+    });
+    el.addEventListener('pointerup', (e) => {
+      if (e.pointerId !== id) return; id = null; el.classList.remove('drag');
+      if (!moved) { tap && tap(); return; }
+      drop && drop(el);
+    });
+  }
+
+  // ===== Mở bìa hồ sơ =====
+  $('folder').onclick = () => {
+    AC(); sfx.cloth(); setTimeout(() => sfx.paper(), 180);
+    $('folder').classList.add('open');
+    setTimeout(() => {
+      for (const id in cards) cards[id].classList.remove('hidden');
+      for (const p of PIECES) p.classList.remove('hidden');
+      $('frame').classList.remove('hidden'); $('tray').classList.remove('hidden'); $('pouch').classList.remove('hidden');
+      say('Hồ sơ của anh. Có một tờ bị xé làm tư.', 4500);
+    }, 450);
+  };
+  say('Thùng "Tháng 6". Bên trong là một bìa hồ sơ.', 4000);
+})();
+</script>
+</body>
+</html>

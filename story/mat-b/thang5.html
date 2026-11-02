@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0B0910" />
+<title>Thùng tháng 5</title>
+<script>document.documentElement.style.background = '#0B0910';</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Caveat:wght@500;700&display=swap" />
+<link rel="stylesheet" href="chung.css?v=2" />
+<style>
+  /* sổ tập đàn mở hai trang */
+  .book { position: absolute; left: 150px; top: 36px; width: 660px; height: 450px; z-index: 5; filter: drop-shadow(0 24px 30px rgba(0,0,0,.6)); }
+  .pg { position: absolute; top: 0; width: 330px; height: 450px; box-sizing: border-box; padding: 26px 22px 20px 34px;
+    background: repeating-linear-gradient(#F4EFE3 0 27px, #C9D6E8 27px 28px), #F4EFE3; background-position: 0 58px; }
+  .pg.l { left: 0; border-radius: 6px 0 0 6px; box-shadow: inset -18px 0 24px -12px rgba(0,0,0,.25); }
+  .pg.r { left: 330px; border-radius: 0 6px 6px 0; box-shadow: inset 18px 0 24px -12px rgba(0,0,0,.25); padding-left: 30px; }
+  .pg.l::before { content: ''; position: absolute; left: 22px; top: 0; bottom: 0; width: 1.5px; background: rgba(200,35,31,.35); }
+  .rings { position: absolute; left: 322px; top: 18px; bottom: 18px; width: 16px; z-index: 2; background: repeating-linear-gradient(transparent 0 16px, #8C8C92 16px 22px, transparent 22px 30px); border-radius: 8px; }
+  .pg h4 { margin: 0 0 6px; font-family: 'Caveat', cursive; font-size: 24px; color: #1E2A44; line-height: 1.1; }
+  .e { font-family: 'Caveat', cursive; color: var(--ink); font-size: 19px; line-height: 28px; white-space: nowrap; }
+  .e b { display: inline-block; width: 46px; font-weight: 700; }
+  .e i { display: inline-block; width: 34px; font-style: normal; color: #5A6E9A; }
+  .e s { text-decoration-color: rgba(31,60,136,.8); text-decoration-thickness: 2px; }
+  .e .side { color: var(--red); font-size: 16px; }
+  .sticky { position: absolute; right: 18px; top: 330px; width: 168px; padding: 12px 14px; background: #FFE58A; transform: rotate(5deg); box-shadow: 0 10px 18px rgba(0,0,0,.35); font-family: 'Caveat', cursive; font-size: 19px; color: #3A2C10; line-height: 1.15; z-index: 3; }
+  .clasp { position: absolute; left: 834px; top: 150px; width: 104px; height: 74px; z-index: 6; cursor: pointer; border-radius: 10px; background: linear-gradient(160deg, #B98E3E, #8A6424); box-shadow: 0 8px 16px rgba(0,0,0,.5); display: grid; place-items: center; color: #2A1D08; font-weight: 800; font-size: 12px; text-align: center; }
+  .clasp small { display: block; font-weight: 600; font-size: 10px; opacity: .8; }
+  .chords { position: absolute; left: 20px; top: 300px; width: 120px; height: 160px; background: var(--paper); transform: rotate(-8deg); z-index: 4; box-shadow: 0 10px 18px rgba(0,0,0,.5); cursor: pointer; padding: 9px; box-sizing: border-box; font-size: 11px; line-height: 1.35; color: #333; }
+  .chords b { color: var(--red); }
+  .metro { position: absolute; left: 836px; top: 330px; width: 92px; height: 150px; z-index: 4; cursor: pointer; }
+  .metro .body { position: absolute; inset: 0; clip-path: polygon(28% 0, 72% 0, 100% 100%, 0 100%); background: linear-gradient(160deg, #4A2C1C, #2A170D); }
+  .metro .arm { position: absolute; left: 44px; bottom: 30px; width: 4px; height: 104px; background: #D9C9A0; transform-origin: bottom center; border-radius: 2px; }
+  .metro .arm::after { content: ''; position: absolute; left: -6px; top: 26px; width: 16px; height: 12px; background: #C9A24E; border-radius: 2px; }
+  .sheet { background: var(--paper); width: 640px; padding: 26px 34px; box-sizing: border-box; color: #262626; border-radius: 2px; box-shadow: 0 30px 60px rgba(0,0,0,.6); font-size: 15px; line-height: 1.9; }
+  .sheet b { color: var(--red); font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <div class="lamp"></div>
+  <div class="chords" id="chords"><div style="font-weight:800;margin-bottom:4px">HỢP ÂM</div>Em như là đại <b>[F]</b> dương…<br>Còn <b>[A7]</b> anh là…<br><b>[Dm7]</b> Ánh nắng…<br><div class="hand" style="font-size:14px;margin-top:6px">bản em đăng cao hơn ½ cung!</div></div>
+  <div class="book">
+    <div class="pg l">
+      <h4>Tập: Sinh ra đã là thứ đối lập nhau</h4>
+      <div class="e"><b>20/4</b><i>30'</i>câu 1–2, tay phải</div>
+      <div class="e"><b>23/4</b><i>45'</i>câu 1–4</div>
+      <div class="e"><b>27/4</b><i>25'</i>điệp khúc. A#m khó bấm</div>
+      <div class="e"><b>30/4</b><i>60'</i>ghép cả bài lần đầu, vấp 6 chỗ</div>
+      <div class="e"><b>4/5</b><i>40'</i>cả bài, vấp 4</div>
+      <div class="e"><b>8/5</b><i>15'</i>đau hông. Tập 15' rồi đi khám</div>
+      <div class="e"><b>10/5</b><i>50'</i>cả bài, vấp 2</div>
+      <div class="e"><b>13/5</b><i>40'</i>ngón 4 tay trái vẫn yếu</div>
+      <div class="e"><b>15/5</b><i>10'</i>khám về muộn</div>
+      <div class="e"><b>17/5</b><i>45'</i><s>trọn bài, không vấp!</s></div>
+      <div class="e" style="padding-left:80px"><span class="side">↳ nghe lại: vấp chỗ A#m</span></div>
+    </div>
+    <div class="rings"></div>
+    <div class="pg r">
+      <div class="sticky">Hôm nào đánh trọn bài,<br>nghe lại mà không vấp<br>chỗ nào → ghi âm, gửi em.</div>
+      <h4>&nbsp;</h4>
+      <div class="e"><b>19/5</b><i>35'</i>cả bài, vấp 1 (tay trái)</div>
+      <div class="e"><b>21/5</b><i>30'</i>tập riêng chỗ A#m → Bm</div>
+      <div class="e"><b>22/5</b><i>30'</i>đeo Holter vẫn tập</div>
+      <div class="e"><b>24/5</b><i>70'</i>trọn bài. Nghe lại 3 lần.</div>
+      <div class="e" style="padding-left:80px">Không vấp.</div>
+      <div class="e"><b>26/5</b><i>20'</i>đánh lại điệp khúc cho vui</div>
+      <div class="e"><b>29/5</b><i>—</i>lấy thuốc</div>
+      <div class="e"><b>31/5</b><i>15'</i>trọn bài, vấp 2 (buồn ngủ)</div>
+      <div class="e"><b>1/6</b><i>—</i></div>
+    </div>
+  </div>
+  <div class="clasp" id="clasp">KHOÁ SỔ<small>ngày · tháng</small></div>
+  <div class="metro" id="metro"><div class="body"></div><div class="arm" id="arm"></div></div>
+  <div class="grain"></div>
+  <div id="zoom"><div class="x" id="zx">✕</div><div id="zbody"></div></div>
+  <div id="say"></div>
+</div></div>
+<div id="rot">Xoay ngang điện thoại nhé.</div>
+<script src="chung.js?v=2"></script>
+<script>
+// Thùng "Tháng 5 · Bản đàn gửi em" (bản thử). Sổ tập đàn: phải đọc kỹ để biết hôm nào anh đánh trọn bài
+// mà nghe lại không vấp. 17/5 bị gạch (nghe lại vẫn vấp), 31/5 vấp vì buồn ngủ; đúng là 24/5.
+// Ngày tháng, số phút là tạm, chờ anh Quang sửa theo đời thật.
+'use strict';
+(() => {
+  const { $, sfx, say, zoom, unzoom } = MB;
+  // máy đếm nhịp: chạm thì lắc theo nhịp 72 (đúng nhịp bài gốc), chạm lần nữa thì dừng
+  let met = null;
+  $('metro').onclick = () => {
+    if (met) { clearInterval(met); met = null; $('arm').style.transform = ''; return; }
+    let s = 1; const beat = 60000 / 72;
+    const tick = () => { $('arm').style.transition = 'transform ' + beat + 'ms ease-in-out'; $('arm').style.transform = 'rotate(' + (s * 18) + 'deg)'; s = -s; MB.AC(); sfx.tap(); };
+    tick(); met = setInterval(tick, beat);
+  };
+  $('chords').onclick = () => {
+    sfx.paper();
+    zoom('<div class="sheet"><div style="font-weight:800;letter-spacing:.06em;color:#1E2A44">SINH RA ĐÃ LÀ THỨ ĐỐI LẬP NHAU · hợp âm</div>' +
+      'Em như là đại <b>[F]</b> dương xanh ngắt khiến bao người ao ước<br>Còn <b>[A7]</b> anh là đám lá khô rơi lặng yên<br><b>[Dm7]</b> Ánh nắng đến vây <b>[C]</b> quanh em<br>Còn nơi <b>[A#]</b> anh tàn tro quấn <b>[A#m]</b> lấy' +
+      '<div class="hand" style="font-size:24px;margin-top:10px">Bản em đăng cao hơn nửa cung → đánh ở F#.</div></div>');
+  };
+  const code = [0, 1, 0, 1];
+  $('clasp').onclick = () => {
+    const dial = (i) => '<div class="dial"><button data-i="' + i + '" data-d="1">▲</button><b id="d' + i + '">' + code[i] + '</b><button data-i="' + i + '" data-d="-1">▼</button></div>';
+    zoom('<div class="lockbox"><div class="hand" style="font-size:26px;color:#F2E6C8">Trang cuối bị ghim lại.<br>Hôm ấy là ngày nào?</div><div class="dials">' + dial(0) + dial(1) + '<b style="font-size:40px;color:#F2E6C8">/</b>' + dial(2) + dial(3) + '</div><button class="btn" id="try">Mở</button></div>');
+    $('zbody').querySelectorAll('.dial button').forEach((bt) => bt.onclick = () => { const i = +bt.dataset.i; code[i] = (code[i] + +bt.dataset.d + 10) % 10; $('d' + i).textContent = code[i]; sfx.roller(); });
+    $('try').onclick = () => {
+      if (code.join('') === '2405') { sfx.unlock(); setTimeout(() => { sfx.latch(); sfx.find(); done(); }, 600); }
+      else { sfx.clack(); say('Ghim vẫn cài chặt.'); }
+    };
+  };
+  function done() {
+    zoom('<div class="sheet" style="width:560px;text-align:center;line-height:1.6"><div class="hand" style="font-size:30px">24/5</div>' +
+      '<div class="hand" style="font-size:22px;margin:10px 0 18px">Ghi âm rồi. Gửi em rồi.</div>' +
+      '<div style="font-size:13px;color:#555">Tờ nhạc thứ hai kẹp ở trang cuối.</div>' +
+      '<div style="font-size:15px;margin-top:14px;color:#262626">Tháng 5. Ốm, khám, thi. Ngày nào anh cũng mở đàn, dù chỉ mười phút.<br>Hôm đánh trọn bài, anh ghi âm gửi em.</div>' +
+      '<div style="font-size:11px;opacity:.55;margin-top:14px">(Trong game: nhớ ngày 24/5 để tìm đúng bản ghi âm trong điện thoại.)</div></div>');
+    say('Tháng 5. Ngày nào anh cũng mở đàn, dù chỉ mười phút.', 6000); MB.done('thang5');
+  }
+  say('Thùng "Tháng 5". Một cuốn sổ, một tờ hợp âm, một máy đếm nhịp.', 4500);
+})();
+</script>
+</body>
+</html>

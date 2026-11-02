@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#07080C" />
+<title>Gác xép</title>
+<script>document.documentElement.style.background = '#07080C';</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Caveat:wght@500;700&family=Lora:ital,wght@1,500;1,600&display=swap" />
+<link rel="stylesheet" href="chung.css?v=2" />
+<style>
+  html, body { background: #07080C; }
+  #stage { background: #0B0E16; box-shadow: none; --w: 0; }
+  #stage::after { z-index: 30; background: radial-gradient(ellipse 85% 85% at 50% 45%, transparent 45%, rgba(0,0,0,.7)); }
+  /* tường hồi: ván dọc, lạnh → ấm theo --w (0..1) */
+  .wall { position: absolute; inset: 0; z-index: 0;
+    background:
+      repeating-linear-gradient(90deg, rgba(0,0,0,.28) 0 2px, transparent 2px 46px),
+      linear-gradient(180deg, color-mix(in srgb, #1B2436 calc(100% - var(--w) * 100%), #5A3826), color-mix(in srgb, #0E131D calc(100% - var(--w) * 100%), #2E1C14)); transition: background 4s; }
+  /* hai mái dốc */
+  .roof { position: absolute; top: 0; width: 520px; height: 330px; z-index: 2;
+    background: repeating-linear-gradient(var(--a), rgba(0,0,0,.35) 0 6px, transparent 6px 44px), linear-gradient(180deg, #121823, #0C1018); }
+  .roof.l { left: -40px; clip-path: polygon(0 0, 100% 0, 100% 16%, 0 100%); --a: 152deg; }
+  .roof.r { right: -40px; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 16%); --a: 28deg; }
+  .beam { position: absolute; left: 0; right: 0; top: 116px; height: 18px; z-index: 3; background: linear-gradient(#1E1610, #120D09); box-shadow: 0 6px 12px rgba(0,0,0,.5); }
+  .post { position: absolute; bottom: 92px; width: 16px; height: 330px; z-index: 3; background: linear-gradient(90deg, #17110C, #241A12, #120D09); }
+  /* cửa sổ tròn */
+  .win { position: absolute; left: 650px; top: 170px; width: 96px; height: 96px; border-radius: 50%; z-index: 4; overflow: hidden;
+    background: radial-gradient(circle at 64% 34%, #F6EFD8 0 9px, rgba(246,239,216,.25) 10px 18px, transparent 19px), linear-gradient(#0C1430, #233458); box-shadow: 0 0 0 7px #2A2018, 0 0 0 9px #120D09, 0 0 40px 6px rgba(140,170,255,.18); }
+  .win::before, .win::after { content: ''; position: absolute; background: #2A2018; }
+  .win::before { left: 45px; top: 0; bottom: 0; width: 6px; } .win::after { top: 45px; left: 0; right: 0; height: 6px; }
+  .frost { position: absolute; inset: 0; border-radius: 50%; z-index: 5; pointer-events: none; transition: opacity 4s;
+    background: radial-gradient(circle, transparent 28%, rgba(220,235,255,.55) 70%), repeating-conic-gradient(rgba(255,255,255,.18) 0 4deg, transparent 4deg 22deg); }
+  .moonbeam { position: absolute; left: 380px; top: 200px; width: 420px; height: 340px; z-index: 6; pointer-events: none; mix-blend-mode: screen;
+    background: linear-gradient(200deg, rgba(150,180,255,.22), rgba(150,180,255,0) 75%); clip-path: polygon(68% 0, 82% 6%, 52% 100%, 6% 100%); transition: opacity 4s; }
+  .motes { position: absolute; left: 380px; top: 200px; width: 420px; height: 340px; z-index: 7; pointer-events: none; }
+  .motes i { position: absolute; width: 2.5px; height: 2.5px; border-radius: 50%; background: rgba(220,230,255,.75); animation: drift linear infinite; }
+  @keyframes drift { from { transform: translate(0, 0); opacity: 0; } 20% { opacity: 1; } to { transform: translate(-30px, -140px); opacity: 0; } }
+  /* sàn */
+  .floor { position: absolute; left: 0; right: 0; bottom: 0; height: 104px; z-index: 1;
+    background: repeating-linear-gradient(90deg, rgba(0,0,0,.25) 0 2px, transparent 2px 120px), linear-gradient(#141018, #07060A); }
+  .floor::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 10px; background: linear-gradient(rgba(0,0,0,.5), transparent); }
+  /* bóng đèn treo */
+  .bulb { position: absolute; left: 478px; top: 0; width: 4px; height: 150px; background: #222; z-index: 8; }
+  .bulb::after { content: ''; position: absolute; left: -8px; bottom: -14px; width: 20px; height: 20px; border-radius: 50%; background: #3A3630; transition: background 2s, box-shadow 2s; }
+  #stage.lit .bulb::after { background: #FFE6B0; box-shadow: 0 0 30px 10px rgba(255,210,140,.6), 0 0 220px 80px rgba(255,190,110,.25); }
+  .warm { position: absolute; inset: 0; z-index: 9; pointer-events: none; mix-blend-mode: screen; opacity: calc(var(--w) * .9); transition: opacity 4s;
+    background: radial-gradient(ellipse 60% 60% at 50% 46%, rgba(255,180,100,.35), transparent 70%); }
+  /* đàn + khăn */
+  .piano { position: absolute; left: 378px; top: 228px; width: 210px; height: 220px; z-index: 12; cursor: pointer; }
+  .piano svg { position: absolute; inset: 0; overflow: visible; }
+  .cloth { transition: transform 2.4s cubic-bezier(.5,0,.2,1), opacity 2.4s; transform-origin: 50% 100%; }
+  .piano.bare .cloth { transform: translate(40px, 180px) rotate(14deg); opacity: 0; }
+  .sheet { opacity: 0; transition: opacity 1s; }
+  .sheet.on { opacity: 1; }
+  .phone-mini { position: absolute; left: 156px; top: -8px; width: 30px; height: 15px; border-radius: 3px; background: #0B0C10; box-shadow: 0 0 0 1px #333; display: none; cursor: pointer; z-index: 2; }
+  .phone-mini::after { content: ''; position: absolute; inset: 2px; border-radius: 2px; background: #6E8CC4; animation: glow 1.6s ease-in-out infinite alternate; }
+  @keyframes glow { from { opacity: .35; } to { opacity: 1; } }
+  .phone-mini.on { display: block; }
+  /* bước lại gần cây đàn: cả căn gác phóng về phía đàn */
+  #room { position: absolute; inset: 0; transform-origin: 483px 330px; transition: transform 2.8s cubic-bezier(.55,0,.3,1), filter 2.8s; }
+  #room.near { transform: scale(3.2); filter: blur(4px) brightness(.6); }
+  /* cận cảnh: bức tường phía trên cây đàn (nơi bóng hai người in lên), thân đàn, giá nhạc, phím */
+  #kv { position: absolute; inset: 0; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 1.6s; overflow: hidden; --w: 0; background: #120B07; }
+  #kv.on { opacity: 1; pointer-events: auto; }
+  #kv .wallk { position: absolute; left: 0; right: 0; top: 0; height: 210px; background: repeating-linear-gradient(90deg, rgba(0,0,0,.12) 0 2px, transparent 2px 64px), linear-gradient(#2C1D14, #24170F); }
+  /* quầng đèn sau lưng người ngồi đàn, hắt lên tường */
+  #kv .halo { position: absolute; left: 0; right: 0; top: 0; height: 210px; pointer-events: none; transition: opacity 3s;
+    background: radial-gradient(ellipse 46% 88% at 50% 62%, rgba(255,214,160,calc(.30 + var(--w) * .22)), rgba(255,190,120,.08) 62%, transparent 82%); mix-blend-mode: screen; }
+  #kv .haloc { position: absolute; left: 0; right: 0; top: 0; height: 210px; pointer-events: none; opacity: 0; transition: opacity 3s;
+    background: radial-gradient(ellipse 46% 88% at 50% 62%, rgba(170,195,245,.30), rgba(140,170,240,.06) 62%, transparent 82%); mix-blend-mode: screen; }
+  #kv.cold .halo { opacity: 0; } #kv.cold .haloc { opacity: 1; }
+  #kv .figs { position: absolute; left: 0; right: 0; top: 0; height: 210px; overflow: hidden; z-index: 1; }
+  #kv .fig { position: absolute; top: -4px; width: 300px; height: 260px; overflow: visible; pointer-events: none; transition: opacity 2.4s; }
+  #kv .fig.sh { color: rgba(26,12,6,.78); mix-blend-mode: multiply; filter: blur(2.2px) drop-shadow(0 0 10px rgba(20,8,2,.35)); opacity: 0; }
+  #kv.cold .fig.sh { color: rgba(10,16,34,.8); }
+  #kv .fig.lt { mix-blend-mode: screen; filter: blur(1.6px) drop-shadow(0 0 14px currentColor); opacity: 0; }
+  #kv .fig .ps, #kv .fig .hd, #kv .fig .hb, #kv .fig .hs { transition: transform 2.4s cubic-bezier(.4,0,.2,1), opacity 1.6s; transform-box: view-box; }
+  #kv .fig .ps { transform-origin: 150px 260px; }
+  #kv .fig .hd { transform-origin: 150px 128px; }
+  #kv .fig .hs { opacity: 0; }
+  #kv .fig path { fill: currentColor; }
+  #kv .fig.bow .hd { transform: translateY(12px) rotate(-4deg) scaleY(.94); }
+  #kv .fig.bow .ps { transform: translateY(6px); }
+  #kv .fig.turn .hb { opacity: 0; } #kv .fig.turn .hs { opacity: 1; }
+  #kv .fig.love.a .ps { transform: translateX(4px) rotate(1.5deg); }
+  #kv .fig.love.e .ps { transform: translateX(-4px) rotate(-1.5deg); }
+  #kv .fig.gone { opacity: 0 !important; transition: opacity 3.4s; }
+  #kv .spark { position: absolute; z-index: 7; width: 5px; height: 5px; border-radius: 50%; pointer-events: none; animation: rise 3.4s ease-out forwards; }
+  @keyframes rise { from { opacity: 1; transform: translate(0, 0) scale(1); } to { opacity: 0; transform: translate(var(--dx), -150px) scale(.4); } }
+  /* thân đàn */
+  #kv .body { position: absolute; left: 14px; right: 14px; top: 196px; bottom: 28px; z-index: 2; border-radius: 4px 4px 6px 6px; background: linear-gradient(90deg, rgba(0,0,0,.35), transparent 8%, transparent 92%, rgba(0,0,0,.35)), linear-gradient(#3C2517, #2A1A10); box-shadow: 0 -2px 0 #4E3220, 0 14px 30px rgba(0,0,0,.6); }
+  #kv .lid { position: absolute; left: 6px; right: 6px; top: 190px; height: 12px; z-index: 2; border-radius: 3px; background: linear-gradient(#5A3A24, #3A2416); box-shadow: 0 4px 10px rgba(0,0,0,.5); }
+  #kv .floor2 { position: absolute; left: 0; right: 0; bottom: 0; height: 40px; background: repeating-linear-gradient(90deg, rgba(0,0,0,.28) 0 2px, transparent 2px 96px), linear-gradient(#2B1C12, #1A110B); }
+  #kv .panel { position: absolute; left: 70px; right: 70px; top: 438px; height: 52px; z-index: 2; border-radius: 4px; box-shadow: inset 0 0 0 2px rgba(0,0,0,.25), inset 0 0 18px rgba(0,0,0,.35); }
+  #kv .pedal { position: absolute; top: 500px; z-index: 2; width: 26px; height: 9px; border-radius: 3px 3px 5px 5px; background: linear-gradient(#E8C878, #9A7A30); }
+  #kv .stand { position: absolute; left: 244px; right: 244px; top: 294px; height: 9px; z-index: 3; border-radius: 3px; background: linear-gradient(#4A2E1C, #24170F); box-shadow: 0 8px 14px rgba(0,0,0,.5); }
+  #kv .pg { position: absolute; top: 212px; z-index: 3; width: 104px; height: 86px; box-shadow: 0 6px 14px rgba(0,0,0,.45); border-radius: 2px; padding: 6px 8px; box-sizing: border-box; transition: filter 3s, box-shadow 1.5s;
+    background: repeating-linear-gradient(180deg, transparent 0 26px, rgba(60,40,20,.25) 26px 27px, transparent 27px 31px, rgba(60,40,20,.25) 31px 32px, transparent 32px 36px, rgba(60,40,20,.25) 36px 37px, transparent 37px 41px, rgba(60,40,20,.25) 41px 42px, transparent 42px 56px), linear-gradient(#F4EDDC, #E6DCC6); }
+  #kv .pg b { font-family: 'Lora', serif; font-style: italic; font-size: 14px; color: #4A3020; font-weight: 600; }
+  #kv .pg i { display: block; margin: 30px -8px 0; white-space: nowrap; text-align: center; font-family: 'Lora', serif; font-size: 13px; color: #8A2A22; opacity: 0; transition: opacity 1.8s; }
+  #kv .pg.lit i { opacity: 1; }
+  #kv .pg.lit { box-shadow: 0 0 30px rgba(255,210,150,.6), 0 6px 14px rgba(0,0,0,.45); }
+  #kv.cold .pg { filter: saturate(.3) brightness(.7); }
+  #kv .fall { position: absolute; left: 30px; right: 30px; top: 306px; height: 12px; z-index: 3; background: linear-gradient(#2E1E14, #1A110B); }
+  #kv .felt { position: absolute; left: 30px; right: 30px; top: 318px; height: 5px; z-index: 3; background: linear-gradient(#7A1E22, #4E1014); }
+  #kv .kb { position: absolute; left: 30px; right: 30px; top: 323px; height: 104px; z-index: 4; }
+  #kv .rail { position: absolute; left: 22px; right: 22px; top: 427px; height: 12px; border-radius: 2px; background: linear-gradient(#4A2E1C, #2A1A10); z-index: 4; }
+  #kv .w { position: absolute; top: 0; height: 104px; box-sizing: border-box; border: 1px solid #A89E8C; border-top: 0; border-radius: 0 0 4px 4px; background: linear-gradient(#FBF7EE, #E9E2D3 85%, #D6CDBB); transition: transform .08s; transform-origin: 50% 0; }
+  #kv .b { position: absolute; top: 0; height: 64px; z-index: 2; border-radius: 0 0 3px 3px; background: linear-gradient(#2A2622, #0C0A09 80%, #1E1A17); box-shadow: 0 3px 4px rgba(0,0,0,.5); transition: transform .08s; transform-origin: 50% 0; }
+  #kv .k::after { content: ''; position: absolute; inset: 0; border-radius: inherit; opacity: 0; background: var(--c, #FFC978); mix-blend-mode: multiply; transition: opacity .28s; }
+  #kv .b.k::after { mix-blend-mode: screen; }
+  #kv .k.dn { transform: perspective(500px) rotateX(-4deg) translateY(2px); }
+  #kv .k.dn::after { opacity: .9; transition: opacity .04s; }
+  #kv .k.hint::before { content: ''; position: absolute; left: 2px; right: 2px; bottom: 6px; height: 34%; border-radius: 4px; background: #FF7FA3; box-shadow: 0 0 16px 4px rgba(255,127,163,.8); animation: hintp .7s ease-in-out infinite alternate; z-index: 1; }
+  #kv .b.k.hint::before { height: 40%; }
+  @keyframes hintp { from { opacity: .45; } to { opacity: 1; } }
+  #kv::before { content: ''; position: absolute; inset: 0; z-index: 8; pointer-events: none; background: rgba(30,60,120,.34); mix-blend-mode: multiply; opacity: 0; transition: opacity 3s; }
+  #kv.cold::before { opacity: 1; }
+  #kv .shine { position: absolute; left: 0; right: 0; top: 196px; height: 260px; pointer-events: none; z-index: 5; background: radial-gradient(ellipse 55% 60% at 50% 50%, rgba(255,190,120,calc(var(--w) * .18)), transparent 70%); }
+  #kv.bloom { --w: 1; }
+  #kv .motek { position: absolute; left: 0; right: 0; top: 0; height: 200px; z-index: 1; pointer-events: none; }
+  #kv .motek i { position: absolute; width: 2.5px; height: 2.5px; border-radius: 50%; background: rgba(255,230,190,.7); animation: drift linear infinite; }
+  #kv.cold .motek i { background: rgba(200,215,255,.6); }
+  /* điện thoại cũ dựng trên giá nhạc, thông báo tháng 7 */
+  #kv .ph { position: absolute; left: 732px; top: 236px; width: 32px; height: 56px; border-radius: 6px; background: #0B0C10; box-shadow: 0 0 0 1.5px #333, 0 6px 10px rgba(0,0,0,.5); transform: rotate(6deg); cursor: pointer; z-index: 6; }
+  #kv .ph::before { content: ''; position: absolute; inset: -18px; }
+  #kv .ph::after { content: ''; position: absolute; inset: 3px; border-radius: 4px; background: #1A2030; transition: background .3s, box-shadow .3s; }
+  #kv .ph.ring::after { background: #9DB8F0; box-shadow: 0 0 22px 6px rgba(150,180,255,.5); }
+  #kv .ph.pulse::after { animation: glow 1.2s ease-in-out infinite alternate; background: #9DB8F0; }
+  #kv .ph.buzz { animation: buzz .09s 10; }
+  @keyframes buzz { 0%, 100% { margin-left: 0; } 50% { margin-left: 3px; } }
+  #kv .ban { position: absolute; left: 50%; top: 50px; z-index: 9; width: 340px; margin-left: -170px; background: rgba(36,38,44,.96); color: #F3EBDA; border-radius: 16px; padding: 11px 14px; font-size: 13px; line-height: 1.45; box-shadow: 0 12px 26px rgba(0,0,0,.55); transform: translateY(-160px); transition: transform .5s cubic-bezier(.3,.7,.2,1), opacity 1.5s; }
+  #kv .ban.on { transform: none; }
+  #kv .ban small { color: #9AA0AA; }
+  /* điện thoại của em */
+  #herbg { position: absolute; inset: 0; z-index: 57; background: rgba(4,5,8,.72); opacity: 0; pointer-events: none; transition: opacity 1s; }
+  #herbg.on { opacity: 1; pointer-events: auto; }
+  #her { left: 345px; top: 10px; z-index: 58; opacity: 0; pointer-events: none; transform: translateY(30px); transition: opacity .8s, transform .8s; }
+  #her.on { opacity: 1; pointer-events: auto; transform: none; }
+  #her .scr { background: #000; display: flex; flex-direction: column; }
+  #her .top { display: flex; align-items: center; gap: 9px; padding: 6px 12px 9px; font-weight: 700; font-size: 14px; border-bottom: 1px solid #1E2026; }
+  #her .av { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #5B6B8A, #2C3446); display: grid; place-items: center; font-size: 13px; }
+  #her .chat { flex: 1; overflow: hidden; padding: 8px 10px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; }
+  #her .sys { color: #7A8088; font-size: 10.5px; text-align: center; margin: 4px 0; }
+  #her .in { align-self: flex-start; max-width: 200px; background: #26282E; border-radius: 18px; padding: 8px 12px; font-size: 11.5px; line-height: 1.45; }
+  #her .in b { color: #9DB8F0; }
+  #her .mute { align-self: flex-start; color: #7A8088; font-size: 10px; margin: -2px 0 0 6px; }
+  #her .bub { align-self: flex-end; max-width: 200px; background: #3B6CF6; border-radius: 18px; padding: 8px 12px; font-size: 12.5px; line-height: 1.45; word-wrap: break-word; }
+  #her .st { align-self: flex-end; color: #7A8088; font-size: 10px; }
+  #her .bar { margin: 6px 10px 10px; height: 34px; border-radius: 17px; background: #1F2227; color: #8A8F98; font-size: 12px; display: flex; align-items: center; padding-left: 14px; cursor: text; box-shadow: 0 0 0 1.5px rgba(157,184,240,.0); animation: ask 1.6s ease-in-out infinite alternate; }
+  #her .bar { flex: none; position: relative; padding-right: 40px; min-height: 34px; height: auto; line-height: 1.35; padding-top: 7px; padding-bottom: 7px; box-sizing: border-box; color: #fff; }
+  #her .bar .ph { color: #8A8F98; }
+  #her.typing .bar .ph, #her .bar .cur { display: none; }
+  #her.typing .bar .cur { display: inline-block; width: 1.5px; height: 14px; margin-left: 1px; vertical-align: -2px; background: #5B8CFF; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  #her.typing .bar { animation: none; }
+  #hsend { position: absolute; right: 5px; bottom: 4px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; color: #6A6F78; transition: background .3s, color .3s; }
+  #hsend.ready { background: #3B6CF6; color: #fff; animation: ask 1s ease-in-out infinite alternate; cursor: pointer; }
+  #her .kbd { display: none; flex: none; background: #2B2D33; padding: 6px 3px 8px; }
+  #her.typing .kbd { display: block; }
+  #her .kbd .row { display: flex; justify-content: center; gap: 4px; margin: 0 0 7px; }
+  #her .kbd .kk { flex: 1; max-width: 21px; height: 34px; border-radius: 5px; background: #6B6E76; color: #fff; display: grid; place-items: center; font-size: 15px; box-shadow: 0 1px 0 rgba(0,0,0,.5); }
+  #her .kbd .kk.w2 { max-width: 34px; background: #46484F; font-size: 12px; }
+  #her .kbd .kk.sp { max-width: 120px; font-size: 11px; }
+  #her .kbd .kk.dn { background: #9A9DA6; }
+  @keyframes ask { to { box-shadow: 0 0 0 1.5px rgba(157,184,240,.75), 0 0 18px rgba(157,184,240,.35); } }
+  #stage.bloom .win { background: radial-gradient(circle at 64% 34%, #FFF6DE 0 9px, rgba(255,240,210,.3) 10px 18px, transparent 19px), linear-gradient(#2A1F48, #8A5A6A); transition: background 6s; }
+  #stage.bloom .motes i { background: rgba(255,214,150,.95); }
+  #stage.bloom .moonbeam { background: linear-gradient(200deg, rgba(255,200,130,.28), rgba(255,200,130,0) 75%); }
+  .days { position: absolute; left: 0; right: 0; top: 84px; text-align: center; z-index: 56; transition: opacity 3s, top 1.6s, font-size 1.6s, color 2s; font-size: 34px; font-weight: 800; color: #FFE3B0; text-shadow: 0 0 24px rgba(255,180,100,.7), 0 2px 8px #000; opacity: 0; transition: opacity 3s; pointer-events: none; }
+  .days.zero { top: 14px; left: 26px; right: auto; text-align: left; font-size: 15px; font-weight: 600; color: #9DB8F0; text-shadow: none; letter-spacing: .04em; }
+  .black { position: absolute; inset: 0; z-index: 85; background: #000; opacity: 0; transition: opacity 3s; pointer-events: none; display: grid; place-items: center; text-align: center; color: #F3EBDA; }
+  .black.on { opacity: 1; pointer-events: auto; }
+  .black p { margin: 10px 0; opacity: 0; transition: opacity 2.5s; }
+  .black p.on { opacity: 1; }
+
+  /* thùng các-tông */
+  .box { position: absolute; width: 104px; height: 86px; z-index: 11; cursor: pointer; transition: transform .2s; }
+  .box:active { transform: translateY(2px); }
+  .box svg { position: absolute; left: 0; bottom: 0; width: 104px; height: 86px; overflow: visible; }
+  .box .lbl { position: absolute; left: 0; right: 0; top: 40px; text-align: center; font-family: 'Caveat', cursive; font-weight: 700; font-size: 21px; color: #3A2A18; pointer-events: none; }
+  .box .flap { transition: transform .8s cubic-bezier(.3,1.4,.4,1); transform-box: fill-box; }
+  .box.open .fl { transform: rotate(-38deg); transform-origin: left bottom; }
+  .box.open .fr { transform: rotate(38deg); transform-origin: right bottom; }
+  .box .glow { opacity: 0; transition: opacity 1.5s; }
+  .box.open .glow { opacity: 1; }
+  .box .tape { transition: opacity .4s; }
+  .box.open .tape { opacity: 0; }
+  /* khung câu đố */
+  #frame { position: absolute; inset: 0; z-index: 80; background: #0B0910; display: none; }
+  #frame.on { display: block; }
+  #frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+  #frame .cl { position: absolute; left: 14px; top: 10px; z-index: 2; color: #F3EBDA; font-size: 13px; background: rgba(0,0,0,.45); border: 1px solid rgba(255,230,200,.25); border-radius: 16px; padding: 6px 14px; cursor: pointer; }
+  #frame .cl.done { background: #C9A24E; color: #2A1D08; border-color: transparent; font-weight: 700; }
+  .flyer { position: absolute; z-index: 40; width: 26px; height: 34px; background: #F2EBDA; box-shadow: 0 6px 12px rgba(0,0,0,.4); transition: all 1.6s cubic-bezier(.4,.1,.2,1); pointer-events: none; }
+  #start { position: absolute; inset: 0; z-index: 90; background: #07080C; display: grid; place-items: center; text-align: center; color: #F3EBDA; cursor: pointer; }
+  #start b { font-family: 'Caveat', cursive; font-size: 44px; color: #FFE3B0; display: block; }
+  #start small { opacity: .6; }
+  #reset { position: absolute; right: 12px; top: 10px; z-index: 31; font-size: 11px; color: rgba(240,230,210,.4); cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <div class="wall"></div>
+  <div class="floor"></div>
+  <div class="roof l"></div><div class="roof r"></div>
+  <div class="beam"></div>
+  <div class="post" style="left:150px"></div><div class="post" style="left:794px"></div>
+  <div class="win"><div class="frost" id="frost"></div></div>
+  <div class="moonbeam" id="beam"></div>
+  <div class="motes" id="motes"></div>
+  <div class="bulb"></div>
+
+  <div class="piano" id="piano">
+    <svg viewBox="0 0 210 220" aria-hidden="true">
+      <defs>
+        <linearGradient id="wood" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#2B1B12" /><stop offset="1" stop-color="#160E09" /></linearGradient>
+        <linearGradient id="clothg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#D8DEE8" /><stop offset="1" stop-color="#8E98A8" /></linearGradient>
+      </defs>
+      <rect x="10" y="0" width="190" height="150" rx="6" fill="url(#wood)" />
+      <rect x="18" y="8" width="174" height="60" rx="4" fill="#1E140D" />
+      <rect x="62" y="22" width="86" height="40" rx="2" fill="#120C08" />
+      <g id="sheets"><rect class="sheet" x="64" y="20" width="20" height="40" fill="#F2EBDA" /><rect class="sheet" x="85" y="18" width="20" height="40" fill="#F2EBDA" /><rect class="sheet" x="106" y="20" width="20" height="40" fill="#F2EBDA" /><rect class="sheet" x="127" y="18" width="20" height="40" fill="#F2EBDA" /></g>
+      <rect x="2" y="104" width="206" height="16" rx="3" fill="#2E1E14" />
+      <rect x="8" y="120" width="194" height="16" fill="#EDE7DA" />
+      <g fill="#111"><rect x="21" y="120" width="5" height="9" /><rect x="28" y="120" width="5" height="9" /><rect x="42" y="120" width="5" height="9" /><rect x="50" y="120" width="5" height="9" /><rect x="57" y="120" width="5" height="9" /><rect x="71" y="120" width="5" height="9" /><rect x="78" y="120" width="5" height="9" /><rect x="93" y="120" width="5" height="9" /><rect x="100" y="120" width="5" height="9" /><rect x="107" y="120" width="5" height="9" /><rect x="122" y="120" width="5" height="9" /><rect x="129" y="120" width="5" height="9" /><rect x="143" y="120" width="5" height="9" /><rect x="150" y="120" width="5" height="9" /><rect x="158" y="120" width="5" height="9" /><rect x="172" y="120" width="5" height="9" /><rect x="179" y="120" width="5" height="9" /><rect x="194" y="120" width="5" height="9" /></g>
+      <rect x="14" y="136" width="12" height="60" fill="url(#wood)" /><rect x="184" y="136" width="12" height="60" fill="url(#wood)" />
+      <rect x="40" y="190" width="130" height="12" rx="2" fill="#24170F" /><rect x="48" y="202" width="8" height="18" fill="#1A110B" /><rect x="154" y="202" width="8" height="18" fill="#1A110B" />
+      <path class="cloth" d="M-8 214 C-6 60 6 -6 40 -8 C90 -16 150 -14 178 -6 C214 4 218 70 220 214 C196 224 176 206 154 218 C130 226 110 206 88 218 C64 228 40 206 16 220 C6 224 -2 218 -8 214Z" fill="url(#clothg)" />
+      <path class="cloth" d="M44 0 C52 70 40 140 30 210 M96 -10 C104 70 96 150 100 214 M150 -8 C150 70 160 140 170 212" stroke="rgba(0,0,0,.14)" stroke-width="3" fill="none" />
+    </svg>
+    <div class="phone-mini" id="phone"></div>
+  </div>
+  <div class="warm"></div>
+  <div class="days" id="days"></div>
+  <div id="kv">
+    <div class="wallk"></div><div class="haloc"></div><div class="halo"></div><div class="motek" id="motek"></div><div class="figs" id="figs"></div>
+    <div class="lid"></div><div class="body"></div><div class="floor2"></div><div class="panel"></div><div class="pedal" style="left:430px"></div><div class="pedal" style="left:504px"></div>
+    <div class="pg" style="left:258px;transform:rotate(-2deg)"><b>Tháng 4</b><i>87 lần</i></div><div class="pg" style="left:368px;transform:rotate(1deg)"><b>Tháng 5</b><i>24/5 · không vấp</i></div><div class="pg" style="left:478px;transform:rotate(-1deg)"><b>1/6</b><i>23:21 · 🔕</i></div><div class="pg" style="left:588px;transform:rotate(2deg)"><b>Tháng 6</b><i>03:12</i></div>
+    <div class="stand"></div><div class="ph" id="kph"></div>
+    <div class="fall"></div><div class="felt"></div><div class="kb" id="kb"></div><div class="rail"></div>
+    <div class="shine"></div>
+    <div class="ban" id="kban"></div>
+  </div>
+  <div id="herbg"></div>
+  <div class="phone" id="her"><div class="scr"><div class="sb"><span>21:04</span><span>▮▮▮ 62%</span></div>
+    <div class="top">‹ <div class="av">Q</div>Lương Ngọc Quang</div>
+    <div class="chat" id="hchat"><div class="sys">23:21 1 THG 6</div><div class="in"><b>/im lặng</b>&nbsp; nãy anh có coi live em, thấy em trông mệt mỏi lắm, tinh thần có vẻ k ổn, mặt đầy sự lo âu, anh sợ nhắn bthg thì sẽ ảnh hưởng đến việc học của em nên anh set chế độ này nhé. Cố lên chúc em thi tốtt, đừng gây áp lực bản thân quá</div><div class="mute">🔕 Tin nhắn im lặng · không có thông báo</div><div class="sys">THÁNG 7</div></div>
+    <div class="bar" id="hbar"><span class="ph" id="hph">Aa</span><span id="htx"></span><i class="cur"></i><b id="hsend">➤</b></div>
+    <div class="kbd" id="hkb"></div></div></div>
+  <div class="black" id="black"><div><p id="e1" style="font-family:Lora,serif;font-style:italic;font-size:28px">Bài hát bảo: ta sinh ra đã là thứ đối lập nhau.</p><p id="e2" style="font-size:20px;margin-top:22px">Vậy mà chỉ cần một câu hỏi của em,</p><p id="e2c" style="font-size:20px">bài hát đã nói sai.</p><p id="e3" style="font-family:Lora,serif;font-style:italic;font-size:27px;color:#FFE3B0;margin-top:30px">Em là điều đúng đắn nhất của anh năm nay.</p><p id="e4" style="font-size:13px;color:rgba(243,235,218,.6);margin-top:36px">Băng số 1 · Mặt B · Hết</p><p id="e5" style="margin-top:26px"><a href="../hoi-uc.html" style="color:#E9C77B;font-size:14px;text-decoration:none;border:1px solid rgba(233,199,123,.5);border-radius:20px;padding:8px 18px">Về lại ngôi nhà ›</a></p></div></div>
+  <div id="say"></div>
+  <div class="grain"></div>
+  <div id="reset">chơi lại từ đầu</div>
+  <div id="frame"><div class="cl" id="cl">‹ Đóng thùng</div><iframe id="ifr" title="Thùng đồ" allow="autoplay"></iframe></div>
+  <div id="start"><div><b>Gác xép</b><small>Băng số 1 · Mặt B · chạm để vào</small></div></div>
+</div></div>
+<div id="rot">Xoay ngang điện thoại nhé.</div>
+<script src="chung.js?v=2"></script>
+<script>
+// Gác xép (bản thử): nối các thùng lại. Mỗi thùng mở câu đố của nó trong khung; giải xong (trang con báo MB.done)
+// thì thùng mở nắp, tờ nhạc bay lên giá đàn, gác ấm thêm một nấc. Xong thùng bệnh án: điện thoại cũ hiện trên nắp đàn → ghi âm.
+// Xong ghi âm: khăn phủ đàn trượt xuống, đèn bật. Chạm vào đàn: cận cảnh phím tự lún theo bản anh đánh, tháng 7 chuông reo, bài gốc hoà vào. Tiến độ lưu trên máy (matb:thu).
+'use strict';
+(() => {
+  const { $, sfx, say } = MB;
+  const BOXES = [
+    { id: 'thang4', label: 'Tháng 4', src: 'thang4.html', x: 186, y: 372 },
+    { id: 'thang5', label: 'Tháng 5', src: 'thang5.html', x: 286, y: 394 },
+    { id: 'imlang', label: '1/6', src: 'im-lang.html', x: 606, y: 394 },
+    { id: 'benhan', label: 'Tháng 6', src: 'benh-an.html', x: 706, y: 372 },
+  ];
+  const KEY = 'matb:thu';
+  let st = {}; try { st = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { /* bỏ qua */ } };
+  // ?moi: vừa từ đầu băng ở phòng khách lên (bản xem thử) → gác xép bắt đầu lại từ đầu
+  if (/[?&]moi\b/.test(location.search)) { st = {}; save(); }
+  // ?dan: coi như đã mở xong cả 4 thùng và nghe bản ghi âm, khăn đã rơi, vào thẳng chỗ chạm đàn (để thử trên điện thoại)
+  if (/[?&]dan\b/.test(location.search)) { st = { thang4: true, thang5: true, imlang: true, benhan: true, ghiam: true }; save(); }
+
+  // thùng các-tông vẽ bằng SVG
+  const boxSVG = '<svg viewBox="0 0 104 86"><defs><linearGradient id="cb" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#A27B4E"/><stop offset="1" stop-color="#7A5A36"/></linearGradient><radialGradient id="gl" cx=".5" cy=".75" r=".6"><stop offset="0" stop-color="rgba(255,214,150,.75)"/><stop offset=".45" stop-color="rgba(255,190,110,.22)"/><stop offset="1" stop-color="rgba(255,190,110,0)"/></radialGradient></defs>' +
+    '<ellipse class="glow" cx="52" cy="14" rx="64" ry="46" fill="url(#gl)" style="mix-blend-mode:screen"/>' +
+    '<rect x="4" y="26" width="96" height="58" rx="2" fill="url(#cb)"/><rect x="4" y="26" width="96" height="6" fill="rgba(0,0,0,.18)"/>' +
+    '<path class="flap fl" d="M4 26 L52 26 L50 18 L6 18Z" fill="#B48A58"/><path class="flap fr" d="M52 26 L100 26 L98 18 L54 18Z" fill="#AD8453"/>' +
+    '<rect class="tape" x="44" y="16" width="16" height="40" fill="rgba(222,206,170,.75)"/>' +
+    '<rect x="22" y="44" width="60" height="24" rx="2" fill="rgba(244,236,214,.85)"/></svg>';
+  BOXES.forEach((b) => {
+    const el = document.createElement('div'); el.className = 'box'; el.id = 'b-' + b.id; el.style.left = b.x + 'px'; el.style.top = b.y + 'px';
+    el.innerHTML = boxSVG + '<div class="lbl">' + b.label + '</div>';
+    el.onclick = () => openBox(b); $('stage').appendChild(el);
+  });
+  // bụi trong vệt trăng
+  for (let i = 0; i < 46; i++) { const m = document.createElement('i'); m.style.left = (10 + Math.random() * 80) + '%'; m.style.top = (20 + Math.random() * 80) + '%'; m.style.animationDuration = (9 + Math.random() * 9) + 's'; m.style.animationDelay = (-Math.random() * 14) + 's'; $('motes').appendChild(m); }
+
+  // gói mọi thứ của căn gác vào #room (để phóng về phía cây đàn khi bước lại gần); lớp phủ thì để ngoài
+  (() => {
+    const room = document.createElement('div'); room.id = 'room';
+    const keep = ['kv', 'herbg', 'her', 'black', 'say', 'reset', 'frame', 'start', 'days'];
+    [...$('stage').children].forEach((el) => { if (!keep.includes(el.id) && !el.classList.contains('grain')) room.appendChild(el); });
+    $('stage').insertBefore(room, $('stage').firstChild);
+  })();
+
+  // tiếng nền: gió lùa qua mái, gỗ kẽo kẹt; nhỏ lại khi mở thùng, ấm dần theo số thùng đã mở
+  let wind = null;
+  function amb() {
+    const a = MB.AC(); if (wind) return;
+    const n = a.createBuffer(1, a.sampleRate * 4, a.sampleRate), d = n.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const s = a.createBufferSource(); s.buffer = n; s.loop = true; const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 380; f.Q.value = 0.7;
+    const l = a.createOscillator(), lg = a.createGain(); l.frequency.value = 0.07; lg.gain.value = 160; l.connect(lg).connect(f.frequency); l.start();
+    const g = a.createGain(); g.gain.value = 0; g.gain.linearRampToValueAtTime(0.07, a.currentTime + 3);
+    s.connect(f).connect(g).connect(a.destination); s.start(); wind = g;
+    setInterval(() => { if (Math.random() < 0.4 && !$('frame').classList.contains('on')) creak(); }, 4200);
+  }
+  function creak() {
+    const a = MB.AC(), t = a.currentTime, o = a.createOscillator(), bp = a.createBiquadFilter(), g = a.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(140 + Math.random() * 60, t); o.frequency.linearRampToValueAtTime(110 + Math.random() * 90, t + 0.7);
+    bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 6; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.018, t + 0.15); g.gain.linearRampToValueAtTime(0, t + 0.75);
+    o.connect(bp).connect(g).connect(a.destination); o.start(t); o.stop(t + 0.8);
+  }
+
+  // ===== trạng thái gác =====
+  const DONE = () => BOXES.filter((b) => st[b.id]).length;
+  function render(fly) {
+    BOXES.forEach((b) => $('b-' + b.id).classList.toggle('open', !!st[b.id]));
+    const n = DONE();
+    [...document.querySelectorAll('#sheets .sheet')].forEach((s, i) => s.classList.toggle('on', i < n));
+    $('stage').style.setProperty('--w', (n * 0.12 + (st.ghiam ? 0.4 : 0)).toFixed(2));
+    $('frost').style.opacity = 1 - n * 0.18 - (st.ghiam ? 0.3 : 0);
+    $('phone').classList.toggle('on', !!st.benhan && !st.thang7);
+    $('piano').classList.toggle('bare', !!st.ghiam);
+    $('stage').classList.toggle('lit', !!st.ghiam);
+  }
+  render();
+
+  let cur = null, curDone = false;
+  function openBox(b) {
+    if (st[b.id]) { say(b.label + ' · đã mở. Tờ nhạc nằm trên giá đàn rồi.'); return; }
+    sfx.cloth(); cur = b; curDone = false;
+    $('cl').textContent = '‹ Đóng thùng'; $('cl').classList.remove('done');
+    $('ifr').src = b.src; $('frame').classList.add('on');
+    if (wind) wind.gain.value = 0.015;
+  }
+  function closeBox() {
+    $('ifr').src = 'about:blank'; $('frame').classList.remove('on'); if (wind) wind.gain.value = 0.07;
+    if (cur && curDone) { st[cur.id] = true; save(); landSheet(cur); }
+    cur = null;
+  }
+  $('cl').onclick = closeBox;
+  addEventListener('message', (e) => {
+    const n = e.data && e.data.matb; if (!n || !cur || n !== cur.id) return;
+    curDone = true; $('cl').textContent = 'Xong · đóng thùng ›'; $('cl').classList.add('done');
+  });
+  // tờ nhạc bay từ thùng lên giá đàn
+  function landSheet(b) {
+    const f = document.createElement('div'); f.className = 'flyer'; f.style.left = (b.x + 40) + 'px'; f.style.top = (b.y + 10) + 'px'; $('stage').appendChild(f);
+    sfx.paper();
+    requestAnimationFrame(() => requestAnimationFrame(() => { f.style.left = '470px'; f.style.top = '250px'; f.style.transform = 'rotate(-6deg) scale(.7)'; f.style.opacity = .2; }));
+    setTimeout(() => { f.remove(); render(); sfx.find(); afterBox(b); }, 1700);
+  }
+  function afterBox(b) {
+    const n = DONE();
+    const nth = ['', 'thứ nhất', 'thứ hai', 'thứ ba', 'thứ tư'][n];
+    say('Tờ nhạc ' + nth + '. Căn gác bớt lạnh một chút.' + (b.id === 'benhan' ? ' Trong túi hồ sơ có một chiếc điện thoại cũ, giờ nằm trên nắp đàn.' : ''), 6000);
+    if (n === 4 && !st.ghiam) setTimeout(() => say('Đủ bốn tờ nhạc. Chiếc điện thoại trên nắp đàn vẫn sáng.', 6000), 6000);
+  }
+  // điện thoại cũ → ghi âm
+  $('phone').onclick = (e) => {
+    e.stopPropagation();
+    if (st.ghiam) { finale(); return; }
+    if (DONE() < 4) { say('Một chiếc điện thoại cũ. Có lẽ nên mở hết các thùng trước đã.'); }
+    cur = { id: 'ghiam', label: 'Ghi âm', src: 'ghi-am.html' }; curDone = false;
+    $('cl').textContent = '‹ Cất điện thoại'; $('cl').classList.remove('done'); $('ifr').src = 'ghi-am.html'; $('frame').classList.add('on');
+    if (wind) wind.gain.value = 0;
+  };
+  // khi ghi âm xong: không bay tờ nhạc, mà khăn phủ đàn trượt xuống, đèn bật
+  const _land = landSheet;
+  landSheet = function (b) { if (b.id === 'ghiam') { sfx.cloth(); render(); setTimeout(() => say('Khăn phủ đàn trượt xuống. Bóng đèn trên gác bật sáng.', 5500), 600); setTimeout(() => say('Bốn tờ nhạc trên giá. Cây đàn không còn phủ khăn.', 6000), 6800); return; } _land(b); };
+  $('piano').onclick = () => {
+    if (st.ghiam) { finale(); return; }
+    say(DONE() < 4 ? 'Cây đàn phủ khăn trắng. Giá nhạc còn thiếu ' + (4 - DONE()) + ' tờ.' : 'Đủ bốn tờ nhạc rồi. Nhưng khăn vẫn phủ. Chiếc điện thoại trên nắp đàn đang sáng.');
+  };
+  $('reset').onclick = () => { if (confirm('Chơi lại gác xép từ đầu?')) { st = {}; save(); render(); } };
+  $('start').onclick = () => {
+    MB.AC(); amb(); $('start').remove();
+    say(DONE() ? 'Gác xép. Lần trước anh đã mở ' + DONE() + ' thùng.' : 'Gác xép. Lạnh. Bốn thùng đồ dán băng keo, một cây đàn phủ khăn trắng.', 5500);
+  };
+
+  // ===== Xem đàn: hai phiên bản =====
+  // Bước lại gần cây đàn. Không ai ngồi, chỉ có một cái bóng dưới sàn, tay lần theo phím đang tự lún.
+  // 1) Phiên bản không có em: lạnh, "Ngày thứ 0". Anh đánh một mình; tới chỗ bài gốc lẽ ra hoà vào thì không có ai,
+  //    băng khựng, cái bóng cúi đầu. Điện thoại trên giá sáng: tin /im lặng chưa từng reo.
+  // 2) Em hỏi: mở điện thoại của em, bấm phím nào cũng ra đúng câu hỏi ấy, bấm gửi. Lần này chuông reo.
+  // 3) Băng tua ngược. Anh đánh lại đúng đoạn ấy, rồi dừng tay chờ (cái bóng quay sang chỗ trống bên cạnh).
+  //    "Bấm theo anh nhé": phím hồng sáng, em bấm 6 nốt; bấm phím nào cũng ra đúng nốt. Mỗi nốt, bóng em hiện rõ thêm.
+  // 4) Nốt cuối: tiếng đàn chạy tiếp, bài gốc hoà vào đúng chỗ (bản B): màn biểu diễn, hai cái bóng cùng đánh.
+  // 5) Tăng tone 2:34.2: hai cái bóng sáng lên, quay sang nhìn nhau, rồi tan vào ánh sáng; Ngày thứ 0 chạy lên Ngày thứ N.
+  // 6) Đoạn kết lắng (3:33): màn đen, các câu cuối. Lời dẫn là bản nháp soạn từ chính lời anh Quang kể; chờ anh duyệt.
+  const LO = 48, HI = 84; // C3 → C6: 22 phím trắng
+  const keys = {}, KX = {};
+  (() => {
+    const kb = $('kb'), W = 900 / 22, white = [0, 2, 4, 5, 7, 9, 11];
+    let wi = 0;
+    for (let m = LO; m <= HI; m++) {
+      const el = document.createElement('div'), pc = m % 12;
+      if (white.includes(pc)) { el.className = 'k w'; el.style.left = (wi * W) + 'px'; el.style.width = W + 'px'; KX[m] = 30 + wi * W + W / 2; wi++; }
+      else { el.className = 'k b'; el.style.left = (wi * W - W * 0.3) + 'px'; el.style.width = (W * 0.6) + 'px'; KX[m] = 30 + wi * W; }
+      el.dataset.m = m; kb.appendChild(el); keys[m] = el;
+    }
+  })();
+  // phím đang lún, của ai: 'a' anh, 'e' em (để tay của từng cái bóng lần theo)
+  const pressT = {}, down = {};
+  function press(m, color, ms, who) {
+    const k = keys[m]; k.style.setProperty('--c', color); k.classList.add('dn'); down[m] = who || 'a'; if (who === 'a' || who === 'e') lastHit[who] = performance.now();
+    clearTimeout(pressT[m]); pressT[m] = setTimeout(() => { k.classList.remove('dn'); delete down[m]; }, ms);
+  }
+  // nghe một nguồn, tìm đỉnh phổ, gập về C3–C6, nốt nào vừa vang lên thì phím ấy lún xuống (mỗi khung tối đa `cap` phím)
+  // pick(m) → [màu, ai]; bài gốc thì bè trầm là anh (vàng), giai điệu là em (hồng)
+  function listen(h, pick, cap, lim) {
+    const a = MB.AC(), an = a.createAnalyser(); an.fftSize = 8192; an.smoothingTimeConstant = 0; h.gain.connect(an);
+    const bin = a.sampleRate / an.fftSize, d = new Float32Array(an.frequencyBinCount), prev = {};
+    return () => {
+      an.getFloatFrequencyData(d);
+      const lv = {};
+      const i0 = Math.floor(120 / bin), i1 = Math.ceil(2100 / bin);
+      let top = -200; for (let i = i0; i < i1; i++) if (d[i] > top) top = d[i];
+      if (top < -90) return;
+      for (let i = i0 + 1; i < i1; i++) {
+        if (d[i] < top - 26 || d[i] < d[i - 1] || d[i] < d[i + 1]) continue;
+        let m = Math.round(69 + 12 * Math.log2((i * bin) / 440));
+        while (m < LO) m += 12; while (m > HI) m -= 12;
+        lv[m] = Math.max(lv[m] || -200, d[i]);
+      }
+      const hits = [];
+      for (let m = LO; m <= HI; m++) {
+        const v = lv[m] == null ? -200 : lv[m], p = prev[m] == null ? -200 : prev[m];
+        if (v > p + 7 && v > top - lim) hits.push([v - p, m]);
+        prev[m] = p * 0.5 + v * 0.5;
+      }
+      hits.sort((x, y) => y[0] - x[0]).slice(0, cap).forEach(([, m]) => { const [c, w] = pick(m); press(m, c, 320, w); });
+    };
+  }
+  // tay của cái bóng: vai cố định, bàn tay trôi về phím đang lún (trái: phím thấp nhất, phải: phím cao nhất)
+  // Bóng hai người in lên tường phía trên cây đàn (đèn sau lưng): đầu và vai, nhìn từ phía sau.
+  // Mỗi người có hai bản: bóng (sh, hoà multiply) và ánh sáng (lt, hoà screen) để lúc cuối hoá thành ánh sáng.
+  // Lớp: .sw (JS: nghiêng theo phím, gật theo nốt) > .ps (CSS: dáng) > .hd > .hb (đầu nhìn từ sau) / .hs (đầu quay nghiêng)
+  const SHAPES = {
+    a: {
+      body: 'M8 262 C10 214 30 182 84 168 C108 162 122 156 128 140 C130 132 130 124 130 116 L170 116 C170 124 170 132 172 140 C178 156 192 162 216 168 C270 182 290 214 292 262 Z',
+      back: 'M150 22 C180 21 199 42 198 72 C199 80 203 84 202 92 C201 99 196 100 193 100 C189 114 178 124 164 128 L136 128 C122 124 111 114 107 100 C104 100 99 99 98 92 C97 84 101 80 102 72 C101 42 120 21 150 22 Z M104 60 C106 34 126 18 150 18 C172 18 194 30 197 58 C188 46 174 40 162 42 C150 36 128 38 118 48 C112 52 107 56 104 60 Z',
+      side: 'M104 74 C102 42 124 20 154 20 C180 20 198 36 202 60 C203 68 206 74 212 82 C215 86 212 89 207 90 C208 94 206 97 204 99 C206 103 204 107 199 108 C197 116 190 121 180 121 C174 122 170 124 168 130 L134 130 C134 120 128 114 120 108 C110 100 105 88 104 74 Z',
+    },
+    e: {
+      body: 'M30 262 C32 220 50 192 98 178 C118 172 130 166 135 150 C136 142 136 134 136 126 L164 126 C164 134 164 142 165 150 C170 166 182 172 202 178 C250 192 268 220 270 262 Z',
+      back: 'M150 30 C178 29 195 50 194 80 C196 108 200 140 210 176 C214 192 220 204 226 214 C204 222 178 226 150 226 C122 226 96 222 74 214 C80 204 86 192 90 176 C100 140 104 108 106 80 C105 50 122 29 150 30 Z',
+      side: 'M196 82 C198 50 178 30 148 30 C122 30 104 46 100 68 C99 76 96 82 90 90 C87 94 90 97 95 98 C94 102 96 105 98 107 C96 111 98 115 103 116 C105 124 112 129 122 129 C128 130 131 132 133 138 L166 138 C176 150 190 178 200 214 C214 206 220 186 216 160 C212 134 204 112 200 98 C198 92 196 88 196 82 Z',
+    },
+  };
+  const FIG = { a: { cx: 392, lean: 0, dip: 0, els: [] }, e: { cx: 572, lean: 0, dip: 0, els: [] } };
+  for (const who of ['a', 'e']) for (const kind of ['sh', 'lt']) {
+    const S = SHAPES[who], el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    el.setAttribute('viewBox', '0 0 300 260'); el.setAttribute('class', 'fig ' + kind + ' ' + who);
+    el.innerHTML = '<g class="sw"><g class="ps"><path d="' + S.body + '"/><g class="hd"><path class="hb" d="' + S.back + '"/><path class="hs" d="' + S.side + '"/></g></g></g>';
+    el.style.left = (FIG[who].cx - 150) + 'px';
+    if (kind === 'lt') el.style.color = who === 'a' ? 'rgba(255,214,150,.95)' : 'rgba(255,186,206,.95)';
+    $('figs').appendChild(el); FIG[who].els.push(el);
+  }
+  const figs = (who) => FIG[who].els;
+  const figCls = (who, cls, on = true) => figs(who).forEach((el) => el.classList.toggle(cls, on));
+  const figShow = (who, v, kind = 'sh') => figs(who).forEach((el) => { if (el.classList.contains(kind)) el.style.opacity = v; });
+  // bụi bay trong quầng đèn
+  for (let i = 0; i < 30; i++) { const m = document.createElement('i'); m.style.left = (25 + Math.random() * 50) + '%'; m.style.top = (30 + Math.random() * 70) + '%'; m.style.animationDuration = (9 + Math.random() * 8) + 's'; m.style.animationDelay = (-Math.random() * 12) + 's'; $('motek').appendChild(m); }
+  // mỗi khung: bóng nghiêng về phía phím mình đang lún, gật nhẹ theo từng nốt
+  const lastHit = { a: 0, e: 0 };
+  function arms() {
+    const now = performance.now();
+    for (const who of ['a', 'e']) {
+      const F = FIG[who], xs = Object.keys(down).filter((m) => down[m] === who).map((m) => KX[m]);
+      const target = xs.length ? Math.max(-1, Math.min(1, (xs.reduce((p, q) => p + q, 0) / xs.length - F.cx) / 220)) * 3.2 : 0;
+      F.lean += (target - F.lean) * 0.06;
+      const since = (now - lastHit[who]) / 1000; F.dip += ((since < 0.18 ? 3.2 : 0) - F.dip) * 0.18;
+      const sway = Math.sin(now / 1400 + (who === 'a' ? 0 : 1.7)) * 0.6;
+      const t = 'translate(' + (F.lean * 3).toFixed(2) + 'px,' + F.dip.toFixed(2) + 'px) rotate(' + (F.lean + sway).toFixed(2) + 'deg)';
+      F.els.forEach((el) => { const g = el.firstChild; g.style.transformOrigin = '150px 262px'; g.style.transform = t; });
+    }
+  }
+  let ears = [];
+  function earLoop() { ears.forEach((f) => f()); arms(); requestAnimationFrame(earLoop); }
+  // tiếng đàn tự tổng hợp (nốt em bấm, nốt trầm anh đỡ): nhiều hoạ âm hơi lệch như dây đàn thật, có tiếng búa gõ
+  function pno(m, vel = 1) {
+    const a = MB.AC(), { out, rev } = MB.bus(), t = a.currentTime, f = 440 * Math.pow(2, (m - 69) / 12);
+    const g = a.createGain(), dec = 2.6 - (m - 48) * 0.025;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.11 * vel, t + 0.004); g.gain.setTargetAtTime(0.0001, t + 0.01, dec / 3.2);
+    const lp = a.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(Math.min(9000, f * 9), t); lp.frequency.setTargetAtTime(f * 2.2, t, 0.5);
+    for (let n = 1; n <= 7; n++) for (const det of [-0.7, 0.7]) {
+      const o = a.createOscillator(), og = a.createGain(); o.frequency.value = n * f * Math.sqrt(1 + 0.00035 * n * n) * Math.pow(2, det / 1200);
+      og.gain.setValueAtTime(0.5 / Math.pow(n, 1.25), t); og.gain.setTargetAtTime(0.0001, t, dec / (1 + n * 0.8));
+      o.connect(og).connect(lp); o.start(t); o.stop(t + dec + 0.5);
+    }
+    const nb = a.createBuffer(1, a.sampleRate * 0.03, a.sampleRate), nd = nb.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = (Math.random() * 2 - 1) * (1 - i / nd.length);
+    const ns = a.createBufferSource(), nf = a.createBiquadFilter(), ng = a.createGain(); ns.buffer = nb; nf.type = 'bandpass'; nf.frequency.value = 2400; ng.gain.value = 0.05 * vel; ns.connect(nf).connect(ng).connect(out); ns.start(t);
+    lp.connect(g).connect(out); const w = a.createGain(); w.gain.value = 0.55; g.connect(w).connect(rev);
+  }
+  // em đánh cùng lúc biểu diễn: phím nào cũng được, nốt tự rơi vào ngũ cung của giọng đang hát (F# trước tăng tone, G sau)
+  let keyPc = 6, mode = '', herNotes = 0;
+  const PENTA = [0, 2, 4, 7, 9];
+  function snap(m) { for (let d = 0; d < 7; d++) for (const x of [m - d, m + d]) if (x >= LO && x <= HI && PENTA.includes(((x - keyPc) % 12 + 12) % 12)) return x; return m; }
+  // "Bấm theo anh": sáu nốt dẫn vào bài (F#: C# D# F# D# C# A#); bấm phím nào cũng ra đúng nốt đang chờ
+  const GUIDE = [73, 75, 78, 75, 73, 70], BASS = { 0: 54, 3: 51, 5: 54 };
+  let gi = 0, onGuideDone = null, guideT = 0;
+  function showHint() { document.querySelectorAll('#kv .k.hint').forEach((k) => k.classList.remove('hint')); if (gi < GUIDE.length) keys[GUIDE[gi]].classList.add('hint'); }
+  $('kb').addEventListener('pointerdown', (e) => {
+    const k = e.target.closest('.k'); if (!k) return;
+    if (mode === 'guide') {
+      const m = GUIDE[gi]; pno(m, 1); press(m, '#FF7FA3', 700, 'e');
+      if (BASS[gi] != null) { pno(BASS[gi], 0.7); press(BASS[gi], '#FFC978', 900, 'a'); }
+      gi++; herNotes++; clearTimeout(guideT);
+      figShow('e', Math.min(1, 0.12 + gi * 0.15));
+      if (gi === 2) say('Bóng ai đó, ngồi xuống bên cạnh.', 4000);
+      if (gi >= GUIDE.length) { mode = ''; showHint(); onGuideDone && onGuideDone(); }
+      else { showHint(); guideT = setTimeout(() => say('Chạm vào phím đang sáng hồng.', 4000), 9000); }
+      return;
+    }
+    if (mode === 'free') { const m = snap(+k.dataset.m); pno(m, 0.8); press(m, '#FF7FA3', 600, 'e'); herNotes++; }
+  });
+  function bell() {
+    const a = MB.AC(), t = a.currentTime;
+    [[1318.5, 0], [1760, 0.13], [1318.5, 0.6], [1760, 0.73]].forEach(([fq, d]) => { const o = a.createOscillator(), g = a.createGain(); o.type = 'sine'; o.frequency.value = fq; g.gain.setValueAtTime(0, t + d); g.gain.linearRampToValueAtTime(0.14, t + d + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t + d + 0.5); o.connect(g).connect(a.destination); o.start(t + d); o.stop(t + d + 0.55); });
+  }
+  // tiếng bước chân trên sàn gỗ gác xép
+  function steps(n) {
+    const a = MB.AC(), { out } = MB.bus();
+    for (let i = 0; i < n; i++) {
+      const t = a.currentTime + i * 0.62, nb = a.createBuffer(1, a.sampleRate * 0.12, a.sampleRate), d = nb.getChannelData(0);
+      for (let j = 0; j < d.length; j++) d[j] = (Math.random() * 2 - 1) * Math.pow(1 - j / d.length, 3);
+      const s2 = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain(); s2.buffer = nb; f.type = 'lowpass'; f.frequency.value = 260 + Math.random() * 80; g.gain.value = 0.9;
+      s2.connect(f).connect(g).connect(out); s2.start(t);
+      const o = a.createOscillator(), og = a.createGain(); o.frequency.setValueAtTime(90, t); o.frequency.exponentialRampToValueAtTime(55, t + 0.12); og.gain.setValueAtTime(0.18, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.14); o.connect(og).connect(out); o.start(t); o.stop(t + 0.15);
+    }
+  }
+  // tiếng cuộn lên trước khi tất cả cùng vào
+  function swell(sec) {
+    const a = MB.AC(), { out, rev } = MB.bus(), t = a.currentTime, nb = a.createBuffer(1, Math.ceil(a.sampleRate * sec), a.sampleRate), d = nb.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const s2 = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain(); s2.buffer = nb; f.type = 'bandpass'; f.Q.value = 0.8; f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(6000, t + sec);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + sec * 0.97); g.gain.linearRampToValueAtTime(0, t + sec);
+    s2.connect(f).connect(g).connect(out); g.connect(rev); s2.start(t);
+  }
+  // băng khựng: chậm dần rồi tắt
+  function tapeStop(h, sec) {
+    const a = MB.AC(), t = a.currentTime, r = h.src.playbackRate, g = h.gain.gain;
+    r.cancelScheduledValues(t); r.setValueAtTime(1, t); r.linearRampToValueAtTime(0.08, t + sec);
+    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0.0001, t + sec + 0.1);
+    try { h.src.stop(t + sec + 0.2); } catch (e) { /* bỏ qua */ }
+  }
+  // băng tua ngược: tiếng rít cao dần, lẫn tiếng đàn lí nhí chạy ngược
+  function rewind(sec) {
+    const a = MB.AC(), { out } = MB.bus(), t = a.currentTime;
+    const n = a.createBuffer(1, Math.ceil(a.sampleRate * sec), a.sampleRate), d = n.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const s2 = a.createBufferSource(); s2.buffer = n; const f = a.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 3; f.frequency.setValueAtTime(700, t); f.frequency.exponentialRampToValueAtTime(5200, t + sec);
+    const g = a.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.16, t + 0.2); g.gain.setValueAtTime(0.16, t + sec - 0.25); g.gain.linearRampToValueAtTime(0, t + sec);
+    s2.connect(f).connect(g).connect(out); s2.start(t);
+    for (let i = 0; i < 26; i++) { const o = a.createOscillator(), og = a.createGain(), tt = t + i * (sec / 26); o.type = 'triangle'; o.frequency.value = 600 + Math.random() * 1600 + i * 60; og.gain.setValueAtTime(0.03, tt); og.gain.exponentialRampToValueAtTime(0.0001, tt + 0.06); o.connect(og).connect(out); o.start(tt); o.stop(tt + 0.07); }
+    const all = Object.keys(keys).map(Number).reverse(); all.forEach((m, i) => setTimeout(() => press(m, '#BFD0F5', 120, 'x'), (i / all.length) * sec * 1000));
+  }
+  // hai cái bóng tan thành những đốm sáng bay lên
+  function sparks(who, color) {
+    const F = FIG[who];
+    for (let i = 0; i < 34; i++) {
+      const sp = document.createElement('i'); sp.className = 'spark';
+      sp.style.left = (F.cx - 110 + Math.random() * 220) + 'px'; sp.style.top = (20 + Math.random() * 180) + 'px';
+      sp.style.background = color; sp.style.boxShadow = '0 0 10px 3px ' + color; sp.style.setProperty('--dx', (Math.random() * 80 - 40) + 'px'); sp.style.animationDelay = (Math.random() * 1.2) + 's';
+      $('kv').appendChild(sp); setTimeout(() => sp.remove(), 5000);
+    }
+  }
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const MIX = 29.55, SONG = 81.08, PRE = 0.35;
+  const COLD_FROM = 18.1;   // đầu câu (sau chỗ lặng 17.2–17.7)
+  const AGAIN_FROM = 22.5;  // lần hai: vào lại từ hợp âm F#
+  const HOLD = 28.84;       // anh dừng tay chờ em, ngay trước phách 28.9
+  let finOn = false;
+  async function finale() {
+    if (finOn) return; finOn = true;
+    const a = MB.AC(); $('phone').classList.remove('on');
+    if (wind) { wind.gain.cancelScheduledValues(a.currentTime); wind.gain.setValueAtTime(wind.gain.value, a.currentTime); wind.gain.linearRampToValueAtTime(0.02, a.currentTime + 3); }
+    MB.load('tieng-dan.mp3'); MB.load('bai-goc.mp3');
+    // bước lại gần cây đàn
+    steps(4); $('room').classList.add('near');
+    await wait(2000);
+    const kv = $('kv'); kv.style.setProperty('--w', 0); kv.classList.add('on', 'cold');
+    $('stage').classList.remove('lit');
+    const days = $('days'); days.className = 'days zero'; days.textContent = 'Ngày thứ 0';
+    requestAnimationFrame(earLoop);
+    await MB.load('tieng-dan.mp3');
+    if (/[?&]nhay\b/.test(location.search)) { asked = true; figShow('a', 1); again(); return; } // chỉ để thử: nhảy tới đoạn em bấm theo anh
+    // 1) Phiên bản không có em
+    const cold = await MB.play('tieng-dan.mp3', { offset: COLD_FROM, gain: 0.9, wet: 0.55, fade: 0.8, when: 0.6 });
+    cold.lpf.frequency.value = 2400;
+    ears = [listen(cold, () => ['#A9BEEA', 'a'], 4, 18)];
+    setTimeout(() => figShow('a', 1), 1400);
+    setTimeout(() => { days.style.opacity = 1; say('Ngày thứ 0. Phiên bản mà em không hỏi.', 6000); }, 2600);
+    await wait((cold.t0 + MIX + 3.2 - a.currentTime) * 1000); // chỗ bài gốc lẽ ra hoà vào: không có ai
+    tapeStop(cold, 1.7); setTimeout(() => sfx.clack(), 1750);
+    await wait(1200); ears = []; figCls('a', 'bow');
+    await wait(2400);
+    say('Ở phiên bản này, bài hát kết thúc ở đây.', 4500);
+    await wait(4800); say('Vì không ai hỏi.', 4000);
+    await wait(4600);
+    $('kph').classList.add('ring'); setTimeout(() => $('kph').classList.add('pulse'), 600);
+    say('Tháng 7, em đã hỏi anh một câu. Câu ấy anh xoá mất rồi.', 6500);
+    await wait(6800); askAgain();
+  }
+  // 2) Em hỏi
+  let asked = false, askT = 0;
+  function askAgain() {
+    if (asked) return;
+    say('Em hỏi lại được không?', 60000);
+    $('kph').onclick = openHer; clearInterval(askT);
+    askT = setInterval(() => { if (!asked && !$('her').classList.contains('on')) say('Em hỏi lại được không? (chạm vào chiếc điện thoại trên giá nhạc)', 60000); }, 12000);
+  }
+  function openHer() {
+    if (asked) return; sfx.tap();
+    $('herbg').classList.add('on'); $('her').classList.add('on'); $('say').style.opacity = 0;
+  }
+  // Em gõ lại câu tháng 7: bấm phím nào cũng ra chữ tiếp theo của đúng câu ấy; đủ câu thì nút gửi sáng
+  const Q = 'Anh đỡ mệt chưa, còn bị sốt không?';
+  let qi = 0;
+  (() => {
+    const rows = [[...'qwertyuiop'], [...'asdfghjkl'], ['⇧', ...'zxcvbnm', '⌫'], ['123', '☺', 'dấu cách', '↵']];
+    $('hkb').innerHTML = rows.map((r) => '<div class="row">' + r.map((k) => '<div class="kk' + (k.length > 1 && k !== 'dấu cách' || '⇧⌫☺↵'.includes(k) ? ' w2' : '') + (k === 'dấu cách' ? ' sp' : '') + '">' + k + '</div>').join('') + '</div>').join('');
+  })();
+  $('hbar').onclick = (e) => {
+    if (asked) return;
+    if (e.target.id === 'hsend') { if (qi < Q.length) return; asked = true; clearInterval(askT); $('hsend').classList.remove('ready'); $('her').classList.remove('typing'); send(Q); return; }
+    if (!$('her').classList.contains('typing')) { sfx.tap(); $('her').classList.add('typing'); }
+  };
+  $('hkb').addEventListener('pointerdown', (e) => {
+    const k = e.target.closest('.kk'); if (!k || asked || qi >= Q.length) return;
+    k.classList.add('dn'); setTimeout(() => k.classList.remove('dn'), 110);
+    qi++; $('htx').textContent = Q.slice(0, qi); sfx.key();
+    if (qi >= Q.length) $('hsend').classList.add('ready');
+  });
+  $('herbg').onclick = () => { if (asked) return; $('herbg').classList.remove('on'); $('her').classList.remove('on', 'typing'); };
+  async function send(text) {
+    const b = document.createElement('div'); b.className = 'bub'; b.textContent = text;
+    $('hchat').appendChild(b); $('hchat').insertAdjacentHTML('beforeend', '<div class="st">Đã gửi</div>');
+    $('htx').textContent = ''; $('hph').textContent = 'Aa'; sfx.paper();
+    await wait(1800);
+    $('her').classList.remove('on'); $('herbg').classList.remove('on');
+    await wait(700);
+    // lần này chuông reo
+    bell(); $('kph').classList.remove('pulse'); $('kph').classList.add('ring', 'buzz'); setTimeout(() => $('kph').classList.remove('buzz'), 1000);
+    const ban = $('kban'); ban.innerHTML = '<b>ẩm ic 😌</b> <small>· bây giờ</small><br>'; ban.appendChild(document.createTextNode(text)); ban.classList.add('on');
+    say('Lần này, chuông reo.', 4500);
+    await wait(4800);
+    ban.style.opacity = 0; $('kph').classList.remove('ring');
+    // 3) băng tua ngược về đúng chỗ vừa khựng
+    rewind(2.2); await wait(2400);
+    again();
+  }
+  async function again() {
+    const kv = $('kv'), a = MB.AC();
+    kv.classList.remove('cold'); kv.style.setProperty('--w', 0.2); figCls('a', 'bow', false);
+    const p1 = await MB.play('tieng-dan.mp3', { offset: AGAIN_FROM, gain: 1, wet: 0.4, fade: 0.4 });
+    ears = [listen(p1, () => ['#FFC978', 'a'], 4, 18)];
+    // anh dừng tay, quay sang chỗ trống bên cạnh: chờ em
+    const tHold = p1.t0 + HOLD, g = p1.gain.gain;
+    g.setValueAtTime(1, tHold - 0.2); g.linearRampToValueAtTime(0.0001, tHold + 0.25); p1.src.stop(tHold + 0.3);
+    p1.ramp(p1.wet.gain, 0.9, Math.max(0.1, tHold - a.currentTime));
+    await wait((tHold - a.currentTime) * 1000 + 300); ears = [];
+    figCls('a', 'turn');
+    figShow('e', 0.06);
+    await wait(900);
+    say('Bấm theo anh nhé.', 60000);
+    gi = 0; mode = 'guide'; showHint();
+    guideT = setTimeout(() => say('Chạm vào phím đang sáng hồng.', 4000), 9000);
+    onGuideDone = () => perform();
+  }
+  // 4) nốt cuối của em: tiếng đàn chạy tiếp, bài gốc hoà vào, tất cả cùng lúc
+  async function perform() {
+    const kv = $('kv'), a = MB.AC();
+    swell(0.9); $('say').style.opacity = 0;
+    await wait(850);
+    figCls('a', 'turn', false); figShow('e', 1);
+    $('stage').classList.add('lit'); kv.style.setProperty('--w', 0.5);
+    await MB.load('bai-goc.mp3');
+    const piano = await MB.play('tieng-dan.mp3', { offset: HOLD + 0.02, gain: 1, wet: 0.35, fade: 0.03 });
+    const at = piano.t0 + MIX - PRE;
+    const song = await MB.play('bai-goc.mp3', { offset: SONG - PRE, gain: 0.78, fade: PRE + 0.3, when: Math.max(0, at - a.currentTime) });
+    const pg = piano.gain.gain; pg.setValueAtTime(1, at + PRE + 0.2); pg.linearRampToValueAtTime(0.0001, at + PRE + 2.2); piano.src.stop(at + PRE + 2.3);
+    const lsong = listen(song, (m) => (m < 63 ? ['#FFC978', 'a'] : ['#FF9DB4', 'e']), 3, 13);
+    ears = [listen(piano, () => ['#FFC978', 'a'], 4, 18), () => { if (a.currentTime > at) lsong(); }];
+    mode = 'free';
+    const t0 = at + PRE - SONG; // giây 0 của bài gốc, theo đồng hồ âm thanh
+    const when = (sec) => Math.max(0, (t0 + sec - a.currentTime) * 1000);
+    setTimeout(() => say('Rồi có một người đánh cùng.', 5500), when(SONG + 1.2));
+    setTimeout(() => say('Cứ đánh tiếp đi. Phím nào cũng được.', 5500), when(SONG + 9));
+    // bốn tờ nhạc sáng dần theo bài
+    [...document.querySelectorAll('#kv .pg')].forEach((pgEl, i) => setTimeout(() => { pgEl.classList.add('lit'); sfx.page(); }, when(96 + i * 14.5)));
+    let w = 0.5; const warmUp = setInterval(() => { w = Math.min(1, w + 0.008); kv.style.setProperty('--w', w.toFixed(2)); }, 1000);
+    // 5) tăng tone (2:34.2): hai cái bóng sáng lên, nhìn nhau, rồi tan vào ánh sáng; Ngày thứ 0 chạy lên Ngày thứ N
+    setTimeout(() => {
+      keyPc = 7; kv.classList.add('bloom'); $('stage').classList.add('bloom');
+      ['a', 'e'].forEach((w) => { figCls(w, 'turn'); figCls(w, 'love'); figShow(w, 0.9, 'lt'); figShow(w, 0); });
+    }, when(154.2));
+    setTimeout(() => {
+      ['a', 'e'].forEach((w) => figCls(w, 'gone')); sparks('a', 'rgba(255,214,150,.95)'); sparks('e', 'rgba(255,182,204,.95)');
+    }, when(160.5));
+    const N = Math.floor((Date.now() - new Date('2026-08-06T23:38:58')) / 864e5) + 1;
+    setTimeout(() => {
+      const days = $('days'); days.className = 'days'; days.style.opacity = 1;
+      const t1 = performance.now(), dur = 3800;
+      (function count() { const k = Math.min(1, (performance.now() - t1) / dur), v = Math.round(N * (1 - Math.pow(1 - k, 3))); days.textContent = 'Ngày thứ ' + v + (k >= 1 ? ' bên nhau' : ''); if (k < 1) requestAnimationFrame(count); })();
+    }, when(162.5));
+    // 6) đoạn kết lắng: màn đen
+    setTimeout(() => { clearInterval(warmUp); mode = ''; $('black').classList.add('on'); }, when(213));
+    [['e1', 215], ['e2', 220], ['e2c', 223.5], ['e3', 229], ['e4', 235], ['e5', 240]].forEach(([id, sec]) => setTimeout(() => $(id).classList.add('on'), when(sec)));
+    setTimeout(() => { st.thang7 = true; save(); }, when(235));
+  }
+})();
+</script>
+</body>
+</html>

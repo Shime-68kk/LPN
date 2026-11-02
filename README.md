@@ -44,7 +44,7 @@ index.html          cổng vào, chỉ chuyển sang home/
 manifest.json       cấu hình PWA
 service-worker.js   nhận thông báo đẩy (không cache gì)
 home/               trang chủ; wallet.js (ví đốt cây), sync.js (sao lưu Firebase), push.js (thông báo), diary.js (nhật ký)
-story/              cốt truyện
+story/              cốt truyện; hoi-uc.* là Băng số 1 (Hồi ức), mat-b/ là Mặt B (gác xép, mở bằng đồng hồ phòng khách)
 game/               Sâu Tím; beatmaps/ là nốt nhạc của từng bài
 shop/               Tiệm Sâu
 assets/             ảnh, nhạc, thư dùng chung

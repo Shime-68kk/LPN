@@ -1465,6 +1465,7 @@
   window.HoiUc = {
     trailer: TRAILER, tease, burn, selfDestruct,
     sfx, audioOn, music, playFake, amb,
+    ctx: () => ac, out: () => out, // cuộn Mặt B tự phát tiếng méo qua cùng đường ra
     busy: () => busy || started,
     armReal(on) { realIn = on; if (on) { $('hint').textContent = HINTS[presses] || HINTS[0]; preload(); } },
   };

@@ -1233,3 +1233,72 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
   @keyframes win-pop-b { from { opacity: 0; transform: translateX(-50%) translateY(16px); } }
 }
 
+
+/* ===== Mặt B: đồng hồ đứng kim, ô băng chưa tìm thấy, lên gác xép ===== */
+.clock.o-clock::before { content: ''; position: absolute; inset: -45%; }
+.clock.stuck .hand-m { animation: none; transform: rotate(120deg); }
+.clock.stuck .hand-h { transform-origin: 20px 20px; transform: rotate(300deg); }
+.clock.stuck .hand-s { animation: stuckS 1.3s ease-in-out infinite; }
+@keyframes stuckS { 0%, 55%, 100% { transform: rotate(144deg); } 30% { transform: rotate(150deg); } }
+.mbc { --cold: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.mbc-in { position: relative; width: min(46vmin, 230px); aspect-ratio: 1; }
+.mbc-lid { position: absolute; inset: 0; transform-origin: 6% 50%; transition: transform 1.2s cubic-bezier(.5, 0, .2, 1); z-index: 2; }
+.mbc.open .mbc-lid { transform: perspective(700px) rotateY(-78deg); }
+.mbc-lid svg { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; filter: drop-shadow(0 8px 18px rgba(0, 0, 0, .6)) saturate(calc(1 - var(--cold) * .9)) brightness(calc(1 - var(--cold) * .3)) drop-shadow(0 0 calc(var(--cold) * 26px) rgba(150, 180, 255, .45)); }
+.mbc-lid .rim { fill: #8C6630; stroke: #E9C77B; stroke-width: 3; }
+.mbc-lid .face { fill: #F3E9D6; }
+.mbc-lid .hr { stroke: #2B1A12; stroke-width: 3.2; }
+.mbc-lid .mn { stroke: #7A6650; stroke-width: 1.2; }
+.mbc-lid .hh, .mbc-lid .mh { fill: #2B1A12; }
+.mbc-lid .sh line { stroke: #B5462F; stroke-width: 1.6; }
+.mbc-lid .sh circle { fill: #B5462F; }
+.mbc-lid .pin { fill: #E9C77B; }
+.mbc-hole { position: absolute; inset: 8%; border-radius: 50%; background: radial-gradient(circle, #1A120C, #0A0705 70%); box-shadow: inset 0 6px 18px #000; display: grid; place-items: center; }
+.mbc-hole svg { width: 46%; height: auto; filter: grayscale(1) brightness(.55) drop-shadow(0 0 10px rgba(150, 180, 255, .35)); }
+.mbc-day { margin: 0; font-size: 15px; letter-spacing: .04em; color: color-mix(in srgb, #E9C77B calc(100% - var(--cold) * 100%), #9DB8F0); }
+.mbc-day b { font-size: 22px; font-variant-numeric: tabular-nums; }
+.bag-items button.ghost { opacity: .55; border-style: dashed !important; }
+.bag-items button.ghost svg { filter: grayscale(1) brightness(.5); }
+.mb-up { position: fixed; inset: 0; z-index: 999; background: #000; opacity: 0; transition: opacity 2.2s; display: grid; place-items: center; pointer-events: none; }
+.mb-up.on { opacity: 1; pointer-events: auto; }
+.mb-up p { margin: 0; color: #9DB8F0; font-size: 15px; letter-spacing: .3em; opacity: 0; animation: mbUp 3s 1.4s forwards; }
+@keyframes mbUp { to { opacity: .8; } }
+/* Cuộn Mặt B trên TV: đoạn băng quay đen trắng, cũ, giật: cầu thang gỗ → gác xép → cây đàn phủ khăn. Chữ thành phụ đề. */
+.crt-content.mb .fake { background: none; justify-content: flex-end; gap: 0; padding: 0 9% 8%; z-index: 2; }
+.crt-content.mb .fake p { text-align: center; font-size: 2.4cqw; text-shadow: 0 0 .8cqw #000, 0 0 .3cqw #000, .12cqw 0 rgba(255, 60, 60, .45), -.12cqw 0 rgba(60, 200, 255, .45); }
+.crt-content.mb .fake p.old { display: none; }
+.mbv { position: absolute; inset: -3%; z-index: 1; filter: grayscale(1) contrast(1.25) brightness(.92) blur(.06cqw); animation: mbvJit .16s steps(2) infinite; }
+.mbv.hit { animation: mbvHit .32s steps(4) both; }
+@keyframes mbvJit { 0% { transform: translate(0, 0); } 50% { transform: translate(.25cqw, -.1cqw); } }
+@keyframes mbvHit { 0% { transform: translate(-3cqw, 0) skewX(-6deg); filter: grayscale(1) contrast(2) brightness(1.6); } 40% { transform: translate(2cqw, 1cqw); } 70% { transform: translate(-1cqw, 0) skewX(3deg); } 100% { transform: none; } }
+.mbv .shot { position: absolute; inset: 0; opacity: 0; transition: opacity .18s; }
+.mbv .shot.on { opacity: 1; }
+.mbv .shot svg { width: 100%; height: 100%; display: block; }
+.mbv .s1.on svg { animation: mbS1 4.2s ease-in forwards; transform-origin: 50% 20%; }
+.mbv .s2.on svg { animation: mbS2 4s linear forwards; }
+.mbv .s3.on svg { animation: mbS3 6s ease-out forwards; transform-origin: 50% 62%; }
+@keyframes mbS1 { from { transform: scale(1) translateY(0); } to { transform: scale(1.5) translateY(-6%); } }
+@keyframes mbS2 { from { transform: scale(1.12) translateX(3%); } to { transform: scale(1.12) translateX(-3%); } }
+@keyframes mbS3 { from { transform: scale(1.05); } to { transform: scale(1.3); } }
+/* sọc dò băng chạy dọc, đường kẻ ngang, góc tối */
+.mbv::before { content: ''; position: absolute; left: 0; right: 0; height: 12%; top: -12%; z-index: 3; background: linear-gradient(transparent, rgba(255, 255, 255, .16) 40%, rgba(255, 255, 255, .32) 50%, rgba(255, 255, 255, .1) 60%, transparent); mix-blend-mode: screen; animation: mbvTrack 3.1s linear infinite; }
+.mbv::after { content: ''; position: absolute; inset: 0; z-index: 3; background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .13) 0 1px, transparent 1px 3px), radial-gradient(ellipse 70% 70% at 50% 50%, transparent 45%, rgba(0, 0, 0, .8)); }
+@keyframes mbvTrack { to { top: 105%; } }
+.mbv .tear { position: absolute; left: 0; right: 0; height: 2.2%; z-index: 4; background: rgba(255, 255, 255, .55); mix-blend-mode: screen; opacity: 0; }
+.mbv .tear.on { opacity: 1; }
+.mbv .rec { position: absolute; left: 8%; top: 9%; z-index: 4; font: 700 2cqw/1 ui-monospace, monospace; color: #EEE; letter-spacing: .1em; opacity: .85; }
+.mbv .rec::before { content: ''; display: inline-block; width: 1.4cqw; height: 1.4cqw; border-radius: 50%; background: #DDD; margin-right: .8cqw; vertical-align: -.1cqw; animation: mbvRec 1s steps(1) infinite; }
+@keyframes mbvRec { 50% { opacity: 0; } }
+/* Cửa gác xép trên trần phòng ngủ (Mặt B): ẩn tới khi chiếu xong cuộn băng; thang gấp trượt xuống, bụi rơi */
+.o-hatch { left: 55%; top: 0; width: 18%; height: 80%; display: none; z-index: 5; }
+.o-hatch.on { display: block; }
+.o-hatch svg { overflow: hidden; }
+.o-hatch .lad { animation: hatchDown 1.4s cubic-bezier(.3, 0, .2, 1) both; }
+.o-hatch .hl { animation: hatchLight 2.4s ease-out both; }
+.o-hatch .rail { stroke: #6B4A2E; stroke-width: 4; stroke-linecap: round; }
+.o-hatch .rung line { stroke: #8A6440; stroke-width: 2.6; stroke-linecap: round; }
+.o-hatch .dust { fill: rgba(220, 230, 255, .8); animation: hatchDust linear infinite; }
+@keyframes hatchDown { from { transform: translateY(-100%); } to { transform: none; } }
+@keyframes hatchLight { from { opacity: 0; } to { opacity: 1; } }
+@keyframes hatchDust { from { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } to { transform: translateY(200px); opacity: 0; } }
+#scene.climb { transition: transform 3.6s ease-in, filter 3.6s; transform: translateY(18%) scale(1.25); filter: brightness(.4); }

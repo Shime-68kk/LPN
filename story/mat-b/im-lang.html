@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0B0910" />
+<title>Thùng 1/6</title>
+<script>document.documentElement.style.background = '#0B0910';</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Caveat:wght@500;700&display=swap" />
+<link rel="stylesheet" href="chung.css?v=2" />
+<style>
+  .phone { left: 60px; top: 10px; }
+  .scr { background: #18191C !important; }
+  .view { position: absolute; inset: 26px 0 0; display: none; flex-direction: column; }
+  .view.on { display: flex; }
+  .top { display: flex; align-items: center; gap: 10px; padding: 8px 14px; font-weight: 700; font-size: 16px; }
+  .top .bk { color: #4C8DFF; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .top .mn { margin-left: auto; font-size: 18px; cursor: pointer; padding: 0 4px; }
+  .row { display: flex; gap: 10px; align-items: center; padding: 8px 14px; cursor: pointer; }
+  .row .av { width: 38px; height: 38px; border-radius: 50%; background: #3A3D44; flex: none; display: grid; place-items: center; font-size: 15px; }
+  .row .tx { min-width: 0; flex: 1; }
+  .row .nm { font-weight: 600; font-size: 13px; }
+  .row .pv { color: #9AA0A8; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .dt { color: #7A8088; font-size: 10.5px; flex: none; }
+  .empty { color: #7A8088; text-align: center; margin-top: 60px; font-size: 12px; padding: 0 20px; line-height: 1.6; }
+  .menu { position: absolute; right: 10px; top: 62px; background: #2A2C31; border-radius: 10px; padding: 4px 0; z-index: 3; display: none; box-shadow: 0 8px 20px rgba(0,0,0,.5); }
+  .menu.on { display: block; }
+  .menu div { padding: 9px 16px; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
+  .menu div.dim { color: #8A8F98; }
+  .chat { flex: 1; overflow-y: auto; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; touch-action: pan-y; }
+  .sys { color: #7A8088; font-size: 10.5px; text-align: center; margin: 4px 0; }
+  .gone { align-self: flex-end; border: 1px solid #3A3D44; color: #8A8F98; font-size: 11.5px; border-radius: 16px; padding: 6px 12px; font-style: italic; }
+  .bub { align-self: flex-end; max-width: 210px; background: #3B6CF6; border-radius: 18px; padding: 9px 13px; font-size: 12.5px; line-height: 1.45; }
+  .bub .il { font-weight: 700; }
+  .draft { margin: 6px 10px 4px; border-radius: 16px; background: #26282E; padding: 10px 12px; font-size: 12px; line-height: 1.5; color: #E8EAEE; position: relative; }
+  .draft .lb { font-size: 10px; color: #8A8F98; margin-bottom: 4px; }
+  .draft .cmd { color: #9DB8FF; font-weight: 700; }
+  .draft .cur { display: inline-block; width: 1.5px; height: 13px; background: #4C8DFF; vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .bar2 { display: flex; align-items: center; gap: 8px; margin: 0 10px 6px; }
+  .bar2 .tap { flex: 1; height: 30px; border-radius: 15px; background: #2A2D33; color: #8A8F98; font-size: 11.5px; display: flex; align-items: center; padding-left: 12px; cursor: text; }
+  .bar2 .send { width: 32px; height: 32px; border-radius: 50%; background: #3B6CF6; display: grid; place-items: center; font-size: 14px; cursor: pointer; flex: none; }
+  .kb { background: #2B2D31; padding: 5px 3px 8px; display: none; }
+  .kb.on { display: block; }
+  .kb .r { display: flex; justify-content: center; gap: 3px; margin: 4px 0; }
+  .kb .k { box-sizing: border-box; min-width: 21px; height: 30px; padding: 0 2px; border-radius: 5px; background: #4A4D54; color: #fff; font-size: 13px; display: grid; place-items: center; cursor: pointer; box-shadow: 0 1px 0 #111; }
+  .kb .k.w { min-width: 44px; font-size: 11px; background: #3A3D43; }
+  .kb .k.sp { min-width: 120px; font-size: 11px; }
+  #v-chat.typing .chat { display: none; }
+  #v-chat.typing .draft { max-height: 112px; overflow-y: auto; font-size: 11px; }
+  .menu2 { max-height: 150px; overflow-y: auto; touch-action: pan-y; margin: 0 10px 6px; background: #2A2C31; border-radius: 12px; overflow: hidden; display: none; }
+  .menu2.on { display: block; }
+  .menu2 div { padding: 8px 12px; font-size: 12px; border-bottom: 1px solid #34363C; cursor: pointer; }
+  .menu2 div small { display: block; color: #8A8F98; font-size: 10.5px; }
+  .ring { position: absolute; inset: 0; z-index: 20; pointer-events: none; opacity: 0; background: radial-gradient(circle at 50% 30%, rgba(255,80,60,.35), transparent 60%); transition: opacity .2s; }
+  .ring.on { opacity: 1; }
+  .ban { position: absolute; left: 8px; right: 8px; top: 30px; z-index: 21; background: rgba(40,42,48,.97); border-radius: 14px; padding: 9px 12px; font-size: 11.5px; line-height: 1.4; transform: translateY(-120px); transition: transform .35s cubic-bezier(.3,.7,.2,1); }
+  .ban.on { transform: none; }
+  .sticky2 { position: absolute; left: 470px; top: 120px; width: 210px; padding: 16px 18px; background: #FFE58A; transform: rotate(4deg); box-shadow: 0 12px 22px rgba(0,0,0,.4); font-family: 'Caveat', cursive; font-size: 24px; color: #3A2C10; line-height: 1.2; z-index: 8; }
+  .tip { position: absolute; left: 500px; top: 330px; width: 300px; z-index: 8; color: rgba(240,230,210,.75); font-size: 14px; line-height: 1.6; opacity: 0; transition: opacity 1.5s; }
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <div class="lamp"></div>
+  <div class="phone"><div class="scr">
+    <div class="sb"><span>23:21</span><span>▮▮▮ 61%</span></div><div class="ban" id="ban"><b>Messenger</b> · bây giờ<br>Thông báo đã reo trên máy người nhận.</div>
+    <div class="view on" id="v-home">
+      <div class="top">Đoạn chat <span class="mn" id="mn">☰</span></div>
+      <div class="empty">Không có đoạn chat nào gần đây.<br>(Anh dọn sạch rồi.)</div>
+      <div class="menu" id="menu"><div class="dim">Tin nhắn đang chờ</div><div class="dim">Tin nhắn spam</div><div id="go-arch">Kho lưu trữ</div><div class="dim">Cài đặt</div></div>
+    </div>
+    <div class="view" id="v-arch">
+      <div class="top"><span class="bk" data-back="v-home">‹</span>Kho lưu trữ</div>
+      <div id="arch"></div>
+    </div>
+    <div class="view" id="v-chat">
+      <div class="top"><span class="bk" data-back="v-arch">‹</span>ẩm ic 😌</div>
+      <div class="chat" id="chat"></div>
+      <div class="draft" id="draft"><div class="lb">Bản nháp · chưa gửi</div><span id="cmd" class="cmd"></span><span id="dtext"></span><span class="cur" id="cur" style="display:none"></span></div>
+      <div class="menu2" id="menu2"></div>
+      <div class="bar2"><div class="tap" id="tap">Chạm để gõ…</div><div class="send" id="send">➤</div></div>
+      <div class="kb" id="kb"></div>
+    </div>
+  </div></div>
+  <div class="ring" id="ring"></div>
+  <div class="sticky2">Em đang ôn thi.<br>Đừng để tiếng chuông<br>làm em giật mình.</div>
+  <div class="tip" id="tip">Messenger có những lệnh gõ bắt đầu bằng dấu <b>/</b><br>(trên bàn phím, dấu / nằm ở trang <b>123</b>).</div>
+  <div class="grain"></div>
+  <div id="zoom"><div class="x" id="zx">✕</div><div id="zbody"></div></div>
+  <div id="say"></div>
+</div></div>
+<div id="rot">Xoay ngang điện thoại nhé.</div>
+<script src="chung.js?v=2"></script>
+<script>
+// Thùng "1/6 · /im lặng" (bản thử). Messenger đã dọn sạch; phải tự tìm Kho lưu trữ. Đoạn chat với "ẩm ic 😌" chỉ còn
+// "Bạn đã gỡ một tin nhắn" (anh đã xoá thật) và tin cuối bị vỡ thành mảnh. Ghép lại đúng nguyên văn tin 23:21 ngày 1/6
+// (lấy từ ảnh chụp anh Quang gửi). Hai mảnh mồi lấy từ hai đoạn chat khác trong kho lưu trữ.
+'use strict';
+(() => {
+  const { $, sfx, say } = MB;
+  // Nguyên văn tin 23:21 ngày 1/6 (ảnh chụp anh Quang gửi), hiện trọn trong bản nháp để Thủy đọc được.
+  const MSG = 'nãy anh có coi live em, thấy em trông mệt mỏi lắm, tinh thần có vẻ k ổn, mặt đầy sự lo âu, anh sợ nhắn bthg thì sẽ ảnh hưởng đến việc học của em nên anh set chế độ này nhé. Cố lên chúc em thi tốtt, đừng gây áp lực bản thân quá';
+  const ARCH = [
+    ['Nhóm lớp ĐTVT', 'Lan: lịch thi có trên cổng rồi nhé', '28/5', '👥'],
+    ['Phòng khám Đa khoa', 'Nhắc lịch tái khám: nhớ uống thuốc đúng giờ', '29/5', '✚'],
+    ['ẩm ic 😌', '🔕 Bạn đã gửi một tin nhắn', '1/6', ''],
+    ['Bạn cùng phòng cũ', 'Mày lấy nốt cái quạt đi', '12/4', ''],
+    ['Shopee', 'Đơn hàng đã giao thành công', '9/4', '🛍'],
+  ];
+  const show = (id) => { document.querySelectorAll('.view').forEach((v) => v.classList.toggle('on', v.id === id)); sfx.tap(); };
+  document.querySelectorAll('[data-back]').forEach((b) => b.onclick = () => show(b.dataset.back));
+  $('mn').onclick = () => { $('menu').classList.toggle('on'); sfx.tap(); };
+  $('go-arch').onclick = () => { $('menu').classList.remove('on'); show('v-arch'); };
+  ARCH.forEach(([n, p, d, ic]) => {
+    const r = document.createElement('div'); r.className = 'row';
+    r.innerHTML = '<div class="av">' + ic + '</div><div class="tx"><div class="nm">' + n + '</div><div class="pv">' + p + '</div></div><div class="dt">' + d + '</div>';
+    r.onclick = () => { if (n.startsWith('ẩm ic')) openChat(); else { sfx.tap(); say('“' + p + '”. Không phải đoạn này.'); } };
+    $('arch').appendChild(r);
+  });
+
+  let opened = false, silent = false, tries = 0, sent = false;
+  function openChat() {
+    show('v-chat');
+    if (opened) return; opened = true;
+    $('chat').innerHTML = '<div class="sys">Tin nhắn và cuộc gọi được bảo mật bằng mã hoá đầu cuối.</div>' +
+      '<div class="gone">Bạn đã gỡ một tin nhắn</div><div class="gone">Bạn đã gỡ một tin nhắn</div><div class="gone">Bạn đã gỡ một tin nhắn</div>' +
+      '<div class="sys">23:21 1 THG 6</div>';
+    $('dtext').textContent = MSG;
+    say('Một bản nháp chưa gửi. Gửi lúc 23:21, khi em đang ôn thi.', 5000);
+  }
+  // gửi thường: chuông reo bên máy em → không được
+  function ringBell() {
+    const a = MB.AC(), t = a.currentTime;
+    [[1318.5, 0], [1760, 0.13], [1318.5, 0.5], [1760, 0.63]].forEach(([f, d]) => { const o = a.createOscillator(), g = a.createGain(); o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0, t + d); g.gain.linearRampToValueAtTime(0.32, t + d + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t + d + 0.42); o.connect(g).connect(a.destination); o.start(t + d); o.stop(t + d + 0.45); });
+    $('ring').classList.add('on'); $('ban').classList.add('on');
+    setTimeout(() => { $('ring').classList.remove('on'); }, 900); setTimeout(() => { $('ban').classList.remove('on'); }, 2600);
+  }
+  $('send').onclick = () => {
+    if (!opened || sent) return;
+    if (!silent) {
+      tries++; ringBell();
+      say(tries === 1 ? 'Ting ting. Hôm ấy, anh sợ đúng tiếng chuông này. Em đang học.' : 'Lại reo. Phải có cách gửi mà không làm em giật mình.', 5000);
+      if (tries >= 2) $('tip').style.opacity = 1;
+      return;
+    }
+    // gửi im lặng: không chuông, chỉ một tiếng vút khẽ
+    sent = true; $('v-chat').classList.remove('typing'); $('kb').classList.remove('on'); $('menu2').classList.remove('on');
+    MB.sfx.paper();
+    const b = document.createElement('div'); b.className = 'bub'; b.innerHTML = '<span class="il">/im lặng</span>&nbsp; ' + MSG;
+    $('draft').remove(); document.querySelector('.bar2').remove();
+    $('chat').appendChild(b);
+    $('chat').insertAdjacentHTML('beforeend', '<div class="sys">🔕 Đã gửi dưới dạng tin nhắn im lặng</div>');
+    $('chat').scrollTop = 1e6; $('tip').style.opacity = 0;
+    setTimeout(() => sfx.find(), 600);
+    setTimeout(() => say('1/6, 23:21. Tin nhắn cuối cùng anh gửi em trên Messenger.', 6000), 1500);
+    setTimeout(() => say('Anh để im lặng. Sợ tiếng chuông làm phiền em học.', 6000), 7800);
+    setTimeout(() => { say('Sau tin này, là một tháng im lặng.', 6000); MB.done('imlang'); }, 14000);
+  };
+  // bàn phím kiểu iPhone: trang chữ và trang 123 (dấu / ở trang 123)
+  let page = 'abc';
+  const ROWS = { abc: ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'], num: ['1234567890', '-/:;()đ&@"', '.,?!\''] };
+  function drawKb() {
+    const kb = $('kb'); kb.innerHTML = '';
+    ROWS[page].forEach((r, i) => {
+      const row = document.createElement('div'); row.className = 'r';
+      if (i === 2) row.appendChild(key(page === 'abc' ? '⇧' : '#+=', 'w', () => {}));
+      for (const c of r) row.appendChild(key(c, '', () => typeKey(c)));
+      if (i === 2) row.appendChild(key('⌫', 'w', () => back()));
+      kb.appendChild(row);
+    });
+    const r4 = document.createElement('div'); r4.className = 'r';
+    r4.appendChild(key(page === 'abc' ? '123' : 'ABC', 'w', () => { page = page === 'abc' ? 'num' : 'abc'; sfx.key(); drawKb(); }));
+    r4.appendChild(key('dấu cách', 'sp', () => typeKey(' ')));
+    r4.appendChild(key('Xong', 'w', () => { $('v-chat').classList.remove('typing'); $('kb').classList.remove('on'); $('cur').style.display = 'none'; }));
+    kb.appendChild(r4);
+  }
+  const key = (t, cls, fn) => { const k = document.createElement('div'); k.className = 'k ' + cls; k.textContent = t; k.onclick = (e) => { e.stopPropagation(); fn(); }; return k; };
+  let typed = '';
+  function typeKey(c) {
+    sfx.key();
+    if (silent) { say('Lệnh đã chọn rồi. Giờ chỉ cần gửi.'); return; }
+    if (!typed && c !== '/') { say('Bản nháp đã viết sẵn rồi. Chỉ cần tìm cách gửi.'); return; }
+    typed += c; $('cmd').textContent = typed + ' ';
+    if (typed === '/') showCmds(); else $('menu2').classList.remove('on');
+  }
+  function back() { sfx.key(); typed = typed.slice(0, -1); $('cmd').textContent = typed ? typed + ' ' : ''; if (typed === '/') showCmds(); else $('menu2').classList.remove('on'); if (silent && !typed) { silent = false; } }
+  function showCmds() {
+    const m = $('menu2'); m.innerHTML = ''; m.classList.add('on');
+    [['/gif', 'Gửi ảnh GIF'], ['/im lặng', 'Gửi tin nhắn mà không kèm âm thanh thông báo'], ['/@mọi người', 'Nhắc tất cả thành viên'], ['/thanh toán', 'Gửi hoặc yêu cầu tiền']].forEach(([c, d]) => {
+      const it = document.createElement('div'); it.innerHTML = c + '<small>' + d + '</small>';
+      it.onclick = () => {
+        sfx.tap(); m.classList.remove('on');
+        if (c === '/im lặng') { silent = true; typed = '/im lặng'; $('cmd').textContent = '/im lặng  '; say('/im lặng. Tin nhắn sẽ tới mà không reo.', 4500); }
+        else { typed = ''; $('cmd').textContent = ''; say(c + '? Không phải lúc này.'); }
+      };
+      m.appendChild(it);
+    });
+  }
+  $('tap').onclick = () => { if (!opened || sent) return; $('v-chat').classList.add('typing'); $('kb').classList.add('on'); $('cur').style.display = 'inline-block'; drawKb(); sfx.tap(); };
+  say('Thùng "1/6". Chiếc điện thoại sáng màn hình lúc 23:21.', 4500);
+})();
+</script>
+</body>
+</html>
