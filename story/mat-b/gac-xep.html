@@ -176,6 +176,13 @@
   .black.on { opacity: 1; pointer-events: auto; }
   .black p { margin: 10px 0; opacity: 0; transition: opacity 2.5s; }
   .black p.on { opacity: 1; }
+  .newsong { display: flex; align-items: center; gap: 12px; max-width: 340px; margin: 22px auto 0; padding: 10px 16px 10px 10px; border-radius: 18px; background: rgba(246,238,223,.08); border: 1px solid rgba(246,238,223,.16); color: #F3EBDA; text-align: left; text-decoration: none; opacity: 0; transform: translateY(8px); transition: opacity 1.6s, transform 1.6s; }
+  .newsong.on { opacity: 1; transform: none; }
+  .newsong img { width: 52px; height: 52px; flex: none; border-radius: 12px; object-fit: cover; }
+  .newsong span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .newsong small { font-size: 11px; color: #FFB4C2; }
+  .newsong b { font-size: 15px; }
+  .newsong i { font-style: normal; font-size: 12px; opacity: .7; }
 
   /* thùng các-tông */
   .box { position: absolute; width: 104px; height: 86px; z-index: 11; cursor: pointer; transition: transform .2s; }
@@ -251,7 +258,7 @@
     <div class="chat" id="hchat"><div class="sys">23:21 1 THG 6</div><div class="in"><b>/im lặng</b>&nbsp; nãy anh có coi live em, thấy em trông mệt mỏi lắm, tinh thần có vẻ k ổn, mặt đầy sự lo âu, anh sợ nhắn bthg thì sẽ ảnh hưởng đến việc học của em nên anh set chế độ này nhé. Cố lên chúc em thi tốtt, đừng gây áp lực bản thân quá</div><div class="mute">🔕 Tin nhắn im lặng · không có thông báo</div><div class="sys">THÁNG 7</div></div>
     <div class="bar" id="hbar"><span class="ph" id="hph">Aa</span><span id="htx"></span><i class="cur"></i><b id="hsend">➤</b></div>
     <div class="kbd" id="hkb"></div></div></div>
-  <div class="black" id="black"><div><p id="e1" style="font-family:Lora,serif;font-style:italic;font-size:28px">Bài hát bảo: ta sinh ra đã là thứ đối lập nhau.</p><p id="e2" style="font-size:20px;margin-top:22px">Vậy mà chỉ cần một câu hỏi của em,</p><p id="e2c" style="font-size:20px">bài hát đã nói sai.</p><p id="e3" style="font-family:Lora,serif;font-style:italic;font-size:27px;color:#FFE3B0;margin-top:30px">Em là điều đúng đắn nhất của anh năm nay.</p><p id="e4" style="font-size:13px;color:rgba(243,235,218,.6);margin-top:36px">Băng số 1 · Mặt B · Hết</p><p id="e5" style="margin-top:26px"><a href="../hoi-uc.html" style="color:#E9C77B;font-size:14px;text-decoration:none;border:1px solid rgba(233,199,123,.5);border-radius:20px;padding:8px 18px">Về lại ngôi nhà ›</a></p></div></div>
+  <div class="black" id="black"><div><p id="e1" style="font-family:Lora,serif;font-style:italic;font-size:28px">Bài hát bảo: ta sinh ra đã là thứ đối lập nhau.</p><p id="e2" style="font-size:20px;margin-top:22px">Vậy mà chỉ cần một câu hỏi của em,</p><p id="e2c" style="font-size:20px">bài hát đã nói sai.</p><p id="e3" style="font-family:Lora,serif;font-style:italic;font-size:27px;color:#FFE3B0;margin-top:30px">Em là điều đúng đắn nhất của anh năm nay.</p><p id="e4" style="font-size:13px;color:rgba(243,235,218,.6);margin-top:36px">Băng số 1 · Mặt B · Hết</p><a id="e6" class="newsong" href="../../game/?song=sinh-ra"><img src="../../assets/thumbs/cover-9.webp" alt="" /><span><small>Chúc mừng em đã mở được bài hát mới</small><b>Sinh Ra Đã Là Thứ Đối Lập Nhau</b><i>Đã thêm vào Sâu Tím · Chơi ngay</i></span></a><p id="e5" style="margin-top:26px"><a href="../hoi-uc.html" style="color:#E9C77B;font-size:14px;text-decoration:none;border:1px solid rgba(233,199,123,.5);border-radius:20px;padding:8px 18px">Về lại ngôi nhà ›</a></p></div></div>
   <div id="say"></div>
   <div class="grain"></div>
   <div id="reset">chơi lại từ đầu</div>
@@ -578,6 +585,8 @@
   }
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const MIX = 29.55, SONG = 81.08, PRE = 0.35;
+  const SONG_URL = '../../assets/sound/Sinh Ra Đã Là Thứ Đối Lập Nhau.mp3'; // bài gốc, dùng chung với Sâu Tím
+  const SONG_ID = 'sinh-ra'; // id bài trong game/beatmaps/index.json: chơi xong gác xép thì mở
   const COLD_FROM = 18.1;   // đầu câu (sau chỗ lặng 17.2–17.7)
   const AGAIN_FROM = 22.5;  // lần hai: vào lại từ hợp âm F#
   const HOLD = 28.84;       // anh dừng tay chờ em, ngay trước phách 28.9
@@ -586,7 +595,7 @@
     if (finOn) return; finOn = true;
     const a = MB.AC(); $('phone').classList.remove('on');
     if (wind) { wind.gain.cancelScheduledValues(a.currentTime); wind.gain.setValueAtTime(wind.gain.value, a.currentTime); wind.gain.linearRampToValueAtTime(0.02, a.currentTime + 3); }
-    MB.load('tieng-dan.mp3'); MB.load('bai-goc.mp3');
+    MB.load('tieng-dan.mp3'); MB.load(SONG_URL);
     // bước lại gần cây đàn
     steps(4); $('room').classList.add('near');
     await wait(2000);
@@ -686,10 +695,10 @@
     await wait(850);
     figCls('a', 'turn', false); figShow('e', 1);
     $('stage').classList.add('lit'); kv.style.setProperty('--w', 0.5);
-    await MB.load('bai-goc.mp3');
+    await MB.load(SONG_URL);
     const piano = await MB.play('tieng-dan.mp3', { offset: HOLD + 0.02, gain: 1, wet: 0.35, fade: 0.03 });
     const at = piano.t0 + MIX - PRE;
-    const song = await MB.play('bai-goc.mp3', { offset: SONG - PRE, gain: 0.78, fade: PRE + 0.3, when: Math.max(0, at - a.currentTime) });
+    const song = await MB.play(SONG_URL, { offset: SONG - PRE, gain: 0.78, fade: PRE + 0.3, when: Math.max(0, at - a.currentTime) });
     const pg = piano.gain.gain; pg.setValueAtTime(1, at + PRE + 0.2); pg.linearRampToValueAtTime(0.0001, at + PRE + 2.2); piano.src.stop(at + PRE + 2.3);
     const lsong = listen(song, (m) => (m < 63 ? ['#FFC978', 'a'] : ['#FF9DB4', 'e']), 3, 13);
     ears = [listen(piano, () => ['#FFC978', 'a'], 4, 18), () => { if (a.currentTime > at) lsong(); }];
@@ -717,8 +726,12 @@
     }, when(162.5));
     // 6) đoạn kết lắng: màn đen
     setTimeout(() => { clearInterval(warmUp); mode = ''; $('black').classList.add('on'); }, when(213));
-    [['e1', 215], ['e2', 220], ['e2c', 223.5], ['e3', 229], ['e4', 235], ['e5', 240]].forEach(([id, sec]) => setTimeout(() => $(id).classList.add('on'), when(sec)));
-    setTimeout(() => { st.thang7 = true; save(); }, when(235));
+    [['e1', 215], ['e2', 220], ['e2c', 223.5], ['e3', 229], ['e4', 235], ['e6', 239], ['e5', 241]].forEach(([id, sec]) => setTimeout(() => $(id).classList.add('on'), when(sec)));
+    setTimeout(() => {
+      st.thang7 = true; save();
+      // mở bài hát mới trong Sâu Tím (đồng bộ qua Firebase khi về trang chủ)
+      try { const op = JSON.parse(localStorage.getItem('lpn:songs')) || {}; op[SONG_ID] = true; localStorage.setItem('lpn:songs', JSON.stringify(op)); } catch (e) { /* bỏ qua */ }
+    }, when(235));
   }
 })();
 </script>

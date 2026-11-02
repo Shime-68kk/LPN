@@ -48,11 +48,15 @@ SONGS = [
     # Bài của Băng số 1 (Chương 17 · Cuộn băng số 1), mở sẵn cho cả hai. Bìa cover-8: ảnh 28 (Fansipan).
     ("giu-mai", "Giữ Mãi Yêu Thương Gần Kề", "Giữ Mãi Yêu Thương Gần Kề.mp3", "Anh (8).jpg",
      "Giữ mãi những ngày mình có nhau, gần thật gần."),
+    # Bài của Băng số 1 · Mặt B (bài em đăng trên tài khoản "lệ"). Khoá: chỉ mở khi chơi xong gác xép
+    # (story/mat-b/gac-xep.html ghi lpn:songs). Bìa cover-9: ảnh album 5 (em mặc váy, nhìn thẳng vào máy).
+    ("sinh-ra", "Sinh Ra Đã Là Thứ Đối Lập Nhau", "Sinh Ra Đã Là Thứ Đối Lập Nhau.mp3", "Anh (9).jpg",
+     "Bài hát bảo mình sinh ra đã đối lập. Vậy mà mình vẫn tìm thấy nhau.", True),
 ]
 # Bài chơi cả bài (không cắt đoạn 96 giây) và bài gắn nhãn NEW, đứng đầu danh sách.
 # Anh Quang muốn mọi bài chỉ chơi một đoạn, không để cả bài (kể cả "chờ chút...").
 FULL_SONG = set()
-NEW_SONGS = ["giu-mai"]
+NEW_SONGS = ["sinh-ra", "giu-mai"]
 
 
 def load_audio(path):

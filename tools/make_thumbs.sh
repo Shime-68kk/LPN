@@ -24,4 +24,9 @@ ffmpeg -v error -y -i "assets/img/Anh (14).jpg" \
   -vf "scale=160:160:force_original_aspect_ratio=increase,crop=160:160" \
   -c:v libwebp -quality 75 "$out/cover-7.webp"
 
+# Bìa bài "Sinh Ra Đã Là Thứ Đối Lập Nhau" (Mặt B) lấy từ ảnh album số 5, cắt lệch lên để thấy mặt.
+ffmpeg -v error -y -i "assets/img/Anh (5).jpg" \
+  -vf "scale=160:-1,crop=160:160:0:(ih-160)*0.18" \
+  -c:v libwebp -quality 75 "$out/cover-9.webp"
+
 echo "Xong: $(ls "$out" | wc -l) ảnh trong $out"

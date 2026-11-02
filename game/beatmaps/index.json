@@ -13,6 +13,19 @@
       "isNew": true
     },
     {
+      "id": "sinh-ra",
+      "title": "Sinh Ra Đã Là Thứ Đối Lập Nhau",
+      "src": "../assets/sound/Sinh Ra Đã Là Thứ Đối Lập Nhau.mp3",
+      "cover": "../assets/thumbs/cover-9.webp",
+      "map": "beatmaps/sinh-ra.json",
+      "bpm": 71.19,
+      "preview": 163.945,
+      "message": "Bài hát bảo mình sinh ra đã đối lập. Vậy mà mình vẫn tìm thấy nhau.",
+      "offset": 0,
+      "locked": true,
+      "isNew": true
+    },
+    {
       "id": "ai-ngoai-anh",
       "title": "Ai Ngoài Anh",
       "src": "../assets/sound/Ai Ngoài Anh.mp3",

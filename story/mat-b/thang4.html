@@ -165,7 +165,7 @@
     // đoạn nhạc em dùng trong bài: 15 giây đầu bài gốc, phát lặp như TikTok (tắt dần ở cuối rồi vào lại)
     const loop = async () => {
       if (!$('post').classList.contains('on')) return;
-      song = await play('bai-goc.mp3', { offset: 0, dur: 15.2, phone: true, gain: 0.9, fade: 0.25 });
+      song = await play('le-15s.mp3', { offset: 0, dur: 15.2, phone: true, gain: 0.9, fade: 0.25 });
       const g = song.gain.gain, t = MB.AC().currentTime; g.setValueAtTime(0.9, t + 14.2); g.linearRampToValueAtTime(0.0001, t + 15.1);
       song.src.onended = () => { if (song && song.src.onended) { song = null; loop(); } };
     };
