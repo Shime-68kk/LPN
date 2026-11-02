@@ -699,6 +699,14 @@ body { background: var(--night); color: var(--cream); font-family: 'Be Vietnam P
 .end-line.on, .end-btn.on, .end-again.on { opacity: 1; transform: none; }
 .end-btn { margin-top: 14px; padding: 14px 28px; border-radius: 999px; background: var(--cream); color: #3A2B3F; font-weight: 700; text-decoration: none; opacity: 0; transform: translateY(8px); transition: opacity 1.2s, transform 1.2s; box-shadow: 0 0 30px rgba(246, 238, 223, .2); }
 .end-again { opacity: 0; transition: opacity 1.2s; }
+/* Thẻ "mở được bài hát mới" ở màn kết: bấm vào là sang Sâu Tím chơi luôn bài đó */
+.end-song { display: flex; align-items: center; gap: 12px; max-width: 340px; margin-top: 18px; padding: 10px 16px 10px 10px; border-radius: 18px; background: rgba(246, 238, 223, .08); border: 1px solid rgba(246, 238, 223, .16); color: var(--cream); text-align: left; text-decoration: none; opacity: 0; transform: translateY(8px); transition: opacity 1.2s, transform 1.2s; }
+.end-song.on { opacity: 1; transform: none; }
+.end-song img { width: 52px; height: 52px; flex: none; border-radius: 12px; object-fit: cover; }
+.end-song span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.end-song small { font-size: 11px; line-height: 1.35; color: #FFB4C2; }
+.end-song b { font-size: 15px; }
+.end-song i { font-style: normal; font-size: 12px; opacity: .7; }
 /* Đoạn ghi thêm ở cuối băng: màn tối, "● REC" nháy ở góc như máy quay, một dòng chữ, nút Xem */
 .bonus { position: fixed; inset: 0; z-index: 11; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 0 28px; text-align: center; background: #050407; opacity: 0; transition: opacity 1.2s; }
 .bonus.on { opacity: 1; }

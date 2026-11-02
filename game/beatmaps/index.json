@@ -1,14 +1,14 @@
 {
   "songs": [
     {
-      "id": "cho-chut",
-      "title": "chờ chút...",
-      "src": "../assets/sound/Chờ Chút.mp3",
-      "cover": "../assets/thumbs/cover-7.webp",
-      "map": "beatmaps/cho-chut.json",
-      "bpm": 84.88,
-      "preview": 44.0,
-      "message": "Chờ anh chút nữa thôi, rồi mình còn đi thật nhiều nơi.",
+      "id": "giu-mai",
+      "title": "Giữ Mãi Yêu Thương Gần Kề",
+      "src": "../assets/sound/Giữ Mãi Yêu Thương Gần Kề.mp3",
+      "cover": "../assets/thumbs/cover-8.webp",
+      "map": "beatmaps/giu-mai.json",
+      "bpm": 123.78,
+      "preview": 175.486,
+      "message": "Giữ mãi những ngày mình có nhau, gần thật gần.",
       "offset": 0,
       "isNew": true
     },
@@ -76,6 +76,17 @@
       "bpm": 95.1,
       "preview": 201.748,
       "message": "Anh là người sẽ thương em thật lâu.",
+      "offset": 0
+    },
+    {
+      "id": "cho-chut",
+      "title": "chờ chút...",
+      "src": "../assets/sound/Chờ Chút.mp3",
+      "cover": "../assets/thumbs/cover-7.webp",
+      "map": "beatmaps/cho-chut.json",
+      "bpm": 84.88,
+      "preview": 44.0,
+      "message": "Chờ anh chút nữa thôi, rồi mình còn đi thật nhiều nơi.",
       "offset": 0
     }
   ]

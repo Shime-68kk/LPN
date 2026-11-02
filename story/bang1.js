@@ -31,6 +31,8 @@ window.BANG1 = {
   // Đoạn ghi thêm ở cuối băng: lời tâm sự anh Quang quay (1080p, lọc ồn, chia đoạn HLS). Hiện sau danh đề.
   // Đoạn ghi thêm sau danh đề (after-credits): nhạc nền "Giữ Mãi Yêu Thương Gần Kề" lót nhỏ phía sau, to ngang phim
   tamSu: '../assets/bang1/tam-su/tam-su.m3u8',
+  // Xem hết cuộn băng thì mở bài này trong Sâu Tím (id trong game/beatmaps/index.json), thẻ chúc mừng hiện ở màn kết
+  unlockSong: 'giu-mai',
   // Thư mục ảnh. Ảnh mẫu hiện tại dùng 18 ảnh có sẵn trong assets/img/.
   dir: '../assets/img/',
   song: {

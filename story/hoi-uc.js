@@ -1197,11 +1197,33 @@
   }
 
   // Kết: "Đây là nơi mọi thứ bắt đầu." và hai nút
+  // Xem hết cuộn băng: mở bài của cuộn băng trong Sâu Tím (lpn:songs, home/sync.js gộp lên Firebase lần sau) và hiện thẻ
+  // chúc mừng. Xem thử bằng ?thu= thì chỉ hiện thẻ, không lưu.
+  function unlockSong() {
+    if (!B.unlockSong) return null;
+    if (!/[?&]thu=/.test(location.search)) {
+      try {
+        const opened = JSON.parse(localStorage.getItem('lpn:songs')) || {};
+        opened[B.unlockSong] = true;
+        localStorage.setItem('lpn:songs', JSON.stringify(opened));
+      } catch (e) { /* bỏ qua */ }
+    }
+    return fetch('../game/beatmaps/index.json').then((r) => r.json()).then((d) => {
+      const s = d.songs.find((x) => x.id === B.unlockSong);
+      if (!s) return;
+      $('end-song-cover').src = s.cover; // đường dẫn trong index.json tính từ game/, cùng cấp với story/
+      $('end-song-title').textContent = s.title;
+      $('end-song').href = '../game/?song=' + encodeURIComponent(s.id);
+      $('end-song').hidden = false;
+    }).catch(() => {});
+  }
   async function finale() {
     $('end').hidden = false;
     $('end-1').textContent = '';
+    const song = unlockSong();
     const ids = ['end-2', 'end-go', 'end-again'];
     if (B.tamSu) { $('end-ts').hidden = false; $('end-ts').onclick = () => tamSu(); ids.push('end-ts'); }
+    if (song) { await song; if (!$('end-song').hidden) ids.push('end-song'); }
     for (const id of ids) { await sleep(1100); $(id).classList.add('on'); }
   }
 

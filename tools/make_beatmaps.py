@@ -45,10 +45,14 @@ SONGS = [
      "Anh là người sẽ thương em thật lâu."),
     ("cho-chut", "chờ chút...", "Chờ Chút.mp3", "Anh (7).jpg",
      "Chờ anh chút nữa thôi, rồi mình còn đi thật nhiều nơi."),
+    # Bài của Băng số 1 (Chương 17 · Cuộn băng số 1), mở sẵn cho cả hai. Bìa cover-8: ảnh 28 (Fansipan).
+    ("giu-mai", "Giữ Mãi Yêu Thương Gần Kề", "Giữ Mãi Yêu Thương Gần Kề.mp3", "Anh (8).jpg",
+     "Giữ mãi những ngày mình có nhau, gần thật gần."),
 ]
 # Bài chơi cả bài (không cắt đoạn 96 giây) và bài gắn nhãn NEW, đứng đầu danh sách.
-FULL_SONG = {"cho-chut"}
-NEW_SONGS = ["cho-chut"]
+# Anh Quang muốn mọi bài chỉ chơi một đoạn, không để cả bài (kể cả "chờ chút...").
+FULL_SONG = set()
+NEW_SONGS = ["giu-mai"]
 
 
 def load_audio(path):
