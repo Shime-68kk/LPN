@@ -73,7 +73,7 @@
     background: radial-gradient(ellipse 46% 88% at 50% 62%, rgba(170,195,245,.30), rgba(140,170,240,.06) 62%, transparent 82%); mix-blend-mode: screen; }
   #kv.cold .halo { opacity: 0; } #kv.cold .haloc { opacity: 1; }
   #kv .figs { position: absolute; left: 0; right: 0; top: 0; height: 210px; overflow: hidden; z-index: 1; }
-  #kv .fig { position: absolute; top: -4px; width: 300px; height: 260px; overflow: visible; pointer-events: none; transition: opacity 2.4s; }
+  #kv .fig { position: absolute; top: -4px; width: 300px; height: 260px; overflow: visible; pointer-events: none; transition: opacity 2.4s; transform-origin: 150px 262px; will-change: transform; }
   #kv .fig.sh { color: rgba(26,12,6,.78); mix-blend-mode: multiply; filter: blur(2.2px) drop-shadow(0 0 10px rgba(20,8,2,.35)); opacity: 0; }
   #kv.cold .fig.sh { color: rgba(10,16,34,.8); }
   #kv .fig.lt { mix-blend-mode: screen; filter: blur(1.6px) drop-shadow(0 0 14px currentColor); opacity: 0; }
@@ -87,6 +87,29 @@
   #kv .fig.turn .hb { opacity: 0; } #kv .fig.turn .hs { opacity: 1; }
   #kv .fig.love.a .ps { transform: translateX(4px) rotate(1.5deg); }
   #kv .fig.love.e .ps { transform: translateX(-4px) rotate(-1.5deg); }
+  /* đoạn cuối, khi cả hai đã hoá ánh sáng: nhìn nhau cười, ngồi sát lại, em quay về phím, cúi đầu ngại, anh hôn má, tựa vào nhau */
+  #kv .fig .hw { transform-box: view-box; transform-origin: 150px 128px; }
+  #kv .fig.happy .hw { animation: nod 1.69s ease-in-out infinite; }
+  #kv .fig.happy.e .hw { animation-delay: -.5s; }
+  @keyframes nod { 0%, 100% { transform: none; } 30% { transform: translateY(3px) rotate(-1.5deg); } 55% { transform: translateY(-1px) rotate(1deg); } }
+  #kv .fig.near.a .ps { transform: translateX(14px) rotate(3deg); }
+  #kv .fig.near.e .ps { transform: translateX(-14px) rotate(-3deg); }
+  #kv .fig.watch.a .ps { transform: translateX(10px) rotate(2.5deg); }
+  #kv .fig.watch.a .hd { transform: rotate(4deg); }
+  #kv .fig.shy.e .ps { transform: translate(-4px, 5px) scaleX(.97); }
+  #kv .fig.shy.e .hd { transform: translateY(9px) rotate(6deg) scaleY(.96); }
+  #kv .fig.kiss.a .ps { transform: translateX(36px) rotate(8.5deg); transition: transform 2.8s cubic-bezier(.45,0,.25,1); }
+  #kv .fig.kiss.a .hd { transform: translateY(5px) rotate(7deg); transition: transform 2.8s cubic-bezier(.45,0,.25,1); }
+  #kv .fig.nestle.a .ps { transform: translateX(24px) rotate(4.5deg); transition: transform 3.2s cubic-bezier(.4,0,.2,1); }
+  #kv .fig.nestle.a .hd { transform: translateY(3px) rotate(6deg); }
+  #kv .fig.nestle.e .ps { transform: translateX(-18px) rotate(-4deg); transition: transform 3.2s cubic-bezier(.4,0,.2,1); }
+  #kv .fig.nestle.e .hd { transform: translateY(8px) rotate(-8deg); }
+  /* lúc anh hôn má: một chớp sáng ấm, rồi một trái tim bằng đốm sáng bay lên */
+  #kv .flare { position: absolute; z-index: 6; width: 260px; height: 260px; margin: -130px 0 0 -130px; border-radius: 50%; pointer-events: none; mix-blend-mode: screen;
+    background: radial-gradient(circle, rgba(255,236,214,.95), rgba(255,170,196,.45) 30%, rgba(255,160,120,.12) 58%, transparent 72%); animation: flare 3.6s ease-out forwards; }
+  @keyframes flare { 0% { opacity: 0; transform: scale(.3); } 18% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.5); } }
+  #kv .hp { position: absolute; z-index: 7; width: 4px; height: 4px; margin: -2px; border-radius: 50%; pointer-events: none; background: #FFD6E2; box-shadow: 0 0 8px 2px rgba(255,170,200,.9); opacity: 0; animation: hp 6.5s ease-in-out forwards; }
+  @keyframes hp { 0% { opacity: 0; transform: scale(.2); } 12% { opacity: 1; transform: scale(1); } 60% { opacity: .95; transform: translateY(-34px); } 100% { opacity: 0; transform: translate(var(--dx), -110px) scale(.4); } }
   #kv .fig.gone { opacity: 0 !important; transition: opacity 3.4s; }
   #kv .spark { position: absolute; z-index: 7; width: 5px; height: 5px; border-radius: 50%; pointer-events: none; animation: rise 3.4s ease-out forwards; }
   @keyframes rise { from { opacity: 1; transform: translate(0, 0) scale(1); } to { opacity: 0; transform: translate(var(--dx), -150px) scale(.4); } }
@@ -266,7 +289,7 @@
   <div id="start"><div><b>Gác xép</b><small>Băng số 1 · Mặt B · chạm để vào</small></div></div>
 </div></div>
 <div id="rot">Xoay ngang điện thoại nhé.</div>
-<script src="chung.js?v=2"></script>
+<script src="chung.js?v=3"></script>
 <script>
 // Gác xép (bản thử): nối các thùng lại. Mỗi thùng mở câu đố của nó trong khung; giải xong (trang con báo MB.done)
 // thì thùng mở nắp, tờ nhạc bay lên giá đàn, gác ấm thêm một nấc. Xong thùng bệnh án: điện thoại cũ hiện trên nắp đàn → ghi âm.
@@ -385,14 +408,14 @@
   };
   // khi ghi âm xong: không bay tờ nhạc, mà khăn phủ đàn trượt xuống, đèn bật
   const _land = landSheet;
-  landSheet = function (b) { if (b.id === 'ghiam') { sfx.cloth(); render(); setTimeout(() => say('Khăn phủ đàn trượt xuống. Bóng đèn trên gác bật sáng.', 5500), 600); setTimeout(() => say('Bốn tờ nhạc trên giá. Cây đàn không còn phủ khăn.', 6000), 6800); return; } _land(b); };
+  landSheet = function (b) { if (b.id === 'ghiam') { preload(); sfx.cloth(); render(); setTimeout(() => say('Khăn phủ đàn trượt xuống. Bóng đèn trên gác bật sáng.', 5500), 600); setTimeout(() => say('Bốn tờ nhạc trên giá. Cây đàn không còn phủ khăn.', 6000), 6800); return; } _land(b); };
   $('piano').onclick = () => {
     if (st.ghiam) { finale(); return; }
     say(DONE() < 4 ? 'Cây đàn phủ khăn trắng. Giá nhạc còn thiếu ' + (4 - DONE()) + ' tờ.' : 'Đủ bốn tờ nhạc rồi. Nhưng khăn vẫn phủ. Chiếc điện thoại trên nắp đàn đang sáng.');
   };
   $('reset').onclick = () => { if (confirm('Chơi lại gác xép từ đầu?')) { st = {}; save(); render(); } };
   $('start').onclick = () => {
-    MB.AC(); amb(); $('start').remove();
+    MB.AC(); amb(); $('start').remove(); if (st.ghiam) preload();
     say(DONE() ? 'Gác xép. Lần trước anh đã mở ' + DONE() + ' thùng.' : 'Gác xép. Lạnh. Bốn thùng đồ dán băng keo, một cây đàn phủ khăn trắng.', 5500);
   };
 
@@ -470,7 +493,7 @@
   for (const who of ['a', 'e']) for (const kind of ['sh', 'lt']) {
     const S = SHAPES[who], el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     el.setAttribute('viewBox', '0 0 300 260'); el.setAttribute('class', 'fig ' + kind + ' ' + who);
-    el.innerHTML = '<g class="sw"><g class="ps"><path d="' + S.body + '"/><g class="hd"><path class="hb" d="' + S.back + '"/><path class="hs" d="' + S.side + '"/></g></g></g>';
+    el.innerHTML = '<g class="sw"><g class="ps"><path d="' + S.body + '"/><g class="hw"><g class="hd"><path class="hb" d="' + S.back + '"/><path class="hs" d="' + S.side + '"/></g></g></g></g>';
     el.style.left = (FIG[who].cx - 150) + 'px';
     if (kind === 'lt') el.style.color = who === 'a' ? 'rgba(255,214,150,.95)' : 'rgba(255,186,206,.95)';
     $('figs').appendChild(el); FIG[who].els.push(el);
@@ -481,17 +504,20 @@
   // bụi bay trong quầng đèn
   for (let i = 0; i < 30; i++) { const m = document.createElement('i'); m.style.left = (25 + Math.random() * 50) + '%'; m.style.top = (30 + Math.random() * 70) + '%'; m.style.animationDuration = (9 + Math.random() * 8) + 's'; m.style.animationDelay = (-Math.random() * 12) + 's'; $('motek').appendChild(m); }
   // mỗi khung: bóng nghiêng về phía phím mình đang lún, gật nhẹ theo từng nốt
-  const lastHit = { a: 0, e: 0 };
+  // still[ai]: 0 là đang đánh (nghiêng theo phím), 1 là ngồi yên (lúc nhìn nhau, hôn má)
+  const lastHit = { a: 0, e: 0 }, still = { a: 0, e: 0 };
   function arms() {
     const now = performance.now();
     for (const who of ['a', 'e']) {
-      const F = FIG[who], xs = Object.keys(down).filter((m) => down[m] === who).map((m) => KX[m]);
-      const target = xs.length ? Math.max(-1, Math.min(1, (xs.reduce((p, q) => p + q, 0) / xs.length - F.cx) / 220)) * 3.2 : 0;
+      const F = FIG[who], xs = Object.keys(down).filter((m) => down[m] === who).map((m) => KX[m]), q = 1 - still[who];
+      const target = xs.length ? Math.max(-1, Math.min(1, (xs.reduce((p, q) => p + q, 0) / xs.length - F.cx) / 220)) * 3.2 * q : 0;
       F.lean += (target - F.lean) * 0.06;
-      const since = (now - lastHit[who]) / 1000; F.dip += ((since < 0.18 ? 3.2 : 0) - F.dip) * 0.18;
+      const since = (now - lastHit[who]) / 1000; F.dip += ((since < 0.18 ? 3.2 * q : 0) - F.dip) * 0.18;
       const sway = Math.sin(now / 1400 + (who === 'a' ? 0 : 1.7)) * 0.6;
-      const t = 'translate(' + (F.lean * 3).toFixed(2) + 'px,' + F.dip.toFixed(2) + 'px) rotate(' + (F.lean + sway).toFixed(2) + 'deg)';
-      F.els.forEach((el) => { const g = el.firstChild; g.style.transformOrigin = '150px 262px'; g.style.transform = t; });
+      const t = 'translate(' + (F.lean * 3).toFixed(1) + 'px,' + F.dip.toFixed(1) + 'px) rotate(' + (F.lean + sway).toFixed(2) + 'deg)';
+      if (t === F.t) continue; F.t = t;
+      // xoay cả khung svg (đã là một lớp riêng trên GPU) thay vì nhóm bên trong: iPhone khỏi phải vẽ lại vùng làm mờ mỗi khung
+      F.els.forEach((el) => { if (+el.style.opacity > 0) el.style.transform = t; });
     }
   }
   let ears = [];
@@ -583,28 +609,62 @@
       $('kv').appendChild(sp); setTimeout(() => sp.remove(), 5000);
     }
   }
+  // lúc anh hôn má em: chớp sáng ở chỗ hai má chạm nhau, tiếng chuông khẽ (ngũ cung G), một trái tim nhỏ bằng đốm sáng bay lên rồi tan
+  function kissGlow(x, y) {
+    const kv = $('kv'), fl = document.createElement('i'); fl.className = 'flare'; fl.style.left = x + 'px'; fl.style.top = y + 'px'; kv.appendChild(fl); setTimeout(() => fl.remove(), 4000);
+    const a = MB.AC(), { out, rev } = MB.bus(), t = a.currentTime;
+    [79, 83, 86, 91, 95].forEach((m, i) => {
+      const o = a.createOscillator(), g = a.createGain(), tt = t + 0.25 + i * 0.11; o.type = 'sine'; o.frequency.value = 440 * Math.pow(2, (m - 69) / 12);
+      g.gain.setValueAtTime(0, tt); g.gain.linearRampToValueAtTime(0.03, tt + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, tt + 2.4);
+      o.connect(g); g.connect(out); g.connect(rev); o.start(tt); o.stop(tt + 2.5);
+    });
+    for (let i = 0; i < 28; i++) {
+      const th = (i / 28) * Math.PI * 2, hx = 16 * Math.pow(Math.sin(th), 3), hy = 13 * Math.cos(th) - 5 * Math.cos(2 * th) - 2 * Math.cos(3 * th) - Math.cos(4 * th);
+      const p = document.createElement('i'); p.className = 'hp'; p.style.left = (x + hx * 1.7) + 'px'; p.style.top = (y - 46 - hy * 1.7) + 'px';
+      p.style.animationDelay = (0.5 + i * 0.045) + 's'; p.style.setProperty('--dx', (hx * 1.2) + 'px'); kv.appendChild(p); setTimeout(() => p.remove(), 8500);
+    }
+  }
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const MIX = 29.55, SONG = 81.08, PRE = 0.35;
-  const SONG_URL = '../../assets/sound/Sinh Ra Đã Là Thứ Đối Lập Nhau.mp3'; // bài gốc, dùng chung với Sâu Tím
+  // bài gốc, cắt từ giây 78 tới hết (bản đầy đủ 9.4MB ở assets/sound dùng cho Sâu Tím): tải và giải mã trên iPhone nhẹ hơn hẳn.
+  // Mọi mốc thời gian vẫn tính theo bài gốc; lúc phát thì trừ CUT.
+  const SONG_URL = 'bai-goc-b.mp3', CUT = 78;
   const SONG_ID = 'sinh-ra'; // id bài trong game/beatmaps/index.json: chơi xong gác xép thì mở
   const COLD_FROM = 18.1;   // đầu câu (sau chỗ lặng 17.2–17.7)
   const AGAIN_FROM = 22.5;  // lần hai: vào lại từ hợp âm F#
   const HOLD = 28.84;       // anh dừng tay chờ em, ngay trước phách 28.9
-  let finOn = false;
+  let finOn = false, earOn = false;
+  // tải trước: tiếng đàn trước (cần ngay), bài gốc sau (một phút nữa mới cần) để hai file không giành mạng của nhau
+  function preload() { MB.load('tieng-dan.mp3').then(() => MB.load(SONG_URL)).catch(() => {}); }
+  // chờ một file: quá 1.2s thì báo đang tải; hỏng thì `once` → trả false, không thì cứ thử lại tới khi được
+  async function need(url, once) {
+    let shown = false;
+    const slow = setTimeout(() => { shown = true; say('Chờ một chút… tiếng đàn đang tới.', 60000); }, 1200);
+    for (;;) {
+      try { await MB.load(url); clearTimeout(slow); if (shown) $('say').style.opacity = 0; return true; } catch (e) {
+        clearTimeout(slow); shown = true;
+        if (once) { say('Mạng chập chờn, tiếng đàn chưa tải được. Chạm vào cây đàn thử lại nhé.', 8000); return false; }
+        say('Mạng chập chờn… đang tải lại.', 60000); await wait(1500);
+      }
+    }
+  }
   async function finale() {
     if (finOn) return; finOn = true;
     const a = MB.AC(); $('phone').classList.remove('on');
     if (wind) { wind.gain.cancelScheduledValues(a.currentTime); wind.gain.setValueAtTime(wind.gain.value, a.currentTime); wind.gain.linearRampToValueAtTime(0.02, a.currentTime + 3); }
-    MB.load('tieng-dan.mp3'); MB.load(SONG_URL);
+    preload();
+    // tiếng đàn chưa tải xong (mạng chậm): chờ ngay tại gác, có báo; hỏng thì cho chạm lại
+    const ready = await need('tieng-dan.mp3', true);
+    if (!ready) { finOn = false; return; }
     // bước lại gần cây đàn
     steps(4); $('room').classList.add('near');
     await wait(2000);
     const kv = $('kv'); kv.style.setProperty('--w', 0); kv.classList.add('on', 'cold');
     $('stage').classList.remove('lit');
     const days = $('days'); days.className = 'days zero'; days.textContent = 'Ngày thứ 0';
-    requestAnimationFrame(earLoop);
-    await MB.load('tieng-dan.mp3');
+    if (!earOn) { earOn = true; requestAnimationFrame(earLoop); }
     if (/[?&]nhay\b/.test(location.search)) { asked = true; figShow('a', 1); again(); return; } // chỉ để thử: nhảy tới đoạn em bấm theo anh
+    if (/[?&]cuoi\b/.test(location.search)) { asked = true; kv.classList.remove('cold'); figShow('a', 1); figShow('e', 1); perform(148); return; } // chỉ để thử: nhảy tới gần lúc tăng tone
     // 1) Phiên bản không có em
     const cold = await MB.play('tieng-dan.mp3', { offset: COLD_FROM, gain: 0.9, wet: 0.55, fade: 0.8, when: 0.6 });
     cold.lpf.frequency.value = 2400;
@@ -689,41 +749,60 @@
     onGuideDone = () => perform();
   }
   // 4) nốt cuối của em: tiếng đàn chạy tiếp, bài gốc hoà vào, tất cả cùng lúc
-  async function perform() {
+  async function perform(from) {
     const kv = $('kv'), a = MB.AC();
     swell(0.9); $('say').style.opacity = 0;
     await wait(850);
     figCls('a', 'turn', false); figShow('e', 1);
     $('stage').classList.add('lit'); kv.style.setProperty('--w', 0.5);
-    await MB.load(SONG_URL);
-    const piano = await MB.play('tieng-dan.mp3', { offset: HOLD + 0.02, gain: 1, wet: 0.35, fade: 0.03 });
-    const at = piano.t0 + MIX - PRE;
-    const song = await MB.play(SONG_URL, { offset: SONG - PRE, gain: 0.78, fade: PRE + 0.3, when: Math.max(0, at - a.currentTime) });
-    const pg = piano.gain.gain; pg.setValueAtTime(1, at + PRE + 0.2); pg.linearRampToValueAtTime(0.0001, at + PRE + 2.2); piano.src.stop(at + PRE + 2.3);
-    const lsong = listen(song, (m) => (m < 63 ? ['#FFC978', 'a'] : ['#FF9DB4', 'e']), 3, 13);
-    ears = [listen(piano, () => ['#FFC978', 'a'], 4, 18), () => { if (a.currentTime > at) lsong(); }];
+    await need(SONG_URL);
+    let t0;
+    if (from) { // chỉ để thử (?cuoi): vào thẳng bài gốc từ giây `from`
+      const song = await MB.play(SONG_URL, { offset: from - CUT, gain: 0.78, fade: 0.5 });
+      ears = [listen(song, (m) => (m < 63 ? ['#FFC978', 'a'] : ['#FF9DB4', 'e']), 3, 13)]; t0 = song.t0 - CUT;
+    } else {
+      const piano = await MB.play('tieng-dan.mp3', { offset: HOLD + 0.02, gain: 1, wet: 0.35, fade: 0.03 });
+      const at = piano.t0 + MIX - PRE;
+      const song = await MB.play(SONG_URL, { offset: SONG - PRE - CUT, gain: 0.78, fade: PRE + 0.3, when: Math.max(0, at - a.currentTime) });
+      const pg = piano.gain.gain; pg.setValueAtTime(1, at + PRE + 0.2); pg.linearRampToValueAtTime(0.0001, at + PRE + 2.2); piano.src.stop(at + PRE + 2.3);
+      const lsong = listen(song, (m) => (m < 63 ? ['#FFC978', 'a'] : ['#FF9DB4', 'e']), 3, 13);
+      ears = [listen(piano, () => ['#FFC978', 'a'], 4, 18), () => { if (a.currentTime > at) lsong(); }];
+      t0 = at + PRE - SONG; // giây 0 của bài gốc, theo đồng hồ âm thanh
+    }
     mode = 'free';
-    const t0 = at + PRE - SONG; // giây 0 của bài gốc, theo đồng hồ âm thanh
     const when = (sec) => Math.max(0, (t0 + sec - a.currentTime) * 1000);
     setTimeout(() => say('Rồi có một người đánh cùng.', 5500), when(SONG + 1.2));
     setTimeout(() => say('Cứ đánh tiếp đi. Phím nào cũng được.', 5500), when(SONG + 9));
     // bốn tờ nhạc sáng dần theo bài
     [...document.querySelectorAll('#kv .pg')].forEach((pgEl, i) => setTimeout(() => { pgEl.classList.add('lit'); sfx.page(); }, when(96 + i * 14.5)));
     let w = 0.5; const warmUp = setInterval(() => { w = Math.min(1, w + 0.008); kv.style.setProperty('--w', w.toFixed(2)); }, 1000);
-    // 5) tăng tone (2:34.2): hai cái bóng sáng lên, nhìn nhau, rồi tan vào ánh sáng; Ngày thứ 0 chạy lên Ngày thứ N
-    setTimeout(() => {
+    // 5) tăng tone (2:34.2) tới hết điệp khúc: hai cái bóng hoá ánh sáng và có một đoạn của riêng mình (mỗi cảnh một câu nhạc, ~6.8s)
+    const at2 = (sec, f) => setTimeout(f, when(sec)), both = (cls, on = true) => ['a', 'e'].forEach((w) => figCls(w, cls, on));
+    at2(154.2, () => { // sáng lên, quay sang nhìn nhau, cười
       keyPc = 7; kv.classList.add('bloom'); $('stage').classList.add('bloom');
-      ['a', 'e'].forEach((w) => { figCls(w, 'turn'); figCls(w, 'love'); figShow(w, 0.9, 'lt'); figShow(w, 0); });
-    }, when(154.2));
-    setTimeout(() => {
-      ['a', 'e'].forEach((w) => figCls(w, 'gone')); sparks('a', 'rgba(255,214,150,.95)'); sparks('e', 'rgba(255,182,204,.95)');
-    }, when(160.5));
+      $('days').style.opacity = 0; // "Ngày thứ 0" lùi đi, lát nữa đếm lên ngày thật
+      both('turn'); both('love'); both('happy'); ['a', 'e'].forEach((w) => { figShow(w, 0.9, 'lt'); figShow(w, 0); }); still.a = still.e = 1;
+    });
+    at2(161, () => { both('love', false); both('near'); }); // ngồi sát lại, vẫn nhìn nhau
+    at2(167.8, () => { // em quay về phím đánh tiếp; anh vẫn ngắm em
+      both('happy', false); both('near', false); figCls('e', 'turn', false); figCls('a', 'watch'); still.e = 0;
+    });
+    at2(174.5, () => { figCls('e', 'shy'); still.e = 0.6; }); // em cúi xuống, ngại
+    at2(177.8, () => { figCls('a', 'watch', false); figCls('a', 'kiss'); still.e = 1; }); // anh nghiêng sang
+    at2(180.6, () => kissGlow(FIG.e.cx - 52, 98)); // hôn má
+    at2(184.4, () => { // em quay sang anh, vẫn cúi; hai người tựa đầu vào nhau
+      figCls('a', 'kiss', false); figCls('e', 'turn'); both('nestle');
+    });
+    at2(188.1, () => both('happy'));
+    at2(194.9, () => { // tan vào ánh sáng
+      both('gone'); sparks('a', 'rgba(255,214,150,.95)'); sparks('e', 'rgba(255,182,204,.95)');
+    });
     const N = Math.floor((Date.now() - new Date('2026-08-06T23:38:58')) / 864e5) + 1;
     setTimeout(() => {
       const days = $('days'); days.className = 'days'; days.style.opacity = 1;
       const t1 = performance.now(), dur = 3800;
       (function count() { const k = Math.min(1, (performance.now() - t1) / dur), v = Math.round(N * (1 - Math.pow(1 - k, 3))); days.textContent = 'Ngày thứ ' + v + (k >= 1 ? ' bên nhau' : ''); if (k < 1) requestAnimationFrame(count); })();
-    }, when(162.5));
+    }, when(197.5));
     // 6) đoạn kết lắng: màn đen
     setTimeout(() => { clearInterval(warmUp); mode = ''; $('black').classList.add('on'); }, when(213));
     [['e1', 215], ['e2', 220], ['e2c', 223.5], ['e3', 229], ['e4', 235], ['e6', 239], ['e5', 241]].forEach(([id, sec]) => setTimeout(() => $(id).classList.add('on'), when(sec)));

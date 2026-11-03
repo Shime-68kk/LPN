@@ -27,9 +27,14 @@ window.MB = (() => {
       for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.4); }
       rev.buffer = b; const rg = ac.createGain(); rg.gain.value = 0.5; rev.connect(rg).connect(out);
     }
-    if (ac.state === 'suspended') ac.resume();
+    // iPhone: ngoài 'suspended' còn 'interrupted' (sau cuộc gọi, chuyển app, iframe khác vừa phát) → cũng phải bật lại
+    wake();
     return ac;
   }
+  // chạm bất kỳ đâu hay quay lại trang mà âm thanh đang bị ngắt → bật lại (resume chỉ chắc ăn trong một cú chạm)
+  function wake() { if (ac && ac.state !== 'running' && ac.state !== 'closed') { const p = ac.resume(); if (p && p.catch) p.catch(() => {}); } }
+  ['pointerdown', 'touchend', 'click'].forEach((n) => document.addEventListener(n, wake, true));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
   function noise(t, dur, type, freq, q, gain) {
     const buf = ac.createBuffer(1, Math.ceil(ac.sampleRate * dur), ac.sampleRate), d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -71,10 +76,19 @@ window.MB = (() => {
 
   // ===== File nhạc =====
   const bufs = {};
+  // Mạng điện thoại chập chờn: tải hỏng thì thử lại (3 lần, mỗi lần tối đa 30s); hỏng hẳn thì quên đi để lần chạm sau tải lại từ đầu
   function load(url) {
     if (bufs[url]) return bufs[url];
     AC();
-    bufs[url] = fetch(url).then((r) => r.arrayBuffer()).then((a) => new Promise((res, rej) => ac.decodeAudioData(a, res, rej)));
+    const once = () => {
+      const ctl = window.AbortController ? new AbortController() : null, to = ctl && setTimeout(() => ctl.abort(), 30000);
+      return fetch(url, ctl ? { signal: ctl.signal } : {})
+        .then((r) => { if (!r.ok) throw new Error(url + ' ' + r.status); return r.arrayBuffer(); })
+        .then((a) => new Promise((res, rej) => ac.decodeAudioData(a, res, rej)))
+        .finally(() => clearTimeout(to));
+    };
+    const tryN = (n) => once().catch((e) => (n > 1 ? new Promise((r) => setTimeout(r, 800)).then(() => tryN(n - 1)) : Promise.reject(e)));
+    bufs[url] = tryN(3).catch((e) => { delete bufs[url]; throw e; });
     return bufs[url];
   }
   // play(url, {offset, dur, gain, phone: true (loa điện thoại nhỏ, rè), wet}) → { src, gain, lpf, hpf, stop(sec) }
