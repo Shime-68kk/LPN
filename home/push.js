@@ -15,7 +15,7 @@
     for (const ch of s) { h ^= ch.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0; }
     return h.toString(16);
   };
-  if (ok) navigator.serviceWorker.register('../service-worker.js', { scope: '../' }).catch(() => {});
+  if (ok) navigator.serviceWorker.register('../service-worker.js', { scope: '../' }).catch(() => {}); // offline.js cũng đăng ký (cả máy không có Push)
 
   // Lưu địa chỉ nhận dưới tên người đang dùng máy, và gỡ khỏi người kia (máy vừa đổi tài khoản).
   async function save(sub) {

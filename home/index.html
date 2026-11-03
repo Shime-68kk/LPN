@@ -42,7 +42,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="home.css?v=35" />
+  <link rel="stylesheet" href="home.css?v=36" />
 </head>
 <body data-weather="nang">
   <script>document.body.dataset.weather = LPN_SKY; document.body.classList.toggle('night', LPN_NIGHT); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
@@ -246,6 +246,10 @@
       <button class="close" type="button" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
     </header>
     <ul class="playlist" id="playlist"></ul>
+    <div class="dl-songs">
+      <button type="button" id="dl-songs" disabled>Tải nhạc về máy</button>
+      <p id="dl-state">Tải một lần, lúc mạng yếu hay mất mạng vẫn nghe và chơi được.</p>
+    </div>
   </section>
 
   <section class="panel panel-tall" id="panel-letter" role="dialog" aria-modal="true" aria-labelledby="pl-title" hidden>
@@ -358,7 +362,8 @@
   </div>
 
   <script src="sync.js?v=8"></script>
-  <script src="push.js?v=1"></script>
+  <script src="push.js?v=2"></script>
+  <script src="offline.js?v=1"></script>
   <script src="diary.js?v=8"></script>
   <script src="home.js?v=33"></script>
   <script src="../shop/skins.js?v=34"></script>

@@ -8,3 +8,6 @@ node_modules/**
 
 # Bài gốc để cắt nhạc trailer: chỉ để trên máy, không đưa lên GitHub
 tools/trailer-music/src/
+
+# Danh sách file cho chế độ offline: tạo lúc build (tools/offline-list.mjs); bản ở gốc chỉ để thử trong mạng nhà
+/offline.json

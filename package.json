@@ -2,6 +2,6 @@
   "name": "lpn",
   "version": "1.0.0",
   "scripts": {
-    "build": "rm -rf dist && mkdir -p dist && cp -r index.html manifest.json service-worker.js assets home game shop story legacy dist/"
+    "build": "rm -rf dist && mkdir -p dist && cp -r index.html manifest.json service-worker.js assets home game shop story legacy dist/ && node tools/offline-list.mjs dist"
   }
 }

@@ -42,7 +42,7 @@ Commit cũ mô tả những thứ không còn trong web hiện tại, nên đừ
 ```
 index.html          cổng vào, chỉ chuyển sang home/
 manifest.json       cấu hình PWA
-service-worker.js   nhận thông báo đẩy (không cache gì)
+service-worker.js   chơi offline / mạng yếu (lưu trang, code, ảnh, nhạc theo offline.json) và nhận thông báo đẩy
 home/               trang chủ; wallet.js (ví đốt cây), sync.js (sao lưu Firebase), push.js (thông báo), diary.js (nhật ký)
 story/              cốt truyện; hoi-uc.* là Băng số 1 (Hồi ức), mat-b/ là Mặt B (gác xép, mở bằng đồng hồ phòng khách)
 game/               Sâu Tím; beatmaps/ là nốt nhạc của từng bài
@@ -75,6 +75,6 @@ HTML, CSS, JavaScript thuần, không framework, không bước build thật s�
 python3 -m http.server 8080      # chạy thử, mở http://localhost:8080/
 ```
 
-Push lên `main` thì Cloudflare Workers Builds chạy `npm run build`. Lệnh này chép các thư mục vào `dist/` rồi phục vụ thư mục đó. Khi sửa JS hoặc CSS, tăng số `?v=` trong thẻ `<script>` / `<link>` để điện thoại tải bản mới.
+Push lên `main` thì Cloudflare Workers Builds chạy `npm run build`. Lệnh này chép các thư mục vào `dist/`, chạy `tools/offline-list.mjs` ghi `dist/offline.json` (danh sách file kèm mã băm cho service worker), rồi phục vụ thư mục đó. Khi sửa JS hoặc CSS, tăng số `?v=` trong thẻ `<script>` / `<link>` để điện thoại tải bản mới.
 
 Hướng dẫn ngắn cho AI và coding agent nằm ở `AGENTS.md`.

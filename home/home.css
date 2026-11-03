@@ -978,3 +978,10 @@ body.night .news-card .btn.ghost { color: #D9BE98; border-color: rgba(246, 231, 
 .news.is-tape .news-card p { color: rgba(236, 230, 218, .7); }
 .news.is-tape .news-ok { background: #ECE3CF !important; border-color: #ECE3CF !important; color: #17121C !important; }
 .news.is-tape .news-card .btn.ghost { color: rgba(236, 230, 218, .7); border-color: rgba(236, 230, 218, .2); }
+
+/* Tải nhạc về máy (home/offline.js): nghe và chơi được khi mạng yếu / mất mạng */
+.dl-songs { flex: none; margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.dl-songs button { min-height: 44px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); font-size: 14px; font-weight: 600; }
+.dl-songs button:not(:disabled):active { background: var(--t-music); transform: scale(.98); }
+.dl-songs button:disabled { opacity: .7; cursor: default; }
+.dl-songs p { margin: 0; font-size: 12px; color: var(--muted); text-align: center; }
