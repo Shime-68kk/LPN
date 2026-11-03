@@ -5,7 +5,11 @@ window.MB = (() => {
   const $ = (id) => document.getElementById(id);
   const stage = $('stage');
   let K = 1;
-  function fit() { K = Math.min(innerWidth / 960, innerHeight / 540); stage.style.transform = 'translate(-50%, -50%) scale(' + K + ')'; }
+  function fit() {
+    K = Math.min(innerWidth / 960, innerHeight / 540); stage.style.transform = 'translate(-50%, -50%) scale(' + K + ')';
+    // Màn máy tính (K > 1): ô hạt phim thu lại theo K để hạt vẫn nhỏ cỡ một điểm ảnh, không phóng to thành vỡ hạt
+    stage.style.setProperty('--gk', (1 / Math.max(1, K)).toFixed(4));
+  }
   addEventListener('resize', fit); fit();
 
   // iPhone: chạm nhanh hai lần (gõ phím liên tục) hay chụm hai ngón sẽ phóng to cả trang rồi không thu lại được → chặn.

@@ -14,7 +14,7 @@
 //   → robot đọc mã 4719 → điện thoại → sau khung ảnh: băng thật + lá thư (radio ngoài sân to lên) → đầu băng → nút nguồn.
 // Đồ tìm thấy không tự vào túi: chỗ có đồ sáng nhẹ, mở ra thấy đồ phát sáng, chạm từng món để cầm lên (bay vào túi).
 // Chìa khoá cổng cũng phải cầm từ túi rồi chạm vào ổ khoá cổng đình. Đồ dùng xong tự biến khỏi túi (băng giả: khi câu đố của nó giải xong); "Sổ ghi chép" giữ lại manh mối, cái nào giải xong có dấu ✓.
-// Tiến độ lưu trên máy (lpn:bang1). Chơi lại từ đầu: thêm ?moi=1 vào địa chỉ. Xem thử: ?thu=sach, vali, bang, maytinh, dinh, thu, bangthat.
+// Tiến độ lưu trên máy (lpn:bang1). Chơi lại từ đầu (cả gác xép Mặt B): thêm ?moi=1 vào địa chỉ. Xem thử: ?thu=sach, vali, bang, maytinh, dinh, thu, bangthat.
 'use strict';
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -41,9 +41,10 @@
     bangthat: { room: 'r1', lamp: true, tut: true, tour: { r1: true, r2: true, r3: true }, items: { A: true, B: true, C: true, D: true, E: true, letter: true, wheel: true, note1: true, note2: true, key: true }, seen: { A: true, B: true, C: true, D: true }, done: ALL_DONE, inVcr: 'E' },
   }[TRY === 'cuoiphim' ? 'bangthat' : TRY] || { room: 'r2', lamp: true, tut: true, items: { A: true, B: true, C: true, wheel: true, note1: true }, seen: { A: true, B: true, C: true }, done: { jig: true, book: true, cipher: true, pillow: true } };
   // Xoá xong thì bỏ ?moi=1 khỏi địa chỉ, để lỡ tải lại trang giữa chừng không bị xoá tiến độ lần nữa.
+  // Chơi lại từ đầu thì gác xép Mặt B (matb:thu) cũng bắt đầu lại.
   try {
     if (/[?&]moi=1\b/.test(location.search)) {
-      localStorage.removeItem(KEY);
+      localStorage.removeItem(KEY); localStorage.removeItem('matb:thu');
       history.replaceState(null, '', location.pathname + location.search.replace(/[?&]moi=1\b/, '').replace(/^&/, '?') + location.hash);
     }
   } catch (e) { /* bỏ qua */ }

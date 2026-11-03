@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Caveat:wght@500;700&display=swap" />
-<link rel="stylesheet" href="chung.css?v=2" />
+<link rel="stylesheet" href="chung.css?v=3" />
 <style>
   .phone { left: 60px; top: 10px; }
   .scr { background: #18191C !important; }
@@ -93,7 +93,8 @@
   <div id="say"></div>
 </div></div>
 <div id="rot">Xoay ngang điện thoại nhé.</div>
-<script src="chung.js?v=3"></script>
+<script src="chung.js?v=4"></script>
+<script src="phim.js?v=1"></script>
 <script>
 // Thùng "1/6 · /im lặng" (bản thử). Messenger đã dọn sạch; phải tự tìm Kho lưu trữ. Đoạn chat với "ẩm ic 😌" chỉ còn
 // "Bạn đã gỡ một tin nhắn" (anh đã xoá thật) và tin cuối bị vỡ thành mảnh. Ghép lại đúng nguyên văn tin 23:21 ngày 1/6
@@ -200,6 +201,19 @@
     });
   }
   $('tap').onclick = () => { if (!opened || sent) return; $('v-chat').classList.add('typing'); $('kb').classList.add('on'); $('cur').style.display = 'inline-block'; drawKb(); sfx.tap(); };
+  // Bàn phím máy tính: gõ thẳng vào ô chat (tự mở bàn phím ảo), ⌫ xoá, Enter gửi; gõ "lặng" có dấu hay "lang" đều được
+  addEventListener('keydown', (e) => {
+    if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || !opened || sent || e.repeat) return;
+    if (!$('kb').classList.contains('on')) { if (e.key.length !== 1) return; $('tap').click(); }
+    if (e.key === 'Backspace') back();
+    else if (e.key === 'Enter') { if (!$('menu2').classList.contains('on')) $('send').click(); }
+    else if (e.key.length === 1) {
+      typeKey(e.key.toLowerCase());
+      // gõ tới "/im l" (có dấu, không dấu hay kiểu Telex đều được) thì như chọn lệnh /im lặng trong danh sách
+      if (/^\/im l/.test(typed.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))) { showCmds(); const it = [...$('menu2').children].find((x) => x.textContent.startsWith('/im lặng')); if (it) it.click(); }
+    } else return;
+    e.preventDefault();
+  });
   say('Thùng "1/6". Chiếc điện thoại sáng màn hình lúc 23:21.', 4500);
 })();
 </script>

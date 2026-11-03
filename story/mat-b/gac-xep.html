@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Caveat:wght@500;700&family=Lora:ital,wght@1,500;1,600&display=swap" />
-<link rel="stylesheet" href="chung.css?v=2" />
+<link rel="stylesheet" href="chung.css?v=3" />
 <style>
   html, body { background: #07080C; }
   #stage { background: #0B0E16; box-shadow: none; --w: 0; }
@@ -194,7 +194,21 @@
   #stage.bloom .motes i { background: rgba(255,214,150,.95); }
   #stage.bloom .moonbeam { background: linear-gradient(200deg, rgba(255,200,130,.28), rgba(255,200,130,0) 75%); }
   .days { position: absolute; left: 0; right: 0; top: 84px; text-align: center; z-index: 56; transition: opacity 3s, top 1.6s, font-size 1.6s, color 2s; font-size: 34px; font-weight: 800; color: #FFE3B0; text-shadow: 0 0 24px rgba(255,180,100,.7), 0 2px 8px #000; opacity: 0; transition: opacity 3s; pointer-events: none; }
-  .days.zero { top: 14px; left: 26px; right: auto; text-align: left; font-size: 15px; font-weight: 600; color: #9DB8F0; text-shadow: none; letter-spacing: .04em; }
+  .days.zero, .days.run { top: 12px; left: 26px; right: auto; text-align: left; font-family: 'Lora', serif; font-style: italic; font-size: 18px; font-weight: 500; color: #9DB8F0; text-shadow: none; letter-spacing: .02em; }
+  /* hai bóng vừa bừng sáng: số ngày đếm ngầm ở góc, ấm lên */
+  .days.run { color: #FFE3B0; text-shadow: 0 0 14px rgba(255,190,120,.55); transition: opacity 2.4s; }
+  .days.run b, .days.zero b { font-weight: 600; font-size: 21px; }
+  /* tan vào ánh sáng: ra giữa, con số lớn */
+  .days.big { top: 62px; font-family: 'Lora', serif; font-style: italic; font-weight: 500; font-size: 26px; color: #FFEBCB; letter-spacing: .01em;
+    text-shadow: 0 0 26px rgba(255,180,100,.65), 0 2px 10px rgba(0,0,0,.7); animation: daysIn 2.6s cubic-bezier(.2,.7,.2,1) both; }
+  .days.big b { display: inline-block; margin: 0 6px; font-size: 68px; font-weight: 600; line-height: 1; vertical-align: -10px; color: #FFE3B0; }
+  @keyframes daysIn { from { opacity: 0; transform: translateY(10px) scale(.94); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+  /* phụ đề cảnh hai cái bóng: dòng nghiêng là điều đang diễn ra, dòng có gạch đầu là lời nói (hồng: em, vàng: anh) */
+  .sub { position: absolute; left: 0; right: 0; top: 452px; z-index: 71; padding: 0 90px; text-align: center; pointer-events: none; opacity: 0; transition: opacity .7s; text-shadow: 0 2px 8px #000, 0 0 3px #000; }
+  .sub.on { opacity: 1; }
+  .sub .act { font-family: 'Lora', serif; font-style: italic; font-size: 19px; color: rgba(246,236,218,.9); }
+  .sub .e, .sub .a { font-size: 19px; font-weight: 500; }
+  .sub .e { color: #FFC7D6; } .sub .a { color: #FFE2AE; }
   .black { position: absolute; inset: 0; z-index: 85; background: #000; opacity: 0; transition: opacity 3s; pointer-events: none; display: grid; place-items: center; text-align: center; color: #F3EBDA; }
   .black.on { opacity: 1; pointer-events: auto; }
   .black p { margin: 10px 0; opacity: 0; transition: opacity 2.5s; }
@@ -266,6 +280,7 @@
   </div>
   <div class="warm"></div>
   <div class="days" id="days"></div>
+  <div class="sub" id="sub"></div>
   <div id="kv">
     <div class="wallk"></div><div class="haloc"></div><div class="halo"></div><div class="motek" id="motek"></div><div class="figs" id="figs"></div>
     <div class="lid"></div><div class="body"></div><div class="floor2"></div><div class="panel"></div><div class="pedal" style="left:430px"></div><div class="pedal" style="left:504px"></div>
@@ -289,7 +304,8 @@
   <div id="start"><div><b>Gác xép</b><small>Băng số 1 · Mặt B · chạm để vào</small></div></div>
 </div></div>
 <div id="rot">Xoay ngang điện thoại nhé.</div>
-<script src="chung.js?v=3"></script>
+<script src="chung.js?v=4"></script>
+<script src="phim.js?v=1"></script>
 <script src="../../home/offline.js?v=1"></script>
 <script>
 // Gác xép (bản thử): nối các thùng lại. Mỗi thùng mở câu đố của nó trong khung; giải xong (trang con báo MB.done)
@@ -330,7 +346,7 @@
   // gói mọi thứ của căn gác vào #room (để phóng về phía cây đàn khi bước lại gần); lớp phủ thì để ngoài
   (() => {
     const room = document.createElement('div'); room.id = 'room';
-    const keep = ['kv', 'herbg', 'her', 'black', 'say', 'reset', 'frame', 'start', 'days'];
+    const keep = ['kv', 'herbg', 'her', 'black', 'say', 'reset', 'frame', 'start', 'days', 'sub'];
     [...$('stage').children].forEach((el) => { if (!keep.includes(el.id) && !el.classList.contains('grain')) room.appendChild(el); });
     $('stage').insertBefore(room, $('stage').firstChild);
   })();
@@ -546,8 +562,8 @@
   const GUIDE = [73, 75, 78, 75, 73, 70], BASS = { 0: 54, 3: 51, 5: 54 };
   let gi = 0, onGuideDone = null, guideT = 0;
   function showHint() { document.querySelectorAll('#kv .k.hint').forEach((k) => k.classList.remove('hint')); if (gi < GUIDE.length) keys[GUIDE[gi]].classList.add('hint'); }
-  $('kb').addEventListener('pointerdown', (e) => {
-    const k = e.target.closest('.k'); if (!k) return;
+  $('kb').addEventListener('pointerdown', (e) => { const k = e.target.closest('.k'); if (k) hitKey(k); });
+  function hitKey(k) {
     if (mode === 'guide') {
       const m = GUIDE[gi]; pno(m, 1); press(m, '#FF7FA3', 700, 'e');
       if (BASS[gi] != null) { pno(BASS[gi], 0.7); press(BASS[gi], '#FFC978', 900, 'a'); }
@@ -555,11 +571,46 @@
       figShow('e', Math.min(1, 0.12 + gi * 0.15));
       if (gi === 2) say('Bóng ai đó, ngồi xuống bên cạnh.', 4000);
       if (gi >= GUIDE.length) { mode = ''; showHint(); onGuideDone && onGuideDone(); }
-      else { showHint(); guideT = setTimeout(() => say('Chạm vào phím đang sáng hồng.', 4000), 9000); }
+      else { showHint(); guideT = setTimeout(() => say(DESK ? 'Bấm phím đang sáng hồng, hoặc gõ phím bất kỳ.' : 'Chạm vào phím đang sáng hồng.', 4000), 9000); }
       return;
     }
     if (mode === 'free') { const m = snap(+k.dataset.m); pno(m, 0.8); press(m, '#FF7FA3', 600, 'e'); herNotes++; }
+  }
+  // ===== Chơi bằng bàn phím máy tính =====
+  // Phím đàn: hàng dưới Z S X D C V G B H N J M , L . ; / là C3 → E4, hàng trên Q 2 W 3 E 4 R T 6 Y 7 U I 9 O 0 P - [ ] là F4 → C6
+  // (phím đen ở hàng chữ / hàng số ngay phía trên, như đàn ảo trên máy tính). Lúc "bấm theo anh", phím nào cũng ra đúng nốt.
+  // Điện thoại của em: gõ phím nào cũng ra chữ tiếp theo của câu hỏi, Enter để gửi. Esc: đóng thùng / cất điện thoại.
+  const DESK = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const PKEY = {};
+  [...'zsxdcvgbhnjm,l.;/'].forEach((c, i) => { PKEY[c] = LO + i; });
+  [...'q2w3e4rt6y7ui9o0p-[]'].forEach((c, i) => { PKEY[c] = 65 + i; });
+  $('ifr').addEventListener('load', () => { try { $('ifr').contentWindow.focus(); } catch (e) { /* bỏ qua */ } });
+  addEventListener('keydown', (e) => {
+    if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key.toLowerCase();
+    if (k === 'escape') {
+      if ($('frame').classList.contains('on')) { $('cl').click(); e.preventDefault(); }
+      else if ($('her').classList.contains('on') && !asked) { $('herbg').click(); e.preventDefault(); }
+      return;
+    }
+    if ($('her').classList.contains('on')) {
+      if (asked) return;
+      if (k === 'enter') { if (qi >= Q.length) $('hsend').click(); e.preventDefault(); return; }
+      if (k.length !== 1 && k !== ' ' || e.repeat) return;
+      if (!$('her').classList.contains('typing')) $('hbar').click();
+      const next = (Q[qi] || '').toLowerCase(), all = [...$('hkb').querySelectorAll('.kk')];
+      const kk = all.find((x) => x.textContent === next) || all.find((x) => x.textContent === k) || all[qi % all.length];
+      kk.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      e.preventDefault(); return;
+    }
+    if ((mode === 'guide' || mode === 'free') && !e.repeat) {
+      const m = PKEY[k] != null ? PKEY[k] : (mode === 'guide' && (k.length === 1 || k === 'enter') ? GUIDE[gi] : null);
+      if (m != null && keys[m]) { hitKey(keys[m]); e.preventDefault(); }
+      return;
+    }
+    if ((k === 'enter' || k === ' ') && vis($('start'))) { $('start').click(); e.preventDefault(); }
   });
+  function vis(el) { return !!el && el.offsetParent !== null && getComputedStyle(el).opacity !== '0'; }
   function bell() {
     const a = MB.AC(), t = a.currentTime;
     [[1318.5, 0], [1760, 0.13], [1318.5, 0.6], [1760, 0.73]].forEach(([fq, d]) => { const o = a.createOscillator(), g = a.createGain(); o.type = 'sine'; o.frequency.value = fq; g.gain.setValueAtTime(0, t + d); g.gain.linearRampToValueAtTime(0.14, t + d + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t + d + 0.5); o.connect(g).connect(a.destination); o.start(t + d); o.stop(t + d + 0.55); });
@@ -662,7 +713,7 @@
     await wait(2000);
     const kv = $('kv'); kv.style.setProperty('--w', 0); kv.classList.add('on', 'cold');
     $('stage').classList.remove('lit');
-    const days = $('days'); days.className = 'days zero'; days.textContent = 'Ngày thứ 0';
+    const days = $('days'); days.className = 'days zero'; days.innerHTML = 'Ngày thứ <b>0</b>';
     if (!earOn) { earOn = true; requestAnimationFrame(earLoop); }
     if (/[?&]nhay\b/.test(location.search)) { asked = true; figShow('a', 1); again(); return; } // chỉ để thử: nhảy tới đoạn em bấm theo anh
     if (/[?&]cuoi\b/.test(location.search)) { asked = true; kv.classList.remove('cold'); figShow('a', 1); figShow('e', 1); perform(148); return; } // chỉ để thử: nhảy tới gần lúc tăng tone
@@ -694,6 +745,7 @@
   function openHer() {
     if (asked) return; sfx.tap();
     $('herbg').classList.add('on'); $('her').classList.add('on'); $('say').style.opacity = 0;
+    $('days').style.opacity = 0; // em bắt đầu nhắn: "Ngày thứ 0" không còn nữa
   }
   // Em gõ lại câu tháng 7: bấm phím nào cũng ra chữ tiếp theo của đúng câu ấy; đủ câu thì nút gửi sáng
   const Q = 'Anh đỡ mệt chưa, còn bị sốt không?';
@@ -713,7 +765,7 @@
     qi++; $('htx').textContent = Q.slice(0, qi); sfx.key();
     if (qi >= Q.length) $('hsend').classList.add('ready');
   });
-  $('herbg').onclick = () => { if (asked) return; $('herbg').classList.remove('on'); $('her').classList.remove('on', 'typing'); };
+  $('herbg').onclick = () => { if (asked) return; $('herbg').classList.remove('on'); $('her').classList.remove('on', 'typing'); $('days').style.opacity = 1; };
   async function send(text) {
     const b = document.createElement('div'); b.className = 'bub'; b.textContent = text;
     $('hchat').appendChild(b); $('hchat').insertAdjacentHTML('beforeend', '<div class="st">Đã gửi</div>');
@@ -749,6 +801,10 @@
     guideT = setTimeout(() => say('Chạm vào phím đang sáng hồng.', 4000), 9000);
     onGuideDone = () => perform();
   }
+  // phụ đề cảnh hai cái bóng (lời em có gạch đầu dòng, màu hồng; lời anh màu vàng)
+  function subtitle(cls, text) {
+    const el = $('sub'); el.innerHTML = '<span class="' + cls + '">' + (cls === 'act' ? '' : '— ') + text + '</span>'; el.classList.add('on');
+  }
   // 4) nốt cuối của em: tiếng đàn chạy tiếp, bài gốc hoà vào, tất cả cùng lúc
   async function perform(from) {
     const kv = $('kv'), a = MB.AC();
@@ -781,7 +837,7 @@
     const at2 = (sec, f) => setTimeout(f, when(sec)), both = (cls, on = true) => ['a', 'e'].forEach((w) => figCls(w, cls, on));
     at2(154.2, () => { // sáng lên, quay sang nhìn nhau, cười
       keyPc = 7; kv.classList.add('bloom'); $('stage').classList.add('bloom');
-      $('days').style.opacity = 0; // "Ngày thứ 0" lùi đi, lát nữa đếm lên ngày thật
+      runDays(); // chọn yêu nhau: số ngày bắt đầu chạy ngầm ở góc
       both('turn'); both('love'); both('happy'); ['a', 'e'].forEach((w) => { figShow(w, 0.9, 'lt'); figShow(w, 0); }); still.a = still.e = 1;
     });
     at2(161, () => { both('love', false); both('near'); }); // ngồi sát lại, vẫn nhìn nhau
@@ -798,12 +854,30 @@
     at2(194.9, () => { // tan vào ánh sáng
       both('gone'); sparks('a', 'rgba(255,214,150,.95)'); sparks('e', 'rgba(255,182,204,.95)');
     });
-    const N = Math.floor((Date.now() - new Date('2026-08-06T23:38:58')) / 864e5) + 1;
-    setTimeout(() => {
-      const days = $('days'); days.className = 'days'; days.style.opacity = 1;
-      const t1 = performance.now(), dur = 3800;
-      (function count() { const k = Math.min(1, (performance.now() - t1) / dur), v = Math.round(N * (1 - Math.pow(1 - k, 3))); days.textContent = 'Ngày thứ ' + v + (k >= 1 ? ' bên nhau' : ''); if (k < 1) requestAnimationFrame(count); })();
-    }, when(197.5));
+    // Số ngày: từ lúc bừng sáng (154.2) tới lúc tan (194.9) chạy ngầm, đều, từ 1 lên đúng hôm nay (tính lúc xem), theo đồng hồ của bài hát;
+    // tan xong thì góc lặng đi, con số ra giữa: "Ngày thứ N bên nhau"
+    const N = Math.floor((Date.now() - new Date('2026-08-06T23:38:58')) / 864e5) + 1, D0 = 154.2, D1 = 194.9;
+    function runDays() {
+      const days = $('days'); days.className = 'days run'; days.innerHTML = 'Ngày thứ <b>1</b>'; days.style.opacity = 1;
+      const b = days.querySelector('b');
+      (function tick() {
+        const k = Math.min(1, Math.max(0, (a.currentTime - t0 - D0) / (D1 - D0)));
+        b.textContent = 1 + Math.round((N - 1) * k); // tăng đều: hôm nay là ngày 90 hay ngày 500 thì cũng chạy hết đúng cảnh ấy
+        if (k < 1 && days.classList.contains('run')) requestAnimationFrame(tick);
+      })();
+    }
+    at2(195.6, () => { $('days').style.opacity = 0; });
+    at2(197.6, () => { const days = $('days'); days.className = 'days big'; days.innerHTML = 'Ngày thứ <b>' + N + '</b> bên nhau'; days.style.opacity = 1; });
+    // Phụ đề: [giây bắt đầu, giây tắt, kiểu, lời]. act: điều đang diễn ra; e / a: lời em / lời anh
+    [
+      [155.2, 160.6, 'act', 'Hai cái bóng bừng sáng. Họ quay sang nhìn nhau.'],
+      [161.3, 167.4, 'act', 'Anh cứ nhìn em mãi, đơ cả người.'],
+      [168.1, 171.4, 'act', 'Em ngại, quay về phía phím đàn.'],
+      [171.7, 177.4, 'e', 'Anh đừng nhìn em thế… em ngại lắm.'],
+      [178.1, 180.5, 'act', 'Anh nghiêng sang…'],
+      [180.7, 184.1, 'act', '…thơm nhẹ lên má em.'],
+      [184.7, 191.5, 'act', 'Em không nói gì. Chỉ khẽ tựa đầu vào anh.'],
+    ].forEach(([s0, s1, cls, text]) => { at2(s0, () => subtitle(cls, text)); at2(s1, () => $('sub').classList.remove('on')); });
     // 6) đoạn kết lắng: màn đen
     setTimeout(() => { clearInterval(warmUp); mode = ''; $('black').classList.add('on'); }, when(213));
     [['e1', 215], ['e2', 220], ['e2c', 223.5], ['e3a', 228], ['e3', 230.5], ['e4', 235], ['e6', 239], ['e5', 241]].forEach(([id, sec]) => setTimeout(() => $(id).classList.add('on'), when(sec)));
