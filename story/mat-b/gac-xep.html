@@ -73,7 +73,7 @@
     background: radial-gradient(ellipse 46% 88% at 50% 62%, rgba(170,195,245,.30), rgba(140,170,240,.06) 62%, transparent 82%); mix-blend-mode: screen; }
   #kv.cold .halo { opacity: 0; } #kv.cold .haloc { opacity: 1; }
   #kv .figs { position: absolute; left: 0; right: 0; top: 0; height: 210px; overflow: hidden; z-index: 1; }
-  #kv .fig { position: absolute; top: -4px; width: 300px; height: 260px; overflow: visible; pointer-events: none; transition: opacity 2.4s; transform-origin: 150px 262px; will-change: transform; }
+  #kv .fig { position: absolute; top: -4px; width: 300px; height: 260px; overflow: visible; pointer-events: none; transition: opacity 2.4s; }
   #kv .fig.sh { color: rgba(26,12,6,.78); mix-blend-mode: multiply; filter: blur(2.2px) drop-shadow(0 0 10px rgba(20,8,2,.35)); opacity: 0; }
   #kv.cold .fig.sh { color: rgba(10,16,34,.8); }
   #kv .fig.lt { mix-blend-mode: screen; filter: blur(1.6px) drop-shadow(0 0 14px currentColor); opacity: 0; }
@@ -516,8 +516,8 @@
       const sway = Math.sin(now / 1400 + (who === 'a' ? 0 : 1.7)) * 0.6;
       const t = 'translate(' + (F.lean * 3).toFixed(1) + 'px,' + F.dip.toFixed(1) + 'px) rotate(' + (F.lean + sway).toFixed(2) + 'deg)';
       if (t === F.t) continue; F.t = t;
-      // xoay cả khung svg (đã là một lớp riêng trên GPU) thay vì nhóm bên trong: iPhone khỏi phải vẽ lại vùng làm mờ mỗi khung
-      F.els.forEach((el) => { if (+el.style.opacity > 0) el.style.transform = t; });
+      // xoay nhóm bên trong (xoay cả khung svg kèm will-change làm Chrome để lại vụn sáng quanh bóng); bóng đang ẩn thì khỏi vẽ
+      F.els.forEach((el) => { if (+el.style.opacity > 0) { const g = el.firstChild; g.style.transformOrigin = '150px 262px'; g.style.transform = t; } });
     }
   }
   let ears = [];
