@@ -34,6 +34,8 @@ http.createServer((req, res) => {
   let f = path.normalize(path.join(base, p.startsWith('/_phim/') ? p.slice(6) : p));
   if (!f.startsWith(base)) { res.writeHead(403).end(); return; }
   try { if (fs.statSync(f).isDirectory()) f = path.join(f, 'index.html'); } catch (e) { /* xử lý ở dưới */ }
+  // giống Cloudflare: link không đuôi (../story/hoi-uc) thì phục vụ hoi-uc.html
+  if (!fs.existsSync(f) && fs.existsSync(f + '.html')) f += '.html';
   let st;
   try { st = fs.statSync(f); } catch (e) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Không có ' + p); return; }
   if (/tam-su|hoi-uc\.html|bang1\.js|\/game\/(index\.html)?$|game\.js/.test(p)) console.log(new Date().toLocaleTimeString('vi-VN'), req.socket.remoteAddress, p, req.headers.range || '', (req.headers['user-agent'] || '').slice(0, 60));

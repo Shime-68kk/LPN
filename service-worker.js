@@ -93,10 +93,30 @@ function sync(force, groups = ['core', 'warm']) {
       try { const r = await fetch(ROOT + p, { cache: 'no-cache' }); if (storable(r)) { await c.put(k, await clean(r)); m.h[k] = h; delete m.v[k]; saveMeta(); } } catch (e) { /* lần sau */ }
     };
     for (let i = 0; i < core.length; i += 3) await Promise.all(core.slice(i, i + 3).map(grab));
+    if (groups.includes('warm')) await getFonts(list.fonts || []);
     for (const j of rest) await grab(j);
     await saveMeta();
   })().finally(() => { syncing = null; });
   return syncing;
+}
+
+// Phông chữ Google mà các trang dùng: lưu css, rồi các tệp phông trong css (mỗi tệp một lần)
+async function getFonts(urls) {
+  const c = await caches.open(FONTS);
+  for (const u of urls) {
+    try {
+      let css = await c.match(u, { ignoreVary: true });
+      // bản trang tự lưu (thẻ <link>) là opaque, không đọc được nội dung → tải lại kiểu cors
+      if (!css || css.type === 'opaque') { const r = await fetch(u, { mode: 'cors' }); if (!r.ok) continue; await c.put(u, r.clone()); css = r; }
+      const files = [...(await css.text()).matchAll(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+)\)/g)].map((m) => m[1]);
+      for (let i = 0; i < files.length; i += 4) {
+        await Promise.all(files.slice(i, i + 4).map(async (f) => {
+          if (await c.match(f, { ignoreVary: true })) return;
+          try { const r = await fetch(f, { mode: 'cors' }); if (r.ok) await c.put(f, r); } catch (e) { /* lần sau */ }
+        }));
+      }
+    } catch (e) { /* lần sau */ }
+  }
 }
 
 // Tải hết nhạc về máy (nút ở trang chủ), báo tiến độ về trang.
@@ -191,11 +211,11 @@ async function partial(res, range) {
 
 // Phông chữ Google: tệp phông giữ mãi, tệp css lấy mạng trước rồi mới tới bản đã lưu.
 async function font(e, req, url) {
-  const c = await caches.open(FONTS), hit = await c.match(req);
+  const c = await caches.open(FONTS), hit = await c.match(req.url, { ignoreVary: true });
   if (hit && url.hostname === 'fonts.gstatic.com') return hit;
   try {
     const res = await (hit ? Promise.race([fetch(req), new Promise((_, no) => setTimeout(no, WAIT))]) : fetch(req));
-    if (res.ok || res.type === 'opaque') e.waitUntil(c.put(req, res.clone()).catch(() => {}));
+    if (res.ok || res.type === 'opaque') e.waitUntil(c.put(req.url, res.clone()).catch(() => {}));
     return res;
   } catch (err) { return hit || Response.error(); }
 }
