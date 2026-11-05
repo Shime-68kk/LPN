@@ -1658,7 +1658,7 @@
     { t: '08:30', tag: 'Lần 3', where: 'Phòng anh', room: 'A', v: 'sang', wait: 'tin em chờ ba tiếng rưỡi',
       saw: 'Anh "trả lời ngay".',
       truth: 'Tin em đã nằm đó <b>ba tiếng rưỡi</b>. Búi chỉ to hơn hẳn lần trước.',
-      clue: 'Nắng đã lên, đồng hồ 8 giờ 30. Pin 92% → 81%. Tủ áo trống một nửa, một móc áo không.' },
+      clue: 'Nắng đã lên, đồng hồ 8 giờ 30. Pin 92% → 81%. Tủ áo trống một nửa vì thiếu đồ của em; cái móc em hay treo áo đung đưa, trống không.' },
     { t: 'Trưa', tag: 'Lần 4', where: 'Doanh trại · giờ nghỉ trưa', room: 'B', v: 'trua', wait: 'tin anh chờ khoảng ba tiếng',
       saw: 'Lấy máy trong ngăn tủ, đọc, gửi vội 4 tin, cất máy.',
       truth: 'Cả buổi sáng điện thoại nằm trong ngăn tủ. Em chỉ có <b>vài phút</b> nghỉ trưa. Có tiếng còi ngoài sân là phải cất máy.',
@@ -1722,6 +1722,21 @@
         + '<p>Bạn thấy: ' + esc(g.saw) + '</p><p>Thật ra: ' + g.truth + '</p>' + (g.clue ? '<p class="gi-clue">Manh mối: ' + esc(g.clue) + '</p>' : '');
       d.appendChild(tx); el.appendChild(d);
     }
+    // Những chi tiết ẩn, giải thích ý nghĩa (chỉ dùng chuyện có trong các chương và kịch bản đã duyệt)
+    const DET = [
+      ['Chiếc móc áo đung đưa trong tủ nhà anh', 'Một nửa cái tủ trống là vì <b>thiếu đồ của em</b>. Trước hôm đi, áo em treo lẫn với áo anh, mở tủ ra là thấy cả hai đứa. Em gấp từng cái vào vali (chương "Nhẹ đi một người"). Cái móc em hay treo áo vẫn ở đó, trống không, khẽ đung đưa.'],
+      ['Đồng hồ treo tường không có số', 'Để bạn khó đoán giờ mà tưởng hai nơi đang cùng một lúc. Nhưng kim vẫn đọc được nếu chịu nhìn: 4 giờ 30, rồi 8 giờ 30, rồi 9 giờ 40 tối.'],
+      ['Hai mặt đồng hồ ở bản đồ', 'Lần đầu tiên có số. Đồng hồ bên em <b>lệch đi</b> so với bên anh rồi mới từ từ <b>xoay khớp</b>. Cả ngày hai người sống lệch nhau: người này rảnh thì người kia bận. Chỉ tới cuộc gọi cuối ngày, hai mặt đồng hồ mới chỉ cùng một giờ.'],
+      ['Hai nhịp đập lệch nhau', 'Tiếng tích tắc bên anh và tiếng dế bên em, hai nhịp sống khác nhau. Ở cảnh mở đầu, hai nhịp sắp trùng thì bị cắt. Ở cuộc gọi, chúng trùng làm một, đúng phách bài hát lên một cung.'],
+      ['Pin tụt', '"Trả lời ngay" mà pin tụt cả chục phần trăm: giữa hai câu nhắn đã trôi qua mấy tiếng. Pin tím là máy anh, pin hồng là máy em.'],
+      ['Tiếng "ting" bên tai trái, tai phải', 'Đeo tai nghe sẽ nghe tin vọng sang từ phía cánh cửa của nhà kia. Tiếng "ting" là lúc người kia cầm máy lên, không phải lúc gửi.'],
+      ['Căn phòng của em', 'Giường lúc nào cũng gọn, các giường giống hệt nhau, giỏ có rất nhiều điện thoại, đèn tắt cùng lúc, tiếng "chuông" thật ra là còi: không phải nhà, mà là <b>doanh trại</b>.'],
+      ['"Nhớ ngủ sớm, bớt thức khuya"', 'Lời em dặn sáng hôm 26, lúc sắp đi. Dòng chữ hiện mờ trên máy anh lúc 4 giờ 30, khi anh vẫn còn thức.'],
+      ['Số 91, rồi 92', 'Số ngày anh đếm, từ đêm 23 giờ 38 phút ngày 6/8, đêm em nhận lời. Sang hôm sau thì thêm một ngày.'],
+      ['Sợi chỉ thẳng tắp của cuộc gọi', 'Không búi, không chùng, sáng nhất bản đồ: lần duy nhất trong ngày <b>không ai phải chờ ai</b>. Cuối cùng nó uốn thành một trái tim.'],
+      ['Chiếc khăn', 'Bảy búi chờ được gỡ ra rồi đan lại, mỗi vạch là một lần chờ, tím và hồng xen nhau: <b>những giờ chờ của cả hai người</b>, đan thành một thứ để giữ ấm cho nhau.'],
+    ];
+    el.insertAdjacentHTML('beforeend', '<div class="gi-box gi-det"><h3>Những chi tiết có thể bạn đã bỏ qua</h3>' + DET.map(([h, t]) => '<p><b>' + esc(h) + '.</b> ' + t + '</p>').join('') + '</div>');
     el.insertAdjacentHTML('beforeend', '<p class="gi-end">Cách nhau tám mươi cây số. Cả ngày, chỉ một lần không phải chờ.</p>');
   }
   function openGiai(back) {
