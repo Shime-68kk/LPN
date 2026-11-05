@@ -527,6 +527,17 @@
       nb.focus({ preventScroll: true });
       return;
     }
+    // Chương mở ra một màn chơi riêng (vd. chương 19 · Sợi chỉ): game: { page, title, text, btn }
+    if (ch.game) {
+      $('end-title').textContent = ch.game.title || 'Hết chương';
+      $('end-text').textContent = ch.game.text || '';
+      nb.hidden = false;
+      nb.textContent = ch.game.btn || 'Vào chơi';
+      nb.dataset.case = ch.game.page;
+      $('end').hidden = false;
+      nb.focus({ preventScroll: true });
+      return;
+    }
     $('end-title').textContent = 'Hết chương';
     if (nextI >= CHAPTERS.length) {
       $('end-text').textContent = 'Em đã đi hết hành trình hiện tại. Anh sẽ viết thêm chương mới nha.';

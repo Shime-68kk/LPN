@@ -792,6 +792,24 @@
         { "who": "ke", "text": "Đơn vị gác đêm, hôm nay hết ca sớm." },
         { "who": "ke", "text": "Bên kia, còn ba tiếng nữa mới đến giờ còi." }
       ]
+    },
+    {
+      "id": "c21",
+      "title": "Ai đó, lúc năm giờ sáng",
+      "cost": 0,
+      "releaseAt": "2026-11-05T23:15:00+07:00",
+      "early": { "quang": "2026-11-05T00:00:00+07:00" },
+      "scene": "dem",
+      "cast": ["quang", "thuy"],
+      "game": { "page": "soi-chi.html", "title": "Sợi chỉ", "text": "Một ngày, hai nơi, một sợi chỉ. Đeo tai nghe vào, xoay ngang điện thoại, rồi kéo sợi chỉ đi nha.", "btn": "Cầm sợi chỉ" },
+      "lines": [
+        { "who": "none", "text": "Tuần đầu tiên" },
+        { "who": "ke", "text": "Có những thứ, chỉ nhìn từ một phía thì không bao giờ hiểu hết." },
+        { "who": "ke", "text": "Một người thấy tin nhắn đến muộn. Người kia thấy tin nhắn mãi chẳng ai đọc." },
+        { "who": "ke", "text": "Chẳng ai sai cả. Chỉ là mỗi người đang cầm một đầu của cùng một sợi chỉ." },
+        { "who": "ke", "text": "Lần này, em được cầm cả hai đầu." },
+        { "who": "ke", "text": "Kéo sợi chỉ đi. Một ngày của hai người, cùng lúc." }
+      ]
     }
   ]
 }

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Sợi chỉ</title>
+  <!-- Trang luôn tối: tô nền ngay từ đầu để chuyển trang không chớp sáng. Chưa mở khoá web thì về trang nhà. -->
+  <script>
+    document.documentElement.style.background = '#000';
+    try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df') location.replace('../home/'); } catch (e) { /* bỏ qua */ }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&display=swap" />
+  <link rel="stylesheet" href="soi-chi.css?v=7" />
+</head>
+<body>
+  <!-- Chương 19 · Sợi chỉ (bản 7). Hai căn nhà, không vẽ người: chỉ đồ vật, ánh sáng và sợi chỉ.
+       Gửi tin = kéo chỉ ra cửa, nhận tin = cuộn chỉ về (chờ càng lâu, chỉ càng dài). Kịch bản: _kich-ban-chuong-19.md.
+       Cả cảnh vẽ bằng canvas (soi-chi.js), âm thanh tự tổng hợp (soi-chi-am.js). -->
+  <canvas id="cv" aria-label="Sợi chỉ"></canvas>
+
+  <p class="line" id="line" aria-live="polite"></p>
+  <p class="hint" id="hint"></p>
+  <div class="note" id="note" aria-live="polite"><b id="note-t"></b><span id="note-p"></span><i id="note-d"></i></div>
+
+  <header class="top" id="top" hidden>
+    <a class="ic" href="../story/" aria-label="Về cốt truyện"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" /></svg></a>
+    <button class="ic" id="btn-sound" type="button" aria-label="Bật tắt tiếng"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" /><path class="i-wave" d="M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12" /><path class="i-mute" d="M16 9l6 6M22 9l-6 6" /></svg></button>
+  </header>
+
+  <section class="start" id="start" hidden>
+    <p class="st-title">Sợi chỉ</p>
+    <i class="st-thread" aria-hidden="true"></i>
+    <small>Nên đeo tai nghe</small>
+    <button class="st-go" id="btn-go" type="button">Chạm để bắt đầu</button>
+    <button class="st-link" id="btn-giai0" type="button" hidden>Xem giải đáp</button>
+  </section>
+
+  <section class="gate" id="locked" hidden>
+    <p class="st-title">Sợi chỉ</p>
+    <small>Chưa tới lúc. Sợi chỉ vẫn đang được se.</small>
+    <a class="st-go" href="../story/">Về cốt truyện</a>
+  </section>
+
+  <section class="tobe" id="tobe" hidden>
+    <p class="st-title">Còn tiếp</p>
+    <small>Bản dựng thử: mở đầu, Lần 1 → Lần 9.</small>
+    <div class="tb-btns">
+      <button class="st-go" id="btn-giai" type="button">Xem giải đáp</button>
+      <button class="st-go" id="btn-again" type="button">Chơi lại</button>
+      <a class="st-go" href="../story/">Về cốt truyện</a>
+    </div>
+  </section>
+
+  <!-- Giải đáp: kể lại cả ngày theo đúng giờ thật, chuyện gì thật sự đang xảy ra, và các manh mối đã giấu -->
+  <section class="giai" id="giai" hidden>
+    <div class="gi-in" id="giai-in"></div>
+    <button class="gi-close" id="giai-close" type="button" aria-label="Đóng">Đóng</button>
+  </section>
+
+  <section class="rotate" id="rotate" hidden>
+    <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="15" y="6" width="18" height="32" rx="3" /><path d="M8 30a16 16 0 0 0 16 12M40 18A16 16 0 0 0 24 6" /><path d="M21 42l3 0 0-3M27 6l-3 0 0 3" /></svg>
+    <small>Xoay ngang điện thoại nha</small>
+  </section>
+
+  <script src="soi-chi-am.js?v=11"></script>
+  <script src="soi-chi-ve.js?v=7"></script>
+  <script src="soi-chi.js?v=37"></script>
+  <script src="../home/offline.js?v=1"></script>
+</body>
+</html>
