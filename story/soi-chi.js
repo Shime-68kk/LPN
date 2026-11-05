@@ -1691,10 +1691,10 @@
       truth: 'Đây là <b>đầu kia của cuộc gọi ở cảnh mở đầu</b>. Câu trọn vẹn: <b>"Thật ra đi quân sự cũng không tệ lắm. Nhưng có một chỗ để về, thì càng muốn về hơn."</b> Rồi: "Em nhớ anh nhiều lắm. Em siêu nhớ anh đấy."' },
     { t: 'Cả ngày', tag: 'Bản đồ', where: 'Hai nơi, tám mươi cây số', room: 'A', v: 'khuya', map: true,
       saw: 'Bảy búi chỉ, gỡ theo lời hát.',
-      truth: 'Bảy lần chờ: <b>nửa tiếng · ba tiếng rưỡi · ba tiếng · năm tiếng · hai tiếng · năm mươi phút · bốn mươi phút</b>. Cả ngày, chỉ một lần không phải chờ: <b>cuộc gọi</b>, sợi chỉ thẳng tắp, sáng nhất.' },
+      truth: 'Bảy lần chờ, <b>lúc thì em chờ anh, lúc thì anh chờ em</b>: nửa tiếng · ba tiếng rưỡi · ba tiếng · năm tiếng · hai tiếng · năm mươi phút · bốn mươi phút. Cả ngày, chỉ một lần không phải chờ: <b>cuộc gọi</b>, sợi chỉ thẳng tắp, sáng nhất.' },
     { t: '05:00', tag: 'Kết', where: 'Doanh trại · sáng hôm sau', room: 'B', v: 'tube',
       saw: 'Còi lại thổi, lại có 7 tin tím. Số 92.',
-      truth: 'Anh lại thức tới 4 giờ 30 để em dậy là có tin. <b>"Ai đó, lúc năm giờ sáng"</b> là anh.' },
+      truth: 'Còi thổi, 7 tin gửi lúc 4 giờ 30 đã nằm sẵn đó. Một ngày <b>thay nhau chờ nhau</b> lại bắt đầu.' },
   ];
   function thumb(room, v, wpx) {
     const c = document.createElement('canvas'), res = clamp(wpx * (window.devicePixelRatio || 1) / CARD.w, 0.25, 1.2);
@@ -1709,7 +1709,7 @@
     const el = $('giai-in'), esc = (x) => x.replace(/[<>&]/g, (m) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[m]);
     el.innerHTML = '<h2 class="gi-h">Giải đáp · Sợi chỉ</h2><p class="gi-sub">Một ngày, hai nơi, kể lại đúng theo giờ thật.</p>'
       + '<div class="gi-box"><h3>Cú lừa</h3><p>Lúc chơi, bạn tưởng hai người đang <b>nhắn qua lại liền tay</b>: gửi đi là có "ting" đáp lại ngay.</p>'
-      + '<p>Thật ra <b>mỗi câu trả lời đi mất mấy tiếng</b>. Em đang đi quân sự: điện thoại cất trong tủ, nộp vào giỏ, chỉ được cầm vài lúc trong ngày. Còn anh thì thức để chờ những lúc ấy.</p></div>'
+      + '<p>Thật ra <b>mỗi câu trả lời đi mất mấy tiếng</b>. Không phải một người chờ một người: <b>lúc em rảnh thì anh bận, lúc anh rảnh thì em không được cầm máy</b> (em đang đi quân sự, điện thoại cất trong tủ, nộp vào giỏ). Hai người thay nhau chờ nhau.</p></div>'
       + '<div class="gi-box"><h3>Cách đọc sợi chỉ</h3><ul class="gi-legend"><li><i style="background:#BEA0FF"></i>Chỉ tím: tin anh</li><li><i style="background:#FF96B6"></i>Chỉ hồng: tin em</li>'
       + '<li>Búi chỉ càng to, cuộn càng lâu: tin càng phải chờ lâu</li><li>"Ting": lúc người kia cầm máy lên, không phải lúc gửi</li><li>Pin tụt: thời gian đã trôi</li></ul></div>';
     for (const g of GIAI) {
