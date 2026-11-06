@@ -12,6 +12,13 @@
   <script>
     document.documentElement.style.background = '#000';
     try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df') location.replace('../home/'); } catch (e) { /* bỏ qua */ }
+    // Chương đang đóng tạm (mọi máy, cả LAN). Anh Quang xem thử bằng ?mo=q0608 (chỉ trong tab đó). Mở lại: SOI_CHI_HOLD = false
+    // và trả releaseAt của c21 trong chapters.json về giờ cũ (2026-11-05T23:15, early quang 2026-11-05T00:00).
+    try {
+      const SOI_CHI_HOLD = true;
+      if (/[?&]mo=q0608\b/.test(location.search)) sessionStorage.setItem('lpn:soiChiPreview', '1');
+      if (SOI_CHI_HOLD && sessionStorage.getItem('lpn:soiChiPreview') !== '1') location.replace('../story/');
+    } catch (e) { /* bỏ qua */ }
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
