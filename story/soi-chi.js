@@ -1,7 +1,7 @@
 // Chương 19 · Sợi chỉ (bản 7, kịch bản: _kich-ban-chuong-19.md). Hai căn nhà, không vẽ người, không chia đôi màn hình.
 // Gửi tin = kéo chỉ từ điện thoại ra cửa. Nhận tin = cuộn chỉ về (chờ càng lâu, búi chỉ càng to).
-// Bản dựng thử hiện có: mở đầu (hành lang, cái kết bị cắt dở) → Lần 1 (phòng anh, đêm) → Lần 2 (phòng em, 5 giờ sáng).
-// Xem thử từ giữa: ?canh=1 (Lần 1), ?canh=2 (Lần 2).
+// Thứ tự chiếu: mở đầu (hành lang, cái kết bị cắt dở) → cảnh nhắn liền tay (Lần 9, chiếu trước) → Lần 1 … Lần 11 → bản đồ → kết.
+// Xem thử từ giữa: ?canh=0.5 (cảnh nhắn liền tay), ?canh=1 (Lần 1), ?canh=2 (Lần 2)…
 // Vẽ: soi-chi-ve.js. Âm thanh: soi-chi-am.js.
 'use strict';
 (() => {
@@ -291,7 +291,8 @@
     });
   }
   // Gửi tin: kéo đầu sợi chỉ từ điện thoại ra tới khe cửa. Thả ở cửa thì từng hạt tin chạy đi.
-  function sendThread(ph, n, col, text) {
+  // o.out: gọi khi hạt cuối ra tới cửa (cảnh nhắn liền tay: máy bên kia kêu ngay). o.hold: ms nán lại sau khi gửi.
+  function sendThread(ph, n, col, text, o = {}) {
     const room = st.room, D = DOOR[room], pan = D.side * 0.55;
     return new Promise((res) => {
       const anc = () => anchorOf(ph);
@@ -328,12 +329,13 @@
             (async () => {
               for (let i = 0; i < n; i++) {
                 ph.msgs = ph.msgs || []; ph.msgs.push({ me: true, col });
-                A.vut(pan * 0.6, i);
-                r.bead(1, col, 340, () => A.clockTick(pan, 0.012));
+                if (i === 0) A.chay(azOf(ph.x), D.side * 1.4, r.len() / 340 + (n - 1) * 0.33, col);
+                const last = i === n - 1;
+                r.bead(1, col, 340, () => { A.clockTick(pan, 0.012); if (last && o.out) o.out(); });
                 await sleep(330);
               }
               ph.status = 'Đã gửi';
-              await sleep(1500);
+              await sleep(o.hold == null ? 1500 : o.hold);
               r.old = true; tween(2.2, (k) => { r.dim = k; });
               res(r);
             })();
@@ -395,8 +397,9 @@
           const a = rope.a(), b = rope.b();
           if (rope.pts.length > 3 && rope.len() > Math.hypot(b.x - a.x, b.y - a.y) * 1.05) rope.pts.splice(1, 1);
         }, lin);
+        A.chay(D.side * 1.4, azOf(ph.x), rope.len() / 420 + (n - 1) * 0.24, col, 0.75);
         for (let i = 0; i < n; i++) {
-          rope.bead(1, col, 420, () => { ph.msgs = ph.msgs || []; ph.msgs.push({ col }); A.pop(D.side * 0.9, i); });
+          rope.bead(1, col, 420, () => { ph.msgs = ph.msgs || []; ph.msgs.push({ col }); A.pop(azOf(ph.x), i); });
           await sleep(240);
         }
         await sleep(1300);
@@ -601,16 +604,21 @@
   // Giờ hiện tại của bài (giây bài gốc). Không tải được nhạc thì vẫn có đồng hồ ảo chạy đúng như bài, để cảnh không lệch.
   const T = () => (sclk ? CUT0 + sclk.at + NOW - sclk.start : -1);
   const waitT = (t) => waitFor(() => T() >= t);
-  // ===== Nhạc lồng: chính bài này, nghẹt và nhỏ, âm ỉ suốt cả chuyện =====
-  // Tệp soi-chi-xt-long.mp3 = 0:00 → 3:19 của bài (mono, nhẹ). Phát: dạo đầu → lời 1 → điệp khúc 1, rồi bỏ qua câu
-  // "Chúng ta dành hết Xuân thì để chờ nhau", nhảy sang nhạc dạo giữa → lời 2 → điệp khúc 2, lại bỏ qua câu ấy, quay về nhạc dạo giữa, lặp mãi.
-  // Cả bài đúng 68 nhịp/phút (đo lại: lệch < 0,04 s suốt 200 s), mọi chỗ nối đều đúng vạch nhịp (lưới GRID0 + n·BAR) nên nghe liền.
-  // Câu "chờ nhau" chỉ được hát ở cao trào: nhạc lồng chuyển thẳng sang bài chính ngay một vạch nhịp, không ngắt.
-  const BED = '../assets/sound/soi-chi-xt-long.mp3', BAR = BL * 4, GRID0 = KEYT - 61 * BAR;
+  // ===== Nhạc lồng: bản piano không lời của chính bài này, nghẹt và nhỏ =====
+  // Tệp soi-chi-piano.mp3: bản piano cover (đánh khớp nhịp bài gốc: chậm hơn đúng 1,614 s, sai < 0,015 s suốt 0:00 → 3:50),
+  // đã lùi 1,614 s nên giây trong tệp = giây trong bài gốc, dùng chung lưới ô nhịp. Âm lượng (sau lọc) bằng tệp nhạc lồng cũ.
+  // Phát: dạo đầu → lời 1 → điệp khúc 1, bỏ qua câu "Chúng ta dành hết Xuân thì để chờ nhau", sang nhạc dạo giữa → lời 2 → điệp khúc 2,
+  // lại bỏ qua câu ấy, quay về nhạc dạo giữa, lặp mãi. Những đoạn dài liền (31 và 22 ô), chỗ nối đúng vạch nhịp, hợp âm khớp.
+  // Câu "chờ nhau" chỉ vang ở cao trào (có lời): piano nhập vào bài gốc đúng một vạch nhịp, xem playFrom.
+  const BED = '../assets/sound/soi-chi-piano.mp3', BAR = BL * 4, GRID0 = KEYT - 61 * BAR;
   const bar = (n) => GRID0 + n * BAR;            // bar(31) = 110.73 "Chúng ta…" điệp khúc 1, bar(34) = 121.32 nhạc dạo giữa, bar(56) = 198.96 "Chúng ta…" điệp khúc 2
-  // Tạm thời (chờ bản không lời): chỉ dùng các đoạn KHÔNG LỜI của bản gốc, dạo đầu (ô 0→3) và dạo giữa (ô 34→37), nối xen nhau.
-  // Giọng hát chạy suốt sẽ đè mất tiếng phòng, tiếng dế, tiếng xe; nên lời chỉ vang ở cao trào.
-  const BED_FULL = [[bar(0), bar(3)], [bar(34), bar(37)], [bar(1), bar(3)], [bar(34), bar(37)]];
+  const BED_FULL = [[bar(0), bar(31)], [bar(34), bar(56)]];
+  // Ô nhịp kế tiếp của nhạc lồng (theo BED_FULL: hết ô 30 hay ô 55 thì sang ô 34)
+  const bedNext = (n) => (n === 30 || n === 55 ? 34 : n + 1);
+  // Độ hợp để vào bài gốc ở ô 52 ngay sau ô n-1 của piano (so hợp âm ô n với ô 52, ô n-1 với ô 51; 1 = y hệt).
+  // Đo bằng phổ 12 nốt từng ô (scratchpad nhac/seam.py). Ô 27 và ô 52 là cùng một câu "Chờ mùa mưa tới" của hai điệp khúc.
+  const SW52 = [0, .71, .51, .78, .62, .8, .8, .8, .65, .85, .6, .71, .72, .8, .77, .73, .65, .7, .59, .82, .89, .95, .89, .6, .81, .79, .79, 1, .89, .59, .8,
+    0, 0, 0, .8, .86, .89, .92, .77, .74, .78, .73, .65, .71, .58, .79, .95, .89, .6, .81, .81, .79, 1, .9, .6, .8];
   // Cảnh mở đầu: chỉ đoạn dạo đầu không lời (3 ô nhịp), lặp êm. Không bao giờ có giọng hát bị cắt ngang.
   const BED_INTRO = [[bar(0), bar(3)], [bar(1), bar(3)]];
   // mức: [âm lượng, lọc Hz]. Mức 0 vẫn còn nghe (âm ỉ), không bao giờ tắt hẳn giữa chuyện.
@@ -626,6 +634,7 @@
     if (bed || bedWait) return;
     const tok = ++bedTok; bedWait = true;
     const [v, f] = lv || bedLevel();
+    // Nhạc lồng đứng yên, cân hai tai: nó là nền đều để những tiếng lệch một bên (và vòng quay ở cao trào) nổi lên.
     const b = await A.long(BED, segs, { vol: v, lp: f, fade });
     bedWait = false;
     if (!b) return;
@@ -637,13 +646,27 @@
   // Vào bài chính từ giây t (bài gốc, đúng một vạch nhịp). Đang có nhạc lồng thì chờ tới vạch nhịp kế tiếp rồi chuyển, liền một mạch.
   // breath > 0: nhạc lồng lắng dần xuống trong breath giây (như nín thở) rồi bài chính mới vào, ở vạch nhịp sau đó,
   // để không bao giờ cắt ngang một câu hát rồi chen giọng khác vào.
+  // xfade: piano nhập vào bài. Chọn vạch nhịp hợp nhất trong 3 ô tới (hợp âm piano khớp chỗ bài vào), ở vạch ấy piano nhảy
+  // sang đúng ô t (chung lưới với bài gốc, chạy song song từng phách với giọng hát), rồi lặng dần trong ~9 s khi bài dâng lên.
   async function playFrom(t, opts, breath = 0, xfade = 0) {
     const o = Object.assign({ at: t - CUT0 }, opts);
-    let when = 0;
-    if (bed) { when = bed.nextBar(GRID0, BAR, breath || 0.35); o.when = when; if (!xfade) o.fade = Math.min(o.fade || 0.05, 0.05); }
+    let when = 0, tail = null;
+    if (bed) {
+      when = bed.nextBar(GRID0, BAR, breath || 0.35);
+      if (xfade && Math.abs(t - bar(52)) < 0.01) {
+        let n = Math.round((bed.posAt(when) - GRID0) / BAR), best = -1, bk = 0;
+        for (let k = 0; k < 3; k++, n = bedNext(n)) { const sc = (SW52[n] || 0) - 0.04 * k; if (sc > best) { best = sc; bk = k; } }
+        when += bk * BAR;
+        tail = A.track(BED, { at: t, when, vol: Math.max(0.01, bed.vol), lp: bed.hz, fade: 0.03 });
+      }
+      o.when = when; if (!xfade || tail) o.fade = tail ? o.fade : Math.min(o.fade || 0.05, 0.05);
+    }
     if (bed && breath) bedOff(breath * 0.75);
     song = await A.track(SONG, o);
-    if (bed) bedOff(xfade || 0.12, xfade ? when : when - 0.03);
+    if (tail) {
+      bedOff(0.12, when - 0.03);
+      tail.then((tr) => { if (!tr) return; setTimeout(() => tr.ramp(0.0001, 9), Math.max(0, (when - A.ctx.currentTime) * 1000 + 1500)); setTimeout(() => tr.stop(0.5), Math.max(0, (when - A.ctx.currentTime) * 1000 + 11000)); });
+    } else if (bed) bedOff(xfade || 0.12, xfade ? when : when - 0.03);
     sclk = song ? { start: song.start, at: song.at } : { start: NOW + 0.08, at: t - CUT0 };
     return !!song;
   }
@@ -656,6 +679,11 @@
     let n = last; while (n - BL > NOW + 0.05) n -= BL;
     BEAT.nP = n; BEAT.nU = Infinity;
     return key;
+  }
+  // Bài hát chạy vòng quanh đầu: trượt ra trước mặt trong lead giây rồi xoay đều, mỗi vòng 12 giây
+  function songOrbit(lead = 1) {
+    const sg = song; if (!sg || !sg.mv) return;
+    sg.mv.to(0, lead); setTimeout(() => { if (song === sg) sg.mv.orbit(12, 1); }, lead * 1000 + 60);
   }
   let sobOn = false;
   let sobPan = -0.15;
@@ -674,6 +702,8 @@
     // Vào ngay khi màn sáng, rất nhỏ và nghẹt như vọng qua sợi chỉ, dâng dần. Người chơi gảy lúc nào thì sợi chỉ sáng, rung lúc đó;
     // không gảy thì nhạc vẫn chạy, câu vẫn hiện. Cắt phụt đúng một lần, ngay trước phách lên cung. Cao trào sẽ phát lại y đoạn này.
     BEAT.final = false; BEAT.meetAt = 0; beats.on = true;
+    // Nhạc ở giữa, đều hai tai: đây là âm thanh đầu tiên của game, lệch một bên ngay từ đầu thì người nghe tưởng tai nghe hỏng.
+    // Tiếng lệch (tích tắc xa bên phải) chỉ đến SAU, trên nền đều ấy.
     const key0 = await leadIn(bar(52), { vol: 0.05, fade: 4, lp: 700 });
     if (song) {
       const t0 = sclk.start;
@@ -710,6 +740,32 @@
     await sleep(2000);
   }
 
+  // Hướng 8D của một điểm trong cảnh: người nghe ngồi giữa khung hình (-1 hẳn bên trái … 1 hẳn bên phải)
+  const azOf = (x) => clamp((x - view.x) / 420, -0.75, 0.75);
+  // Máy của ai đang ở phòng này (phòng anh, phố: máy anh; chỗ em: máy em)
+  const ownOf = (room) => (room === 'A' || room === 'P' ? 'q' : 't');
+  // Máy đang cầm nhận tin: kêu trong tay (nghẹt đi nếu máy úp, cất trong ngăn tủ)
+  function ring(ph, who) { const far = !ph ? 0.3 : ph.hidden ? 0.75 : ph.mode === 'down' ? 0.3 : 0; A.notify(who, ph ? azOf(ph.x) : 0, far); }
+
+  // ===== Chờ tiếng "ting" =====
+  // Tiếng máy người kia vọng qua cửa, đúng lúc người ấy cầm máy lên đọc. Cảnh nhắn liền tay ở đầu: vang ngay.
+  // Từ Lần 1 trở đi, người chơi đã quen "gửi là có ting", nhưng mỗi lần ting một muộn hơn (vài giây trong game là mấy tiếng ngoài đời),
+  // có lần không tới. Trong lúc chờ: tiếng phòng, tích tắc, pin tụt dần nếu máy còn nằm đó.
+  async function waitTing(sec, pan, who, ph, bat) {
+    if (ph && bat != null && ph.bat != null) { const b0 = ph.bat; tween(sec, (k) => { ph.bat = Math.round(lerp(b0, bat, k)); }, lin); }
+    await sleep(sec * 1000);
+    if (!who) return;
+    A.ting(pan, 0.75, who);
+    if (ph) ph.status = 'Đã xem';
+  }
+
+  // Sang cảnh mới: để tiếng nền đều đều chạy chừng hai giây rưỡi (tai lấy làm mốc) rồi mới cho tiếng lệch một bên đầu tiên vang lên.
+  async function settle(sec = 2.5) {
+    if (!A.ctx || A.placeT == null) return;
+    const left = sec - (A.ctx.currentTime - A.placeT);
+    if (left > 0) await sleep(left * 1000);
+  }
+
   // ================= Lần 1 · Phòng anh · đêm =================
   const noteA = { a: 0 };
   function drawNoteA(c) {
@@ -729,13 +785,17 @@
   async function walk(room) {
     clearHint(); handler = null;
     const D = DOOR[room];
-    A.swish(D.side > 0 ? 'r' : 'l', 0.07);
+    A.swish(D.side > 0 ? 'r' : 'l', 0.05); A.qua(D.side);
     await camTo(D.x, 300, 1.5, 0.45, easeIn);
     await fadeTo(1, 0.14);
   }
   async function lan1() {
-    setRoom('A', 'on'); st.day = false; st.lamp = true; st.doorGlow.A = 0.22; st.fade = 1; st.vign = 0.62;
-    note('', '', 'Cùng ngày ấy. Sớm hơn.', 2.2);
+    // Ngay sau cảnh nhắn liền tay: cùng căn phòng, cùng ngọn đèn, vẫn là đêm. Người chơi tưởng đêm ấy còn tiếp.
+    // Thật ra là 4 giờ 30 sáng, trước đó gần một ngày (đồng hồ, pin 18% → 92% là manh mối).
+    setRoom('A', 'on'); st.day = false; st.lamp = true; st.doorGlow.A = 0.22; st.fade = 1; st.vign = 0.62; st.bars = 0;
+    noteOff();
+    ropes.A = []; ward.k = 0; keyState.on = true;
+    under.A = [(c, t) => V.wardrobeOpen(c, t, ward.k, ward.t0), (c, t) => { if (keyState.on) V.keys(c, t); }];
     Object.assign(view, { x: 470, y: 252, z: 1.38 });
     clockOn = true; nextTick = NOW + 0.6;
     Object.assign(phones.A, { card: 1, bat: 92, status: '' });
@@ -745,8 +805,9 @@
     await fadeTo(0, 2.6);
     setTimeout(() => M(1), 2600);
     await sleep(1200);
-    await sendThread(phones.A, 7, 'q', 'Kéo sợi chỉ từ điện thoại ra cửa');
-    await sleep(400);
+    await sendThread(phones.A, 7, 'q', reelSeen ? 'Kéo sợi chỉ ra cửa' : 'Kéo sợi chỉ từ điện thoại ra cửa');
+    // Vừa nãy gửi là có "ting". Lần này: chỉ có tiếng đồng hồ.
+    await waitTing(3.6);
     extras.push(drawNoteA);
     await camTo(phones.A.x - 12, phones.A.y - 48, 1.95, 1.8);
     await tween(1.4, (k) => { noteA.a = k; });
@@ -845,8 +906,9 @@
     for (const m of [0.7, 0, 0.85, 0.12, 1]) { st.mix = m; await sleep(90 + Math.random() * 60); }
     st.v = 'tube'; st.v2 = null; st.mix = 0; st.tube = true; st.doorGlow.B = 0.22;
     tween(1, (k) => { ph.glow = k * 0.85; });
-    await sleep(600);
-    arrive(rope, -0.4);
+    // sau tiếng còi và tiếng đèn: để căn phòng lặng lại, chỉ còn tiếng nền đều, rồi tin mới tới
+    await sleep(1700);
+    await settle(); arrive(rope, -0.4);
     await reelIn(rope, ph, 2, 7, 'q', 'Chạm vào sợi chỉ nhiều lần để cuộn tin về. Chỉ căng thì tin tới');
     ph.glow = 1;
     await sleep(900);
@@ -860,9 +922,8 @@
     const p0 = { x: ph.x, y: ph.y };
     await tween(0.45, (k) => { ph.x = lerp(p0.x, ph.stash.x, k); ph.y = lerp(p0.y, ph.stash.y + 6, k); ph.s = 1 - k * 0.6; ph.glow = 1 - k; });
     ph.hidden = true; A.thud();
-    await sleep(350);
-    // "Ting" khẽ vọng từ phía cửa (nhà anh)
-    A.ting(-0.8, 0.75);
+    // Máy anh vọng từ phía cửa, lúc anh cầm máy lên đọc (8 giờ 30). Đã muộn hơn cảnh đầu một chút.
+    await waitTing(2.4, -0.8, 'q');
     tween(1.2, (k) => { st.doorGlow.B = lerp(0.22, 1, k); });
     await sleep(500);
     await tapOn(DOOR.B.hit, '', { at: { x: DOOR.B.x, y: 330 }, ring: 1.2, r: 30 });
@@ -875,16 +936,21 @@
   let arriveSeen = false;
   function say(text, ms) { hintEl.textContent = text; hintEl.classList.add('on'); const id = (sayId = {}); setTimeout(() => { if (sayId === id) hintEl.classList.remove('on'); }, ms); }
   let sayId = null;
+  // Tin tới: tiếng tin chạy trong sợi chỉ (8D) từ sau gáy phía cửa về tới máy, rồi MÁY MÌNH KÊU (chuông máy mình, trong tay)
+  // và sợi chỉ rung. Người nghe được cả hai chuông: máy mình khi nhận, máy bên kia (sau cửa) khi người ấy đọc.
   async function arrive(rope, pan) {
-    const first = !arriveSeen; arriveSeen = true;
+    const first = !arriveSeen, D = DOOR[st.room], ph = phones[st.room]; arriveSeen = true;
+    A.chay(D.side * 1.5, ph ? azOf(ph.x) : 0, 1.1, rope.col);
+    await sleep(1150);
+    rope.twang(); ring(ph, ownOf(st.room));
     if (first) say('Sợi chỉ khẽ rung: bên kia vừa gửi tin tới', 4200);
-    for (let i = 0; i < 2; i++) { rope.twang(); A.ks(i ? 784 : 659, 0.1, pan); await sleep(1500); }
+    await sleep(1500); rope.twang(); await sleep(1500);
     if (first) await sleep(900);
   }
 
   // ================= Lần 3 · Phòng anh · 8 giờ 30 sáng =================
   // "Phòng này mình đi rồi mà." Nắng đã vào. Sợi chỉ hồng của em chờ ba tiếng rưỡi: búi to, cuộn mãi mới hết.
-  // Trả lời 2 tin (người chơi tưởng là trả lời ngay). Mở tủ: một nửa trống, một móc áo không. Cầm chìa khoá, đi.
+  // Trả lời 2 tin (người chơi tưởng là trả lời ngay). Mở tủ: một nửa trống, một móc áo không (màu hồng, của em). Cầm chìa khoá, đi.
   function afterLan1() {
     const ph = phones.A; Object.assign(ph, { mode: 'down', x: 424, y: 297, ang: 0, glow: 0, hidden: false });
     if (!ropes.A.length) {
@@ -910,15 +976,15 @@
     camTo(505, 240, 1.12, 2.6, easeOut);
     await fadeTo(0, 0.5);
     await sleep(500);
-    arrive(pink, 0.4);
+    await settle(); arrive(pink, 0.4);
     await reelIn(pink, ph, 3, 3, 't', 'Chạm vào sợi chỉ để cuộn tin về', {
       before: () => { A.soft('c'); Object.assign(ph, { mode: 'up', ang: -0.3, y: 298, x: 430 }); tween(0.8, (k) => { ph.glow = k; }); },
     });
     await sleep(900);
     M(1);
     await sendThread(ph, 2, 'q', 'Kéo sợi chỉ ra cửa');
-    await sleep(500);
-    A.ting(0.8, 0.75); tween(1.2, (k) => { st.doorGlow.A = k * 0.7; });
+    // Chờ lâu hơn nữa (em đọc lúc nghỉ trưa). Pin tụt dần trong lúc chờ.
+    await waitTing(4.4, 0.8, 't', ph, 76); tween(1.2, (k) => { st.doorGlow.A = k * 0.7; });
     await tapOn({ x: 734, y: 236, r: 64 }, 'Mở tủ áo', { ring: 1.4, text: 5 });
     A.swish('r', 0.07); A.thud(); ward.t0 = NOW;
     tween(0.9, (k) => { ward.k = k; }, easeOut);
@@ -960,7 +1026,7 @@
     camTo(470, 240, 1.12, 2.4, easeOut);
     await fadeTo(0, 0.5);
     await sleep(400);
-    arrive(rope, -0.4);
+    await settle(); arrive(rope, -0.4);
     await tapOn({ x: 258, y: 316, r: 36 }, 'Mở ngăn tủ lấy điện thoại', { ring: 1.2, text: 4 });
     A.thud(); ph.hidden = false;
     const home = { x: 360, y: 300 };
@@ -975,8 +1041,8 @@
     const p0 = { x: ph.x, y: ph.y };
     await tween(0.45, (k) => { ph.x = lerp(p0.x, ph.stash.x, k); ph.y = lerp(p0.y, ph.stash.y + 6, k); ph.s = 1 - k * 0.6; ph.glow = 1 - k; });
     ph.hidden = true; A.thud();
-    await sleep(350);
-    A.ting(-0.8, 0.75);
+    // Lần chờ lâu nhất trong ngày: tới chiều anh mới đọc
+    await waitTing(6.4, -0.8, 'q');
     tween(1.2, (k) => { st.doorGlow.B = k * 0.8; });
     await sleep(500);
     await tapOn(DOOR.B.hit, '', { at: { x: DOOR.B.x, y: 330 }, ring: 1.2, r: 30 });
@@ -1014,13 +1080,12 @@
     A.setPlace('pho', 'c', 0.7);
     await fadeTo(0, 0.5);
     await sleep(500);
-    arrive(pink, 0.5);
+    await settle(); arrive(pink, 0.5);
     await reelIn(pink, ph, 4, 4, 't', 'Chạm vào sợi chỉ để cuộn tin về');
     await sleep(900);
     M(1);
     await sendThread(ph, 5, 'q', 'Kéo sợi chỉ vào ngõ');
-    await sleep(500);
-    A.ting(0.85, 0.8);
+    await waitTing(3.6, 0.85, 't', ph, 41);
     await goDoor('P');
     M(0);
   }
@@ -1052,7 +1117,7 @@
     A.setPlace('lop', 'c', 0.7);
     await fadeTo(0, 0.5);
     await sleep(1400);
-    arrive(rope, -0.5);
+    await settle(); arrive(rope, -0.5);
     await reelIn(rope, ph, 4, 2, 'q', 'Chạm vào sợi chỉ để cuộn tin về');
     await readPhone(ph, 1400);
     // Định trả lời thì chiếc giỏ sáng lên
@@ -1070,7 +1135,7 @@
     await camTo(500, 240, 1.12, 1.6);
     await sleep(1600);
     // "Ting" nghẹt trong giỏ. Một sợi chỉ tím bò từ khe cửa vào, quấn quanh giỏ.
-    A.ting(-0.25, 0.97);
+    A.toi(-0.6, 'q', 1.0); setTimeout(() => A.notify('t', -0.2, 0.85), 1050);
     tween(2.6, (k) => { bk.glow = Math.sin(k * Math.PI); });
     const D = DOOR.L, tip = { x: D.x, y: D.gy };
     const crawl = new Rope({ col: 'q', room: 'L', base: BASE.L + 6, a: () => ({ x: D.x, y: D.gy }), b: () => tip, grow: true }).line(D.x, D.gy, D.x + 4, D.gy + 2, 1);
@@ -1091,7 +1156,8 @@
     await fadeTo(0, 0.5);
     await sleep(1500);
     await sendThread(ph, 8, 'q', 'Kéo sợi chỉ vào ngõ');
-    await sleep(4200);
+    // Không có "ting" nào. Chờ mãi.
+    await waitTing(7.5, 0, null, ph, 26);
     await goDoor('P', 2.4);
   }
 
@@ -1110,50 +1176,96 @@
     await tapOn({ x: 262, y: 300, r: 44 }, 'Lấy điện thoại khỏi giỏ', { ring: 1, text: 4 });
     A.thud(); bk.inside = false; ph.hidden = false;
     await tween(0.55, (k) => { ph.x = lerp(262, 482, k); ph.y = lerp(300, 292, k) - Math.sin(k * Math.PI) * 24; ph.s = 0.5 + k * 0.5; ph.glow = k; }, easeOut);
-    arrive(rope, -0.3);
+    await settle(); arrive(rope, -0.3);
     await reelIn(rope, ph, 7, 8, 'q', 'Chạm vào sợi chỉ để cuộn tin về');
     await readPhone(ph, 2400);
     await sendThread(ph, 1, 't', 'Kéo sợi chỉ ra cửa');
-    await sleep(600);
-    A.ting(-0.85, 0.75);
+    // Gần lại rồi: chờ chẳng bao lâu
+    await waitTing(1.7, -0.85, 'q', ph);
     await goDoor('L');
   }
 
   // ================= Lần 9 · Phòng anh · 9 giờ 40 tối · lần nhắn thật =================
   // Hai người cùng cầm máy: chỉ ngắn tũn, chạm một cái là xong, "ting" đáp lại ngay, tai này gửi tai kia đáp, nhịp nhanh dần.
   // Rồi bên kia "tách" một tiếng: tắt đèn. Không còn "ting" nữa.
-  async function lan9() {
-    afterLan1();
-    enter('A', 'toi', 'r'); st.day = false; st.lamp = true; st.doorGlow.A = 0.3; st.vign = 0.6;
-    noteOff();
+  // Cảnh này chiếu HAI lần:
+  //   mo = true: ngay sau hành lang, như đầu chuyện ("Cùng ngày ấy. Sớm hơn."). Đây là cú lừa thứ nhất: người chơi học rằng
+  //     hai người này gửi là có trả lời ngay, có "đang nhập…". Rồi Lần 1 hiện ra trong cùng căn phòng, cùng ngọn đèn, như đêm ấy còn tiếp.
+  //   mo = false: đúng giờ của nó (sau Lần 8), ngắn hơn. Người chơi nhận ra cảnh mở màn, và hiểu đó là lần duy nhất trong ngày.
+  const A_MSGS0 = phones.A.msgs.map((m) => Object.assign({}, m));
+  // Một lượt nhắn tự chạy (không cần chạm): tin em theo sợi chỉ hồng vào, tin anh theo chính sợi ấy ra, "ting" ngay bên kia cửa
+  async function autoSwap(ph) {
+    const D = DOOR.A, pk = new Rope({ col: 't', room: 'A', base: BASE.A + 6, a: () => ({ x: D.x, y: D.gy }), b: () => anchorOf(ph) }).line(D.x, D.gy, ph.x, ph.y, 1.12);
+    pk.alpha = 0; ropes.A.push(pk); for (let i = 0; i < 120; i++) pk.step(1 / 60);
+    tween(0.4, (k) => { pk.alpha = k; });
+    await sleep(800);
+    A.chay(1.4, azOf(ph.x), pk.len() / 430, 't');
+    await new Promise((res) => pk.bead(1, 't', 430, () => { ph.msgs.push({ col: 't' }); A.pop(azOf(ph.x), 0); ring(ph, 'q'); pk.twang(); res(); }));
+    await sleep(900);
+    ph.msgs.push({ me: true, col: 'q' }); ph.status = 'Đã gửi'; A.chay(azOf(ph.x), 1.4, pk.len() / 430, 'q');
+    await new Promise((res) => pk.bead(-1, 'q', 430, res));
+    await sleep(520); A.ting(0.85, 0.72, 't'); ph.status = 'Đã xem';
+    await tween(0.6, (k) => { pk.alpha = 1 - k; });
+    ropes.A = ropes.A.filter((x) => x !== pk);
+  }
+  async function lan9(mo = false) {
+    const ph = phones.A;
+    if (mo) {
+      setRoom('A', 'toi'); st.fade = 1; st.bars = 0; ropes.A = [];
+      Object.assign(view, { x: 520, y: 262, z: 1.5 });
+      camTo(505, 240, 1.12, 7, easeOut);
+      tween(3.2, (k) => { st.bars = Math.min(st.bars, 1 - k); });
+      note('', '', 'Cùng ngày ấy. Sớm hơn.', 1.6);
+    } else {
+      afterLan1();
+      enter('A', 'toi', 'r');
+      noteOff();
+    }
+    st.day = false; st.lamp = true; st.doorGlow.A = 0.3; st.vign = 0.6;
     under.A = [(c, t) => V.wardrobeOpen(c, t, ward.k, ward.t0), (c, t) => { if (keyState.on) V.keys(c, t); }];
     ward.k = 0; keyState.on = true;
     for (const r of ropes.A) { r.old = true; r.dim = 1; }
-    const ph = phones.A; Object.assign(ph, { mode: 'up', x: 588, y: 310, ang: -0.28, glow: 1, hidden: false, card: 1, bat: 18, status: 'Đã xem' });
+    Object.assign(ph, { mode: 'up', x: 588, y: 310, ang: -0.28, glow: 1, hidden: false, card: 1, bat: 18, status: 'Đã xem', typing: false });
     clockOn = true; nextTick = NOW + 0.5;
     A.setPlace('phong-toi');
-    await fadeTo(0, 0.5);
+    await fadeTo(0, mo ? 2.4 : 0.5);
+    if (mo) noteOff();
     M(2);
-    await sleep(900);
-    const gaps = [900, 600, 380, 250];
-    for (let r = 0; r < 4; r++) {
-      // Lần duy nhất trong ngày hiện "đang nhập…": bên kia thật sự đang cầm máy, ngay lúc này
-      ph.typing = true; await sleep(r === 0 ? 1600 : 1100 - r * 200); ph.typing = false;
-      const pk = incoming('A', 't', ph, 2, 100 + r);
-      A.ting(0.8, 0.3); arrive(pk, 0.7);
-      await reelIn(pk, ph, 1, 1 + (r % 2), 't', '');
-      await sendThread(ph, 1 + (r === 3 ? 1 : 0), 'q', r === 0 ? 'Kéo sợi chỉ ra cửa' : '');
-      if (r === 1) M(3);
-      await sleep(gaps[r]);
+    await sleep(mo ? 600 : 900);
+    if (mo) {
+      // Gửi xong là máy em bên kia cửa kêu ngay (em đang cầm máy), "Đã gửi" chuyển "Đã xem" liền
+      // (chờ tiếng tin bay tắt hẳn, nền lại đều, rồi mới "ting": tiếng to ngay trước sẽ át mất nó)
+      const instant = { hold: 700, out: () => setTimeout(() => { A.ting(0.85, 0.72, 't'); ph.status = 'Đã xem'; }, 520) };
+      const rounds = 3, gaps = [600, 380, 260];
+      for (let r = 0; r < rounds; r++) {
+        // "đang nhập…": bên kia thật sự đang cầm máy, ngay lúc này
+        ph.typing = true; await sleep(r === 0 ? 1500 : 900 - r * 200); ph.typing = false;
+        const pk = incoming('A', 't', ph, 2, 100 + r);
+        await settle(); arrive(pk, 0.7);
+        await reelIn(pk, ph, 1, 1 + (r % 2), 't', r === 0 ? 'Chạm vào sợi chỉ để cuộn tin về' : '');
+        await sendThread(ph, r === rounds - 1 ? 2 : 1, 'q', r === 0 ? 'Kéo sợi chỉ từ điện thoại ra cửa' : '', instant);
+        if (r === 1) M(3);
+        await sleep(gaps[r]);
+      }
+    } else {
+      // Lần nhắc lại: KHÔNG bắt chơi lại. Chỉ để nhận ra khung hình mở màn: hai lượt tự chạy, rồi tắt đèn.
+      await settle(1.6);
+      for (let r = 0; r < 2; r++) { ph.typing = true; await sleep(r ? 700 : 1300); ph.typing = false; await autoSwap(ph); await sleep(r ? 300 : 500); }
     }
-    // Bên kia: một tiếng "tách" xa. Khe cửa tối lại.
-    await sleep(1600);
+    // Bên kia: một tiếng "tách" xa. Khe cửa tối lại. Không gửi thêm gì (Lần 1 ngay sau đã là "gửi mà không ai đáp").
+    await sleep(1400);
     A.sw(0.95); M(1);
     tween(2.2, (k) => { st.doorGlow.A = 0.3 * (1 - k); });
-    await sleep(2600);
-    await sendThread(ph, 1, 'q', '');
-    await sleep(3200);
+    await sleep(2800);
     M(0);
+    if (mo) {
+      // Không đi qua cửa: màn tối dần, rồi vẫn căn phòng ấy, vẫn ngọn đèn ấy (Lần 1)
+      await fadeTo(1, 2.2);
+      clockOn = false;
+      await sleep(900);
+      phones.A.msgs.splice(0, phones.A.msgs.length, ...A_MSGS0.map((m) => Object.assign({}, m)));
+      return;
+    }
     await goDoor('A', 2.6);
     clockOn = false;
   }
@@ -1200,7 +1312,7 @@
     pH.scr = 'call'; pH.lightCol = [255, 205, 222];
     Object.assign(taut, { a: () => anchorOf(phones.H), b: () => TAUT_B, grow: 0, vib: 1, vt: NOW, pulses: [] });
     extras.push(drawTaut);
-    A.vut(0.6, 2); A.ks(440, 0.12, 0.6);
+    A.chay(azOf(phones.H.x), 1.4, 1.0, 't'); A.ks(440, 0.12, 0.6);
     await tween(0.55, (k) => { taut.grow = k; }, easeOut);
     await sleep(1800);
     A.coiXa();
@@ -1248,7 +1360,8 @@
     // nhạc lồng mờ dần đi cùng lúc. Rồi dâng đều suốt ~32 giây: nhỏ, nghẹt → "Chúng ta dành hết Xuân thì để chờ nhau" → đoạn dồn → lên cung.
     // Người chơi gảy theo nhịp để nghe hết câu; chậm quá thì câu tự hiện theo nhạc, bài không bao giờ phải đợi.
     if (!bed) A.music.set(0);
-    const key1 = await leadIn(bar(52), { vol: 0.07, fade: 3.5, lp: 850 }, 0, 4);
+    // Bài hát vọng qua điện thoại từ phía cánh cửa (đầu kia sợi chỉ). Tới phách lên cung mới mở ra, bao quanh đầu.
+    const key1 = await leadIn(bar(52), { vol: 0.07, fade: 3.5, lp: 850, v: 0.2 }, 0, 4);
     if (song) {
       const t0 = sclk.start;
       waitFor(() => NOW >= t0 + 3.6).then(() => song && song.ramp(0.4, bar(56) - bar(52) - 3.6, 1700));
@@ -1270,6 +1383,8 @@
     await waitFor(() => NOW >= key1);
     BEAT.conv = () => 0;
     flash.t0 = NOW; taut.vib = 1.4; taut.vt = NOW; if (!song) { A.chime(); A.music.set(4); }
+    // Hai nhịp gặp nhau: bài hát rời phía cánh cửa, ra trước mặt rồi chạy vòng quanh đầu (nhạc 8D), suốt tới hết bản đồ
+    songOrbit(1.4);
     // Lời em, xen giữa các câu hát (không đè lên chữ "Chờ" nào)
     await waitT(216.9); lineShow(6);
     await waitT(220.4); lineShow(7);
@@ -1504,7 +1619,7 @@
     beats.on = false; noteOff();
     if (st.fade > 0.5) { setRoom('A', 'khuya'); afterLan1(); fadeTo(0, 0.6); }
     // Vào thẳng bản đồ (?canh=12): bài chưa chạy thì cho chạy từ đúng chỗ cuộc gọi vừa xong
-    if (T() < 0) await playFrom(232.2, { vol: 0.9, fade: 1.2 });
+    if (T() < 0) { await playFrom(232.2, { vol: 0.9, fade: 1.2, v: 0 }); songOrbit(0.2); }
     camTo(500, 240, 1.12, 1.8);
     MAP.cards = { A: makeCard('A', 'khuya'), B: makeCard('H', 'n') };
     MAP.on = true; MAP.k = 0; MAP.a = 1; MAP.clock = 0; MAP.turn = 1;
@@ -1613,7 +1728,7 @@
     for (const m of [0.7, 0, 0.85, 0.12, 1]) { st.mix = m; await sleep(90 + Math.random() * 60); }
     st.v = 'tube'; st.v2 = null; st.mix = 0; st.tube = true;
     tween(1, (k) => { ph.glow = k; });
-    arrive(rope, -0.4);
+    await settle(); arrive(rope, -0.4);
     await reelIn(rope, ph, 2, 7, 'q', '');
     ph.scr = 'num'; ph.num = '92';
     M(1);
@@ -1648,16 +1763,16 @@
       saw: 'Một hành lang tối, một sợi chỉ căng, tiếng ai đó sụt sịt. Câu "Thật ra đi…" bị cắt ngang.',
       truth: 'Đây là <b>cảnh cuối cùng của ngày</b>, được chiếu trước. Em ra hành lang gọi cho anh, đứng sát cột, khóc vì nhớ. Chữ bị cắt mất là <b>"quân sự"</b>.' },
     { t: '04:30', tag: 'Lần 1', where: 'Phòng anh', room: 'A', v: 'on',
-      saw: 'Anh gửi 7 tin tím, úp máy, tắt đèn.',
+      saw: 'Vẫn căn phòng ấy, vẫn ngọn đèn ấy, như đêm vẫn còn tiếp. Anh gửi 7 tin tím. Lần này không có tiếng "ting" nào. Úp máy, tắt đèn.',
       truth: 'Anh thức gần trọn đêm, như "đơn vị gác đêm" ở chương 18, để <b>5 giờ còi thổi, em mở máy là có tin</b>. Dòng "nhớ ngủ sớm, bớt thức khuya" là lời em dặn sáng hôm 26, lúc sắp đi.',
-      clue: 'Đồng hồ treo tường chỉ 4 giờ 30. Pin 92%.' },
+      clue: 'Đồng hồ treo tường chỉ 4 giờ 30. Pin 92%, trong khi cảnh nhắn liền tay ngay trước đó chỉ còn 18%: cảnh này xảy ra trước.' },
     { t: '05:00', tag: 'Lần 2', where: 'Chỗ ngủ ở doanh trại', room: 'B', v: 'tube', wait: 'tin anh chờ nửa tiếng',
-      saw: 'Một căn phòng, tiếng chuông xa, đèn bật, gấp chăn, đọc tin, trả lời rồi cất máy. Ngay sau đó có tiếng "ting".',
-      truth: 'Tiếng "chuông" là <b>còi báo thức</b>. Tiếng "ting" ngay sau đó <b>không phải lúc em gửi</b>, mà là lúc anh cầm máy lên đọc: <b>8 giờ 30</b>.',
+      saw: 'Một căn phòng, tiếng chuông xa, đèn bật, gấp chăn, đọc tin, trả lời rồi cất máy. Một lúc sau mới có tiếng "ting" vọng qua cửa.',
+      truth: 'Tiếng "chuông" xa là <b>còi báo thức</b>. Tiếng "ting" qua cửa là <b>máy anh</b>, và nó <b>không vang lúc em gửi</b>, mà lúc anh cầm máy lên đọc: <b>8 giờ 30</b>.',
       clue: 'Cửa chớp, đèn tuýp, giường sắt có màn, giường bên cạnh giống hệt. Chăn phải gấp gọn.' },
     { t: '08:30', tag: 'Lần 3', where: 'Phòng anh', room: 'A', v: 'sang', wait: 'tin em chờ ba tiếng rưỡi',
-      saw: 'Anh "trả lời ngay".',
-      truth: 'Tin em đã nằm đó <b>ba tiếng rưỡi</b>. Búi chỉ to hơn hẳn lần trước.',
+      saw: 'Anh đọc rồi trả lời. Lần này phải chờ lâu hơn nữa mới có "ting", pin tụt trong lúc chờ.',
+      truth: 'Tiếng "ting" vọng qua cửa ở lần 2 chính là lúc này, 8 giờ 30. Tin em đã nằm đó <b>ba tiếng rưỡi</b>. Búi chỉ to hơn hẳn lần trước.',
       clue: 'Nắng đã lên, đồng hồ 8 giờ 30. Pin 92% → 81%. Tủ áo trống một nửa vì thiếu đồ của em; cái móc em hay treo áo đung đưa, trống không.' },
     { t: 'Trưa', tag: 'Lần 4', where: 'Doanh trại · giờ nghỉ trưa', room: 'B', v: 'trua', wait: 'tin anh chờ khoảng ba tiếng',
       saw: 'Lấy máy trong ngăn tủ, đọc, gửi vội 4 tin, cất máy.',
@@ -1672,16 +1787,16 @@
       truth: 'Điện thoại phải <b>nộp vào giỏ chung</b>, trong giỏ có rất nhiều máy. Tin anh tới mà không lấy ra được: <b>lần đầu tiên có tin mà không trả lời được</b>.',
       clue: 'Chiếc giỏ có nhiều điện thoại. Bàn học dài, cuốn vở giống hệt nhau.' },
     { t: '20:10', tag: 'Lần 7', where: 'Ngoài phố, tối', room: 'P', v: 'toi',
-      saw: 'Anh gửi 8 tin. Không có tiếng đáp.',
+      saw: 'Anh gửi 8 tin. Chờ mãi, không có tiếng "ting" nào.',
       truth: 'Máy em <b>đang nằm trong giỏ</b>. Sợi chỉ chùng xuống, không ai cuộn.',
       clue: 'Pin 30%.' },
     { t: '21:00', tag: 'Lần 8', where: 'Phòng học · trả máy', room: 'L', v: 'toi', wait: 'tin anh chờ năm mươi phút',
       saw: 'Lấy máy khỏi giỏ, một búi chỉ tím quấn quanh.',
       truth: 'Được trả máy, <b>cả tràng tin anh đổ về cùng lúc</b>. Em nhắn lại.' },
     { t: '21:40', tag: 'Lần 9', where: 'Phòng anh', room: 'A', v: 'toi', wait: 'tin em chờ bốn mươi phút, rồi không ai phải chờ',
-      saw: 'Nhắn qua lại thật nhanh, có "đang nhập…".',
-      truth: '<b>Lần duy nhất trong ngày hai người cùng cầm máy.</b> Đây mới là "trả lời ngay" thật. Rồi bên kia "tách" một tiếng: tắt đèn.',
-      clue: '"Đang nhập…" chỉ xuất hiện đúng lần này. Pin 18%.' },
+      saw: 'Ngay sau hành lang, ở đầu game: nhắn qua lại thật nhanh, có "đang nhập…". Gần cuối, bạn quay lại đúng căn phòng ấy.',
+      truth: '<b>Cảnh nhắn liền tay ở đầu game là cảnh này</b>, 21 giờ 40, gần cuối ngày, được chiếu trước. Đây là <b>lần duy nhất trong ngày hai người cùng cầm máy</b>: "trả lời ngay" thật. Rồi bên kia "tách" một tiếng: tắt đèn.',
+      clue: '"Đang nhập…" chỉ xuất hiện đúng lần này. Gửi xong là nghe ngay máy em kêu bên kia cửa. Pin 18%.' },
     { t: '22:00 → 23:50', tag: 'Lần 10', where: 'Doanh trại · tắt đèn', room: 'B', v: 'dem',
       saw: 'Phòng tối, điện thoại hiện số 91. Cầm máy ra hành lang, đặt lên lan can, bấm gọi.',
       truth: 'Cả phòng tắt đèn cùng lúc, nhiều người ngủ chung nên không gọi được. <b>Số 91</b> là số ngày anh đếm, từ đêm 23 giờ 38 phút ngày 6/8, đêm em nhận lời. Em đặt máy sát cột và gọi: khung hình <b>trùng khít cảnh mở đầu</b>.',
@@ -1708,8 +1823,9 @@
     if (giaiBuilt) return; giaiBuilt = true;
     const el = $('giai-in'), esc = (x) => x.replace(/[<>&]/g, (m) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[m]);
     el.innerHTML = '<h2 class="gi-h">Giải đáp · Sợi chỉ</h2><p class="gi-sub">Một ngày, hai nơi, kể lại đúng theo giờ thật.</p>'
-      + '<div class="gi-box"><h3>Cú lừa</h3><p>Lúc chơi, bạn tưởng hai người đang <b>nhắn qua lại liền tay</b>: gửi đi là có "ting" đáp lại ngay.</p>'
-      + '<p>Thật ra <b>mỗi câu trả lời đi mất mấy tiếng</b>. Không phải một người chờ một người: <b>lúc em rảnh thì anh bận, lúc anh rảnh thì em không được cầm máy</b> (em đang đi quân sự, điện thoại cất trong tủ, nộp vào giỏ). Hai người thay nhau chờ nhau.</p></div>'
+      + '<div class="gi-box"><h3>Cú lừa thứ nhất</h3><p>Ngay đầu game, bạn thấy hai người <b>nhắn qua lại liền tay</b>: gửi đi là có "ting" đáp lại, có "đang nhập…". Bạn tin rằng họ vẫn nhắn với nhau như thế.</p></div>'
+      + '<div class="gi-box"><h3>Cú lừa thứ hai</h3><p>Rồi mỗi lần gửi, tiếng "ting" tới <b>muộn hơn một chút</b>. Có lần không tới. Bạn tưởng chỉ chậm vài giây. Thật ra <b>vài giây ấy là mấy tiếng đồng hồ</b>.</p>'
+      + '<p>Cảnh nhắn liền tay ở đầu game là <b>21 giờ 40</b>, lần duy nhất trong ngày. Còn lại, không phải một người chờ một người: <b>lúc em rảnh thì anh bận, lúc anh rảnh thì em không được cầm máy</b> (em đang đi quân sự, điện thoại cất trong tủ, nộp vào giỏ). Hai người thay nhau chờ nhau.</p></div>'
       + '<div class="gi-box"><h3>Cách đọc sợi chỉ</h3><ul class="gi-legend"><li><i style="background:#BEA0FF"></i>Chỉ tím: tin anh</li><li><i style="background:#FF96B6"></i>Chỉ hồng: tin em</li>'
       + '<li>Búi chỉ càng to, cuộn càng lâu: tin càng phải chờ lâu</li><li>"Ting": lúc người kia cầm máy lên, không phải lúc gửi</li><li>Pin tụt: thời gian đã trôi</li></ul></div>';
     for (const g of GIAI) {
@@ -1728,8 +1844,8 @@
       ['Đồng hồ treo tường không có số', 'Để bạn khó đoán giờ mà tưởng hai nơi đang cùng một lúc. Nhưng kim vẫn đọc được nếu chịu nhìn: 4 giờ 30, rồi 8 giờ 30, rồi 9 giờ 40 tối.'],
       ['Hai mặt đồng hồ ở bản đồ', 'Lần đầu tiên có số. Đồng hồ bên em <b>lệch đi</b> so với bên anh rồi mới từ từ <b>xoay khớp</b>. Cả ngày hai người sống lệch nhau: người này rảnh thì người kia bận. Chỉ tới cuộc gọi cuối ngày, hai mặt đồng hồ mới chỉ cùng một giờ.'],
       ['Hai nhịp đập lệch nhau', 'Tiếng tích tắc bên anh và tiếng dế bên em, hai nhịp sống khác nhau. Ở cảnh mở đầu, hai nhịp sắp trùng thì bị cắt. Ở cuộc gọi, chúng trùng làm một, đúng phách bài hát lên một cung.'],
-      ['Pin tụt', '"Trả lời ngay" mà pin tụt cả chục phần trăm: giữa hai câu nhắn đã trôi qua mấy tiếng. Pin tím là máy anh, pin hồng là máy em.'],
-      ['Tiếng "ting" bên tai trái, tai phải', 'Đeo tai nghe sẽ nghe tin vọng sang từ phía cánh cửa của nhà kia. Tiếng "ting" là lúc người kia cầm máy lên, không phải lúc gửi.'],
+      ['Pin tụt', 'Cảnh nhắn liền tay ở đầu game pin chỉ còn 18%, cảnh ngay sau lại là 92%: cảnh đầu không phải buổi sáng. Trong lúc chờ "ting", pin tụt dần: thời gian đang trôi. Pin tím là máy anh, pin hồng là máy em.'],
+      ['Tiếng "ting" sau cánh cửa', 'Đeo tai nghe sẽ nghe tiếng máy của người kia vọng ra từ phía cánh cửa. Nó vang lúc người kia <b>cầm máy lên</b>, không phải lúc gửi, và mỗi lần một muộn hơn. Chỉ ở cảnh nhắn liền tay (21 giờ 40), gửi xong là nghe ngay.'],
       ['Căn phòng của em', 'Giường lúc nào cũng gọn, các giường giống hệt nhau, giỏ có rất nhiều điện thoại, đèn tắt cùng lúc, tiếng "chuông" thật ra là còi: không phải nhà, mà là <b>doanh trại</b>.'],
       ['"Nhớ ngủ sớm, bớt thức khuya"', 'Lời em dặn sáng hôm 26, lúc sắp đi. Dòng chữ hiện mờ trên máy anh lúc 4 giờ 30, khi anh vẫn còn thức.'],
       ['Số 91, rồi 92', 'Số ngày anh đếm, từ đêm 23 giờ 38 phút ngày 6/8, đêm em nhận lời. Sang hôm sau thì thêm một ngày.'],
@@ -1755,8 +1871,10 @@
     const from = +(Q.get('canh') || 0);
     $('top').hidden = false;
     if (from <= 0) await coldOpen();
-    const LAN = [lan1, lan2, lan3, lan4, lan5, lan6, lan7, lan8, lan9, lan10, lan11];
-    for (let i = Math.max(1, from); i <= 11; i++) {
+    // Cú lừa thứ nhất: cảnh nhắn liền tay (Lần 9, 21:40) chiếu trước, như đầu ngày. ?canh=0.5 để xem từ đây.
+    if (from < 1) { if (bedFile) A.music.set(0); await lan9(true); }
+    const LAN = [lan1, lan2, lan3, lan4, lan5, lan6, lan7, lan8, () => lan9(false), lan10, lan11];
+    for (let i = Math.max(1, Math.ceil(from)); i <= 11; i++) {
       // Lần 1 → 9: không nhạc. Chỉ có âm thanh không gian (tiếng "ting" bên trái / phải cửa, tin bay qua đầu, tiếng phòng):
       // nhạc nền sẽ che mất cảm giác 8D. Nhạc không lời chỉ khẽ vào từ Lần 10 (tắt đèn, ra hành lang), âm ỉ dâng tới cao trào.
       bedGrow = i >= 10 ? (i - 10) : 0;
@@ -1770,7 +1888,7 @@
   }
 
   // Chỉ để thử tự động (?dbg): đổi toạ độ thế giới ra toạ độ màn hình
-  if (Q.has('dbg')) window.__sc = { bats: BATS, h: () => !!handler, hk: () => handler && (handler.reel ? 'reel' : handler.screen ? 'screen' : 'x'), T, map: MAP, bed: () => bed && bed.pos(), song: () => song && { start: song.start, now: NOW }, beat: BEAT, scr: (x, y) => ({ x: (x - VW.x) * S * VW.z + cw / 2, y: (y - VW.y) * S * VW.z + ch / 2 }), st, phones, ropes, anchorOf, DOOR };
+  if (Q.has('dbg')) window.__sc = { bats: BATS, h: () => !!handler, hk: () => handler && (handler.reel ? 'reel' : handler.screen ? 'screen' : 'x'), T, map: MAP, bed: () => bed && bed.pos(), song: () => song && { start: song.start, now: NOW }, sv: () => song && song.mv && +song.mv.v.toFixed(2), beat: BEAT, scr: (x, y) => ({ x: (x - VW.x) * S * VW.z + cw / 2, y: (y - VW.y) * S * VW.z + ch / 2 }), st, phones, ropes, anchorOf, DOOR, A };
 
   // ================= Bắt đầu =================
   resize();

@@ -56,12 +56,15 @@ button { font: inherit; color: inherit; }
 .tobe .credit { font-size: 10.5px; letter-spacing: .06em; opacity: .55; animation-delay: 1.8s; }
 
 /* Ghi chú góc trên: giờ, nơi chốn, một dòng tả cảnh. Giờ cuộn tới giờ mới khi sang cảnh. */
-.note { position: fixed; top: calc(var(--st) + 3px); left: calc(var(--sl) + 50px); z-index: 6; pointer-events: none; max-width: min(44vw, 340px);
-  opacity: 0; transition: opacity 1.2s ease; text-shadow: 0 1px 3px rgba(0, 0, 0, .9), 0 0 14px rgba(0, 0, 0, .6); }
+.note { position: fixed; top: calc(var(--st) + 3px); left: calc(var(--sl) + 50px); z-index: 6; pointer-events: none; max-width: min(52vw, 440px);
+  opacity: 0; transition: opacity 1.2s ease; text-shadow: 0 1px 3px rgba(0, 0, 0, .95), 0 0 16px rgba(0, 0, 0, .75); }
+/* Một vùng tối mờ sau chữ để chữ nổi trên mọi nền (nền sáng ban ngày, ánh đèn), không có viền khung */
+.note::before { content: ''; position: absolute; inset: -18px -56px -22px -70px; z-index: -1; pointer-events: none;
+  background: radial-gradient(ellipse 60% 70% at 38% 45%, rgba(8, 5, 10, .62), rgba(8, 5, 10, .32) 55%, transparent 80%); }
 .note.on { opacity: 1; }
 .note b { display: block; font: 500 clamp(15px, calc(var(--u) * 4.6), 22px)/1.15 'Fraunces', serif; letter-spacing: .07em; font-variant-numeric: tabular-nums; color: var(--ink); }
-.note span { display: block; margin-top: 1px; font-size: 11px; letter-spacing: .12em; color: var(--dim); }
-.note i { display: block; margin-top: 5px; font: italic 400 clamp(12px, calc(var(--u) * 3.4), 14.5px)/1.45 'Fraunces', serif; color: rgba(251, 239, 243, .82); opacity: 0; transition: opacity 1.4s ease; }
+.note span { display: block; margin-top: 1px; font-size: 13px; letter-spacing: .12em; color: rgba(251, 239, 243, .82); }
+.note i { display: block; margin-top: 6px; font: italic 400 clamp(15px, calc(var(--u) * 4.4), 19.5px)/1.4 'Fraunces', serif; color: #FBEFF3; opacity: 0; transition: opacity 1.4s ease; }
 .note i.on { opacity: 1; }
 
 /* Giải đáp: trang đọc, cuộn dọc */

@@ -434,6 +434,30 @@
     c.fillStyle = '#FFFFFF'; c.fillRect(x + 19.5, y - 37, 3, 4);
     c.fillStyle = '#ECECEA'; rr(c, x + 30, y - 9, 24, 6, 3); c.fill(); c.fillStyle = '#4A7BC4'; c.fillRect(x + 52, y - 8.5, 4, 5);
   }
+  // Lớp sáng cho phòng trong nhà (doanh trại, phòng học): góc trần và chân tường tối lại, hai mép phòng khuất,
+  // đèn tuýp hắt một vùng sáng xuống tường và phản chiếu mờ trên sàn gạch, cửa sổ ban ngày in một mảng sáng xuống sàn.
+  // Vẽ một lần vào ảnh nền, không tốn gì mỗi khung hình.
+  function interiorLight(c, o) {
+    fillAll(c, LG(c, 0, Y0, 0, 96, [[0, 'rgba(14,18,16,.5)'], [1, 'rgba(14,18,16,0)']]));
+    fillAll(c, LG(c, 0, FLOOR - 30, 0, FLOOR, [[0, 'rgba(10,14,12,0)'], [1, 'rgba(10,14,12,.26)']]));
+    c.fillStyle = LG(c, 0, FLOOR, 0, FLOOR + 34, [[0, 'rgba(0,0,0,.3)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(X0, FLOOR, BW, 34);
+    fillAll(c, LG(c, -120, 0, 150, 0, [[0, 'rgba(8,12,10,.42)'], [1, 'rgba(8,12,10,0)']]));
+    fillAll(c, LG(c, 850, 0, 1120, 0, [[0, 'rgba(8,12,10,0)'], [1, 'rgba(8,12,10,.42)']]));
+    for (const [x, y, w] of o.tubes || []) {
+      const cx = x + w / 2;
+      glow(c, cx, y + 18, 330, [236, 243, 250], 0.1, 0.62);
+      glow(c, cx, y + 14, 70, [255, 255, 255], 0.28, 0.32);
+      shaft(c, [[x + 8, y + 16], [x + w - 8, y + 16], [x + w + 70, FLOOR], [x - 70, FLOOR]], [236, 243, 250], 0.035);
+      // phản chiếu trên sàn gạch bóng
+      glow(c, cx, FLOOR + 46, 64, [236, 243, 250], 0.11, 2.1);
+      glow(c, cx, FLOOR + 20, 28, [255, 255, 255], 0.14, 0.6);
+    }
+    if (o.win && o.day) {
+      const [x, y, w, h] = o.win;
+      glow(c, x + w / 2, FLOOR + 70, w * 0.75, [255, 246, 222], 0.09, 0.28);
+      for (let i = 0; i < 7; i++) { c.fillStyle = 'rgba(90,80,60,' + (0.025 + (i % 3) * 0.012) + ')'; c.fillRect(x + 8 + i * (w - 16) / 6, y + h + 12, 1.4, 34 + (i * 13) % 40); }
+    }
+  }
   function bgB(c, v) {
     const lit = v === 'tube', day = v === 'trua', night = v === 'dem', R = rand(19);
     c.fillStyle = LG(c, 0, Y0, 0, 244, [[0, '#B7BCB0'], [1, '#CDD0C4']]); c.fillRect(X0, Y0, BW, 244 - Y0);
@@ -450,6 +474,7 @@
     ironBed(c, 700, 'other');
     cabinet(c, 226, 300, 64, 94);
     ironBed(c, 300, 'mine');
+    if (lit || day) interiorLight(c, { tubes: lit ? [[652, 66, 118]] : [], win: [410, 58, 184, 80], day });
     if (day) {
       // Nắng trưa: sáng dịu, trắng ấm; một luồng nắng gần như dựng đứng qua ô cửa cao
       glow(c, 502, 100, 320, [255, 248, 228], 0.16);
@@ -549,6 +574,7 @@
   }
 
   // Tủ áo mở (k 0..1): nửa trái còn áo của anh, nửa phải trống, một chiếc móc không đung đưa. t0: lúc mở (móc đung đưa mạnh rồi lặng dần)
+  // Móc ấy màu hồng (màu của em trong cả chương): nhìn là biết móc của em, không phải móc anh vừa lấy áo.
   function shirt(c, x, y, col) {
     c.strokeStyle = '#9A8C78'; c.lineWidth = 1; c.beginPath(); c.arc(x, y + 2, 2.4, Math.PI, Math.PI * 2.2); c.stroke();
     c.beginPath(); c.moveTo(x - 10, y + 10); c.lineTo(x, y + 5); c.lineTo(x + 10, y + 10); c.stroke();
@@ -563,10 +589,10 @@
     c.fillStyle = LG(c, 0, iy, 0, iy + ih, [[0, '#0F0A09'], [1, '#22170F']]); c.fillRect(ix, iy, iw, ih);
     c.fillStyle = '#8E7E68'; c.fillRect(ix + 3, iy + 16, iw - 6, 2.2);
     shirt(c, ix + 13, iy + 18, '#2F3C5E'); shirt(c, ix + 27, iy + 18, '#5C5C66'); shirt(c, ix + 40, iy + 18, '#4A3D6A');
-    // nửa phải: một móc áo không, đung đưa
+    // nửa phải: một móc áo không, màu hồng, đung đưa
     const age = Math.max(0, t - t0), sw = Math.sin(age * 2.4) * 0.22 * Math.exp(-age * 0.35) + Math.sin(t * 0.8) * 0.025;
     c.save(); c.translate(ix + 72, iy + 18); c.rotate(sw);
-    c.strokeStyle = '#B8A890'; c.lineWidth = 1.1; c.beginPath(); c.arc(0, 2, 2.4, Math.PI, Math.PI * 2.2); c.stroke();
+    c.strokeStyle = '#F096B6'; c.lineWidth = 1.3; c.beginPath(); c.arc(0, 2, 2.4, Math.PI, Math.PI * 2.2); c.stroke();
     c.beginPath(); c.moveTo(-12, 12); c.lineTo(0, 5); c.lineTo(12, 12); c.lineTo(-12, 12); c.stroke();
     c.restore();
     c.fillStyle = '#3A2A22'; c.fillRect(ix, iy + ih - 58, iw, 3);
@@ -740,6 +766,7 @@
     c.fillStyle = '#8A6A48'; c.fillRect(224, 318, 78, 7); c.fillStyle = '#5E4630'; c.fillRect(228, 325, 5, 69); c.fillRect(293, 325, 5, 69);
     shade(c, 565, 398, 240, 10, 0.5);
     desk(c);
+    interiorLight(c, { tubes: [[260, 60, 110], [760, 60, 110]] });
     glow(c, 315, 72, 420, [225, 240, 255], 0.11, 0.7); glow(c, 815, 72, 420, [225, 240, 255], 0.11, 0.7);
     glow(c, 315, 72, 90, [240, 250, 255], 0.3, 0.4); glow(c, 815, 72, 90, [240, 250, 255], 0.3, 0.4);
     const fall = c.createRadialGradient(560, 100, 200, 560, 100, 860);
