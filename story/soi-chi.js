@@ -693,7 +693,7 @@
   async function coldOpen() {
     setRoom('H', 'n'); st.bars = 1; st.vign = 1; st.fade = 1;
     Object.assign(view, { x: 392, y: 262, z: 2.2 });
-    setTimeout(() => note('', 'Một hành lang', 'Một cô gái đứng lặng ở hành lang, chỗ đầu cầu thang. Nước mắt rơi, vì nhớ.', 2.4), 1600);
+    setTimeout(() => note('', 'Một hành lang', 'Có ai đó đứng ở đây, lặng im.', 2.4), 1600);
     extras.push(drawTaut);
     A.setPlace('hanh-lang');
     await sleep(1300);
