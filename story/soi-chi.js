@@ -1629,6 +1629,7 @@
     await tween(3.2, (k) => { MAP.k = k; }, lin);
     if (!song) A.music.set(2);
     // Chạm búi chỉ, theo lời hát. Búi căng lần lượt, mỗi búi đúng một câu "chờ"; bấm sớm thì giữ lại một cú, tới câu mới căng.
+    // Không chạm thì búi vẫn tự gỡ đúng câu của nó.
     await new Promise((res) => {
       // Mỗi búi một lần chạm. Chạm đúng lúc câu "chờ" của búi đó vang lên thì căng ngay; chạm sớm thì búi loé sáng, rung khẽ,
       // giữ cú chạm lại, tới câu của nó mới căng. Nhờ vậy ai chạm nhanh cũng thấy từng búi bung ra đúng theo lời hát.
@@ -1644,7 +1645,9 @@
         tween(1, (k) => { MAP.lab[i] = k; });
         if (next() < 0) { done = true; handler = null; screenHint = null; clearInterval(iv); setTimeout(res, 1400); }
       };
-      const iv = setInterval(() => { const i = next(); if (q > 0 && i >= 0 && ready(i)) { q = 0; pull(i); } }, 20);
+      // Không chạm (quên, hoặc chạm muộn): tới câu "chờ" của búi nào thì búi ấy tự gỡ, trễ 0,7 s sau đầu câu (để ai chạm vẫn kịp tự tay gỡ).
+      // Kết quả kiểu gì cũng gỡ hết, đúng theo lời hát; chạm chỉ để người chơi tự tay cảm nhận.
+      const iv = setInterval(() => { const i = next(); if (i < 0) return; if (q > 0 && ready(i)) { q = 0; pull(i); } else if (T() >= DAY[i].t + 0.7) pull(i); }, 20);
       screenHint = () => { const i = next(); if (i < 0 || q) return null; const m = mapThread(i, mapRects()).m; return { x: m.x, y: m.y }; };
       hint(null, 'Chạm vào búi chỉ để gỡ, theo lời hát', { ring: 99, text: 1.5 });
       handler = {
