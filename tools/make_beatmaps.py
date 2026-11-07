@@ -45,6 +45,10 @@ SONGS = [
      "Anh là người sẽ thương em thật lâu."),
     ("cho-chut", "chờ chút...", "Chờ Chút.mp3", "Anh (7).jpg",
      "Chờ anh chút nữa thôi, rồi mình còn đi thật nhiều nơi."),
+    # Bài của Chương 19 · Sợi chỉ (bản gốc Vũ. & Hà Anh Tuấn, không phải bản piano nền). Khoá: chơi hết Sợi chỉ thì mở
+    # (story/soi-chi.js ghi lpn:songs). Bìa cover-10: ảnh cuối phim Băng số 1 (~/Videos/bang1-dung/GE5A5130.jpeg).
+    ("danh-het-xuan-thi", "Dành Hết Xuân Thì Để Chờ Nhau", "Dành Hết Xuân Thì Để Chờ Nhau.mp3", "Anh (10).jpg",
+     "Bao lâu cũng được. Mình chờ nhau.", True),
     # Bài của Băng số 1 (Chương 17 · Cuộn băng số 1), mở sẵn cho cả hai. Bìa cover-8: ảnh 28 (Fansipan).
     ("giu-mai", "Giữ Mãi Yêu Thương Gần Kề", "Giữ Mãi Yêu Thương Gần Kề.mp3", "Anh (8).jpg",
      "Giữ mãi những ngày mình có nhau, gần thật gần."),
@@ -56,7 +60,7 @@ SONGS = [
 # Bài chơi cả bài (không cắt đoạn 96 giây) và bài gắn nhãn NEW, đứng đầu danh sách.
 # Anh Quang muốn mọi bài chỉ chơi một đoạn, không để cả bài (kể cả "chờ chút...").
 FULL_SONG = set()
-NEW_SONGS = ["sinh-ra", "giu-mai"]
+NEW_SONGS = ["danh-het-xuan-thi", "sinh-ra", "giu-mai"]
 
 
 def load_audio(path):

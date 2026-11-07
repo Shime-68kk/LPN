@@ -1742,8 +1742,20 @@
   }
 
   // ================= Kết bản dựng thử =================
+  // Chơi hết Sợi chỉ: mở khoá bài gốc "Dành Hết Xuân Thì Để Chờ Nhau" trong Sâu Tím (lpn:songs, home/sync.js gộp lên Firebase).
+  const SONG_ID = 'danh-het-xuan-thi';
+  function moBai() {
+    try {
+      const opened = JSON.parse(localStorage.getItem('lpn:songs')) || {};
+      if (!opened[SONG_ID]) { opened[SONG_ID] = true; localStorage.setItem('lpn:songs', JSON.stringify(opened)); }
+      if (window.Sync) window.Sync.dirty();
+    } catch (e) { /* bỏ qua */ }
+  }
+  // Ai đã chơi hết từ trước khi có bài này thì cũng được mở luôn
+  try { if (localStorage.getItem('soichi:xong') === '1') moBai(); } catch (e) { /* bỏ qua */ }
   function hetChuong() {
     try { localStorage.setItem('soichi:xong', '1'); } catch (e) { /* bỏ qua */ }
+    moBai(); $('end-song').hidden = false;
     // Như cuối phim: chữ hiện lên trong lúc giai điệu còn ngân, rõ dần, rồi mới tắt hẳn
     A.setPlace(null); noteOff();
     if (bed) { bed.set(0.17, 2600, 4); setTimeout(() => bedOff(9), 14000); }

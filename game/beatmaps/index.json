@@ -1,6 +1,19 @@
 {
   "songs": [
     {
+      "id": "danh-het-xuan-thi",
+      "title": "Dành Hết Xuân Thì Để Chờ Nhau",
+      "src": "../assets/sound/Dành Hết Xuân Thì Để Chờ Nhau.mp3",
+      "cover": "../assets/thumbs/cover-10.webp",
+      "map": "beatmaps/danh-het-xuan-thi.json",
+      "bpm": 68.0,
+      "preview": 234.325,
+      "message": "Bao lâu cũng được. Mình chờ nhau.",
+      "offset": 0,
+      "locked": true,
+      "isNew": true
+    },
+    {
       "id": "giu-mai",
       "title": "Giữ Mãi Yêu Thương Gần Kề",
       "src": "../assets/sound/Giữ Mãi Yêu Thương Gần Kề.mp3",

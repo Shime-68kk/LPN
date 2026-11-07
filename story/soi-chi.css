@@ -95,3 +95,12 @@ button { font: inherit; color: inherit; }
 .gi-det { margin-top: 22px; }
 .gi-det p { margin: 0 0 10px; }
 .gi-det p b:first-child { color: #FFD3E0; }
+
+/* Thẻ mở khoá bài hát ở màn kết */
+.end-song { display: flex; align-items: center; gap: 12px; max-width: min(340px, calc(100vw - 32px)); padding: 10px 16px 10px 10px; border-radius: 18px; background: rgba(255, 157, 184, .08); border: 1px solid rgba(255, 157, 184, .3); color: var(--ink); text-align: left; text-decoration: none; animation: rise 2s ease 1.6s both; }
+.end-song[hidden] { display: none; }
+.end-song img { width: 56px; height: 56px; flex: none; border-radius: 12px; object-fit: cover; }
+.end-song span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.end-song small { font-size: 11px; line-height: 1.35; color: #FFB4C2; letter-spacing: .02em; animation: none; }
+.end-song b { font-size: 15px; font-weight: 600; }
+.end-song i { font-style: normal; font-size: 12px; opacity: .7; }
