@@ -947,6 +947,7 @@ button.d-av:active { transform: scale(.94); }
   pointer-events: none;
 }
 .news-logo { position: relative; width: 132px; height: 132px; margin: -6px auto 0; animation: float 3s ease-in-out infinite; }
+.news.is-song .news-logo { width: 116px; height: 116px; border-radius: 26px; object-fit: cover; box-shadow: 0 10px 26px rgba(80, 40, 90, .28); }
 .news-kicker { position: relative; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #B0412E; }
 .news-card h2 { position: relative; margin: 0; font-family: 'Fraunces', serif; font-weight: 600; font-size: 24px; }
 .news-card p { position: relative; margin: 0 0 6px; font-size: 15px; line-height: 1.5; color: #6E5236; }

@@ -577,6 +577,16 @@
       else if (cs) this.item = { key: cs.case.announce.key, a: cs.case.announce, href: '../story/' + cs.case.page };
       this.show();
     },
+    // Bài mới trong Sâu Tím (announce trong game/beatmaps/index.json): báo một lần "Chúc mừng em đã mở khoá bài hát mới"
+    song(list) {
+      if (this.item) return;
+      const seen = store.get('lpn:news') || {};
+      const s = list.find((x) => x.announce && !x.locked && !seen['song:' + x.id]);
+      if (!s) return;
+      this.item = { key: 'song:' + s.id, song: true, href: '../game/?song=' + encodeURIComponent(s.id),
+        a: { logo: s.cover, kicker: 'Sâu Tím · Bài hát mới', title: 'Chúc mừng em đã mở khoá bài hát mới', text: s.title + '. Đã thêm vào Sâu Tím rồi nha.', ok: 'Chơi ngay', later: 'Để sau' } };
+      this.show();
+    },
     show() {
       const it = this.item;
       if (!it || document.documentElement.classList.contains('need-lock') || !$('news').hidden) return;
@@ -594,6 +604,7 @@
         tick();
         this.timer = setInterval(tick, 1000);
       }
+      $('news').classList.toggle('is-song', !!it.song);
       if (a.logo) $('news-logo').src = a.logo;
       $('news-kicker').textContent = a.kicker || 'Cốt truyện · Chương mới';
       $('news-title').textContent = a.title;
@@ -825,6 +836,7 @@
     .then((d) => {
       const opened = store.get('lpn:songs') || {};
       SONGS = d.songs.filter((s) => !s.locked || opened[s.id]).map((s) => ({ id: s.id, title: s.title, cover: s.cover, src: s.src }));
+      News.song(d.songs);
       Home.gameStars();
       Home.story();
       Weather.apply();

@@ -10,7 +10,7 @@
       "preview": 234.325,
       "message": "Bao lâu cũng được. Mình chờ nhau.",
       "offset": 0,
-      "locked": true,
+      "announce": true,
       "isNew": true
     },
     {
