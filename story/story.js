@@ -417,7 +417,7 @@
       // Phía sau chỉ còn dòng điều khiển (đổi cảnh, mở nhạc…): đây là câu cuối của chương.
       const final = !P.queue.some((x) => x.text || x.choice || x.if || x.ifWeather);
       P.log.push({ who: NAMES[item.who] || item.who === 'none' ? item.who : 'ke', text: String(item.text || ''), sky: P.sky,
-        cast: P.cast, near: P.near, heart: P.heart, emote: item.emote || '', emoteWho: item.emoteWho || item.who, final });
+        cast: P.cast, near: P.near, heart: P.heart, emote: item.emote || '', emoteWho: item.emoteWho || item.who, final, b: !!item.b });
       show(P.log.length - 1, true);
       return;
     }
@@ -455,7 +455,7 @@
     tag.className = 'who ' + who;
     tag.hidden = who === 'none';
     const line = $('line');
-    line.className = 'line ' + (who === 'ke' || who === 'none' ? who : '');
+    line.className = 'line ' + (who === 'ke' || who === 'none' ? who : '') + (item.b ? ' strong' : '');
     const waitChoice = last && P.waiting;
     $('choices').hidden = !waitChoice;
     $('btn-next').hidden = !!waitChoice;
