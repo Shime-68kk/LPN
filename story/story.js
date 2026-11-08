@@ -102,6 +102,8 @@
     return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(s).padStart(2, '0');
   };
   const openTime = (i) => new Date(CHAPTERS[i].openAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  // Buổi theo giờ mở: sáng / trưa / chiều / tối.
+  const openPart = (i) => { const h = new Date(CHAPTERS[i].openAt).getHours(); return h < 11 ? 'sáng' : h < 14 ? 'trưa' : h < 18 ? 'chiều' : 'tối'; };
 
   let waitTimer = 0;
   function openWait(i) {
@@ -111,7 +113,7 @@
     const tick = () => {
       const left = waitLeft(i);
       if (!left) { clearInterval(waitTimer); closeDialog(); renderMap(); return; }
-      $('shop-text').textContent = 'Chương này mở lúc ' + openTime(i) + ' tối nay. Còn ' + clock(left) + ' nữa thôi, chờ anh chút nhé.';
+      $('shop-text').textContent = 'Chương này mở lúc ' + openTime(i) + ' ' + openPart(i) + ' nay. Còn ' + clock(left) + ' nữa thôi, chờ anh chút nhé.';
     };
     dialog('Chờ chút…', '', 'Em đợi được', () => {
       clearInterval(waitTimer);

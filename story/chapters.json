@@ -815,11 +815,11 @@
       "id": "c22",
       "title": "Người cúp máy sau cùng",
       "cost": 500,
-      "releaseAt": "2026-11-09T12:00:00+07:00",
+      "openAt": "2026-11-09T12:00:00+07:00",
       "early": { "quang": "2026-11-09T00:00:00+07:00" },
       "scene": "dem",
       "cast": ["quang"],
-      "announce": { "kicker": "Chương mới", "title": "Có chương mới cho em!", "text": "Chương 20 · Người cúp máy sau cùng.", "ok": "Đọc ngay", "later": "Để sau" },
+      "announce": { "kicker": "Chương mới · Trưa nay 12:00", "title": "Trưa nay có chương mới!", "text": "Chương 20 · Người cúp máy sau cùng. Hẹn em lúc 12 giờ trưa nha.", "ok": "Xem đếm ngược", "later": "Để sau" },
       "lines": [
         { "who": "none", "text": "Tuần đầu em đi quân sự" },
         { "who": "ke", "text": "Em đi quân sự được bảy ngày." },
