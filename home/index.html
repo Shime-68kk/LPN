@@ -42,7 +42,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="home.css?v=37" />
+  <link rel="stylesheet" href="home.css?v=38" />
 </head>
 <body data-weather="nang">
   <script>document.body.dataset.weather = LPN_SKY; document.body.classList.toggle('night', LPN_NIGHT); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
@@ -316,6 +316,8 @@
       <span class="news-glow" aria-hidden="true"></span>
       <img class="news-logo" id="news-logo" src="../assets/img/tham-tu.webp" alt="" width="132" height="132" />
       <span class="news-art" id="news-art" hidden><svg class="cas" viewBox="0 0 64 42" aria-hidden="true"><rect class="cas-b" x="1" y="1" width="62" height="40" rx="5" /><rect class="cas-l" x="7" y="5" width="50" height="13" rx="2" /><text x="32" y="14.6">BĂNG SỐ 1</text><rect class="cas-w" x="15" y="23" width="34" height="13" rx="6.5" /><g class="reel"><circle cx="23" cy="29.5" r="4.6" /><path d="M23 25.4v8.2M18.9 29.5h8.2" /></g><g class="reel"><circle cx="41" cy="29.5" r="4.6" /><path d="M41 25.4v8.2M36.9 29.5h8.2" /></g></svg></span>
+      <span class="news-call" id="news-call" hidden aria-hidden="true"><span class="ph-ring"></span><span class="ph-ring r2"></span><span class="ph"><span class="ph-notch"></span><span class="ph-av"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.6A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.4C19 15.6 12 20 12 20z" /></svg></span><b>Anh</b><span class="ph-time" id="news-call-time">09:52</span><span class="ph-end"><svg viewBox="0 0 24 24"><path d="M3 13.5c5-4.6 13-4.6 18 0l-2.4 2.4-3.3-1.6v-2.4a11 11 0 0 0-6.6 0v2.4l-3.3 1.6z" /></svg></span></span></span>
+      <span class="news-letter" id="news-letter" hidden aria-hidden="true"><svg viewBox="0 0 64 48"><rect class="lt-b" x="4" y="8" width="56" height="36" rx="5" /><path class="lt-f" d="M5 10l27 20 27-20" /><path class="lt-h" d="M32 26s-6.2-3.9-6.2-8.4a3.4 3.4 0 0 1 6.2-2 3.4 3.4 0 0 1 6.2 2C38.2 22.1 32 26 32 26z" /></svg></span>
       <span class="news-count" id="news-count" hidden></span>
       <span class="news-kicker" id="news-kicker">Cốt truyện · Chương mới</span>
       <h2 id="news-title">Đã có chương truyện mới!</h2>
@@ -365,7 +367,7 @@
   <script src="push.js?v=2"></script>
   <script src="offline.js?v=1"></script>
   <script src="diary.js?v=8"></script>
-  <script src="home.js?v=34"></script>
+  <script src="home.js?v=35"></script>
   <script src="../shop/skins.js?v=34"></script>
   <script>
     // Tiệm Sâu đang có sự kiện thì gắn nhãn lên ô; máy này chưa xem thì nhãn nhấp nháy.

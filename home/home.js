@@ -574,7 +574,7 @@
       const ch = list.find((c) => c.announce && !done[c.id] && !seen[c.id]);
       const cs = list.find((c) => c.case && c.case.announce && done[c.id] && !flags[c.case.id + 'Done'] && !seen[c.case.announce.key]);
       if (ch) this.item = { key: ch.id, a: ch.announce, href: '../story/?play=' + encodeURIComponent(ch.id), openAt: ch.openAt }; // chưa tới giờ mở: trang cốt truyện hiện đếm ngược
-      else if (cs) this.item = { key: cs.case.announce.key, a: cs.case.announce, href: '../story/' + cs.case.page };
+      else if (cs) this.item = { key: cs.case.announce.key, a: cs.case.announce, href: '../story/' + cs.case.page, isCase: true };
       this.show();
     },
     // Bài mới trong Sâu Tím (announce trong game/beatmaps/index.json): báo một lần "Chúc mừng em đã mở khoá bài hát mới"
@@ -591,19 +591,27 @@
       const it = this.item;
       if (!it || document.documentElement.classList.contains('need-lock') || !$('news').hidden) return;
       const a = it.a;
-      // Bảng báo kiểu cuộn băng (Băng số 1): nền phim tối, cuộn băng hai trục quay, đếm ngược tới giờ mở
-      const tape = a.theme === 'tape';
-      $('news').classList.toggle('is-tape', tape);
-      $('news-logo').hidden = tape;
-      $('news-art').hidden = !tape;
+      // Kiểu bảng báo: tape = cuộn băng (Băng số 1), call = cuộc gọi đang chạy (chương 20),
+      // chương không ghi theme thì là phong thư; sâu thám tử chỉ còn dùng cho hồ sơ vụ án.
+      const theme = a.theme || (it.song || it.isCase ? '' : 'letter');
+      $('news').classList.toggle('is-tape', theme === 'tape');
+      $('news').classList.toggle('is-call', theme === 'call');
+      $('news-logo').hidden = !!theme;
+      $('news-art').hidden = theme !== 'tape';
+      $('news-call').hidden = theme !== 'call';
+      $('news-letter').hidden = theme !== 'letter';
       clearInterval(this.timer);
-      $('news-count').hidden = !(tape && it.openAt);
-      if (tape && it.openAt) {
-        const at = Date.parse(it.openAt), pad = (n) => String(n).padStart(2, '0');
-        const tick = () => { const s = Math.max(0, Math.round((at - Date.now()) / 1000)); $('news-count').textContent = s ? 'Còn ' + pad(Math.floor(s / 3600)) + ':' + pad(Math.floor(s % 3600 / 60)) + ':' + pad(s % 60) : 'Đã mở'; };
-        tick();
-        this.timer = setInterval(tick, 1000);
-      }
+      const counting = !!(theme && it.openAt);
+      $('news-count').hidden = !counting;
+      const pad = (n) => String(n).padStart(2, '0');
+      const at = Date.parse(it.openAt), t0 = Date.now();
+      const tick = () => {
+        if (counting) { const s = Math.max(0, Math.round((at - Date.now()) / 1000)); $('news-count').textContent = s ? 'Còn ' + pad(Math.floor(s / 3600)) + ':' + pad(Math.floor(s % 3600 / 60)) + ':' + pad(s % 60) : 'Đã mở'; }
+        // Đồng hồ cuộc gọi chạy từ 09:52, qua mốc mười phút rồi cứ thế chạy tiếp.
+        if (theme === 'call') { const c = 592 + Math.floor((Date.now() - t0) / 1000); $('news-call-time').textContent = pad(Math.floor(c / 60)) + ':' + pad(c % 60); }
+      };
+      tick();
+      if (counting || theme === 'call') this.timer = setInterval(tick, 1000);
       $('news').classList.toggle('is-song', !!it.song);
       if (a.logo) $('news-logo').src = a.logo;
       $('news-kicker').textContent = a.kicker || 'Cốt truyện · Chương mới';
