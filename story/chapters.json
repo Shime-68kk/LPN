@@ -883,18 +883,18 @@
         { "who": "ke", "text": "Hỏi cái vết xước nhỏ trên tay cậu đã đỡ chưa." },
         { "who": "ke", "text": "Hỏi đêm qua cậu ngủ được mấy tiếng. Hỏi bữa trưa nay có phải lại ăn vội ăn vàng không." },
         { "who": "ke", "text": "Có một điều cậu để ý từ lâu, mà đến đêm ấy mới hiểu." },
-        { "who": "ke", "text": "Bao nhiêu cuộc gọi rồi, chưa bao giờ em là người cúp máy trước." },
-        { "who": "ke", "text": "Lần nào em cũng là người giữ máy đến cuối cùng." },
-        { "who": "ke", "text": "Kể cả đêm thứ bảy. Cậu dỗi, cậu không nghe. Em vẫn gọi lại. Em vẫn là người không chịu buông máy trước." },
-        { "who": "ke", "text": "Hóa ra người cúp máy sau cùng là người không bao giờ chịu buông tay trước.", "b": true },
+        { "who": "ke", "text": "Bao nhiêu cuộc gọi rồi, chưa bao giờ em đột ngột cúp máy." },
+        { "who": "ke", "text": "Đêm thứ bảy cũng vậy. Người để máy rung trên bàn là cậu. Người gọi đi gọi lại là em." },
+        { "who": "ke", "text": "Cậu dỗi thì im. Em giận thì vẫn gọi." },
+        { "who": "ke", "text": "Hóa ra trong một lần giận nhau, người cúp máy sau cùng là người không chịu buông tay trước.", "b": true },
         { "who": "ke", "text": "Cậu không biết cảm ơn sao cho đủ." },
         { "who": "ke", "text": "Nói ra thì nhẹ quá. Để trong lòng thì nặng quá. Nên cậu viết." },
         { "who": "ke", "text": "Cảm ơn em, vì những đêm thức đến hai giờ, dù năm giờ đã có còi." },
         { "who": "ke", "text": "Cảm ơn em, vì tủi thân thì gọi cho cậu, chứ không khóc một mình." },
         { "who": "ke", "text": "Cảm ơn em, vì đêm ấy em nhỏ hơn ba tuổi mà lại là người lớn." },
-        { "who": "ke", "text": "Và cảm ơn em, vì lần nào cũng là người ở lại đến cuối." },
+        { "who": "ke", "text": "Và cảm ơn em, vì đêm ấy đã không chịu buông máy." },
         { "who": "quang", "text": "Lần sau anh không xin mười phút nữa đâu. Em gọi bao lâu, anh nghe bấy lâu." },
-        { "who": "quang", "text": "Còn lần này, để anh là người giữ máy đến cuối nhé." }
+        { "who": "quang", "text": "Lần sau có giận nhau, để anh là người giữ máy đến cuối nhé." }
       ]
     }
   ]
