@@ -571,6 +571,10 @@
     check(list, done, flags) {
       if (this.item) return;
       const seen = store.get('lpn:news') || {};
+      // Xem thử bảng báo của một chương: home/?bao=c22 (không đánh dấu đã xem).
+      const force = new URLSearchParams(location.search).get('bao');
+      const fc = force && list.find((c) => c.id === force && c.announce);
+      if (fc) { this.item = { key: fc.id, a: fc.announce, href: '../story/?play=' + encodeURIComponent(fc.id), openAt: fc.openAt, preview: true }; this.show(); return; }
       const ch = list.find((c) => c.announce && !done[c.id] && !seen[c.id]);
       const cs = list.find((c) => c.case && c.case.announce && done[c.id] && !flags[c.case.id + 'Done'] && !seen[c.case.announce.key]);
       if (ch) this.item = { key: ch.id, a: ch.announce, href: '../story/?play=' + encodeURIComponent(ch.id), openAt: ch.openAt }; // chưa tới giờ mở: trang cốt truyện hiện đếm ngược
@@ -619,7 +623,7 @@
       $('news').hidden = false;
     },
     seen() {
-      if (!this.item) return;
+      if (!this.item || this.item.preview) return;
       const seen = store.get('lpn:news') || {};
       seen[this.item.key] = Date.now();
       store.set('lpn:news', seen);
