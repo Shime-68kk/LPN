@@ -608,7 +608,12 @@
       $('news-count').hidden = !counting;
       if (counting) {
         const at = Date.parse(it.openAt), pad = (n) => String(n).padStart(2, '0');
-        const tick = () => { const s = Math.max(0, Math.round((at - Date.now()) / 1000)); $('news-count').textContent = s ? 'Còn ' + pad(Math.floor(s / 3600)) + ':' + pad(Math.floor(s % 3600 / 60)) + ':' + pad(s % 60) : 'Đã mở'; };
+        const tick = () => {
+          const s = Math.max(0, Math.round((at - Date.now()) / 1000));
+          // Mẩu giấy viết tay: đếm bằng lời (còn 9 tiếng 12 phút nữa); cuộn băng: đồng hồ số.
+          if (plain) { const h = Math.floor(s / 3600), m = Math.ceil(s % 3600 / 60); $('news-count').textContent = s ? 'còn ' + (h ? h + ' tiếng ' : '') + (m ? m + ' phút ' : '') + 'nữa' : 'mở rồi đó'; }
+          else $('news-count').textContent = s ? 'Còn ' + pad(Math.floor(s / 3600)) + ':' + pad(Math.floor(s % 3600 / 60)) + ':' + pad(s % 60) : 'Đã mở';
+        };
         tick();
         this.timer = setInterval(tick, 1000);
       }

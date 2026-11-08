@@ -987,8 +987,21 @@ body.night .news-card .btn.ghost { color: #D9BE98; border-color: rgba(246, 231, 
 .dl-songs button:disabled { opacity: .7; cursor: default; }
 .dl-songs p { margin: 0; font-size: 12px; color: var(--muted); text-align: center; }
 
-/* Chương thường: bảng báo chỉ có chữ, không hình */
+/* Chương thường: một mẩu giấy viết tay dán băng keo, không khung bo tròn, không chữ in hoa giãn */
+.news.is-plain .news-card, body.night .news.is-plain .news-card {
+  max-width: 320px; padding: 34px 24px 18px 34px; border-radius: 2px; text-align: left; gap: 2px;
+  background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0) 0 29px, rgba(110, 140, 180, .2) 29px 30px) 0 22px / 100% 100% no-repeat, #FFFBF0;
+  color: #2E2114; font-family: 'Patrick Hand', 'Be Vietnam Pro', cursive;
+  transform: rotate(-1.4deg); box-shadow: 0 2px 3px rgba(40, 25, 10, .18), 0 18px 34px rgba(20, 12, 4, .38);
+  overflow: visible;
+}
+.news.is-plain .news-card::before { content: ''; position: absolute; top: -13px; left: 50%; width: 92px; height: 26px; margin-left: -46px; background: rgba(236, 182, 190, .78); transform: rotate(3deg); box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
+.news.is-plain .news-card::after { content: ''; position: absolute; top: 0; bottom: 0; left: 22px; width: 1px; background: rgba(214, 92, 92, .35); }
 .news.is-plain .news-glow { display: none; }
-.news.is-plain .news-card { padding-top: 24px; }
-.news.is-plain .news-count { background: rgba(176, 65, 46, .08); box-shadow: inset 0 0 0 1px rgba(176, 65, 46, .25); color: #B0412E; }
-body.night .news.is-plain .news-count { background: rgba(255, 156, 130, .1); box-shadow: inset 0 0 0 1px rgba(255, 156, 130, .3); color: #FF9C82; }
+.news.is-plain .news-kicker, body.night .news.is-plain .news-kicker { order: 1; font: 18px 'Patrick Hand', cursive; letter-spacing: 0; text-transform: none; color: #B0412E; }
+.news.is-plain .news-card h2 { order: 2; font: 31px/1.15 'Patrick Hand', cursive; color: #22180E; }
+.news.is-plain .news-card p, body.night .news.is-plain .news-card p { order: 3; margin: 2px 0 0; font: 20px/1.4 'Patrick Hand', cursive; color: #4E3A26; }
+.news.is-plain .news-count { order: 4; align-self: flex-start; padding: 0; background: none; box-shadow: none; font: 18px 'Patrick Hand', cursive; letter-spacing: 0; color: #8A6A48; }
+.news.is-plain .news-card .btn { order: 5; align-self: flex-start; min-height: 40px; padding: 0; border: 0 !important; background: none !important; font: 22px 'Patrick Hand', cursive; }
+.news.is-plain .news-ok, body.night .news.is-plain .news-ok { margin-top: 10px; color: #22180E !important; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 5px; }
+.news.is-plain .news-card .btn.ghost, body.night .news.is-plain .news-card .btn.ghost { order: 6; min-height: 34px; font-size: 18px; color: #8A6A48; }
