@@ -649,10 +649,29 @@
   // Bấm "tiếp" liên tục trên điện thoại không bị hiểu là chạm đúp để phóng to.
   document.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false });
   document.addEventListener('gesturestart', (e) => e.preventDefault());
-  $('talk').addEventListener('click', () => next());
   $('btn-next').addEventListener('click', (e) => { e.stopPropagation(); next(); });
   $('btn-prev').addEventListener('click', (e) => { e.stopPropagation(); prev(); });
-  $('btn-skip').addEventListener('click', () => { if (P.typing) finishTyping(); });
+  // Chạm hoặc vuốt ở bất kỳ đâu trên màn đọc (cả khung cảnh lẫn khung chữ):
+  // chạm nửa phải / vuốt sang trái: lần đầu hiện hết câu đang gõ, lần nữa sang câu tiếp;
+  // chạm mép trái (30%) / vuốt sang phải: về câu trước.
+  {
+    let sx = 0, sy = 0, down = false;
+    const skip = (t) => t.closest('button, a, .choices, .play-top, .song-card');
+    $('play').addEventListener('pointerdown', (e) => {
+      if (skip(e.target)) { down = false; return; }
+      down = true; sx = e.clientX; sy = e.clientY;
+    });
+    $('play').addEventListener('pointerup', (e) => {
+      if (!down) return;
+      down = false;
+      if (P.waiting && P.pos === P.log.length - 1) return; // đang chờ chọn
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.2) { if (dx < 0) next(); else prev(); return; }
+      if (Math.abs(dx) > 12 || Math.abs(dy) > 12) return;
+      if (e.clientX < window.innerWidth * 0.3 && P.pos > 0 && !P.typing) prev();
+      else next();
+    });
+  }
   $('btn-back').addEventListener('click', () => history.back());
   $('btn-end-map').addEventListener('click', () => history.back());
   // Hết chương rồi vẫn quay lại được câu vừa đọc (rồi lùi tiếp bằng nút ‹ hay phím ←), không phải đọc lại từ đầu.

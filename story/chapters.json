@@ -819,7 +819,7 @@
       "early": { "quang": "2026-11-09T00:00:00+07:00" },
       "scene": "dem",
       "cast": ["quang"],
-      "announce": { "theme": "call", "kicker": "Chương mới · Trưa nay 12:00", "title": "Trưa nay có chương mới!", "text": "Chương 20 · Người cúp máy sau cùng. Hẹn em lúc 12 giờ trưa nha.", "ok": "Xem đếm ngược", "later": "Để sau" },
+      "announce": { "kicker": "Chương mới · Trưa nay 12:00", "title": "Đã có chương mới!", "text": "Chương 20 · Người cúp máy sau cùng. Hẹn em lúc 12 giờ trưa nha.", "ok": "Xem đếm ngược", "later": "Để sau" },
       "lines": [
         { "who": "none", "text": "Tuần đầu em đi quân sự" },
         { "who": "ke", "text": "Em đi quân sự được bảy ngày." },

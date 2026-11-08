@@ -326,3 +326,7 @@ body.night .song-meta small { color: #FF9FB2; }
 .song-bar i { display: block; height: 100%; width: 0; background: #FF8FA3; }
 .song-card.on .song-bar i { animation: song-play var(--dur, 20s) linear forwards; }
 @keyframes song-play { to { width: 100%; } }
+
+/* Chỗ của nút cũ ở góc phải: giữ khoảng để tên chương vẫn nằm giữa */
+.chip-icon-space { width: 44px; height: 44px; flex: none; }
+.play { touch-action: pan-y; user-select: none; -webkit-user-select: none; }
