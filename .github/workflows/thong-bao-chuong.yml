@@ -1,0 +1,50 @@
+# Gửi thông báo chương mới cho Thủy vào giờ hẹn, không cần máy tính bật.
+# Cần secret VAPID_JSON (nội dung file ~/.config/lpn-push/vapid.json) trong Settings → Secrets → Actions.
+# Đổi lịch, tiêu đề, nội dung ở phần env và cron bên dưới cho mỗi chương.
+name: Thông báo chương mới
+on:
+  schedule:
+    - cron: '3 5 9 11 *'   # 12:03 giờ VN, 09/11
+    - cron: '35 5 9 11 *'  # dự phòng 12:35 nếu lần đầu không chạy
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: read
+env:
+  NGAY: '2026-11-09'
+  NGUOI: thuy
+  TIEU_DE: 'Có chương mới cho em!'
+  NOI_DUNG: 'Chương 20 · Người cúp máy sau cùng'
+  LINK: 'story/?play=c22'
+jobs:
+  gui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kiểm tra ngày và đã gửi chưa
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          today=$(TZ=Asia/Ho_Chi_Minh date +%F)
+          if [ "$today" != "$NGAY" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then echo "go=no" >> $GITHUB_OUTPUT; exit 0; fi
+          n=$(curl -s -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/${{ github.repository }}/actions/workflows/thong-bao-chuong.yml/runs?status=success&created=%3E%3D$NGAY" | grep -c '"event": "schedule"' || true)
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$n" -gt 0 ]; then echo "Đã gửi rồi"; echo "go=no" >> $GITHUB_OUTPUT; exit 0; fi
+          echo "go=yes" >> $GITHUB_OUTPUT
+      - uses: actions/checkout@v4
+        if: steps.check.outputs.go == 'yes'
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.go == 'yes'
+        with:
+          node-version: 20
+      - name: Gửi
+        if: steps.check.outputs.go == 'yes'
+        env:
+          VAPID_JSON: ${{ secrets.VAPID_JSON }}
+        run: |
+          mkdir -p ~/.config/lpn-push
+          printf '%s' "$VAPID_JSON" > ~/.config/lpn-push/vapid.json
+          for i in 1 2 3; do
+            node tools/push.mjs "$NGUOI" "$TIEU_DE" "$NOI_DUNG" "$LINK" && exit 0
+            sleep 30
+          done
+          exit 1
