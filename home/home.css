@@ -1005,3 +1005,7 @@ body.night .news-card .btn.ghost { color: #D9BE98; border-color: rgba(246, 231, 
 .news.is-plain .news-card .btn { order: 5; align-self: flex-start; min-height: 40px; padding: 0; border: 0 !important; background: none !important; font: 22px 'Patrick Hand', cursive; }
 .news.is-plain .news-ok, body.night .news.is-plain .news-ok { margin-top: 10px; color: #22180E !important; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 5px; }
 .news.is-plain .news-card .btn.ghost, body.night .news.is-plain .news-card .btn.ghost { order: 6; min-height: 34px; font-size: 18px; color: #8A6A48; }
+
+/* Bấm nhanh hai lần (nhập mật khẩu, nút bấm) không bị iPhone phóng to màn hình; vẫn chụm hai ngón để phóng được */
+.lock, .lock *, button, a, .btn { touch-action: manipulation; }
+.pad button { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
