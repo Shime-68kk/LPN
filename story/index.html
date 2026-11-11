@@ -10,7 +10,7 @@
   <title>Cốt truyện</title>
   <script>
     // Chưa mở khoá trên máy này thì quay về trang chủ để nhập mật khẩu.
-    try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df') location.replace('../home/'); }
+    try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df' || (localStorage.getItem('lpn:who') === 'quang' && !localStorage.getItem('lpn:relock1') && localStorage.getItem('lpn:preview') !== '1')) location.replace('../home/'); }
     catch (e) { location.replace('../home/'); }
   </script>
   <script>

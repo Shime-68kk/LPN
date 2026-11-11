@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Ngày bên nhau trên màn hình khoá</title>
   <script>
-    try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df') location.replace('./'); }
+    try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df' || (localStorage.getItem('lpn:who') === 'quang' && !localStorage.getItem('lpn:relock1') && localStorage.getItem('lpn:preview') !== '1')) location.replace('./'); }
     catch (e) { location.replace('./'); }
   </script>
   <script>

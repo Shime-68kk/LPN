@@ -13,6 +13,14 @@
   <title>Yêu Lệ Thủy</title>
   <script>
     // Chưa mở khoá trên máy này thì hiện màn khoá ngay, tránh lộ nội dung.
+    // Một lần duy nhất (11/11/2026, anh Quang dặn): máy nào đang ở tài khoản Quang thì khoá lại,
+    // nhập mật khẩu rồi chọn lại "Ai đang dùng máy này?". Cờ lpn:relock1 ghi ngay, nên chỉ xảy ra một lần mỗi máy.
+    try {
+      if (localStorage.getItem('lpn:who') === 'quang' && !localStorage.getItem('lpn:relock1') && localStorage.getItem('lpn:preview') !== '1') {
+        localStorage.setItem('lpn:relock1', '1');
+        localStorage.removeItem('lpn:unlock');
+      }
+    } catch (e) { /* bỏ qua */ }
     try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df') document.documentElement.classList.add('need-lock'); }
     catch (e) { document.documentElement.classList.add('need-lock'); }
   </script>
