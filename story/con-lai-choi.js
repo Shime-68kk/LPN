@@ -241,9 +241,9 @@
   // ================= Diễn biến =================
   function goStage(n) {
     C.stage = n; C.idle = 0; C.sub = '';
-    if (n === 1) { say('Hai giờ sáng, hai đứa mới chịu cúp máy. Mọi chiếc đồng hồ đều dừng ở đó.', 7.5); A.songDist(0.13, 3); }
-    if (n === 2) { C.skyTo = 0.12; C.hourA = 23; C.hand = 23; C.lit = 0.34; say('Đêm thứ bảy.', 4); A.songDist(0.22, 3); }
-    if (n === 3) { C.skyTo = 0.95; C.car = 1; C.hourA = 8.5; C.hand = 8.5; C.lit = 1; say('Tám rưỡi, xe chạy. Trên đường, anh nhẩm lại những chuyện em kể.', 7.5); A.songDist(0.33, 3); }
+    if (n === 1) { A.songDist(0.13, 3); }
+    if (n === 2) { C.skyTo = 0.12; C.hourA = 23; C.hand = 23; C.lit = 0.34; A.songDist(0.22, 3); }
+    if (n === 3) { C.skyTo = 0.95; C.car = 1; C.hourA = 8.5; C.hand = 8.5; C.lit = 1; A.songDist(0.33, 3); }
     if (n === 4) { K().setText('cap', ''); setTimeout(() => { const cap = document.getElementById('cap'); cap.style.top = ''; cap.style.bottom = ''; K().finale(); }, 1500); }
   }
   function walkTo(cap, text) { C.cap = cap; C.sub = 'walk'; C.idle = 0; if (text) say(text, 7); setTimeout(() => { if (C.sub === 'walk' && C.count < C.cap) hint('giữ tay bên anh để anh bước'); }, 5200); }
@@ -266,7 +266,7 @@
     // ----- đang mở cận cảnh -----
     if (C.close) {
       const c = C.close, inside = inR(R[c.side], x, y);
-      if (c.id === 'note') { shut(); if (!C.noteSeen) { C.noteSeen = true; say('Năm giờ. Bên em, chiếc đồng hồ vẫn chỉ hai giờ.', 7); } return; }
+      if (c.id === 'note') { shut(); if (!C.noteSeen) { C.noteSeen = true; } return; }
       if (c.id === 'call' && inside && C.talk < 0 && C.calling <= 0 && C.flip < 0.5) { C.calling = 3.1; C.calls++; A.ring(); setTimeout(() => { C.buzz = 2.2; A.buzz(2); }, 500); return; }
       if (c.id === 'khay') { if (C.closeT > 1) { A.clink(); } return; }
       if ((c.id === 'uno' || c.id === 'khay') && C.closeT > 3) shut();
@@ -280,7 +280,7 @@
       if (side === 'e' && id === 'clock' && C.sub !== 'coi' && C.sub !== 'walk') {
         if (!C.noteSeen) { A.tick(); hint('chưa biết phải chỉnh về mấy giờ'); return; }
         C.hourE = C.hourE >= 12 ? 1 : C.hourE + 1; A.tick();
-        if (C.hourE === 5) { C.sub = 'coi'; setTimeout(() => { A.siren(5.2); C.skyTo = 0.3; say('“Đêm trước em thức với cậu đến hai giờ, mà năm giờ đã có còi.”', 8); }, 500);
+        if (C.hourE === 5) { C.sub = 'coi'; setTimeout(() => { A.siren(5.2); C.skyTo = 0.3; }, 500);
           setTimeout(() => { C.lamp = true; A.lamp(); C.hourA = 5; }, 3200); setTimeout(() => walkTo(250), 7200); }
         return;
       }
@@ -292,8 +292,8 @@
       if (side === 'a' && id === 'phone') { hint('máy úp xuống, im lìm'); return; }
     }
     if (C.stage === 3 && C.sub !== 'walk') {
-      if (side === 'e' && id === 'shutter' && !C.found.khay) { C.found.khay = 1; A.shutter(); setTimeout(() => { open('e', 'khay'); A.clink(); say('“Tối nào em cũng hỏi anh ăn chưa.” Còn khay cơm của em thì cứ để nguyên.', 8); }, 900); setTimeout(() => { if (C.close && C.close.id === 'khay') shut(); got(); }, 8600); return; }
-      if (side === 'e' && id === 'bench' && !C.found.uno) { C.found.uno = 1; A.flip(); setTimeout(() => { open('e', 'uno'); for (let i = 0; i < 5; i++) setTimeout(() => A.flip(), 300 + i * 280); say('“Ai cũng biết chơi. Chỉ em là không.” Em ra một góc, rồi gọi cho anh.', 8); }, 700); setTimeout(() => { if (C.close && C.close.id === 'uno') shut(); say('“Người ta chỉ than với người mà người ta tin nhất.”', 7); got(); }, 8600); return; }
+      if (side === 'e' && id === 'shutter' && !C.found.khay) { C.found.khay = 1; A.shutter(); setTimeout(() => { open('e', 'khay'); A.clink(); }, 900); setTimeout(() => { if (C.close && C.close.id === 'khay') shut(); got(); }, 8600); return; }
+      if (side === 'e' && id === 'bench' && !C.found.uno) { C.found.uno = 1; A.flip(); setTimeout(() => { open('e', 'uno'); for (let i = 0; i < 5; i++) setTimeout(() => A.flip(), 300 + i * 280); }, 700); setTimeout(() => { if (C.close && C.close.id === 'uno') shut(); got(); }, 8600); return; }
       if (side === 'e' && id === 'hill' && !C.found.hill) { hint('chạm và giữ ngọn đồi'); return; }
     }
     if (C.sub !== 'walk' && id === null && C.stage >= 1) { /* chạm chỗ trống: không có gì */ }
@@ -301,7 +301,7 @@
   // mỗi thứ tìm được: anh đi thêm một đoạn
   function got() {
     const n = Object.keys(C.found).length; C.cap = 500 + n * 150; C.auto = true; C.idle = 0;
-    if (n >= 3) setTimeout(() => { C.sub = 'done'; }, 400);
+    if (n >= 3) setTimeout(() => { C.sub = 'done'; say('“Người ta chỉ than với người mà người ta tin nhất.”', 7); }, 400);
   }
 
   function down(x, y) {
@@ -315,8 +315,8 @@
   function move(x) { if (C.sliding && C.close && C.close.track) { const t = C.close.track; C.slide = clamp((x - t.x - t.r * 0.7) / (t.w - t.r * 1.4)); } }
   function up(x, y) {
     C.holding = false; C.walking = false;
-    if (C.sliding) { C.sliding = false; if (C.slide > 0.8) { C.slide = 1; C.talk = 0; C.buzz = 0; A.tick(); open('a', 'answer'); C.close.keep = true; say('“Cậu xin mười phút. Còn em, em muốn cả đêm.”', 8); } else C.slide = 0; return; }
-    if (C.lidHold) { C.lidHold = false; A.windTo(0.3, 2); if (C.lid > 0.92) { C.found.hill = 1; say('“Cả đơn vị thì tập. Còn em thì ngủ.”', 7); got(); } return; }
+    if (C.sliding) { C.sliding = false; if (C.slide > 0.8) { C.slide = 1; C.talk = 0; C.buzz = 0; A.tick(); open('a', 'answer'); C.close.keep = true; } else C.slide = 0; return; }
+    if (C.lidHold) { C.lidHold = false; A.windTo(0.3, 2); if (C.lid > 0.92) { C.found.hill = 1; got(); } return; }
     if (C.tapAt && now - C.tapAt[2] < 0.6) tap(C.tapAt[0], C.tapAt[1]);
     C.tapAt = null;
   }
@@ -335,11 +335,11 @@
     // bài hát ở phần chơi: chỉ đoạn dạo và đoạn đầu, lặp lại (đoạn rap để dành cho cao trào)
     if (C.stage < 4 && A.el && !A.el.paused && A.el.currentTime > 56.2) { try { A.el.currentTime = 10.9; } catch (e) { /* bỏ qua */ } }
     // cuộc gọi
-    if (C.calling > 0) { C.calling -= dt; if (C.calling <= 0 && C.calls >= 3 && C.flip < 0.5) { C.flip = 1; A.tick(); shut(); say('Em gọi một cuộc. Hai cuộc. Rồi nhiều cuộc liền nhau.', 6); setTimeout(() => { C.buzz = 30; A.buzz(2); hint('máy bên anh đã lật lên'); }, 900); } }
+    if (C.calling > 0) { C.calling -= dt; if (C.calling <= 0 && C.calls >= 3 && C.flip < 0.5) { C.flip = 1; A.tick(); shut(); setTimeout(() => { C.buzz = 30; A.buzz(2); hint('máy bên anh đã lật lên'); }, 900); } }
     if (C.buzz > 0) { C.buzz -= dt; if (C.flip > 0.5 && C.talk < 0 && Math.floor(C.buzz * 0.55) !== Math.floor((C.buzz + dt) * 0.55)) A.buzz(1); }
     if (C.talk >= 0) { const was = C.talk; C.talk += dt * (C.talk < 30 ? 6 : 95); // đồng hồ cuộc gọi chạy nhanh dần, qua mười phút vẫn chạy
       if (was < 600 && C.talk >= 600) { A.bell(659.3, 0.08, 3); }
-      if (was < 760 && C.talk >= 760) { shut(); C.talk = 760; C.stage = 2; walkTo(500, 'Lần ấy em gọi mãi, anh mới nghe.'); C.talk = -2; } }
+      if (was < 760 && C.talk >= 760) { shut(); C.talk = 760; C.stage = 2; walkTo(500); C.talk = -2; } }
     // anh bước
     const moving = (C.sub === 'walk' && C.walking) || C.auto;
     if (moving && C.count < C.cap) {

@@ -38,23 +38,17 @@
   const BEAT = 0.75; // 80 nhịp/phút
 
   // Chữ giữa trời (line) và chú thích dưới đồ vật (cap): [từ giây, tới giây, chữ, đậm?]
-  const LINES_COMMON = [[89.5, 95.4, 'Anh đi hết phần của anh rồi.']];
+  const LINES_COMMON = [];
   const LINES = {
     none: [],
     b: [
-      [105.4, 111.4, 'Còi gọi em đi. Cánh cổng vẫn đóng.'],
-      [112.4, 118.6, 'Chín trăm chín mươi chín vạch sáng. Chỉ còn một khe tối, dày bằng cánh cổng.'],
-      [119.6, 125.8, 'Từ hôm em đi, chưa lúc nào anh ở gần em như lúc này.'],
-      [126.8, 134.4, 'Hôm nay mình chưa gặp được nhau. Nhưng anh đã đứng ở chỗ gần em nhất.'],
+      [112.4, 119.4, 'Chỉ còn một khe tối, dày bằng cánh cổng.'],
       [136, 144.5, 'Đường về, anh không thấy dài.'],
-      [155.6, 165, 'Em chỉ cần một bước. Phần còn lại là của anh.', 1],
-      [166.4, 176, 'Khe tối ấy, để dành cho ngày em về.'],
+      [155.6, 166, 'Em chỉ cần một bước. Phần còn lại là của anh.', 1],
     ],
     a: [
-      [105.4, 113.6, 'Bài hát bảo em chỉ cần một bước. Em lại bước những hai.'],
-      [121.5, 130.6, 'Lần trước mình giận nhau vì anh xin mười phút.'],
-      [131.8, 140, 'Hôm nay anh đi cả buổi sáng, để được đứng trước em mấy phút.'],
-      [155.6, 165, 'Em chỉ cần một bước. Phần còn lại là của anh.', 1],
+      [0, 0, ''],
+      [155.6, 166, 'Em chỉ cần một bước. Phần còn lại là của anh.', 1],
     ],
   };
   const ASK = [84.6, 103]; // khoảng em tự quyết ở cổng: bước thêm một bước (cổng mở) hay đứng yên tới lúc còi gọi (cổng đóng)
@@ -64,12 +58,12 @@
     [47.7, 50.2, 'Lần này, anh tự đi tìm em.'],
     [51.6, 56.9, 'Tối nào em cũng hỏi anh ăn chưa. Còn khay cơm của em thì cứ để nguyên.'],
   ];
-  const CAPS = { none: [], b: [], a: [[143.6, 151.5, 'Đồng hồ vẫn để đó. Anh không bấm.']] };
+  const CAPS = { none: [], b: [], a: [] };
   // Cảnh cắt cận đồ vật (cả khung hình): [từ, tới, tên]. Cắt đúng đầu câu hát, như phim dựng theo nhạc.
   const INSERTS = [[25.4, 34.4, 'den'], [36.0, 47.0, 'goi'], [50.4, 57.5, 'khay']];
   // Đồ vật hiện giữa trời (không cắt cảnh)
   const OBJ_COMMON = [];
-  const OBJ = { none: [], b: [], a: [[141.5, 152.5, 'bam']] };
+  const OBJ = { none: [], b: [], a: [] };
 
   // ================= Tiện ích =================
   const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
@@ -176,6 +170,13 @@
       zoom: t < 0 ? 1 : ramp(t, [[0, 1], [71.3, 1.06], [CUE.chorus, 1.085], [CUE.chorus + 7, 1.035]]), // máy quay tiến chậm về phía cổng
     };
     // "bước một bước": dấu chân em bừng lên đúng chữ
+    // Kết "cổng mở": máy quay đi xuyên qua cổng ra con đường, trời sáng hẳn, 999 + 1 = 1000.
+    v.thru = KET === 'a' ? ss(S.tA + 3.6, S.tA + 9.5, t) : 0;
+    if (v.thru > 0) { v.dawn = Math.max(v.dawn, 0.86 + 0.14 * v.thru); v.gold = Math.max(v.gold, v.thru); }
+    // Kết "cổng đóng": còi gọi em đi, ngày trôi về đêm. Cổng vẫn đóng, 999 vạch thành một dãy đèn tới tận chân trời.
+    v.night = KET === 'b' ? ss(106, 140, t) : 0;
+    if (v.night > 0) { v.dawn = lerp(v.dawn, 0.07, v.night); v.gold *= 1 - ss(104, 122, t); v.bloom = 0; v.win = Math.max(v.win, 1 + 0.8 * v.night); }
+    if (KET !== 'a') v.bloom *= t > CUE.chorus2 - 1 ? 0 : 1;
     v.footFlare = Math.max(S.flare, ss(CUE.one - 0.08, CUE.one + 0.1, t) * (1 - ss(CUE.one + 0.3, CUE.one + 2.2, t)), 0.9 * ss(CUE.wake - 0.1, CUE.wake + 0.15, t) * (1 - ss(CUE.wake + 0.5, CUE.wake + 2.4, t)));
     return v;
   }
@@ -642,10 +643,10 @@
     if (ins) drawInsert(ins[2], tt - ins[0], ins[1] - ins[0]);
     else {
       // máy quay cầm tay rất khẽ + tiến chậm; cổng ở gần nên trôi nhiều hơn cảnh xa (thị sai)
-      const zs = v.zoom * 1.012, zg = 1.012 + (v.zoom - 1) * 2.2, hold = 1 - v.still;
+      const zs = v.zoom * 1.012 + v.thru * 0.8, zg = 1.012 + (v.zoom - 1) * 2.2 + v.thru * v.thru * 3.4, hold = 1 - v.still;
       const dx = (Math.sin(now * 0.47) * 1.6 + Math.sin(now * 1.31) * 0.7) * hold, dy = (Math.sin(now * 0.61 + 1) * 1.2 + Math.sin(now * 1.7) * 0.5) * hold;
       g.save(); g.translate(L.W / 2 + dx * 0.45, L.hy + dy * 0.45); g.scale(zs, zs); g.translate(-L.W / 2, -L.hy); drawScene(v); g.restore();
-      g.save(); g.translate(L.W / 2 + dx, L.gy + dy); g.scale(zg, zg); g.translate(-L.W / 2, -L.gy); drawGate(v); g.restore();
+      if (v.thru < 0.97) { g.save(); g.globalAlpha = 1 - ss(0.55, 0.97, v.thru); g.translate(L.W / 2 + dx, L.gy + dy + v.thru * L.H * 0.5); g.scale(zg, zg); g.translate(-L.W / 2, -L.gy); drawGate(v); g.restore(); g.globalAlpha = 1; }
       if (tt >= 0) drawObject(tt);
     }
     const dk = tt >= 0 && !S.fin ? cutDark(tt) : 0;
@@ -657,10 +658,12 @@
     if (Math.abs(lbh - (S.lbCss == null ? -9 : S.lbCss)) > 0.5) { S.lbCss = lbh; document.documentElement.style.setProperty('--lb', lbh.toFixed(1) + 'px'); }
     $('title').classList.toggle('on', S.phase === 'show' && S.t >= 3.4 && S.t < 9.2);
     if (S.phase === 'show') {
-      const n = $('count-n'); if (n.textContent !== String(v.count)) n.textContent = v.count;
+      const cnt = v.thru > 0.5 ? 1000 : v.count;
+      const n = $('count-n'); if (n.textContent !== String(cnt)) n.textContent = cnt;
+      $('count').classList.toggle('k1000', cnt === 1000);
       $('count').classList.toggle('on', S.t >= CUE.verse && S.t < CUE.bridge);
       $('count').classList.toggle('full', v.count >= 999);
-      $('count').classList.toggle('pop', S.t >= CUE.nineEnd - 0.12 && S.t < CUE.toward + 2.6);
+      $('count').classList.toggle('pop', (S.t >= CUE.nineEnd - 0.12 && S.t < CUE.toward + 2.6) || cnt === 1000);
       const li = pick(LINES_COMMON.concat(LINES[KET || 'none']), S.t); setText('line', li ? li[2] : '', li && li[3]);
       const ca = pick(CAPS_COMMON.concat(CAPS[KET || 'none']), S.t); setText('cap', ca ? ca[2] : '');
     }
@@ -695,7 +698,7 @@
   // Tiếng và việc xảy ra một lần khi bài chạy qua từng mốc
   function runCues(a, b) {
     if (b - a > 1.5 || b < a) { A.songDist(distOf(b), 0.2); return; } // vừa tua: bỏ qua tiếng một lần
-    A.songDist(distOf(b), 0.25);
+    A.songDist(KET === 'b' ? ramp(b, [[104, 1], [146, 0.4]]) : distOf(b), 0.25);
     const F = (at) => fireBetween(a, b, at);
     if (F(1.9)) { A.bell(329.6, 0.1, 4); A.bell(493.9, 0.06, 4, 0.5); }                    // ô cửa sáng đèn
     if (F(CUE.weak + 0.9)) A.down();                                                        // ánh sáng chững lại
@@ -715,7 +718,7 @@
     if (F(CUE.calm)) A.hush(1.2);                                                            // lặng một nhịp
     if (F(CUE.chorus)) { A.hit(); A.warm(6, 0.05); A.sparkle(8, 0.03); }
     if (S.fin && S.other && F(87.5)) { $('hint').textContent = S.other === 'a' ? 'em vẫn còn bước được một bước nữa' : 'lần này, em thử đứng yên'; $('hint').classList.add('on'); setTimeout(() => $('hint').classList.remove('on'), 9000); }  // vỡ oà
-    if (F(CUE.chorus2)) { A.warm(6, 0.04); A.sparkle(6, 0.024); }
+    if (F(CUE.chorus2) && KET === 'a') { A.warm(6, 0.04); A.sparkle(6, 0.024); }
     if (F(CUE.bridge + 3)) showAfter();
     if (F(CUE.end)) { S.phase = 'after'; }
   }
@@ -757,6 +760,7 @@
     // iPhone chỉ cho phát nhạc khi bắt đầu từ một lần chạm: mở sẵn bài (im lặng) ngay ở lần chạm này
     if (A.el) { const p = A.el.play(); if (p && p.then) p.then(() => { if (S.phase !== 'show') A.el.pause(); }).catch(() => {}); }
     $('btn-go').classList.add('fire'); $('start').classList.add('out'); $('top').hidden = false;
+    if (Q.has('fin')) { A.bedStart(); finale(); return; }
     if (!SKIP) { S.phase = 'play'; window.ConLaiChoi.start(); return; }
     S.phase = 'alone';
     setTimeout(() => { if (!S.stepped) setText('line', 'Bước một bước thôi.'); }, 4200);

@@ -24,19 +24,19 @@ button { font: inherit; color: inherit; }
 .count.on { opacity: 1; }
 .count b { font: 300 clamp(30px, 8.4vmin, 50px)/1 'Barlow Condensed', sans-serif; font-variant-numeric: tabular-nums; letter-spacing: .06em; color: #FFE9C4; }
 .count i { font: 400 clamp(13px, 3.4vmin, 17px) 'Barlow Condensed', sans-serif; font-style: normal; letter-spacing: .16em; color: var(--dim); margin-left: 8px; }
-/* "999 bước còn lại": con số nổi bật lên giữa khung hình rồi mới về chỗ */
-.count { transition: opacity 1.6s ease, top .7s cubic-bezier(.2, 1.5, .35, 1), transform .7s cubic-bezier(.2, 1.5, .35, 1); }
-.count.pop { top: 27vh; transform: translateX(-50%) scale(2.9); }
-.count.pop i { opacity: 0; }
-.count i { transition: opacity .4s; }
-.count.pop b { font-weight: 500; color: #FFF6E0; text-shadow: 0 0 34px rgba(255, 205, 130, .95), 0 0 90px rgba(255, 180, 100, .55); }
+/* "999 bước còn lại": con số chỉ bừng sáng lên, không phóng to */
+.count b { transition: color .5s, text-shadow .5s; }
+.count.pop b { font-weight: 500; color: #FFF8E6; text-shadow: 0 0 14px rgba(255, 226, 170, 1), 0 0 34px rgba(255, 200, 120, .95), 0 0 70px rgba(255, 180, 100, .7); animation: sang 1.6s ease-in-out infinite; }
+.count i { transition: opacity .6s; }
+.count.k1000 i { opacity: 0; }
+@keyframes sang { 0%, 100% { opacity: 1; } 50% { opacity: .82; } }
 .count.full b { font-weight: 500; color: #FFF4DC; text-shadow: 0 0 26px rgba(255, 210, 140, .85); }
 
 /* Tựa phim: hiện sau khi em bước, trên nền nhạc dạo */
-.title { position: fixed; left: 0; right: 0; top: 34%; margin: 0; z-index: 5; pointer-events: none; text-align: center;
-  font: 500 clamp(30px, 9.4vmin, 62px)/1.1 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: .42em; padding-left: .42em; color: #FFF3DE;
-  opacity: 0; transition: opacity 2.4s ease, letter-spacing 7s ease-out; text-shadow: 0 0 30px rgba(255, 205, 130, .35), 0 2px 12px rgba(0, 0, 0, .9); }
-.title.on { opacity: 1; letter-spacing: .5em; }
+.title { position: fixed; left: 0; right: 0; top: 34%; margin: 0; z-index: 5; pointer-events: none; text-align: center; white-space: nowrap;
+  font: 500 clamp(19px, 6.2vw, 50px)/1.1 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: .34em; padding-left: .34em; color: #FFF3DE;
+  opacity: 0; transform: scale(.97); transition: opacity 2.4s ease, transform 7s ease-out; text-shadow: 0 0 30px rgba(255, 205, 130, .35), 0 2px 12px rgba(0, 0, 0, .9); }
+.title.on { opacity: 1; transform: scale(1.03); }
 
 /* Câu giữa trời (đoạn kết) và phụ đề ở một phần ba dưới */
 .line, .cap { position: fixed; left: 50%; transform: translateX(-50%); margin: 0; text-align: center; pointer-events: none; z-index: 5;
