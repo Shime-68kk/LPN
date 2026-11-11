@@ -196,6 +196,45 @@
       this.env(g, t, 0.03, 0.1, 1.3); o.connect(f).connect(g).connect(this.fx); o.start(t); o.stop(t + 1.6);
     },
 
+    // ---------- Tiếng của phần chơi ----------
+    // Kim đồng hồ nhích một nấc
+    tick() {
+      if (!this.ctx) return;
+      const ctx = this.ctx, t = ctx.currentTime + 0.01, s = ctx.createBufferSource(); s.buffer = this.white;
+      const f = this.filt('bandpass', 3100, 5), g = ctx.createGain(); this.env(g, t, 0.001, 0.4, 0.035); s.connect(f).connect(g).connect(this.fx); s.start(t, 0.5, 0.08);
+      const o = ctx.createOscillator(), og = ctx.createGain(); o.frequency.value = 1180; this.env(og, t, 0.001, 0.06, 0.05); o.connect(og).connect(this.fx); o.start(t); o.stop(t + 0.1);
+    },
+    // Còi doanh trại: hú lên rồi hạ xuống, vang cả sân
+    siren(sec = 5) {
+      if (!this.ctx) return;
+      const ctx = this.ctx, t = ctx.currentTime + 0.05, o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain(), f = this.filt('bandpass', 900, 0.9);
+      o.type = 'sawtooth'; o2.type = 'sawtooth';
+      for (const [osc, k] of [[o, 1], [o2, 1.006]]) { osc.frequency.setValueAtTime(300 * k, t); osc.frequency.exponentialRampToValueAtTime(760 * k, t + sec * 0.3); osc.frequency.setValueAtTime(760 * k, t + sec * 0.62); osc.frequency.exponentialRampToValueAtTime(260 * k, t + sec); }
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.11, t + sec * 0.18); g.gain.setValueAtTime(0.11, t + sec * 0.66); g.gain.exponentialRampToValueAtTime(0.0001, t + sec);
+      o.connect(f); o2.connect(f); f.connect(g).connect(this.fx); const w = ctx.createGain(); w.gain.value = 1.1; g.connect(w).connect(this.verb);
+      o.start(t); o2.start(t); o.stop(t + sec + 0.1); o2.stop(t + sec + 0.1);
+    },
+    // Tiếng chuông chờ khi em gọi
+    ring() {
+      if (!this.ctx) return;
+      const ctx = this.ctx;
+      [0, 1.5].forEach((dt) => { const t = ctx.currentTime + 0.05 + dt, o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.value = 425;
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.07, t + 0.03); g.gain.setValueAtTime(0.07, t + 0.95); g.gain.linearRampToValueAtTime(0, t + 1); o.connect(g).connect(this.fx); o.start(t); o.stop(t + 1.05); });
+    },
+    // Lật một lá bài
+    flip() {
+      if (!this.ctx) return;
+      const ctx = this.ctx, t = ctx.currentTime + 0.01, s = ctx.createBufferSource(); s.buffer = this.white;
+      const f = this.filt('highpass', 1800, 0.7), g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+      s.connect(f).connect(g).connect(this.fx); s.start(t, Math.random() * 3, 0.15);
+    },
+    // Cửa chớp nhà ăn kéo lên
+    shutter() {
+      if (!this.ctx) return;
+      const ctx = this.ctx, t0 = ctx.currentTime + 0.02;
+      for (let i = 0; i < 9; i++) { const t = t0 + i * 0.075, s = ctx.createBufferSource(); s.buffer = this.white; const f = this.filt('bandpass', 900 + i * 90, 3), g = ctx.createGain(); this.env(g, t, 0.002, 0.2, 0.05); s.connect(f).connect(g).connect(this.fx); s.start(t, Math.random() * 3, 0.1); }
+    },
+
     // ---------- Tiếng đồ vật ----------
     // Công tắc đèn bàn: tách một tiếng, rồi tiếng quạt laptop rì rì vài giây
     lamp() {
