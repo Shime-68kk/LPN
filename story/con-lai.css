@@ -48,7 +48,7 @@ button { font: inherit; color: inherit; }
 .cap { bottom: calc(var(--lb) + 9vh); width: min(84vw, 560px); font: 400 clamp(14.5px, 3.9vmin, 19px)/1.55 'Be Vietnam Pro', sans-serif; color: #F6EFE2;
   text-shadow: 0 0 14px rgba(0, 0, 0, .95), 0 0 5px rgba(0, 0, 0, .9), 0 1px 2px rgba(0, 0, 0, 1); }
 
-.hint { position: fixed; left: 50%; bottom: calc(var(--sb) + 8px); transform: translateX(-50%); margin: 0; pointer-events: none; z-index: 6; white-space: nowrap;
+.hint { position: fixed; left: 50%; bottom: max(calc(var(--sb) + 4px), calc(var(--lb) / 2 - 10px)); transform: translateX(-50%); margin: 0; pointer-events: none; z-index: 6; white-space: nowrap;
   font: 400 15px 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: .3em; color: var(--dim); opacity: 0; transition: opacity 1.2s; text-shadow: 0 1px 3px #000; }
 .hint.on { opacity: 1; }
 

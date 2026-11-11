@@ -118,11 +118,13 @@
     Object.assign(L, {
       W, H, P, m: Math.min(W, H),
       hy: H * (P ? 0.5 : 0.44),      // đường chân trời
-      gy: H * (P ? 0.865 : 0.84),    // chân cổng
+      gy: H * (P ? 0.79 : 0.74),     // chân cổng (sân trong cổng phải đủ cao để dấu chân nằm TRÊN dải đen khung phim)
       rw: Math.min(W * (P ? 0.35 : 0.24), H * 0.5), // nửa bề rộng đường ở chân cổng
     });
-    L.fy = L.gy + (H - L.gy) * 0.56; // dấu chân của em
-    L.fr = Math.min(Math.max(21, L.rw * 0.25), (H - L.gy) * 0.36);
+    L.lbh = H * (P ? 0.085 : 0.075); // dải đen khung phim
+    const yard = H - L.lbh - L.gy;   // phần sân còn thấy được khi có dải đen
+    L.fy = L.gy + yard * 0.52;       // dấu chân của em: luôn nằm giữa phần sân nhìn thấy
+    L.fr = Math.min(Math.max(21, L.rw * 0.25), yard * 0.62);
     L.bs = clamp(L.m * 0.105, 34, 64); // khoảng cách song cổng
     L.bw = Math.max(3.5, L.m * 0.0125);
     L.rail = L.hy - H * (P ? 0.115 : 0.16);
@@ -130,7 +132,6 @@
     if (P) { L.ox = W / 2; L.oy = L.hy * 0.43; L.or = Math.min(W * 0.3, L.hy * 0.25); }
     else { L.ox = W * 0.25; L.oy = H * 0.37; L.or = Math.min(H * 0.27, W * 0.16); }
     $('line').style.top = Math.round(P ? L.hy * 0.34 : H * 0.2) + 'px';
-    L.lbh = H * (P ? 0.085 : 0.075); // dải đen khung phim
     buildSprites();
   }
 
