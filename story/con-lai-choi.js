@@ -31,6 +31,8 @@
     hold: 0, holding: false, stepped: false, flare: 0,
     idle: 0, t: 0, car: 0, carT: 0,
     msg: '', msgUntil: 0,
+    ck: { h: 2, m: 0 }, drag: null, dragging: false, phoneE: false, cards: [3, 0, 8, 0], sel: -1, unoDone: false, deckOut: false,
+    pending: 0, beatFlash: 0, spark: 0,
   };
   const say = (text, sec = 6.5) => { C.msg = text; C.msgUntil = C.t + sec; K().setText('cap', text); };
   const hint = (text) => { const h = document.getElementById('hint'); h.textContent = text; h.classList.add('on'); clearTimeout(hint.tm); hint.tm = setTimeout(() => h.classList.remove('on'), 5200); };
@@ -97,8 +99,7 @@
     if (face) { rr(-pw / 2 + 3, -ph + 2.5, pw - 6, ph - 5, 3); g.fillStyle = C.stage === 2 ? '#1f6f43' : (C.noteSeen ? '#1a2238' : 'rgba(150,180,255,' + (0.5 + 0.4 * pulse()) + ')'); g.fill(); }
     g.restore();
     if (C.buzz > 0 || (C.stage === 1 && !C.noteSeen)) { g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.5; g.drawImage(K().SP.fog, px - pw, py - pw * 0.7, pw * 2, pw); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; }
-    if (C.stage === 1 && !C.noteSeen && !C.close) invite(px, py - ph * 0.5, pw * 0.62);
-    if (C.stage === 2 && C.flip > 0.5 && !C.close) invite(px, py - ph * 0.5, pw * 0.62);
+
   }
   // ----- Phía anh: trên xe, cửa kính trôi qua -----
   function drawCar(r) {
@@ -130,6 +131,8 @@
     const gr = g.createLinearGradient(wx, wy, wx + ww, wy + wh); gr.addColorStop(0, 'rgba(255,255,255,.07)'); gr.addColorStop(0.4, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(wx, wy, ww, wh);
     g.restore();
     g.strokeStyle = '#15171f'; g.lineWidth = m * 0.03; rr(wx, wy, ww, wh, m * 0.06); g.stroke();
+    // đồng hồ điện tử trên xe
+    T('08:30', x + w * 0.2, y + h * 0.86, '500 ' + (m * 0.085) + 'px "Barlow Condensed", sans-serif', 'rgba(140,240,170,.9)');
     // lưng ghế trước
     g.fillStyle = '#0c0d14'; rr(x + w * 0.56, y + h * 0.56, w * 0.3, h * 0.6, m * 0.05); g.fill(); rr(x + w * 0.63, y + h * 0.44, w * 0.16, h * 0.15, m * 0.03); g.fill();
   }
@@ -154,11 +157,10 @@
     }
     // đồng hồ trên đầu hồi
     const cr = m * 0.07, ccx = bx + bw / 2, ccy = by + bh * 0.02;
-    clockFace(ccx, ccy, cr, C.hand, C.stage === 1 && C.noteSeen ? 0.25 + 0.2 * pulse() : 0);
-    if (C.stage === 1 && C.noteSeen && C.sub !== 'coi') invite(ccx, ccy, cr * 1.5);
+    clockFace(ccx, ccy, cr, C.ck.h + C.ck.m / 60, 0.12 + 0.1 * pulse());
     // điện thoại của em trên bậu cửa sổ
-    if (C.stage >= 2) { const ex = bx + bw * 0.195, ey = by + bh * 0.66 + bh * 0.2; g.fillStyle = '#0b0c12'; rr(ex - m * 0.02, ey - m * 0.06, m * 0.04, m * 0.06, 2); g.fill();
-      if (C.stage === 2) { g.fillStyle = 'rgba(120,230,160,' + (0.5 + 0.4 * pulse()) + ')'; g.fillRect(ex - m * 0.015, ey - m * 0.055, m * 0.03, m * 0.05); if (!C.close && C.flip < 0.5) invite(ex, ey - m * 0.03, m * 0.07); } }
+    if (C.stage >= 2 && (C.phoneE || C.stage > 2)) { const ex = bx + bw * 0.195, ey = by + bh * 0.66 + bh * 0.2; g.fillStyle = '#0b0c12'; rr(ex - m * 0.02, ey - m * 0.06, m * 0.04, m * 0.06, 2); g.fill();
+      if (C.stage === 2) { g.fillStyle = 'rgba(120,230,160,' + (0.5 + 0.4 * pulse()) + ')'; g.fillRect(ex - m * 0.015, ey - m * 0.055, m * 0.03, m * 0.05); if (!C.close && C.flip < 0.5 && C.calls === 0) invite(ex, ey - m * 0.03, m * 0.07); } }
     // cột loa còi
     const lx = x + w * 0.52, ly = y + h * 0.72; g.fillStyle = rgb(mix([5, 6, 11], [58, 60, 70], day)); g.fillRect(lx - 2.5, y + h * 0.2, 5, ly - (y + h * 0.2));
     for (const s of [-1, 1]) { g.beginPath(); g.moveTo(lx, y + h * 0.24); g.lineTo(lx + s * m * 0.09, y + h * 0.2); g.lineTo(lx + s * m * 0.09, y + h * 0.3); g.closePath(); g.fill(); }
@@ -175,8 +177,6 @@
     g.fillStyle = rgb(mix([18, 19, 28], [126, 120, 112], day)); g.fillRect(hx, hy2, hw, h * 0.03); g.fillRect(hx + hw * 0.08, hy2, hw * 0.08, h * 0.09); g.fillRect(hx + hw * 0.84, hy2, hw * 0.08, h * 0.09);
     const dk = C.deck; { const dx = hx + hw * (0.5 + 0.0 * dk), dy = hy2 + h * 0.065 - dk * h * 0.085; g.save(); g.translate(dx, dy); g.rotate(-0.12);
       for (let i = 0; i < 3; i++) { rr(-m * 0.028 + i * 1.5, -m * 0.02 - i * 1.5, m * 0.056, m * 0.04, 2); g.fillStyle = ['#b3262c', '#e2b23a', '#b3262c'][i]; g.fill(); g.strokeStyle = '#f3ead6'; g.lineWidth = 1; g.stroke(); } g.restore(); }
-    // gợi ý chỗ còn thứ chưa tìm (chặng 3)
-    if (C.stage === 3 && !C.close) { if (!C.found.khay) invite(kx + kw * 0.5, ky + kh * 0.4, kw * 0.34 * (C.idle > 16 ? 1 : 0.0001)); if (!C.found.uno) invite(hx + hw * 0.5, hy2 + h * 0.04, hw * 0.4 * (C.idle > 24 ? 1 : 0.0001)); if (!C.found.hill) invite(x + w * 0.76, y + h * 0.33, m * 0.1 * (C.idle > 32 ? 1 : 0.0001)); }
     // mí mắt sụp xuống (ngủ gật trên đồi)
     if (C.lid > 0.01) { g.fillStyle = '#020204'; const lh = h * 0.52 * C.lid; g.beginPath(); g.moveTo(x, y); g.lineTo(x + w, y); g.lineTo(x + w, y + lh * 0.7); g.quadraticCurveTo(x + w / 2, y + lh * 1.3, x, y + lh * 0.7); g.closePath(); g.fill();
       g.beginPath(); g.moveTo(x, y + h); g.lineTo(x + w, y + h); g.lineTo(x + w, y + h - lh * 0.7); g.quadraticCurveTo(x + w / 2, y + h - lh * 1.3, x, y + h - lh * 0.7); g.closePath(); g.fill(); }
@@ -193,9 +193,15 @@
     g.fillStyle = 'rgba(3,4,9,' + 0.86 * k + ')'; g.fillRect(r.x, r.y, r.w, r.h);
     g.globalAlpha = k; g.translate(cx, cy + (1 - k) * 14);
     const F = (px, wt = 400) => wt + ' ' + (px * u) + 'px "Be Vietnam Pro", sans-serif';
-    if (c.id === 'note') { // điện thoại của anh: ghi chú lịch của em
-      phoneBody(u); T('Ghi chú', 0, -0.56 * u, F(0.06), 'rgba(238,240,248,.5)'); T('Lịch của em', -0.28 * u, -0.42 * u, F(0.1, 600), '#FFE2A8', 'left');
-      [['05:00', 'còi báo thức'], ['12:45', 'còi đầu giờ chiều'], ['21:00', 'em nhận lại máy']].forEach((row, i) => { const yy = (-0.22 + i * 0.2) * u; T(row[0], -0.28 * u, yy, '500 ' + (0.115 * u) + 'px "Barlow Condensed", sans-serif', i === 0 ? '#FFD79A' : '#EEF0F8', 'left'); T(row[1], -0.28 * u, yy + 0.085 * u, F(0.052), 'rgba(238,240,248,.55)', 'left'); });
+    if (c.id === 'note') { // điện thoại của anh: ba giờ báo thức, mỗi cái một hình nhỏ (không chữ)
+      phoneBody(u);
+      [['05:00', 'loa'], ['12:45', 'bat'], ['21:00', 'may']].forEach((row, i) => { const yy = (-0.36 + i * 0.34) * u;
+        T(row[0], -0.27 * u, yy, '400 ' + (0.2 * u) + 'px "Barlow Condensed", sans-serif', '#FFE7BC', 'left');
+        const ix = 0.2 * u; g.strokeStyle = '#FFD79A'; g.fillStyle = '#FFD79A'; g.lineWidth = Math.max(1.3, 0.014 * u); g.lineJoin = 'round';
+        if (row[1] === 'loa') { g.beginPath(); g.moveTo(ix - 0.06 * u, yy - 0.02 * u); g.lineTo(ix - 0.02 * u, yy - 0.02 * u); g.lineTo(ix + 0.05 * u, yy - 0.06 * u); g.lineTo(ix + 0.05 * u, yy + 0.06 * u); g.lineTo(ix - 0.02 * u, yy + 0.02 * u); g.lineTo(ix - 0.06 * u, yy + 0.02 * u); g.closePath(); g.fill(); }
+        else if (row[1] === 'bat') { g.beginPath(); g.arc(ix, yy + 0.01 * u, 0.055 * u, Math.PI, 0); g.closePath(); g.fill(); g.fillRect(ix - 0.075 * u, yy + 0.02 * u, 0.15 * u, 0.012 * u); }
+        else { rr(ix - 0.035 * u, yy - 0.06 * u, 0.07 * u, 0.12 * u, 0.012 * u); g.stroke(); }
+        g.fillStyle = 'rgba(255,255,255,.07)'; g.fillRect(-0.3 * u, yy + 0.16 * u, 0.6 * u, 1); });
     } else if (c.id === 'call') { // điện thoại của em: gọi anh
       phoneBody(u); T('Anh', 0, -0.4 * u, F(0.15, 600));
       const st = C.talk >= 0 ? tm(C.talk) : C.calling > 0 ? 'Đang gọi…' : C.calls ? 'Không trả lời' : ''; T(st, 0, -0.24 * u, C.talk >= 0 ? '400 ' + (0.14 * u) + 'px "Barlow Condensed", sans-serif' : F(0.062), C.talk >= 0 ? '#9BE8B4' : 'rgba(238,240,248,.6)');
@@ -209,11 +215,20 @@
         T('vuốt để nghe', 0.06 * u, ty, F(0.048), 'rgba(238,240,248,.45)');
         g.fillStyle = '#34c26b'; g.beginPath(); g.arc(tx + 0.085 * u + C.slide * (tw - 0.17 * u), ty, 0.075 * u, 0, 6.29); g.fill(); c.track = { x: cx + tx, w: tw, y: cy + ty, r: 0.12 * u }; }
     } else if (c.id === 'khay') { K().OBJS.khay(u * 0.95, 1, C.closeT); }
-    else if (c.id === 'uno') { // những lá bài xoè ra
-      const cols = ['#c22c32', '#e6b63c', '#2f8f57', '#2a62b8', '#c22c32'];
-      for (let i = 0; i < 5; i++) { const on = ss(0.3 + i * 0.28, 0.75 + i * 0.28, C.closeT), a = (-0.5 + i * 0.25) * on; g.save(); g.translate(0, 0.5 * u); g.rotate(a); g.translate(0, -0.72 * u);
-        rr(-0.2 * u, -0.3 * u, 0.4 * u, 0.6 * u, 0.04 * u); g.fillStyle = cols[i]; g.fill(); g.strokeStyle = '#f6efdc'; g.lineWidth = 0.02 * u; g.stroke();
-        g.save(); g.rotate(-0.5); g.fillStyle = '#f6efdc'; g.beginPath(); g.ellipse(0, 0, 0.15 * u, 0.22 * u, 0, 0, 6.29); g.fill(); g.restore(); T(String([7, 2, 9, 4, 1][i]), 0, 0, '600 ' + (0.2 * u) + 'px "Barlow Condensed", sans-serif', cols[i]); g.restore(); }
+    else if (c.id === 'clock') { // chỉnh giờ: vòng trong kéo kim giờ, vòng ngoài kéo kim phút
+      const rc = Math.min(r.w, r.h) * 0.3; c.dial = { x: cx, y: cy, r: rc };
+      g.strokeStyle = 'rgba(255,220,160,.22)'; g.lineWidth = 1; g.beginPath(); g.arc(0, 0, rc * 1.14, 0, 6.29); g.stroke();
+      clockFace(0, 0, rc, C.ck.h + C.ck.m / 60, 0);
+      g.strokeStyle = 'rgba(27,28,38,.16)'; g.setLineDash([3, 5]); g.beginPath(); g.arc(0, 0, rc * 0.66, 0, 6.29); g.stroke(); g.setLineDash([]);
+    }
+    else if (c.id === 'uno') { // bốn lá bài: chạm hai lá để đổi chỗ
+      const cols = { 0: '#2a62b8', 3: '#2f8f57', 8: '#c22c32' }, cw = Math.min(r.w * 0.19, u * 0.56), ch = cw * 1.5; c.cardsAt = [];
+      for (let i = 0; i < 4; i++) { const px = (i - 1.5) * cw * 1.14, lift = (C.sel === i ? -ch * 0.14 : 0) + (C.unoDone ? -ch * 0.1 * Math.max(0, Math.sin((C.closeT * 5 - i * 0.7))) : 0), col = i === 3 && C.cards[i] === 0 ? '#e0a92e' : cols[C.cards[i]];
+        c.cardsAt.push({ x: cx + px, y: cy, w: cw * 1.1, h: ch * 1.2 });
+        g.save(); g.translate(px, lift); rr(-cw / 2, -ch / 2, cw, ch, cw * 0.1); g.fillStyle = col; g.fill(); g.strokeStyle = C.sel === i ? '#FFE7B0' : '#f6efdc'; g.lineWidth = cw * (C.sel === i ? 0.07 : 0.045); g.stroke();
+        g.save(); g.rotate(-0.5); g.fillStyle = '#f6efdc'; g.beginPath(); g.ellipse(0, 0, cw * 0.34, ch * 0.36, 0, 0, 6.29); g.fill(); g.restore();
+        T(String(C.cards[i]), 0, ch * 0.02, '600 ' + (cw * 0.62) + 'px "Barlow Condensed", sans-serif', col); g.restore(); }
+      if (C.unoDone) { g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.6 * k; g.drawImage(K().SP.warm, -cw * 3, -ch, cw * 6, ch * 2); g.globalCompositeOperation = 'source-over'; }
     }
     g.restore(); g.globalAlpha = 1;
   }
@@ -230,6 +245,14 @@
     const N = 74; for (let i = 0; i < N; i++) { const f = (i + 0.5) / N, px = lerp(p0[0], p1[0], f), py = lerp(p0[1], p1[1], f), on = f <= k;
       g.fillStyle = on ? 'rgba(255,226,170,.95)' : 'rgba(200,208,235,.2)'; g.beginPath(); g.arc(px, py, on ? 1.9 : 1.3, 0, 6.29); g.fill(); }
     if (C.count > 0) { const hx = lerp(p0[0], p1[0], k), hy = lerp(p0[1], p1[1], k); g.globalCompositeOperation = 'lighter'; g.drawImage(SP.glow, hx - 16, hy - 16, 32, 32); g.globalCompositeOperation = 'source-over'; }
+    // vòng nhịp: co về đúng tâm ở mỗi phách của bài, chạm lúc đó thì anh bước dài
+    if (C.sub === 'walk' && C.count < C.cap && !C.close) { const bx = a.x + a.w * 0.5, by = a.y + a.h * 0.86, br = Math.max(20, L.m * 0.06), ph = beatPhase();
+      g.strokeStyle = 'rgba(255,226,170,.9)'; g.lineWidth = 2; g.beginPath(); g.arc(bx, by, br, 0, 6.29); g.stroke();
+      g.strokeStyle = 'rgba(255,226,170,' + (0.25 + 0.6 * ph) + ')'; g.lineWidth = 1.5; g.beginPath(); g.arc(bx, by, br * (1 + 1.5 * (1 - ph)), 0, 6.29); g.stroke();
+      g.fillStyle = 'rgba(255,236,196,' + (0.2 + 0.8 * C.beatFlash) + ')'; g.beginPath(); g.ellipse(bx, by, br * 0.5, br * 0.26, 0, 0, 6.29); g.fill();
+      if (C.beatFlash > 0.4) { g.globalCompositeOperation = 'lighter'; g.globalAlpha = C.beatFlash; g.drawImage(SP.glow, bx - br * 2.2, by - br * 2.2, br * 4.4, br * 4.4); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; } }
+    // giải xong một việc: một đốm sáng chạy dọc cánh cổng
+    if (C.spark > 0.01) { const q = 1 - C.spark, sx = P ? d.x + d.w * q : d.x + d.w / 2, sy = P ? d.y + d.h / 2 : d.y + d.h * (1 - q); g.globalCompositeOperation = 'lighter'; g.globalAlpha = Math.sin(C.spark * Math.PI); g.drawImage(SP.glow, sx - 46, sy - 46, 92, 92); g.drawImage(SP.warm, sx - 110, sy - 40, 220, 80); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; }
     // dấu chân của em, sát cánh cổng
     const f = footPos(), fr = Math.max(18, L.m * 0.055);
     if (!C.stepped) { g.setLineDash([4, 5]); g.strokeStyle = 'rgba(232,226,214,' + (0.35 + 0.35 * pulse()) + ')'; g.lineWidth = 1.4; g.beginPath(); g.ellipse(f.x, f.y, fr, fr * 0.5, 0, 0, 6.29); g.stroke(); g.setLineDash([]);
@@ -239,14 +262,16 @@
   }
 
   // ================= Diễn biến =================
+  // Ba mốc giờ trong điện thoại anh là ba chiếc chìa: 05:00 (còi), 21:00 (em nhận lại máy), 12:45 (nhà ăn mở).
+  const TARGET = { 1: [5, 0], 2: [9, 0], 3: [0, 45] };
   function goStage(n) {
     C.stage = n; C.idle = 0; C.sub = '';
     if (n === 1) { A.songDist(0.13, 3); }
-    if (n === 2) { C.skyTo = 0.12; C.hourA = 23; C.hand = 23; C.lit = 0.34; A.songDist(0.22, 3); }
-    if (n === 3) { C.skyTo = 0.95; C.car = 1; C.hourA = 8.5; C.hand = 8.5; C.lit = 1; A.songDist(0.33, 3); }
+    if (n === 2) { C.skyTo = 0.12; C.hourA = 7; C.ck = { h: 7, m: 0 }; C.lit = 0.34; C.phoneE = false; A.songDist(0.22, 3); }
+    if (n === 3) { C.skyTo = 0.95; C.car = 1; C.hourA = 8.5; C.ck = { h: 8, m: 30 }; C.lit = 1; A.songDist(0.33, 3); }
     if (n === 4) { K().setText('cap', ''); setTimeout(() => { const cap = document.getElementById('cap'); cap.style.top = ''; cap.style.bottom = ''; K().finale(); }, 1500); }
   }
-  function walkTo(cap, text) { C.cap = cap; C.sub = 'walk'; C.idle = 0; if (text) say(text, 7); setTimeout(() => { if (C.sub === 'walk' && C.count < C.cap) hint('giữ tay bên anh để anh bước'); }, 5200); }
+  function walkTo(cap) { C.cap = cap; C.sub = 'walk'; C.idle = 0; setTimeout(() => { if (C.sub === 'walk' && C.count < C.cap) hint('chạm theo nhịp, bên anh'); }, 2600); }
   function open(side, id) { C.close = { side, id }; C.closeT = 0; C.idle = 0; }
   function shut() { C.close = null; }
 
@@ -260,63 +285,91 @@
     setTimeout(() => goStage(1), 6800);
   }
 
+  // Kim đồng hồ đã về đúng giờ của chặng này
+  function clockRight() {
+    const n = C.stage; A.bell(659.3, 0.07, 2.5); C.spark = 1;
+    setTimeout(() => { if (C.close && C.close.id === 'clock') shut(); }, 700);
+    if (n === 1) { C.sub = 'coi'; setTimeout(() => { A.siren(5.2); C.skyTo = 0.3; }, 900); setTimeout(() => { C.lamp = true; A.lamp(); C.hourA = 5; }, 3800); setTimeout(() => walkTo(250), 7400); }
+    if (n === 2) { C.sub = 'may'; setTimeout(() => { C.phoneE = true; A.tick(); }, 1100); }
+    if (n === 3) { C.sub = ''; setTimeout(() => { A.siren(2.6); A.shutter(); C.found.khay = 1; }, 900); setTimeout(() => { open('e', 'khay'); A.clink(); }, 2300); setTimeout(() => { if (C.close && C.close.id === 'khay') shut(); got(); }, 7200); }
+  }
+  // Đặt kim theo chỗ ngón tay: vòng trong là kim giờ, vòng ngoài là kim phút
+  function dragClock(x, y) {
+    const k = C.close && C.close.dial; if (!k) return;
+    const dx = x - k.x, dy = y - k.y, d = Math.hypot(dx, dy), ang = (Math.atan2(dx, -dy) * 180 / Math.PI + 360) % 360;
+    if (C.drag === null) C.drag = d > k.r * 0.66 ? 'm' : 'h';
+    if (C.drag === 'h') { const h = Math.round(ang / 30) % 12; if (h !== C.ck.h) { C.ck.h = h; A.tick(); } }
+    else { const m = (Math.round(ang / 30) * 5) % 60; if (m !== C.ck.m) { C.ck.m = m; A.tick(); } }
+  }
+  const SOLVED = '0830';
+  function tapCard(i) {
+    if (C.unoDone) return;
+    if (C.sel < 0) { C.sel = i; A.flip(); return; }
+    const a = C.cards[C.sel]; C.cards[C.sel] = C.cards[i]; C.cards[i] = a; C.sel = -1; A.flip();
+    if (C.cards.join('') === SOLVED) { C.unoDone = true; C.found.uno = 1; C.spark = 1; A.bell(659.3, 0.07, 2.5); for (let k = 0; k < 4; k++) setTimeout(() => A.flip(), 500 + k * 160); setTimeout(() => { if (C.close && C.close.id === 'uno') shut(); got(); }, 3600); }
+  }
+  // Chạm theo nhịp bài hát để anh bước
+  const beatPhase = () => { const t = A.el && !A.el.paused ? A.el.currentTime : C.t; return (t % 0.75) / 0.75; };
+  function beatTap() {
+    const ph = beatPhase(), off = Math.min(ph, 1 - ph) * 0.75, good = off < 0.15;
+    C.pending += good ? 30 : 9; C.beatFlash = good ? 1 : 0.35; C.idle = 0;
+    A.step(good ? 0.7 : 0.3, (C.tapN = (C.tapN || 0) + 1) & 1 ? 0.3 : -0.3);
+  }
+
   function tap(x, y) {
     C.idle = 0;
     if (C.stage === 0) return;
-    // ----- đang mở cận cảnh -----
     if (C.close) {
       const c = C.close, inside = inR(R[c.side], x, y);
-      if (c.id === 'note') { shut(); if (!C.noteSeen) { C.noteSeen = true; } return; }
-      if (c.id === 'call' && inside && C.talk < 0 && C.calling <= 0 && C.flip < 0.5) { C.calling = 3.1; C.calls++; A.ring(); setTimeout(() => { C.buzz = 2.2; A.buzz(2); }, 500); return; }
-      if (c.id === 'khay') { if (C.closeT > 1) { A.clink(); } return; }
-      if ((c.id === 'uno' || c.id === 'khay') && C.closeT > 3) shut();
+      if (c.id === 'note') { shut(); C.noteSeen = true; return; }
+      if (c.id === 'clock') { if (c.dial && Math.hypot(x - c.dial.x, y - c.dial.y) > c.dial.r * 1.25) shut(); return; }
+      if (c.id === 'call' && C.talk < 0 && C.calling <= 0 && C.flip < 0.5) { if (!inside) { shut(); return; } C.calling = 3.1; C.calls++; A.ring(); setTimeout(() => { C.buzz = 2.2; A.buzz(2); }, 500); return; }
+      if (c.id === 'uno') { if (c.cardsAt) { for (let i = 0; i < 4; i++) { const q = c.cardsAt[i]; if (Math.abs(x - q.x) < q.w / 2 && Math.abs(y - q.y) < q.h / 2) { tapCard(i); return; } } } if (!inside) shut(); return; }
+      if (c.id === 'khay') { A.clink(); return; }
       return;
     }
     const side = inR(R.a, x, y) ? 'a' : inR(R.e, x, y) ? 'e' : null; if (!side) return;
     const id = hit(side, x, y);
-    if (C.stage === 1) {
-      if (side === 'a' && id === 'phone') { A.tick(); open('a', 'note'); return; }
-      if (side === 'a' && (id === 'lamp' || id === 'laptop')) { C.lamp = !C.lamp; A.lamp(); return; }
-      if (side === 'e' && id === 'clock' && C.sub !== 'coi' && C.sub !== 'walk') {
-        if (!C.noteSeen) { A.tick(); hint('chưa biết phải chỉnh về mấy giờ'); return; }
-        C.hourE = C.hourE >= 12 ? 1 : C.hourE + 1; A.tick();
-        if (C.hourE === 5) { C.sub = 'coi'; setTimeout(() => { A.siren(5.2); C.skyTo = 0.3; }, 500);
-          setTimeout(() => { C.lamp = true; A.lamp(); C.hourA = 5; }, 3200); setTimeout(() => walkTo(250), 7200); }
-        return;
-      }
-      if (side === 'e' && id === 'loa') { hint('chưa tới giờ còi'); return; }
-    }
+    if (side === 'a' && !C.car && id === 'phone' && (C.stage === 1 || C.stage === 3 || (C.stage === 2 && C.flip < 0.5 && !C.phoneE))) { A.tick(); open('a', 'note'); return; }
+    if (side === 'a' && C.car && C.stage === 3 && C.sub !== 'walk') { A.tick(); open('a', 'note'); return; } // trên xe: chạm để xem lại ba mốc giờ
+    if (side === 'a' && !C.car && (id === 'lamp' || id === 'laptop') && C.stage === 1) { C.lamp = !C.lamp; A.lamp(); return; }
+    if (side === 'e' && id === 'clock' && C.sub !== 'coi' && C.sub !== 'walk' && !(C.stage === 2 && C.phoneE) && !(C.stage === 3 && C.found.khay)) { A.tick(); open('e', 'clock'); return; }
+    if (C.stage === 1 && side === 'e' && id === 'loa') { hint('chưa tới giờ còi'); return; }
     if (C.stage === 2 && C.sub !== 'walk') {
-      if (side === 'e' && id === 'phone' && C.talk < 0) { open('e', 'call'); return; }
+      if (side === 'e' && id === 'phone') { if (!C.phoneE) hint('chưa tới giờ nhận máy'); else if (C.talk < 0) open('e', 'call'); return; }
       if (side === 'a' && id === 'phone' && C.flip > 0.5) { open('a', 'answer'); return; }
       if (side === 'a' && id === 'phone') { hint('máy úp xuống, im lìm'); return; }
     }
     if (C.stage === 3 && C.sub !== 'walk') {
-      if (side === 'e' && id === 'shutter' && !C.found.khay) { C.found.khay = 1; A.shutter(); setTimeout(() => { open('e', 'khay'); A.clink(); }, 900); setTimeout(() => { if (C.close && C.close.id === 'khay') shut(); got(); }, 8600); return; }
-      if (side === 'e' && id === 'bench' && !C.found.uno) { C.found.uno = 1; A.flip(); setTimeout(() => { open('e', 'uno'); for (let i = 0; i < 5; i++) setTimeout(() => A.flip(), 300 + i * 280); }, 700); setTimeout(() => { if (C.close && C.close.id === 'uno') shut(); got(); }, 8600); return; }
+      if (side === 'e' && id === 'shutter' && !C.found.khay) { hint('nhà ăn chưa tới giờ mở'); return; }
+      if (side === 'e' && id === 'bench' && !C.found.uno) { A.flip(); C.deck = Math.max(C.deck, 0.01); C.deckOut = true; setTimeout(() => open('e', 'uno'), 500); return; }
       if (side === 'e' && id === 'hill' && !C.found.hill) { hint('chạm và giữ ngọn đồi'); return; }
     }
-    if (C.sub !== 'walk' && id === null && C.stage >= 1) { /* chạm chỗ trống: không có gì */ }
   }
-  // mỗi thứ tìm được: anh đi thêm một đoạn
+  // mỗi thứ tìm được: anh đi thêm một đoạn, một đốm sáng chạy qua cánh cổng
   function got() {
-    const n = Object.keys(C.found).length; C.cap = 500 + n * 150; C.auto = true; C.idle = 0;
+    const n = Object.keys(C.found).length; C.cap = 500 + n * 150; C.auto = true; C.idle = 0; C.spark = 1;
     if (n >= 3) setTimeout(() => { C.sub = 'done'; say('“Người ta chỉ than với người mà người ta tin nhất.”', 7); }, 400);
   }
 
   function down(x, y) {
     if (C.stage === 0) { C.holding = true; return; }
     C.idle = 0;
+    if (C.close && C.close.id === 'clock' && C.close.dial && Math.hypot(x - C.close.dial.x, y - C.close.dial.y) < C.close.dial.r * 1.2) { C.drag = null; C.dragging = true; dragClock(x, y); return; }
     if (C.close && C.close.id === 'answer' && C.close.track && C.talk < 0) { const t = C.close.track; if (Math.abs(y - t.y) < t.r * 2.2 && x > t.x - t.r && x < t.x + t.w + t.r) { C.sliding = true; return; } }
-    if (C.sub === 'walk' && inR(R.a, x, y) && !C.close) { C.walking = true; return; }
+    if (C.sub === 'walk' && inR(R.a, x, y) && !C.close && C.count < C.cap) { beatTap(); return; }
     if (C.stage === 3 && !C.close && !C.found.hill && inR(R.e, x, y) && hit('e', x, y) === 'hill') { C.lidHold = true; A.windTo(0.05, 1.5); return; }
     C.tapAt = [x, y, now];
   }
-  function move(x) { if (C.sliding && C.close && C.close.track) { const t = C.close.track; C.slide = clamp((x - t.x - t.r * 0.7) / (t.w - t.r * 1.4)); } }
-  function up(x, y) {
-    C.holding = false; C.walking = false;
-    if (C.sliding) { C.sliding = false; if (C.slide > 0.8) { C.slide = 1; C.talk = 0; C.buzz = 0; A.tick(); open('a', 'answer'); C.close.keep = true; } else C.slide = 0; return; }
-    if (C.lidHold) { C.lidHold = false; A.windTo(0.3, 2); if (C.lid > 0.92) { C.found.hill = 1; got(); } return; }
+  function move(x, y) {
+    if (C.dragging) dragClock(x, y);
+    if (C.sliding && C.close && C.close.track) { const t = C.close.track; C.slide = clamp((x - t.x - t.r * 0.7) / (t.w - t.r * 1.4)); }
+  }
+  function up() {
+    C.holding = false;
+    if (C.dragging) { C.dragging = false; C.drag = null; const tg = TARGET[C.stage]; if (tg && C.ck.h === tg[0] && C.ck.m === tg[1]) clockRight(); return; }
+    if (C.sliding) { C.sliding = false; if (C.slide > 0.8) { C.slide = 1; C.talk = 0; C.buzz = 0; A.tick(); C.spark = 1; } else C.slide = 0; return; }
+    if (C.lidHold) { C.lidHold = false; C.lidFull = 0; A.windTo(0.3, 2); if (C.lid > 0.92) { C.found.hill = 1; got(); } return; }
     if (C.tapAt && now - C.tapAt[2] < 0.6) tap(C.tapAt[0], C.tapAt[1]);
     C.tapAt = null;
   }
@@ -324,42 +377,46 @@
   function update(dt) {
     C.t += dt; C.idle += dt; if (C.close) C.closeT += dt;
     C.sky += (C.skyTo - C.sky) * Math.min(1, dt * 0.5);
-    C.hand += (C.hourE - C.hand) * Math.min(1, dt * 6); if (C.stage >= 2) C.hand = C.hourA;
     if (C.stage === 0) { if (C.holding && !C.stepped) { C.hold = Math.min(1, C.hold + dt / 0.95); if (C.hold >= 1) step(); } else C.hold = Math.max(0, C.hold - dt * 2.2); }
-    C.flare = Math.max(0, C.flare - dt * 0.5);
+    C.flare = Math.max(0, C.flare - dt * 0.5); C.beatFlash = Math.max(0, C.beatFlash - dt * 3); C.spark = Math.max(0, C.spark - dt * 0.7);
     if (C.sub === 'coi') C.lit = Math.min(1, C.lit + dt * 0.14);
     if (C.car) C.carT += dt * (0.4 + (C.count < C.cap ? 0.8 : 0));
-    C.shutter = Math.min(1, C.shutter + (C.found.khay ? dt * 1.4 : 0)); C.deck = Math.min(1, C.deck + (C.found.uno ? dt * 2 : 0));
+    C.shutter = Math.min(1, C.shutter + (C.found.khay ? dt * 1.4 : 0)); C.deck = Math.min(1, C.deck + (C.deckOut ? dt * 2 : 0));
     C.lid = clamp(C.lid + (C.lidHold ? dt / 2.4 : -dt * 1.6));
-    if (C.lidHold && C.lid >= 1) { C.lidFull = (C.lidFull || 0) + dt; if (C.lidFull > 1.4) up(0, 0); } // ngủ đủ một giấc thì tự mở mắt
-    // bài hát ở phần chơi: chỉ đoạn dạo và đoạn đầu, lặp lại (đoạn rap để dành cho cao trào)
-    if (C.stage < 4 && A.el && !A.el.paused && A.el.currentTime > 56.2) { try { A.el.currentTime = 10.9; } catch (e) { /* bỏ qua */ } }
+    if (C.lidHold && C.lid >= 1) { C.lidFull = (C.lidFull || 0) + dt; if (C.lidFull > 1.4) up(); } // ngủ đủ một giấc thì tự mở mắt
+    // bài hát ở phần chơi: chỉ đoạn dạo và đoạn đầu, lặp đúng 60 phách (đoạn rap để dành cho cao trào)
+    if (C.stage < 4 && A.el && !A.el.paused && A.el.currentTime > 56.25) { try { A.el.currentTime -= 45; } catch (e) { /* bỏ qua */ } }
     // cuộc gọi
-    if (C.calling > 0) { C.calling -= dt; if (C.calling <= 0 && C.calls >= 3 && C.flip < 0.5) { C.flip = 1; A.tick(); shut(); setTimeout(() => { C.buzz = 30; A.buzz(2); hint('máy bên anh đã lật lên'); }, 900); } }
+    if (C.calling > 0) { C.calling -= dt; if (C.calling <= 0 && C.calls >= 3 && C.flip < 0.5) { C.flip = 1; A.tick(); shut(); setTimeout(() => { C.buzz = 30; A.buzz(2); }, 900); } }
     if (C.buzz > 0) { C.buzz -= dt; if (C.flip > 0.5 && C.talk < 0 && Math.floor(C.buzz * 0.55) !== Math.floor((C.buzz + dt) * 0.55)) A.buzz(1); }
     if (C.talk >= 0) { const was = C.talk; C.talk += dt * (C.talk < 30 ? 6 : 95); // đồng hồ cuộc gọi chạy nhanh dần, qua mười phút vẫn chạy
-      if (was < 600 && C.talk >= 600) { A.bell(659.3, 0.08, 3); }
-      if (was < 760 && C.talk >= 760) { shut(); C.talk = 760; C.stage = 2; walkTo(500); C.talk = -2; } }
+      if (was < 600 && C.talk >= 600) A.bell(659.3, 0.08, 3);
+      if (C.talk >= 760) { shut(); C.talk = -2; walkTo(500); } }
     // anh bước
-    const moving = (C.sub === 'walk' && C.walking) || C.auto;
-    if (moving && C.count < C.cap) {
-      const was = C.count; C.walkAcc += dt * 46; const add = Math.floor(C.walkAcc); C.walkAcc -= add; C.count = Math.min(C.cap, C.count + add);
-      if (Math.floor(was / 9) !== Math.floor(C.count / 9)) A.step(0.32, (Math.floor(C.count / 9) & 1) ? 0.25 : -0.25);
-      if (C.count >= C.cap) { C.auto = false; C.walking = false; A.bell(493.9, 0.06, 2.5);
+    if (C.auto && C.count < C.cap) C.pending += dt * 46;
+    if (C.pending >= 1 && C.count < C.cap) {
+      const was = C.count, add = Math.min(Math.floor(C.pending), Math.max(1, Math.ceil(dt * 150))); C.pending -= add; C.count = Math.min(C.cap, C.count + add);
+      if (C.auto && Math.floor(was / 9) !== Math.floor(C.count / 9)) A.step(0.3, (Math.floor(C.count / 9) & 1) ? 0.25 : -0.25);
+      if (C.count >= C.cap) { C.auto = false; C.pending = 0; A.bell(493.9, 0.06, 2.5);
         if (C.sub === 'walk') { C.sub = ''; goStage(C.stage + 1); }
         else if (C.sub === 'done') goStage(4); }
     }
     if (C.sub === 'done' && !C.auto && C.count >= C.cap && C.stage === 3) goStage(4);
     if (C.msg && C.t > C.msgUntil) { C.msg = ''; K().setText('cap', ''); }
-    // gợi ý khi em đứng lâu
-    if (C.idle > 15 && !C.close) { C.idle = 3;
+    // gợi ý khi em đứng lâu (ngắn, không kể chuyện)
+    if (C.idle > 16 && !C.dragging) { C.idle = 4;
+      const tg = TARGET[C.stage], right = tg && C.ck.h === tg[0] && C.ck.m === tg[1];
       if (C.stage === 0 && !C.stepped) hint('chạm và giữ dấu chân của em');
-      else if (C.sub === 'walk') hint('giữ tay bên anh để anh bước');
+      else if (C.sub === 'walk') hint('chạm theo nhịp, bên anh');
+      else if (C.close && C.close.id === 'clock') hint(C.stage === 3 ? 'vòng ngoài là kim phút' : 'kéo kim giờ');
+      else if (C.close && C.close.id === 'uno') hint('chiếc đồng hồ trên xe anh');
+      else if (C.close) { /* đang xem */ }
       else if (C.stage === 1 && !C.noteSeen) hint('điện thoại trên bàn anh đang sáng');
-      else if (C.stage === 1) hint('chiếc đồng hồ bên em vẫn chỉ hai giờ');
-      else if (C.stage === 2 && C.flip < 0.5) hint(C.calls ? 'gọi nữa đi' : 'điện thoại của em, trên bậu cửa sổ');
-      else if (C.stage === 2 && C.talk < 0) hint('chạm điện thoại bên anh, rồi vuốt để nghe');
-      else if (C.stage === 3) hint('bên em còn ' + (3 - Object.keys(C.found).length) + ' thứ em đã kể'); }
+      else if (C.stage === 1 && C.sub !== 'coi') hint('đồng hồ bên em vẫn chỉ hai giờ');
+      else if (C.stage === 2 && !C.phoneE && !right) hint('mấy giờ em mới được nhận lại máy?');
+      else if (C.stage === 2 && C.flip < 0.5) hint(C.calls ? 'gọi nữa đi' : 'máy của em, trên bậu cửa sổ');
+      else if (C.stage === 2 && C.talk < 0 && C.talk > -2) hint('máy bên anh đã lật lên');
+      else if (C.stage === 3) hint(!C.found.khay ? 'nhà ăn mở lúc mấy giờ?' : !C.found.uno ? 'dưới gầm ghế đá' : 'chạm và giữ ngọn đồi'); }
     const n = document.getElementById('count-n'); if (n.textContent !== String(C.count)) n.textContent = C.count;
     document.getElementById('count').classList.toggle('on', C.stage >= 1 && C.count > 0);
   }
