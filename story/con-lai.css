@@ -1,13 +1,14 @@
-/* "Phần còn lại": cả cảnh là một canvas tràn hết cỡ (100vw × 100dvh), chơi được cả màn dọc lẫn màn ngang.
-   Chữ rất ít: một câu giữa trời, một dòng chú thích dưới đồ vật, con số bước ở trên cùng. */
+/* "Phần còn lại": một thước phim ngắn. Cả cảnh là một canvas tràn hết cỡ (100vw × 100dvh), xem được cả màn dọc lẫn màn ngang.
+   Chữ: tựa phim và con số bằng Barlow Condensed, câu thoại giữa trời bằng Cormorant Garamond, phụ đề bằng Be Vietnam Pro. */
 :root {
   --ink: #F7EFE3;
-  --dim: rgba(247, 239, 227, .6);
+  --dim: rgba(247, 239, 227, .62);
   --vang: #FFD79A;
   --sl: max(14px, env(safe-area-inset-left));
   --sr: max(14px, env(safe-area-inset-right));
   --st: max(8px, env(safe-area-inset-top));
   --sb: max(10px, env(safe-area-inset-bottom));
+  --lb: 8.5vh; /* dải đen trên dưới của khung phim (con-lai.js đổi theo cảnh) */
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: var(--ink); }
@@ -18,45 +19,75 @@ button { font: inherit; color: inherit; }
 #cv { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; touch-action: none; }
 
 /* Con số bước của anh */
-.count { position: fixed; left: 50%; top: calc(var(--st) + 10px); transform: translateX(-50%); margin: 0; z-index: 5; pointer-events: none; white-space: nowrap;
-  opacity: 0; transition: opacity 2s ease; text-shadow: 0 0 18px rgba(255, 200, 120, .35), 0 1px 3px rgba(0, 0, 0, .9); }
+.count { position: fixed; left: 50%; top: calc(var(--lb) + 12px); transform: translateX(-50%); margin: 0; z-index: 5; pointer-events: none; white-space: nowrap;
+  opacity: 0; transition: opacity 1.6s ease, top 2.4s ease; text-shadow: 0 0 18px rgba(255, 200, 120, .35), 0 1px 3px rgba(0, 0, 0, .9); }
 .count.on { opacity: 1; }
-.count b { font: 300 clamp(26px, 7.2vmin, 44px)/1 'Fraunces', serif; font-variant-numeric: tabular-nums; letter-spacing: .04em; color: #FFE9C4; }
-.count i { font: 400 12px 'Be Vietnam Pro', sans-serif; font-style: normal; letter-spacing: .12em; color: var(--dim); margin-left: 8px; }
-.count.full b { color: #FFF4DC; text-shadow: 0 0 26px rgba(255, 210, 140, .8); }
+.count b { font: 300 clamp(30px, 8.4vmin, 50px)/1 'Barlow Condensed', sans-serif; font-variant-numeric: tabular-nums; letter-spacing: .06em; color: #FFE9C4; }
+.count i { font: 400 clamp(13px, 3.4vmin, 17px) 'Barlow Condensed', sans-serif; font-style: normal; letter-spacing: .16em; color: var(--dim); margin-left: 8px; }
+/* "999 bước còn lại": con số nổi bật lên giữa khung hình rồi mới về chỗ */
+.count { transition: opacity 1.6s ease, top .7s cubic-bezier(.2, 1.5, .35, 1), transform .7s cubic-bezier(.2, 1.5, .35, 1); }
+.count.pop { top: 27vh; transform: translateX(-50%) scale(2.9); }
+.count.pop i { opacity: 0; }
+.count i { transition: opacity .4s; }
+.count.pop b { font-weight: 500; color: #FFF6E0; text-shadow: 0 0 34px rgba(255, 205, 130, .95), 0 0 90px rgba(255, 180, 100, .55); }
+.count.full b { font-weight: 500; color: #FFF4DC; text-shadow: 0 0 26px rgba(255, 210, 140, .85); }
 
-/* Câu chữ giữa trời (vị trí do con-lai.js đặt theo bố cục) */
+/* Tựa phim: hiện sau khi em bước, trên nền nhạc dạo */
+.title { position: fixed; left: 0; right: 0; top: 34%; margin: 0; z-index: 5; pointer-events: none; text-align: center;
+  font: 500 clamp(30px, 9.4vmin, 62px)/1.1 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: .42em; padding-left: .42em; color: #FFF3DE;
+  opacity: 0; transition: opacity 2.4s ease, letter-spacing 7s ease-out; text-shadow: 0 0 30px rgba(255, 205, 130, .35), 0 2px 12px rgba(0, 0, 0, .9); }
+.title.on { opacity: 1; letter-spacing: .5em; }
+
+/* Câu giữa trời (đoạn kết) và phụ đề ở một phần ba dưới */
 .line, .cap { position: fixed; left: 50%; transform: translateX(-50%); margin: 0; text-align: center; pointer-events: none; z-index: 5;
-  opacity: 0; transition: opacity 1.4s ease; text-wrap: balance; }
-.line { width: min(84vw, 620px); font: 400 clamp(17px, 4.7vmin, 27px)/1.5 'Fraunces', serif; letter-spacing: .01em; color: #FFF6E8;
+  opacity: 0; transition: opacity 1.3s ease; text-wrap: balance; }
+.line { width: min(86vw, 640px); font: 500 clamp(21px, 5.9vmin, 33px)/1.34 'Cormorant Garamond', serif; letter-spacing: .005em; color: #FFF7EA;
   text-shadow: 0 0 22px rgba(10, 12, 30, .95), 0 0 8px rgba(10, 12, 30, .9), 0 1px 2px rgba(0, 0, 0, .9); }
 .line.on, .cap.on { opacity: 1; }
-.line.dam { font-weight: 600; color: #FFE7B8; text-shadow: 0 0 26px rgba(255, 190, 110, .55), 0 0 10px rgba(10, 12, 30, .95), 0 1px 2px rgba(0, 0, 0, .9); }
-.cap { width: min(80vw, 520px); font: italic 400 clamp(14.5px, 3.9vmin, 20px)/1.5 'Fraunces', serif; color: #F3E7D6;
-  text-shadow: 0 0 18px rgba(8, 10, 24, .95), 0 0 6px rgba(8, 10, 24, .9), 0 1px 2px rgba(0, 0, 0, .9); }
+.line.dam { font-weight: 700; font-size: clamp(24px, 6.9vmin, 40px); color: #FFE9BD; text-shadow: 0 0 28px rgba(255, 190, 110, .6), 0 0 10px rgba(10, 12, 30, .95), 0 1px 2px rgba(0, 0, 0, .9); }
+.cap { bottom: calc(var(--lb) + 9vh); width: min(84vw, 560px); font: 400 clamp(14.5px, 3.9vmin, 19px)/1.55 'Be Vietnam Pro', sans-serif; color: #F6EFE2;
+  text-shadow: 0 0 14px rgba(0, 0, 0, .95), 0 0 5px rgba(0, 0, 0, .9), 0 1px 2px rgba(0, 0, 0, 1); }
 
-.hint { position: fixed; left: 50%; bottom: calc(var(--sb) + 6px); transform: translateX(-50%); margin: 0; pointer-events: none; z-index: 5; white-space: nowrap;
-  font-size: 12.5px; letter-spacing: .1em; color: var(--dim); opacity: 0; transition: opacity 1.2s; text-shadow: 0 1px 3px #000; }
+.hint { position: fixed; left: 50%; bottom: calc(var(--sb) + 8px); transform: translateX(-50%); margin: 0; pointer-events: none; z-index: 6; white-space: nowrap;
+  font: 400 15px 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: .3em; color: var(--dim); opacity: 0; transition: opacity 1.2s; text-shadow: 0 1px 3px #000; }
 .hint.on { opacity: 1; }
 
 .top { position: fixed; left: 0; right: 0; top: 0; padding: var(--st) var(--sr) 0 var(--sl); display: flex; justify-content: space-between; z-index: 8; pointer-events: none; }
-.ic { pointer-events: auto; width: 38px; height: 38px; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .25); opacity: .34; cursor: pointer; transition: opacity .3s; }
+.ic { pointer-events: auto; width: 38px; height: 38px; display: grid; place-items: center; border: 0; border-radius: 50%; background: none; opacity: .36; cursor: pointer; transition: opacity .3s; }
 .ic:hover { opacity: .8; }
 .ic svg { width: 19px; height: 19px; fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 #btn-sound .i-mute { display: none; }
 #btn-sound.off .i-mute { display: inline; }
 #btn-sound.off .i-wave { display: none; }
 
-/* Màn bắt đầu */
-.start { position: fixed; inset: 0; z-index: 20; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center; padding: var(--st) var(--sr) var(--sb) var(--sl); transition: opacity 1.6s; }
-.start.go { opacity: 0; pointer-events: none; }
-.st-title { margin: 0; font: 400 clamp(28px, 8vmin, 42px) 'Fraunces', serif; letter-spacing: .05em; animation: rise 2s ease both; }
-.start small { color: var(--dim); letter-spacing: .1em; font-size: 12px; animation: rise 2s ease .7s both; }
-.st-go { margin-top: 6px; padding: 8px 4px; border: 0; border-bottom: 1px solid rgba(255, 215, 154, .6); background: none; color: var(--ink); text-decoration: none; cursor: pointer; letter-spacing: .05em; font-size: 15px; animation: rise 2s ease 1.3s both; }
-.st-demo { margin: 22px 0 0; font-size: 12px; color: var(--dim); animation: rise 2s ease 1.8s both; }
+/* ----- Màn vào ----- */
+.start { position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; text-align: center;
+  padding: var(--st) var(--sr) calc(var(--sb) + 15vh) var(--sl); background: radial-gradient(120% 70% at 50% 62%, rgba(0, 0, 4, .25), rgba(0, 0, 4, .82)); transition: opacity 1.5s ease .25s; }
+.start.out { opacity: 0; pointer-events: none; }
+.st-ear { margin: 0 0 30px; display: flex; align-items: center; gap: 9px; font: 400 14px 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: .26em; color: var(--dim); animation: rise 1.8s ease .5s both; }
+.st-ear svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+/* Nút tròn: một đốm đèn ấm trong vòng sáng mảnh. Nhấn xuống thì lún, thả ra thì đốm đèn loé và lan ra. */
+.go { position: relative; width: 104px; height: 104px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; animation: rise 1.8s ease both; transition: transform .16s ease; }
+.go i { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid rgba(255, 215, 154, .75); box-shadow: 0 0 22px rgba(255, 190, 110, .28), inset 0 0 18px rgba(255, 190, 110, .16); animation: ring 3.2s ease-in-out infinite; }
+.go i::after { content: ''; position: absolute; inset: -11px; border-radius: 50%; border: 1px solid rgba(255, 215, 154, .22); }
+.go b { position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%;
+  background: radial-gradient(circle, #FFF6DF 0%, #FFD48E 42%, rgba(255, 170, 90, 0) 72%); box-shadow: 0 0 34px 10px rgba(255, 190, 110, .42); animation: core 3.2s ease-in-out infinite; transition: transform .16s ease; }
+.go:active { transform: scale(.93); }
+.go:active b { transform: scale(1.25); }
+.go.fire b { animation: none; transform: scale(34); opacity: 0; transition: transform 1.25s cubic-bezier(.2, .7, .2, 1), opacity 1.25s ease; }
+.go.fire i { animation: none; transform: scale(1.7); opacity: 0; transition: transform .9s ease, opacity .9s ease; }
+.go-label { margin: 18px 0 0; font: 500 19px 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: .44em; padding-left: .44em; color: #FFEFD4; animation: rise 1.8s ease .25s both; transition: opacity .5s; }
+.start.out .go-label, .start.out .st-ear, .start.out .st-demo { opacity: 0; transition: opacity .4s; }
+.st-demo { position: absolute; left: 0; right: 0; bottom: calc(var(--sb) + 14px); margin: 0; font-size: 12px; color: var(--dim); animation: rise 2s ease 1.2s both; }
 .st-demo button { border: 0; background: none; padding: 4px 2px; color: var(--dim); cursor: pointer; }
 .st-demo button.on { color: var(--vang); border-bottom: 1px solid currentColor; }
-@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes ring { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.045); } }
+@keyframes core { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
 
-.after { position: fixed; left: 0; right: 0; bottom: calc(var(--sb) + 18px); z-index: 9; display: flex; justify-content: center; gap: 26px; animation: rise 2.4s ease both; }
-.after .st-go { animation: none; font-size: 13.5px; text-shadow: 0 1px 3px #000; }
+/* ----- Chữ cuối phim ----- */
+.after { position: fixed; left: 0; right: 0; bottom: calc(var(--sb) + 16px); z-index: 9; text-align: center; animation: rise 3s ease both; text-shadow: 0 1px 4px rgba(0, 0, 0, .9); }
+.af-title { margin: 0; font: 500 clamp(17px, 4.6vmin, 24px) 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: .42em; padding-left: .42em; }
+.af-credit { margin: 4px 0 10px; font-size: 11.5px; letter-spacing: .06em; color: var(--dim); }
+.af-btns { display: flex; justify-content: center; gap: 28px; }
+.af-btns button, .af-btns a { border: 0; background: none; padding: 6px 2px; font: 500 15px 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: .26em; color: var(--ink); text-decoration: none; cursor: pointer; border-bottom: 1px solid rgba(255, 215, 154, .6); }

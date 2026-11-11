@@ -15,7 +15,8 @@
   const CUE = {
     verse: 10.9,      // "Từ lần đầu tiên ta đi bên nhau"
     sit: 25.6,        // "Cách anh lặng lẽ ngồi / Ngồi nhìn bóng tối lặng thầm"
-    weak: 36.0,       // "…có những phút giây yếu đuối không ngờ"
+    weak: 36.0,       // "…có những phút giây yếu đuối không ngờ": ánh sáng chững lại
+    wake: 47.3,       // sau "…về nhà anh nhé, có em chờ": dấu chân em sáng lên, ánh sáng đi tiếp
     wait: 46.6,       // "…về nhà anh nhé, có em chờ"
     rice: 50.6,       // "Có dư vị mỗi bữa cơm"
     rap: 58.9,        // "Có định mệnh nào…"
@@ -36,9 +37,7 @@
   const BEAT = 0.75; // 80 nhịp/phút
 
   // Chữ giữa trời (line) và chú thích dưới đồ vật (cap): [từ giây, tới giây, chữ, đậm?]
-  const LINES_COMMON = [
-    [3.2, 9.8, 'Ở rất xa, có một ô cửa vừa sáng đèn.'],
-  ];
+  const LINES_COMMON = [];
   const LINES = {
     b: [
       [89.5, 95.2, 'Anh đi hết phần của anh rồi.'],
@@ -61,13 +60,16 @@
     ],
   };
   const CAPS_COMMON = [
-    [27.2, 33.6, 'Đèn bàn sáng từ đêm qua. Bộ câu hỏi soạn chưa xong thì trời đã sáng.'],
-    [38.6, 46.2, 'Lần ấy em gọi mãi anh mới nghe. Lần này anh tự đi tìm em.'],
-    [51.4, 57.6, 'Tối nào em cũng hỏi anh ăn chưa. Còn khay cơm của em thì cứ để nguyên.'],
+    [27.2, 33.9, 'Đèn bàn sáng từ đêm qua. Bộ câu hỏi soạn chưa xong thì trời đã sáng.'],
+    [38.8, 46.5, 'Lần ấy em gọi mãi, anh mới nghe.'],
+    [47.7, 50.2, 'Lần này, anh tự đi tìm em.'],
+    [51.6, 56.9, 'Tối nào em cũng hỏi anh ăn chưa. Còn khay cơm của em thì cứ để nguyên.'],
   ];
   const CAPS = { b: [], a: [[143.6, 151.5, 'Đồng hồ vẫn để đó. Anh không bấm.']] };
-  // Đồ vật hiện giữa trời: [từ, tới, tên]
-  const OBJ_COMMON = [[25.4, 34.4, 'den'], [36, 47, 'goi'], [49.6, 58.4, 'khay']];
+  // Cảnh cắt cận đồ vật (cả khung hình): [từ, tới, tên]. Cắt đúng đầu câu hát, như phim dựng theo nhạc.
+  const INSERTS = [[25.4, 34.4, 'den'], [36.0, 47.0, 'goi'], [50.4, 57.5, 'khay']];
+  // Đồ vật hiện giữa trời (không cắt cảnh)
+  const OBJ_COMMON = [];
   const OBJ = { b: [], a: [[141.5, 152.5, 'bam']] };
 
   // ================= Tiện ích =================
@@ -127,14 +129,8 @@
     // Đồ vật và chữ: màn dọc xếp giữa trời, màn ngang đồ vật bên trái, chữ bên phải
     if (P) { L.ox = W / 2; L.oy = L.hy * 0.43; L.or = Math.min(W * 0.3, L.hy * 0.25); }
     else { L.ox = W * 0.25; L.oy = H * 0.37; L.or = Math.min(H * 0.27, W * 0.16); }
-    const line = $('line'), cap = $('cap');
-    if (P) {
-      line.style.top = Math.round(L.hy * 0.36) + 'px'; line.style.left = '50%';
-      cap.style.top = Math.round(L.oy + L.or * 1.2) + 'px'; cap.style.left = '50%'; cap.style.width = '';
-    } else {
-      line.style.top = Math.round(H * 0.2) + 'px'; line.style.left = '50%';
-      cap.style.top = Math.round(H * 0.25) + 'px'; cap.style.left = '66%'; cap.style.width = Math.round(W * 0.42) + 'px';
-    }
+    $('line').style.top = Math.round(P ? L.hy * 0.34 : H * 0.2) + 'px';
+    L.lbh = H * (P ? 0.085 : 0.075); // dải đen khung phim
     buildSprites();
   }
 
@@ -161,8 +157,8 @@
   function show(t) {
     const st = S.stepped ? 1 : 0;
     const v = {
-      p: t < 0 ? 0 : ramp(t, [[CUE.verse, 0], [CUE.rap, 0.45], [CUE.nine, 0.7], [71.3, 1]]),
-      count: t < 0 ? 0 : Math.round(ramp(t, [[CUE.verse, 0], [CUE.rap, 450], [CUE.nine, 700], [CUE.nineEnd, 999]])),
+      p: t < 0 ? 0 : ramp(t, [[CUE.verse, 0], [CUE.weak, 0.2], [CUE.wake + 0.3, 0.2], [CUE.rap, 0.45], [CUE.nine, 0.7], [71.3, 1]]),
+      count: t < 0 ? 0 : Math.round(ramp(t, [[CUE.verse, 0], [CUE.weak, 200], [CUE.wake + 0.3, 200], [CUE.rap, 450], [CUE.nine, 700], [CUE.nineEnd, 999]])),
       dawn: t < 0 ? 0.03 : ramp(t, [[0, 0.03], [CUE.rap, 0.2], [CUE.dawn, 0.42], [CUE.chorus, 0.58], [CUE.chorus + 5, 0.86], [CUE.chorus2, 0.9], [CUE.chorus2 + 6, 1]]),
       gold: ramp(t, [[CUE.dawn, 0], [CUE.chorus, 0.3], [CUE.chorus + 7, 0.78], [CUE.chorus2, 0.82], [CUE.chorus2 + 7, 1]]),
       win: t < 0 ? 0 : ss(1.6, 3, t) * (1 + 1.6 * ss(CUE.window - 0.3, CUE.window + 0.7, t) * (1 - ss(CUE.window + 2.5, CUE.window + 7, t))),
@@ -173,9 +169,13 @@
       still: ss(CUE.calm - 0.3, CUE.calm + 0.6, t) * (1 - ss(CUE.chorus - 0.2, CUE.chorus + 0.2, t)), // nhịp lặng trước điệp khúc
       open: KET === 'a' ? ss(CUE.chorus + 0.2, CUE.chorus + 5.5, t) : 0,
       foot: st,
+      // ánh sáng chững lại và mờ đi ở "yếu đuối không ngờ", sáng lại sau khi dấu chân em gọi
+      dim: 1 - 0.82 * ss(CUE.weak + 0.6, CUE.weak + 1.5, t) * (1 - ss(CUE.wake + 0.1, CUE.wake + 1, t)),
+      lb: t < 0 ? 1 : 1 - ss(CUE.chorus, CUE.chorus + 2.8, t),                       // dải đen khung phim: mở ra ở điệp khúc
+      zoom: t < 0 ? 1 : ramp(t, [[0, 1], [71.3, 1.06], [CUE.chorus, 1.085], [CUE.chorus + 7, 1.035]]), // máy quay tiến chậm về phía cổng
     };
     // "bước một bước": dấu chân em bừng lên đúng chữ
-    v.footFlare = Math.max(S.flare, ss(CUE.one - 0.08, CUE.one + 0.1, t) * (1 - ss(CUE.one + 0.3, CUE.one + 2.2, t)));
+    v.footFlare = Math.max(S.flare, ss(CUE.one - 0.08, CUE.one + 0.1, t) * (1 - ss(CUE.one + 0.3, CUE.one + 2.2, t)), 0.9 * ss(CUE.wake - 0.1, CUE.wake + 0.15, t) * (1 - ss(CUE.wake + 0.5, CUE.wake + 2.4, t)));
     return v;
   }
   // Bài nghe gần / xa theo giây
@@ -337,8 +337,9 @@
     if (v.p > 0.0005) {
       const hx = roadX(sh), hr = Math.max(7, L.rw * 1.5 * sh) * (1 + 0.05 * Math.sin(now * 3.1)) * (1 - 0.25 * v.gate);
       g.globalCompositeOperation = 'lighter';
-      g.globalAlpha = 0.95; g.drawImage(SP.glow, hx - hr, yh - hr * 0.9, hr * 2, hr * 1.5);
-      g.globalAlpha = 0.5; g.drawImage(SP.warm, hx - hr * 1.8, yh - hr * 0.5, hr * 3.6, hr * 1.1);
+      const fl = v.dim < 0.95 ? v.dim * (0.75 + 0.25 * Math.sin(now * 23) * Math.sin(now * 7.1)) : 1; // chập chờn khi chững lại
+      g.globalAlpha = 0.95 * fl; g.drawImage(SP.glow, hx - hr, yh - hr * 0.9, hr * 2, hr * 1.5);
+      g.globalAlpha = 0.5 * fl; g.drawImage(SP.warm, hx - hr * 1.8, yh - hr * 0.5, hr * 3.6, hr * 1.1);
       g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
     }
     // nắng phủ nhẹ cả cảnh
@@ -541,6 +542,48 @@
     }
   }
 
+  // ----- Cảnh cắt cận: cả khung hình là một góc tĩnh vật, máy quay tiến rất chậm -----
+  function drawInsert(id, tt, dur) {
+    const { W, H } = L, z = 1.02 + 0.06 * tt / dur;
+    g.save(); g.translate(W / 2, H / 2); g.scale(z, z); g.translate(-W / 2, -H / 2);
+    let gr;
+    if (id === 'den') {
+      const dy = H * 0.63, u = Math.min(W * 0.4, H * 0.27);
+      gr = g.createLinearGradient(0, 0, 0, dy); gr.addColorStop(0, '#05060d'); gr.addColorStop(1, '#0d0d18'); g.fillStyle = gr; g.fillRect(0, 0, W, dy);
+      // ô cửa sổ: trời ngoài kia đã hửng xanh
+      const ww = Math.min(W * 0.3, u * 1.1), wh = ww * 1.25, wx = W * 0.1, wy = H * 0.17;
+      gr = g.createLinearGradient(0, wy, 0, wy + wh); gr.addColorStop(0, '#16224a'); gr.addColorStop(1, '#4a4a78'); g.fillStyle = gr; g.fillRect(wx, wy, ww, wh);
+      g.fillStyle = '#07080f'; g.fillRect(wx + ww / 2 - 2, wy, 4, wh); g.fillRect(wx, wy + wh * 0.5 - 2, ww, 4); g.strokeStyle = '#07080f'; g.lineWidth = 5; g.strokeRect(wx, wy, ww, wh);
+      // vầng sáng của đèn hắt lên tường
+      g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.5; g.drawImage(SP.warm, W / 2 - u * 1.4, dy - u * 2.3, u * 3.4, u * 2.9); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+      gr = g.createLinearGradient(0, dy, 0, H); gr.addColorStop(0, '#3b2a21'); gr.addColorStop(0.12, '#2a1d17'); gr.addColorStop(1, '#0b0807'); g.fillStyle = gr; g.fillRect(0, dy, W, H - dy);
+      g.fillStyle = 'rgba(255,214,150,.22)'; g.fillRect(0, dy, W, 1.5);
+      g.save(); g.translate(W / 2 + u * 0.08, dy - 0.52 * u); OBJS.den(u, 1, tt); g.restore();
+    } else if (id === 'goi') {
+      const u = Math.min(W * 0.4, H * 0.27);
+      gr = g.createLinearGradient(0, 0, W, H); gr.addColorStop(0, '#1d1511'); gr.addColorStop(1, '#0b0807'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+      g.strokeStyle = 'rgba(255,220,190,.035)'; g.lineWidth = 1; for (let i = 0; i < 26; i++) { const y = H * (i / 26) + Math.sin(i * 7.3) * 6; g.beginPath(); g.moveTo(0, y); g.bezierCurveTo(W * 0.3, y + Math.sin(i) * 9, W * 0.7, y - Math.cos(i * 2) * 9, W, y + 4); g.stroke(); }
+      // màn hình hắt sáng lên mặt bàn, bừng hơn ở mỗi hồi rung
+      const bz = (tt > 1.4 && tt < 2) || (tt > 2.35 && tt < 2.95) ? 1 : 0;
+      g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.55 + 0.25 * bz; g.drawImage(SP.fog, W / 2 - u * 2, H * 0.47 - u * 2.1, u * 4, u * 4.2); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+      g.save(); g.translate(W / 2, H * 0.47); OBJS.goi(u, 1, tt); g.restore();
+    } else if (id === 'khay') {
+      const u = Math.min(W * 0.43, H * 0.25);
+      gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#0a0d14'); gr.addColorStop(0.5, '#161b25'); gr.addColorStop(1, '#090b11'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+      // mặt bàn inox nhà ăn: mấy vệt sáng lạnh chạy ngang
+      for (let i = 0; i < 7; i++) { const y = H * (0.2 + i * 0.1); g.fillStyle = 'rgba(190,205,230,' + (0.018 + 0.012 * (i % 3)) + ')'; g.fillRect(0, y, W, 2 + (i % 2) * 5); }
+      g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.5; g.drawImage(SP.fog, W / 2 - u * 2.2, H * 0.46 - u * 1.7, u * 4.4, u * 3.4); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+      g.save(); g.translate(W / 2, H * 0.44); OBJS.khay(u, 1, tt); g.restore();
+    }
+    g.restore(); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+  }
+  // Độ tối của nhát cắt (chìm nhanh vào đen rồi hiện ra): cho cả cảnh đường lẫn cảnh cận
+  function cutDark(t) {
+    let dk = 0;
+    for (const [a, b] of INSERTS) dk = Math.max(dk, ss(a - 0.28, a, t) * (1 - ss(a, a + 0.32, t)), ss(b - 0.28, b, t) * (1 - ss(b, b + 0.32, t)));
+    return dk;
+  }
+
   function drawFinish(v) {
     const { W, H } = L;
     // loé sáng lúc điệp khúc vỡ ra
@@ -578,13 +621,29 @@
     }
     const v = show(S.phase === 'show' || S.phase === 'after' ? S.t : -1);
     g.clearRect(0, 0, L.W, L.H);
-    drawScene(v); drawGate(v);
-    if (S.phase === 'show' || S.phase === 'after') drawObject(S.t);
+    const tt = S.phase === 'show' || S.phase === 'after' ? S.t : -1, ins = pick(INSERTS, tt);
+    if (ins) drawInsert(ins[2], tt - ins[0], ins[1] - ins[0]);
+    else {
+      // máy quay cầm tay rất khẽ + tiến chậm; cổng ở gần nên trôi nhiều hơn cảnh xa (thị sai)
+      const zs = v.zoom * 1.012, zg = 1.012 + (v.zoom - 1) * 2.2, hold = 1 - v.still;
+      const dx = (Math.sin(now * 0.47) * 1.6 + Math.sin(now * 1.31) * 0.7) * hold, dy = (Math.sin(now * 0.61 + 1) * 1.2 + Math.sin(now * 1.7) * 0.5) * hold;
+      g.save(); g.translate(L.W / 2 + dx * 0.45, L.hy + dy * 0.45); g.scale(zs, zs); g.translate(-L.W / 2, -L.hy); drawScene(v); g.restore();
+      g.save(); g.translate(L.W / 2 + dx, L.gy + dy); g.scale(zg, zg); g.translate(-L.W / 2, -L.gy); drawGate(v); g.restore();
+      if (tt >= 0) drawObject(tt);
+    }
+    const dk = tt >= 0 ? cutDark(tt) : 0;
+    if (dk > 0.01) { g.fillStyle = 'rgba(0,0,0,' + dk + ')'; g.fillRect(0, 0, L.W, L.H); }
     drawFinish(v);
+    // dải đen khung phim
+    const lbh = L.lbh * v.lb;
+    if (lbh > 0.3) { g.fillStyle = '#000'; g.fillRect(0, 0, L.W, lbh); g.fillRect(0, L.H - lbh, L.W, lbh); }
+    if (Math.abs(lbh - (S.lbCss == null ? -9 : S.lbCss)) > 0.5) { S.lbCss = lbh; document.documentElement.style.setProperty('--lb', lbh.toFixed(1) + 'px'); }
+    $('title').classList.toggle('on', S.phase === 'show' && S.t >= 3.4 && S.t < 9.2);
     if (S.phase === 'show') {
       const n = $('count-n'); if (n.textContent !== String(v.count)) n.textContent = v.count;
       $('count').classList.toggle('on', S.t >= CUE.verse && S.t < CUE.bridge);
       $('count').classList.toggle('full', v.count >= 999);
+      $('count').classList.toggle('pop', S.t >= CUE.nineEnd - 0.12 && S.t < CUE.toward + 2.6);
       const li = pick(LINES_COMMON.concat(LINES[KET]), S.t); setText('line', li ? li[2] : '', li && li[3]);
       const ca = pick(CAPS_COMMON.concat(CAPS[KET]), S.t); setText('cap', ca ? ca[2] : '');
     }
@@ -597,10 +656,13 @@
     A.songDist(distOf(b), 0.25);
     const F = (at) => fireBetween(a, b, at);
     if (F(1.9)) { A.bell(329.6, 0.1, 4); A.bell(493.9, 0.06, 4, 0.5); }                    // ô cửa sáng đèn
+    if (F(CUE.weak + 0.9)) A.down();                                                        // ánh sáng chững lại
+    if (F(CUE.wake)) { A.step(0.5, 0); A.bell(493.9, 0.07, 3); }                             // dấu chân em gọi, ánh sáng đi tiếp
+    if (F(CUE.chorus - 3.5)) A.riser(3.45);                                                 // dồn lên rồi vỡ ra
     if (F(4)) A.droneOff(5);
     // bước chân anh ở xa, rơi đúng phách của bài, gần dần; vào đoạn rap thì nhường cho bài hát
     const k = Math.floor((b - 0.03) / BEAT);
-    if (k !== lastBeat) { lastBeat = k; if (b > CUE.verse && b < CUE.rap - 0.5) { const n = (b - CUE.verse) / (CUE.rap - CUE.verse); A.step(0.04 + 0.22 * n, (k & 1 ? 0.2 : -0.2)); } }
+    if (k !== lastBeat) { lastBeat = k; if (b > CUE.verse && b < CUE.rap - 0.5 && !(b > CUE.weak + 1 && b < CUE.wake + 0.5) && !pick(INSERTS, b)) { const n = (b - CUE.verse) / (CUE.rap - CUE.verse); A.step(0.04 + 0.22 * n, (k & 1 ? 0.2 : -0.2)); } }
     if (F(CUE.verse)) A.windTo(0.34, 4);
     if (F(CUE.sit)) A.lamp();
     if (F(CUE.weak + 1.4)) A.buzz(2);
@@ -609,7 +671,7 @@
     if (F(CUE.one)) A.step(0.75, 0);                                                         // "bước một bước": tiếng bước của em vọng lại
     if (F(CUE.nineEnd)) A.bell(659.3, 0.07, 3.5);                                            // 999
     if (F(CUE.calm)) A.hush(1.2);                                                            // lặng một nhịp
-    if (F(CUE.chorus)) { A.warm(6, 0.05); A.sparkle(8, 0.03); if (KET === 'a') A.latch(); }  // vỡ oà
+    if (F(CUE.chorus)) { A.hit(); A.warm(6, 0.05); A.sparkle(8, 0.03); if (KET === 'a') A.latch(); }  // vỡ oà
     if (F(CUE.chorus2)) { A.warm(6, 0.04); A.sparkle(6, 0.024); }
     if (F(CUE.bridge + 3)) { S.phase = 'show'; $('after').hidden = false; }
     if (F(CUE.end)) { S.phase = 'after'; }
@@ -619,7 +681,8 @@
   function doStep() {
     if (S.stepped) return;
     S.stepped = true; S.holding = false; S.flare = 1; S.stepAt = S.now; S.stepClock = new Date();
-    A.step(1, 0);
+    A.step(1, 0); A.boom();
+    try { if (navigator.vibrate) navigator.vibrate(35); } catch (e) { /* bỏ qua */ }
     $('hint').classList.remove('on'); setText('line', '');
     setTimeout(() => { S.phase = 'show'; S.t = S.prevT = S.clock = T0; A.songDist(distOf(T0), 0.05); A.songPlay(T0); }, 1900);
   }
@@ -647,10 +710,10 @@
     A.init(); A.resume(); A.bedStart();
     // iPhone chỉ cho phát nhạc khi bắt đầu từ một lần chạm: mở sẵn bài (im lặng) ngay ở lần chạm này
     if (A.el) { const p = A.el.play(); if (p && p.then) p.then(() => { if (S.phase !== 'show') A.el.pause(); }).catch(() => {}); }
-    $('start').classList.add('go'); $('top').hidden = false;
+    $('btn-go').classList.add('fire'); $('start').classList.add('out'); $('top').hidden = false;
     S.phase = 'alone';
-    setTimeout(() => { if (!S.stepped) setText('line', 'Bước một bước thôi.'); }, 3200);
-    setTimeout(() => { if (!S.stepped) { $('hint').textContent = 'chạm và giữ'; $('hint').classList.add('on'); } }, 6000);
+    setTimeout(() => { if (!S.stepped) setText('line', 'Bước một bước thôi.'); }, 4200);
+    setTimeout(() => { if (!S.stepped) { $('hint').textContent = 'chạm và giữ'; $('hint').classList.add('on'); } }, 7000);
   });
   $('btn-sound').classList.toggle('off', A.muted);
   $('btn-sound').addEventListener('click', () => { A.mute(!A.muted); $('btn-sound').classList.toggle('off', A.muted); });

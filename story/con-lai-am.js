@@ -162,6 +162,40 @@
       s.connect(f).connect(g).connect(this.fx); s.start(t); s.stop(t + sec + 0.1);
     },
 
+    // ---------- Tiếng của phim ----------
+    // Bước của em: một tiếng trầm sâu lan ra (như cả khoảng tối rung lên)
+    boom() {
+      if (!this.ctx) return;
+      const ctx = this.ctx, t = ctx.currentTime + 0.02, o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(31, t + 1.4);
+      this.env(g, t, 0.02, 0.55, 2.4); o.connect(g).connect(this.out); const w = ctx.createGain(); w.gain.value = 0.5; g.connect(w).connect(this.verb);
+      o.start(t); o.stop(t + 2.8);
+    },
+    // Dồn lên trước điệp khúc: hơi gió hút ngược, cắt đúng lúc điệp khúc vào
+    riser(sec = 3.4) {
+      if (!this.ctx) return;
+      const ctx = this.ctx, t = ctx.currentTime, s = ctx.createBufferSource(); s.buffer = this.white; s.loop = true;
+      const f = this.filt('bandpass', 400, 1.2), g = ctx.createGain();
+      f.frequency.setValueAtTime(350, t); f.frequency.exponentialRampToValueAtTime(7000, t + sec);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.075, t + sec * 0.97); g.gain.linearRampToValueAtTime(0, t + sec);
+      s.connect(f).connect(g).connect(this.fx); s.start(t); s.stop(t + sec + 0.05);
+    },
+    // Điệp khúc vào: một nhịp trầm đỡ dưới bài hát
+    hit() {
+      if (!this.ctx) return;
+      const ctx = this.ctx, t = ctx.currentTime + 0.005, o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(62, t); o.frequency.exponentialRampToValueAtTime(41, t + 0.5);
+      this.env(g, t, 0.006, 0.5, 2); o.connect(g).connect(this.out); o.start(t); o.stop(t + 2.3);
+      const s = ctx.createBufferSource(); s.buffer = this.brown; const sg = ctx.createGain(); this.env(sg, t, 0.004, 0.35, 0.5); s.connect(sg).connect(this.fx); s.start(t, 1, 0.7);
+    },
+    // Ánh sáng chững lại: một tiếng tụt xuống, khẽ
+    down() {
+      if (!this.ctx) return;
+      const ctx = this.ctx, t = ctx.currentTime + 0.02, o = ctx.createOscillator(), g = ctx.createGain(), f = this.filt('lowpass', 900, 0.7);
+      o.type = 'triangle'; o.frequency.setValueAtTime(196, t); o.frequency.exponentialRampToValueAtTime(61, t + 1.1);
+      this.env(g, t, 0.03, 0.1, 1.3); o.connect(f).connect(g).connect(this.fx); o.start(t); o.stop(t + 1.6);
+    },
+
     // ---------- Tiếng đồ vật ----------
     // Công tắc đèn bàn: tách một tiếng, rồi tiếng quạt laptop rì rì vài giây
     lamp() {
