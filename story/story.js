@@ -77,10 +77,11 @@
   // Chương mở lần lượt: xong chương trước mới được dùng đốt cây mở chương sau.
   function status(i) {
     const ch = CHAPTERS[i];
+    // Chưa tới giờ mở (openAt): hiện sẵn trên bản đồ với đồng hồ đếm ngược, chưa bấm được.
+    // Xét TRƯỚC cả "đã xong": máy đã đọc chương này lúc được xem sớm cũng phải chờ tới giờ, không xem lại trước được.
+    if (!OPEN_ALL && waitLeft(i) > 0) return { state: 'locked', note: 'Mở sau ' + clock(waitLeft(i)), wait: true };
     if (save.done[ch.id]) return { state: 'done', note: 'Đã xong' };
     if (OPEN_ALL) return { state: 'current', note: 'Đọc thử' };
-    // Chưa tới giờ mở (openAt): hiện sẵn trên bản đồ với đồng hồ đếm ngược, chưa bấm được.
-    if (waitLeft(i) > 0) return { state: 'locked', note: 'Mở sau ' + clock(waitLeft(i)), wait: true };
     // anyOrder: chương đặc biệt (vd. chương hôm nay) đọc được không cần xong chương trước.
     const ready = i === 0 || ch.anyOrder || save.done[CHAPTERS[i - 1].id];
     if (!isOpen(i)) return { state: ready ? 'buy' : 'locked', note: 'Cần ' + ch.cost + ' đốt cây' };
@@ -364,6 +365,7 @@
   const isTalk = (item) => item && !!item.text && (item.who === 'quang' || item.who === 'thuy');
 
   function play(i) {
+    if (!OPEN_ALL && waitLeft(i) > 0) { openWait(i); return; } // chưa tới giờ mở thì không đường nào vào được, kể cả đã đọc rồi
     if (waitLeft(i) > 0) { openWait(i); return; }
     const ch = CHAPTERS[i];
     const song = findSong(ch.lines);
