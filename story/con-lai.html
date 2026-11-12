@@ -12,11 +12,19 @@
   <script>
     document.documentElement.style.background = '#000';
     try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df' || (localStorage.getItem('lpn:who') === 'quang' && !localStorage.getItem('lpn:relock1') && localStorage.getItem('lpn:preview') !== '1')) location.replace('../home/'); } catch (e) { /* bỏ qua */ }
+    // Chương 21 mở lúc 12:00 ngày 12/11/2026. Trước giờ đó trang khoá với mọi tài khoản; chỉ link riêng của anh Quang (?k=…) vào được,
+    // và vào bằng link riêng thì không lưu gì (window.CONLAI_XEMTHU). Trong trang chỉ có mã băm của khoá, không có khoá thật.
+    (function () {
+      var k = (location.search.match(/[?&]k=([a-z0-9]+)/) || [])[1] || '', h = 0x811c9dc5, s = 'conlai:' + k;
+      for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+      window.CONLAI_XEMTHU = !!k && h.toString(16) === '30f284ec';
+      if (Date.now() < Date.parse('2026-11-12T12:00:00+07:00') && !window.CONLAI_XEMTHU && !/^(localhost|127\.0\.0\.1|192\.168\.)/.test(location.hostname)) location.replace('./?play=c23');
+    })();
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600&family=Be+Vietnam+Pro:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&display=swap" />
-  <link rel="stylesheet" href="con-lai.css?v=20" />
+  <link rel="stylesheet" href="con-lai.css?v=21" />
 </head>
 <body>
   <!-- "Phần còn lại" (12/11/2026). Một thước phim ngắn chạy theo bài "Có Em Chờ". Máy quay đặt TRONG cổng, nhìn ra con đường;
@@ -50,8 +58,8 @@
     <div class="af-btns"><button id="btn-other" type="button">Tìm kết còn lại</button><button id="btn-again" type="button">Chơi lại</button><a href="../story/">Về cốt truyện</a></div>
   </section>
 
-  <script src="con-lai-am.js?v=20"></script>
-  <script src="con-lai.js?v=20"></script>
-  <script src="con-lai-choi.js?v=20"></script>
+  <script src="con-lai-am.js?v=21"></script>
+  <script src="con-lai.js?v=21"></script>
+  <script src="con-lai-choi.js?v=21"></script>
 </body>
 </html>

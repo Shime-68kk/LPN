@@ -854,7 +854,7 @@
     } else { // hết 17 giây: cổng vẫn đóng. Chỉ còn gió, và một mẩu của bài hát vọng lại từ rất xa
       S.tK = S.t; S.clock = S.t; A.down(); setTimeout(() => { if (KET === 'b') A.frag(0, 10.6, 0.15); }, 2600);
     }
-    try { const f = JSON.parse(localStorage.getItem('lpn:conlai')) || {}; f[k] = 1; localStorage.setItem('lpn:conlai', JSON.stringify(f)); } catch (e) { /* bỏ qua */ }
+    if (!window.CONLAI_XEMTHU) { try { const f = JSON.parse(localStorage.getItem('lpn:conlai')) || {}; f[k] = 1; localStorage.setItem('lpn:conlai', JSON.stringify(f)); } catch (e) { /* bỏ qua */ } } // link xem thử: không lưu gì
   }
   // Câu đố tìm chìa: chiếc hộp mở ra một mặt đồng hồ. Hai đứa hẹn nhau mấy giờ?
   function keyDial() { return { x: L.W / 2, y: L.H * 0.47, r: Math.min(L.W * 0.36, L.H * 0.26) }; }
