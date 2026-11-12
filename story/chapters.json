@@ -902,9 +902,9 @@
       "title": "Phần còn lại",
       "cost": 0,
       "openAt": "2026-11-12T12:00:00+07:00",
-      "early": { "quang": "2026-11-12T00:00:00+07:00" },
       "scene": "dem",
       "cast": ["quang"],
+      "announce": { "kicker": "Trưa nay, 12 giờ", "title": "Đã có chương mới!", "text": "Chương 21 · Phần còn lại", "ok": "Xem đếm ngược", "later": "Để sau" },
       "game": { "page": "con-lai.html", "title": "Phần còn lại", "text": "Đeo tai nghe vào, cầm dọc điện thoại nha.", "btn": "Bước vào" },
       "lines": [
         { "who": "none", "text": "Ngày thứ 98" },
