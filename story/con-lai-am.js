@@ -5,6 +5,7 @@
 (() => {
   const ls = { get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* bỏ qua */ } } };
   const SONG = '../assets/sound/' + encodeURIComponent('Có Em Chờ') + '.mp3';
+  const DIR = '../assets/sound/conlai/', FIN0 = 44.9;
 
   const A = {
     ctx: null, out: null, muted: ls.get('lpn:conlai-mute') === '1', el: null, dist: 0,
@@ -40,19 +41,17 @@
       this.fx = ctx.createGain(); this.fx.connect(this.out);
       const fxw = ctx.createGain(); fxw.gain.value = 0.35; this.fx.connect(fxw).connect(this.verb);
 
-      // ----- Bài hát qua bộ lọc khoảng cách -----
-      const el = (this.el = new Audio());
-      el.preload = 'auto'; el.src = SONG; el.playsInline = true;
-      try {
-        const src = ctx.createMediaElementSource(el);
-        this.lp1 = this.filt('lowpass', 300, 0.6); this.lp2 = this.filt('lowpass', 300, 0.5);
-        this.hp = this.filt('highpass', 20, 0.5);
-        this.dry = ctx.createGain(); this.dry.gain.value = 0;
-        this.wetS = ctx.createGain(); this.wetS.gain.value = 0;
-        src.connect(this.lp1).connect(this.lp2).connect(this.hp);
-        this.hp.connect(this.dry).connect(this.out);
-        this.hp.connect(this.wetS).connect(this.verb);
-      } catch (e) { /* trình duyệt cũ: phát thẳng */ }
+      // ----- Bài hát qua bộ lọc khoảng cách (chỉ dùng ở đoạn kết) -----
+      this.lp1 = this.filt('lowpass', 300, 0.6); this.lp2 = this.filt('lowpass', 300, 0.5);
+      this.hp = this.filt('highpass', 20, 0.5);
+      this.dry = ctx.createGain(); this.dry.gain.value = 0;
+      this.wetS = ctx.createGain(); this.wetS.gain.value = 0;
+      this.lp1.connect(this.lp2).connect(this.hp);
+      this.hp.connect(this.dry).connect(this.out);
+      this.hp.connect(this.wetS).connect(this.verb);
+      if (/[?&]t=/.test(location.search)) { // chỉ khi xem thử thước phim cũ
+        try { const el = (this.el = new Audio()); el.preload = 'auto'; el.src = SONG; el.playsInline = true; ctx.createMediaElementSource(el).connect(this.lp1); } catch (e) { /* bỏ qua */ }
+      }
     },
     resume() { if (this.ctx && this.ctx.state !== 'running') this.ctx.resume().catch(() => {}); },
     mute(on) {
@@ -68,6 +67,7 @@
     songDist(x, sec = 0.6) {
       this.dist = x;
       if (!this.ctx || !this.lp1) return;
+      x = Math.max(0, Math.min(1, x));
       const t = this.ctx.currentTime, tc = Math.max(0.02, sec / 3);
       const cut = 260 * Math.pow(20000 / 260, Math.pow(x, 1.15));
       this.lp1.frequency.setTargetAtTime(cut, t, tc);
@@ -82,7 +82,38 @@
       const p = this.el.play(); if (p && p.catch) p.catch(() => {});
     },
     songStop() { if (this.el) { this.el.pause(); } if (this.dry) { this.dry.gain.setTargetAtTime(0, this.ctx.currentTime, 0.05); this.wetS.gain.setTargetAtTime(0, this.ctx.currentTime, 0.05); } },
-    songTime() { return this.el && !this.el.paused ? this.el.currentTime : -1; },
+    songTime() {
+      if (this.finSrc) { const t = this.ctx.currentTime - this.finT0; return t >= 0 && t < this.finDur ? FIN0 + t : -1; }
+      return this.el && !this.el.paused ? this.el.currentTime : -1;
+    },
+    // Tải sẵn đoạn kết của bài vào bộ đệm (từ giây 58,2). Phát bằng bộ đệm thì không khựng và không cần iPhone cho phép từng lần.
+    load() {
+      if (this.loading || !this.ctx) return; this.loading = true;
+      const get = (n) => fetch(DIR + n + '.mp3').then((r) => r.arrayBuffer()).then((b) => new Promise((ok, no) => this.ctx.decodeAudioData(b, ok, no)));
+      get('seed').then((buf) => { this.seed = buf; }).catch(() => {});
+      get('fin').then((buf) => { this.fin = buf; }).catch(() => { this.loading = false; });
+    },
+    finReady() { return !!this.fin; },
+    // Một mẩu của bài hát vọng lại từ xa (văng vẳng): vào rất chậm, tan rất chậm, không bao giờ cắt ngang.
+    // from: giây trong bài (0–34), dur: dài bao lâu, x: gần xa (0,1 rất xa … 0,4 gần hơn). Trả về stop(sec) để cho tan sớm.
+    frag(from, dur, x = 0.15) {
+      const none = { stop() {} }; if (!this.seed || !this.ctx || this.finSrc) return none;
+      const ctx = this.ctx, t = ctx.currentTime + 0.05, s = ctx.createBufferSource(), g = ctx.createGain();
+      s.buffer = this.seed; this.songDist(x, 0.3);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(1, t + 3); g.gain.setValueAtTime(1, t + Math.max(3.1, dur - 4)); g.gain.linearRampToValueAtTime(0, t + dur);
+      s.connect(g).connect(this.lp1); s.start(t, from, dur + 0.2);
+      return { stop: (sec = 2.5) => { const n = ctx.currentTime; try { g.gain.cancelScheduledValues(n); g.gain.setValueAtTime(g.gain.value, n); g.gain.linearRampToValueAtTime(0, n + sec); s.stop(n + sec + 0.1); } catch (e) { /* bỏ qua */ } } };
+    },
+    // Phát đoạn kết từ giây `from` của bài (58,2 là đầu đoạn; 70,6 là lúc về lại cổng)
+    finPlay(from = FIN0, quick = false) {
+      if (!this.fin) return false;
+      this.finStop(0.05);
+      const ctx = this.ctx, t = ctx.currentTime + 0.12, off = Math.max(0, from - FIN0), s = ctx.createBufferSource(), g = ctx.createGain();
+      s.buffer = this.fin; const fade = quick ? 0.18 : off < 1 ? 7 : 1.2; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(1, t + fade); s.connect(g).connect(this.lp1); s.start(t, off); // vào thật khẽ rồi lớn dần
+      this.finSrc = s; this.finGain = g; this.finT0 = t - off; this.finDur = this.fin.duration;
+      return true;
+    },
+    finStop(sec = 0.3) { if (this.finSrc) { const s = this.finSrc, g = this.finGain, t = this.ctx.currentTime; g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, sec / 3); try { s.stop(t + sec + 0.1); } catch (e) { /* bỏ qua */ } this.finSrc = null; } },
 
     // ---------- Nền: gió trước bình minh + tiếng ù một mình ----------
     bedStart() {

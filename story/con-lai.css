@@ -24,13 +24,11 @@ button { font: inherit; color: inherit; }
 .count.on { opacity: 1; }
 .count b { font: 300 clamp(30px, 8.4vmin, 50px)/1 'Barlow Condensed', sans-serif; font-variant-numeric: tabular-nums; letter-spacing: .06em; color: #FFE9C4; }
 .count i { font: 400 clamp(13px, 3.4vmin, 17px) 'Barlow Condensed', sans-serif; font-style: normal; letter-spacing: .16em; color: var(--dim); margin-left: 8px; }
-/* "999 bước còn lại": con số chỉ bừng sáng lên, không phóng to */
-.count b { transition: color .5s, text-shadow .5s; }
-.count.pop b { font-weight: 500; color: #FFF8E6; text-shadow: 0 0 14px rgba(255, 226, 170, 1), 0 0 34px rgba(255, 200, 120, .95), 0 0 70px rgba(255, 180, 100, .7); animation: sang 1.6s ease-in-out infinite; }
+/* "999 bước còn lại": con số chỉ sáng lên một chút tại chỗ. Không đổi cỡ, không đổi nét chữ. */
+.count b { transition: color .6s ease, text-shadow .6s ease; }
+.count.full b, .count.pop b { color: #FFFBEF; text-shadow: 0 0 7px rgba(255, 228, 176, .95), 0 0 16px rgba(255, 205, 130, .5), 0 1px 3px rgba(0, 0, 0, .9); }
 .count i { transition: opacity .6s; }
 .count.k1000 i { opacity: 0; }
-@keyframes sang { 0%, 100% { opacity: 1; } 50% { opacity: .82; } }
-.count.full b { font-weight: 500; color: #FFF4DC; text-shadow: 0 0 26px rgba(255, 210, 140, .85); }
 
 /* Tựa phim: hiện sau khi em bước, trên nền nhạc dạo */
 .title { position: fixed; left: 0; right: 0; top: 34%; margin: 0; z-index: 5; pointer-events: none; text-align: center; white-space: nowrap;
@@ -44,12 +42,15 @@ button { font: inherit; color: inherit; }
 .line { width: min(86vw, 640px); font: 500 clamp(21px, 5.9vmin, 33px)/1.34 'Cormorant Garamond', serif; letter-spacing: .005em; color: #FFF7EA;
   text-shadow: 0 0 22px rgba(10, 12, 30, .95), 0 0 8px rgba(10, 12, 30, .9), 0 1px 2px rgba(0, 0, 0, .9); }
 .line.on, .cap.on { opacity: 1; }
+.line { white-space: pre-line; }
 .line.dam { font-weight: 700; font-size: clamp(24px, 6.9vmin, 40px); color: #FFE9BD; text-shadow: 0 0 28px rgba(255, 190, 110, .6), 0 0 10px rgba(10, 12, 30, .95), 0 1px 2px rgba(0, 0, 0, .9); }
 .cap { bottom: calc(var(--lb) + 9vh); width: min(84vw, 560px); font: 400 clamp(14.5px, 3.9vmin, 19px)/1.55 'Be Vietnam Pro', sans-serif; color: #F6EFE2;
   text-shadow: 0 0 14px rgba(0, 0, 0, .95), 0 0 5px rgba(0, 0, 0, .9), 0 1px 2px rgba(0, 0, 0, 1); }
 
-.hint { position: fixed; left: 50%; bottom: max(calc(var(--sb) + 4px), calc(var(--lb) / 2 - 10px)); transform: translateX(-50%); margin: 0; pointer-events: none; z-index: 6; white-space: nowrap;
-  font: 400 15px 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: .3em; color: var(--dim); opacity: 0; transition: opacity 1.2s; text-shadow: 0 1px 3px #000; }
+.hint { position: fixed; left: 50%; bottom: max(calc(var(--sb) + 5px), calc(var(--lb) / 2 - 10px)); transform: translateX(-50%); margin: 0; pointer-events: none; z-index: 6;
+  width: max-content; max-width: 92vw; text-align: center; text-wrap: balance;
+  font: 400 13.5px/1.35 'Be Vietnam Pro', sans-serif; letter-spacing: .02em; color: rgba(247, 239, 227, .86); opacity: 0; transition: opacity .8s;
+  text-shadow: 0 0 10px #000, 0 0 4px #000, 0 1px 2px #000; }
 .hint.on { opacity: 1; }
 
 .top { position: fixed; left: 0; right: 0; top: 0; padding: var(--st) var(--sr) 0 var(--sl); display: flex; justify-content: space-between; z-index: 8; pointer-events: none; }
@@ -85,12 +86,11 @@ button { font: inherit; color: inherit; }
 @keyframes ring { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.045); } }
 @keyframes core { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
 
-/* ----- Chữ cuối phim ----- */
-.after { position: fixed; left: 0; right: 0; bottom: calc(var(--sb) + 16px); z-index: 9; text-align: center; animation: rise 3s ease both; text-shadow: 0 1px 4px rgba(0, 0, 0, .9); }
-.af-title { margin: 0; font: 500 clamp(17px, 4.6vmin, 24px) 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: .42em; padding-left: .42em; }
-.af-credit { margin: 4px 0 10px; font-size: 11.5px; letter-spacing: .06em; color: var(--dim); }
-.af-btns { display: flex; justify-content: center; gap: 28px; }
+/* ----- Bảng khép chương: nằm chính giữa màn đen, dưới hình hai đốm sáng ----- */
+.after { position: fixed; left: 0; right: 0; top: 46%; z-index: 9; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 22px; animation: rise 3s ease both; }
+.af-title { margin: 0; font: 500 clamp(22px, 6.4vw, 36px)/1.1 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: .34em; padding-left: .34em; color: #FFF3DE; white-space: nowrap; }
+.af-title::after { content: ''; display: block; width: 46px; height: 1px; margin: 16px auto 14px; background: rgba(255, 215, 154, .75); }
+.af-ket { order: 2; margin: 0 0 22px; max-width: 30em; font: italic 500 clamp(17px, 4.6vw, 21px)/1.4 'Cormorant Garamond', serif; color: #F3E7D3; }
+.af-btns { order: 3; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 28px; }
 .af-btns button, .af-btns a { border: 0; background: none; padding: 6px 2px; font: 500 15px 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: .26em; color: var(--ink); text-decoration: none; cursor: pointer; border-bottom: 1px solid rgba(255, 215, 154, .6); }
-
-.af-ket { margin: 0 0 10px; font-size: 12.5px; color: var(--vang); letter-spacing: .04em; }
-.af-btns { flex-wrap: wrap; row-gap: 6px; }
+.af-credit { order: 4; margin: 26px 0 0; font-size: 11px; letter-spacing: .08em; color: rgba(247, 239, 227, .42); }

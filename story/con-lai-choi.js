@@ -35,7 +35,7 @@
     pending: 0, beatFlash: 0, spark: 0,
   };
   const say = (text, sec = 6.5) => { C.msg = text; C.msgUntil = C.t + sec; K().setText('cap', text); };
-  const hint = (text) => { const h = document.getElementById('hint'); h.textContent = text; h.classList.add('on'); clearTimeout(hint.tm); hint.tm = setTimeout(() => h.classList.remove('on'), 5200); };
+  const hint = (text) => { const h = document.getElementById('hint'); h.textContent = text; h.classList.add('on'); C.obj = null; C.objT = C.t + 2.2; };
 
   // ================= Bố cục: hai nửa và cánh cổng ở giữa =================
   const R = { a: {}, e: {}, d: {} };
@@ -48,7 +48,7 @@
   // Vùng chạm của đồ vật (toạ độ 0..1 trong từng nửa)
   const HOT = {
     a: { phone: [0.6, 0.54, 0.34, 0.26], lamp: [0.5, 0.26, 0.2, 0.36], laptop: [0.18, 0.34, 0.32, 0.3], clock: [0.72, 0.1, 0.2, 0.24], win: [0.05, 0.08, 0.3, 0.42] },
-    e: { clock: [0.14, 0.24, 0.2, 0.2], loa: [0.44, 0.14, 0.16, 0.3], phone: [0.0, 0.56, 0.22, 0.2], shutter: [0.66, 0.46, 0.3, 0.3], bench: [0.08, 0.76, 0.28, 0.22], hill: [0.5, 0.2, 0.5, 0.26], foot: [0.36, 0, 0.28, 0.2] },
+    e: { clock: [0.14, 0.24, 0.2, 0.2], loa: [0.44, 0.14, 0.16, 0.3], phone: [0.0, 0.56, 0.22, 0.2], shutter: [0.66, 0.46, 0.3, 0.3], bench: [0.08, 0.7, 0.28, 0.2], hill: [0.5, 0.2, 0.5, 0.26], foot: [0.36, 0, 0.28, 0.2] },
   };
   const hit = (side, x, y) => {
     const r = R[side], nx = (x - r.x) / r.w, ny = (y - r.y) / r.h;
@@ -56,16 +56,16 @@
     return null;
   };
   // Dấu chân của em: sát cánh cổng
-  const footPos = () => (L.P ? { x: R.e.x + R.e.w * 0.56, y: R.e.y + R.e.h * 0.92 } : { x: R.e.x + R.e.w * 0.5, y: R.e.y + R.e.h * 0.9 });
+  const footPos = () => (L.P ? { x: R.e.x + R.e.w * 0.56, y: R.e.y + R.e.h * 0.85 } : { x: R.e.x + R.e.w * 0.5, y: R.e.y + R.e.h * 0.84 });
 
   // ================= Vẽ =================
   const SKY = (k) => [mix([6, 8, 20], mix([40, 46, 98], [112, 156, 214], ss(0.5, 1, k)), ss(0, 0.6, k)), mix([12, 15, 34], mix([214, 138, 142], [206, 226, 244], ss(0.5, 1, k)), ss(0, 0.6, k))];
   function sky(x, y, w, h, k) { const [a, b] = SKY(k), gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, rgb(a)); gr.addColorStop(1, rgb(b)); g.fillStyle = gr; g.fillRect(x, y, w, h); }
   function rr(x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
-  function clockFace(cx, cy, r, hour, glow) {
+  function clockFace(cx, cy, r, hour, glow, hDeg, mDeg) {
     g.fillStyle = '#e9e4d6'; g.beginPath(); g.arc(cx, cy, r, 0, 6.29); g.fill(); g.strokeStyle = '#1b1c26'; g.lineWidth = Math.max(2, r * 0.13); g.stroke();
     g.fillStyle = '#1b1c26'; for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; g.beginPath(); g.arc(cx + Math.sin(a) * r * 0.78, cy - Math.cos(a) * r * 0.78, r * (i % 3 ? 0.035 : 0.06), 0, 6.29); g.fill(); }
-    const ha = hour * Math.PI / 6, ma = (hour % 1) * 2 * Math.PI;
+    const ha = hDeg != null ? hDeg * Math.PI / 180 : hour * Math.PI / 6, ma = mDeg != null ? mDeg * Math.PI / 180 : (hour % 1) * 2 * Math.PI;
     g.strokeStyle = '#1b1c26'; g.lineCap = 'round'; g.lineWidth = r * 0.11; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.sin(ha) * r * 0.48, cy - Math.cos(ha) * r * 0.48); g.stroke();
     g.lineWidth = r * 0.07; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.sin(ma) * r * 0.72, cy - Math.cos(ma) * r * 0.72); g.stroke();
     if (glow > 0.01) { g.globalCompositeOperation = 'lighter'; g.globalAlpha = glow; g.drawImage(K().SP.glow, cx - r * 2.4, cy - r * 2.4, r * 4.8, r * 4.8); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; }
@@ -173,7 +173,7 @@
     g.fillStyle = rgb(mix([24, 27, 40], [132, 142, 150], day)); const sh = kh * 0.5 * (1 - C.shutter); g.fillRect(kx + kw * 0.1, ky + kh * 0.16, kw * 0.8, sh);
     g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1; for (let i = 1; i < 6; i++) { const yy = ky + kh * 0.16 + sh * i / 6; if (sh > 6) { g.beginPath(); g.moveTo(kx + kw * 0.1, yy); g.lineTo(kx + kw * 0.9, yy); g.stroke(); } }
     // ghế đá, bộ bài nằm khuất dưới gầm
-    const hx = x + w * 0.12, hy2 = y + h * 0.84, hw = w * 0.2;
+    const hx = x + w * 0.12, hy2 = y + h * 0.78, hw = w * 0.2;
     g.fillStyle = rgb(mix([18, 19, 28], [126, 120, 112], day)); g.fillRect(hx, hy2, hw, h * 0.03); g.fillRect(hx + hw * 0.08, hy2, hw * 0.08, h * 0.09); g.fillRect(hx + hw * 0.84, hy2, hw * 0.08, h * 0.09);
     const dk = C.deck; { const dx = hx + hw * (0.5 + 0.0 * dk), dy = hy2 + h * 0.065 - dk * h * 0.085; g.save(); g.translate(dx, dy); g.rotate(-0.12);
       for (let i = 0; i < 3; i++) { rr(-m * 0.028 + i * 1.5, -m * 0.02 - i * 1.5, m * 0.056, m * 0.04, 2); g.fillStyle = ['#b3262c', '#e2b23a', '#b3262c'][i]; g.fill(); g.strokeStyle = '#f3ead6'; g.lineWidth = 1; g.stroke(); } g.restore(); }
@@ -195,10 +195,11 @@
     const F = (px, wt = 400) => wt + ' ' + (px * u) + 'px "Be Vietnam Pro", sans-serif';
     if (c.id === 'note') { // điện thoại của anh: ba giờ báo thức, mỗi cái một hình nhỏ (không chữ)
       phoneBody(u);
-      [['05:00', 'loa'], ['12:45', 'bat'], ['21:00', 'may']].forEach((row, i) => { const yy = (-0.36 + i * 0.34) * u;
+      [['05:00', 'loa'], ['21:30', 'may'], ['23:30', 'goi']].forEach((row, i) => { const yy = (-0.36 + i * 0.34) * u;
         T(row[0], -0.27 * u, yy, '400 ' + (0.2 * u) + 'px "Barlow Condensed", sans-serif', '#FFE7BC', 'left');
         const ix = 0.2 * u; g.strokeStyle = '#FFD79A'; g.fillStyle = '#FFD79A'; g.lineWidth = Math.max(1.3, 0.014 * u); g.lineJoin = 'round';
         if (row[1] === 'loa') { g.beginPath(); g.moveTo(ix - 0.06 * u, yy - 0.02 * u); g.lineTo(ix - 0.02 * u, yy - 0.02 * u); g.lineTo(ix + 0.05 * u, yy - 0.06 * u); g.lineTo(ix + 0.05 * u, yy + 0.06 * u); g.lineTo(ix - 0.02 * u, yy + 0.02 * u); g.lineTo(ix - 0.06 * u, yy + 0.02 * u); g.closePath(); g.fill(); }
+        else if (row[1] === 'goi') { g.strokeStyle = '#FF7B7B'; g.lineCap = 'round'; g.beginPath(); g.moveTo(ix + 0.05 * u, yy - 0.05 * u); g.lineTo(ix - 0.045 * u, yy + 0.045 * u); g.moveTo(ix - 0.045 * u, yy - 0.02 * u); g.lineTo(ix - 0.045 * u, yy + 0.045 * u); g.lineTo(ix + 0.02 * u, yy + 0.045 * u); g.stroke(); }
         else if (row[1] === 'bat') { g.beginPath(); g.arc(ix, yy + 0.01 * u, 0.055 * u, Math.PI, 0); g.closePath(); g.fill(); g.fillRect(ix - 0.075 * u, yy + 0.02 * u, 0.15 * u, 0.012 * u); }
         else { rr(ix - 0.035 * u, yy - 0.06 * u, 0.07 * u, 0.12 * u, 0.012 * u); g.stroke(); }
         g.fillStyle = 'rgba(255,255,255,.07)'; g.fillRect(-0.3 * u, yy + 0.16 * u, 0.6 * u, 1); });
@@ -216,9 +217,13 @@
         g.fillStyle = '#34c26b'; g.beginPath(); g.arc(tx + 0.085 * u + C.slide * (tw - 0.17 * u), ty, 0.075 * u, 0, 6.29); g.fill(); c.track = { x: cx + tx, w: tw, y: cy + ty, r: 0.12 * u }; }
     } else if (c.id === 'khay') { K().OBJS.khay(u * 0.95, 1, C.closeT); }
     else if (c.id === 'clock') { // chỉnh giờ: vòng trong kéo kim giờ, vòng ngoài kéo kim phút
-      const rc = Math.min(r.w, r.h) * 0.3; c.dial = { x: cx, y: cy, r: rc };
+      const rc = Math.min(r.w * 0.4, r.h * 0.36); c.dial = { x: cx, y: cy, r: rc };
       g.strokeStyle = 'rgba(255,220,160,.22)'; g.lineWidth = 1; g.beginPath(); g.arc(0, 0, rc * 1.14, 0, 6.29); g.stroke();
-      clockFace(0, 0, rc, C.ck.h + C.ck.m / 60, 0);
+      const rc2 = rc; clockFace(0, 0, rc, C.ck.h + C.ck.m / 60, 0, C.ang && C.ang.h != null ? C.ang.h : null, C.ang && C.ang.m != null ? C.ang.m : null);
+      // đầu kim có chấm tròn để biết chỗ nắm kéo
+      { const hd = (C.ang && C.ang.h != null ? C.ang.h : (C.ck.h + C.ck.m / 60) * 30) * Math.PI / 180, md = (C.ang && C.ang.m != null ? C.ang.m : C.ck.m * 6) * Math.PI / 180;
+        g.fillStyle = '#E8A33A'; g.beginPath(); g.arc(Math.sin(hd) * rc2 * 0.48, -Math.cos(hd) * rc2 * 0.48, rc2 * 0.075, 0, 6.29); g.fill();
+        if (C.stage === 3) { g.beginPath(); g.arc(Math.sin(md) * rc2 * 0.72, -Math.cos(md) * rc2 * 0.72, rc2 * 0.06, 0, 6.29); g.fill(); } }
       g.strokeStyle = 'rgba(27,28,38,.16)'; g.setLineDash([3, 5]); g.beginPath(); g.arc(0, 0, rc * 0.66, 0, 6.29); g.stroke(); g.setLineDash([]);
     }
     else if (c.id === 'uno') { // bốn lá bài: chạm hai lá để đổi chỗ
@@ -245,12 +250,12 @@
     const N = 74; for (let i = 0; i < N; i++) { const f = (i + 0.5) / N, px = lerp(p0[0], p1[0], f), py = lerp(p0[1], p1[1], f), on = f <= k;
       g.fillStyle = on ? 'rgba(255,226,170,.95)' : 'rgba(200,208,235,.2)'; g.beginPath(); g.arc(px, py, on ? 1.9 : 1.3, 0, 6.29); g.fill(); }
     if (C.count > 0) { const hx = lerp(p0[0], p1[0], k), hy = lerp(p0[1], p1[1], k); g.globalCompositeOperation = 'lighter'; g.drawImage(SP.glow, hx - 16, hy - 16, 32, 32); g.globalCompositeOperation = 'source-over'; }
-    // vòng nhịp: co về đúng tâm ở mỗi phách của bài, chạm lúc đó thì anh bước dài
-    if (C.sub === 'walk' && C.count < C.cap && !C.close) { const bx = a.x + a.w * 0.5, by = a.y + a.h * 0.86, br = Math.max(20, L.m * 0.06), ph = beatPhase();
-      g.strokeStyle = 'rgba(255,226,170,.9)'; g.lineWidth = 2; g.beginPath(); g.arc(bx, by, br, 0, 6.29); g.stroke();
-      g.strokeStyle = 'rgba(255,226,170,' + (0.25 + 0.6 * ph) + ')'; g.lineWidth = 1.5; g.beginPath(); g.arc(bx, by, br * (1 + 1.5 * (1 - ph)), 0, 6.29); g.stroke();
-      g.fillStyle = 'rgba(255,236,196,' + (0.2 + 0.8 * C.beatFlash) + ')'; g.beginPath(); g.ellipse(bx, by, br * 0.5, br * 0.26, 0, 0, 6.29); g.fill();
-      if (C.beatFlash > 0.4) { g.globalCompositeOperation = 'lighter'; g.globalAlpha = C.beatFlash; g.drawImage(SP.glow, bx - br * 2.2, by - br * 2.2, br * 4.4, br * 4.4); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; } }
+    // hai dấu chân bên anh: cái đang sáng là cái cần chạm
+    if (C.sub === 'walk' && C.count < C.cap && !C.close) { const bx = a.x + a.w * 0.5, by = a.y + a.h * 0.84, fr = Math.max(22, L.m * 0.062);
+      for (const sd of [0, 1]) { const fx = bx + (sd ? 1 : -1) * fr * 1.5, fy = by + (sd ? -fr * 0.3 : fr * 0.3), on = sd === C.foot, pu = pulse();
+        if (on) { g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.55 + 0.35 * pu; g.drawImage(SP.glow, fx - fr * 2.2, fy - fr * 1.5, fr * 4.4, fr * 3); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; }
+        g.fillStyle = on ? 'rgba(255,241,210,' + (0.75 + 0.25 * pu) + ')' : 'rgba(210,214,235,.22)';
+        g.beginPath(); g.ellipse(fx, fy - fr * 0.16, fr * 0.5, fr * 0.72, 0, 0, 6.29); g.fill(); g.beginPath(); g.ellipse(fx, fy + fr * 0.82, fr * 0.36, fr * 0.36, 0, 0, 6.29); g.fill(); } }
     // giải xong một việc: một đốm sáng chạy dọc cánh cổng
     if (C.spark > 0.01) { const q = 1 - C.spark, sx = P ? d.x + d.w * q : d.x + d.w / 2, sy = P ? d.y + d.h / 2 : d.y + d.h * (1 - q); g.globalCompositeOperation = 'lighter'; g.globalAlpha = Math.sin(C.spark * Math.PI); g.drawImage(SP.glow, sx - 46, sy - 46, 92, 92); g.drawImage(SP.warm, sx - 110, sy - 40, 220, 80); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; }
     // dấu chân của em, sát cánh cổng
@@ -263,15 +268,53 @@
 
   // ================= Diễn biến =================
   // Ba mốc giờ trong điện thoại anh là ba chiếc chìa: 05:00 (còi), 21:00 (em nhận lại máy), 12:45 (nhà ăn mở).
-  const TARGET = { 1: [5, 0], 2: [9, 0], 3: [0, 45] };
+  const TARGET = { 1: [5, 0], 2: [11, 30], 3: [0, 45] }; // chặng 2: đêm thứ bảy, khoảng 23:30 em mới nghe máy (9 rưỡi tối em mới nhận lại máy)
   function goStage(n) {
     C.stage = n; C.idle = 0; C.sub = '';
-    if (n === 1) { A.songDist(0.13, 3); }
-    if (n === 2) { C.skyTo = 0.12; C.hourA = 7; C.ck = { h: 7, m: 0 }; C.lit = 0.34; C.phoneE = false; A.songDist(0.22, 3); }
-    if (n === 3) { C.skyTo = 0.95; C.car = 1; C.hourA = 8.5; C.ck = { h: 8, m: 30 }; C.lit = 1; A.songDist(0.33, 3); }
+    if (n === 1) card('Buổi sáng đầu tiên em ở trong đó.', 'Còi gọi lúc mấy giờ?');
+    if (n === 2) { C.skyTo = 0.12; C.hourA = 9.5; C.ck = { h: 9, m: 30 }; C.lit = 0.34; C.phoneE = false; card('Đêm thứ bảy, gần nửa đêm.', 'Em gọi mãi. Máy anh úp trên bàn.'); }
+    if (n === 3) { C.skyTo = 0.95; C.car = 1; C.hourA = 8.5; C.ck = { h: 8, m: 30 }; C.lit = 1; card('Hôm nay. Tám rưỡi, anh lên xe.', 'Anh mang theo những chuyện em kể.'); }
     if (n === 4) { K().setText('cap', ''); setTimeout(() => { const cap = document.getElementById('cap'); cap.style.top = ''; cap.style.bottom = ''; K().finale(); }, 1500); }
   }
-  function walkTo(cap) { C.cap = cap; C.sub = 'walk'; C.idle = 0; setTimeout(() => { if (C.sub === 'walk' && C.count < C.cap) hint('chạm theo nhịp, bên anh'); }, 2600); }
+  // Anh bước: phát trọn một đoạn hát (rõ), em chạm theo phách của chính đoạn ấy
+  // Anh bước: em chạm lần lượt hai dấu chân trái, phải bên anh
+  function walkTo(cap) { C.cap = cap; C.sub = 'walk'; C.idle = 0; C.foot = 0; }
+  // Việc cần làm lúc này, và chỗ cần chạm (để vẽ vòng sáng)
+  function objective() {
+    C.aim = null; const cl = C.close && C.close.id;
+    if (cardOn()) return '';
+    if (C.stage === 0) return C.woke == null && C.t > 2.5 ? 'chạm nhẹ' : '';
+    if (C.sub === 'walk') return C.count < C.cap ? 'chạm lần lượt hai dấu chân bên anh' : '';
+    if (C.stage === 5) { if (C.sub === 'coi') return ''; if (C.t - C.t0 > 40) C.aim = ['e', 0.52, 0.25]; return C.t - C.t0 > 6 ? 'trong doanh trại còn một thứ chưa lên tiếng' : ''; }
+    if (C.sub === 'coi' || C.sub === 'done' || C.stage >= 4 || C.talk >= 0) return '';
+    if (cl === 'note') return 'chạm để đóng';
+    if (cl === 'clock') return C.stage === 1 ? 'kéo kim giờ tới giờ còi buổi sáng' : C.stage === 2 ? 'kéo kim giờ tới lúc em gọi đêm ấy' : 'kéo hai kim tới giờ nhà ăn mở';
+    if (cl === 'call') return C.calling > 0 ? '' : 'bấm gọi';
+    if (cl === 'answer') return 'vuốt để nghe máy';
+    if (cl === 'uno') return C.unoDone ? '' : 'xếp theo giờ trên xe anh: chạm hai lá để đổi chỗ';
+    if (cl) return '';
+    if (C.stage === 1) { if (!C.noteSeen) { C.aim = ['a', 0.77, 0.67]; return 'chạm chiếc điện thoại đang sáng bên anh'; } C.aim = ['e', 0.235, 0.375]; return 'chạm chiếc đồng hồ bên em'; }
+    if (C.stage === 2) {
+      if (C.sub !== 'may' && !C.phoneE) { C.aim = ['e', 0.235, 0.375]; return 'chạm chiếc đồng hồ bên em'; }
+      if (!C.phoneE) return '';
+      if (C.flip < 0.5) { C.aim = ['e', 0.11, 0.67]; return 'chạm điện thoại của em trên bậu cửa sổ'; }
+      if (C.talk === -1) { C.aim = ['a', 0.77, 0.67]; return 'chạm điện thoại bên anh'; }
+      return '';
+    }
+    if (C.stage === 3) {
+      if (!C.found.khay) { C.aim = ['e', 0.81, 0.6]; return 'tìm ba thứ em đã kể: cửa nhà ăn'; }
+      if (!C.found.uno) { C.aim = ['e', 0.22, 0.82]; return 'bộ bài dưới gầm ghế đá'; }
+      if (!C.found.hill) { C.aim = ['e', 0.76, 0.33]; return 'ngọn đồi em ngủ gật: chạm và giữ'; }
+    }
+    return '';
+  }
+  // Tấm bảng mở chặng: cả màn hình tối lại, hai dòng ngắn nằm chính giữa, 4 giây rồi tan. Trong lúc đó chưa chạm được gì.
+  function card(a, b) {
+    C.card = C.t; const el = document.getElementById('line'); C.lineTop = el.style.top; el.style.top = '40%';
+    K().setText('line', a + '\n' + b); clearTimeout(card.tm);
+    card.tm = setTimeout(() => { K().setText('line', ''); setTimeout(() => { el.style.top = C.lineTop; }, 1400); }, 4200);
+  }
+  const cardOn = () => C.card != null && C.t - C.card < 4.6;
   function open(side, id) { C.close = { side, id }; C.closeT = 0; C.idle = 0; }
   function shut() { C.close = null; }
 
@@ -280,7 +323,6 @@
     C.stepped = true; C.holding = false; C.flare = 1; C.count = 0;
     A.step(1, 0); A.boom(); try { if (navigator.vibrate) navigator.vibrate(35); } catch (e) { /* bỏ qua */ }
     document.getElementById('hint').classList.remove('on'); K().setText('line', '');
-    A.songDist(0.1, 0.1); A.songPlay(0);
     document.getElementById('title').classList.add('on'); setTimeout(() => document.getElementById('title').classList.remove('on'), 5600);
     setTimeout(() => goStage(1), 6800);
   }
@@ -289,17 +331,20 @@
   function clockRight() {
     const n = C.stage; A.bell(659.3, 0.07, 2.5); C.spark = 1;
     setTimeout(() => { if (C.close && C.close.id === 'clock') shut(); }, 700);
-    if (n === 1) { C.sub = 'coi'; setTimeout(() => { A.siren(5.2); C.skyTo = 0.3; }, 900); setTimeout(() => { C.lamp = true; A.lamp(); C.hourA = 5; }, 3800); setTimeout(() => walkTo(250), 7400); }
-    if (n === 2) { C.sub = 'may'; setTimeout(() => { C.phoneE = true; A.tick(); }, 1100); }
+    if (n === 1) { C.sub = 'coi'; setTimeout(() => { A.siren(5.2); C.skyTo = 0.3; }, 900); setTimeout(() => { C.lamp = true; A.lamp(); C.hourA = 5; A.frag(0, 10.4, 0.12); }, 4600); setTimeout(() => walkTo(250), 7400); }
+    if (n === 2) { C.sub = 'may'; C.hourA = 11.5; setTimeout(() => { C.phoneE = true; A.tick(); }, 1100); }
     if (n === 3) { C.sub = ''; setTimeout(() => { A.siren(2.6); A.shutter(); C.found.khay = 1; }, 900); setTimeout(() => { open('e', 'khay'); A.clink(); }, 2300); setTimeout(() => { if (C.close && C.close.id === 'khay') shut(); got(); }, 7200); }
   }
   // Đặt kim theo chỗ ngón tay: vòng trong là kim giờ, vòng ngoài là kim phút
-  function dragClock(x, y) {
+  const tipOf = (k, which) => { const deg = which === 'h' ? (C.ck.h + C.ck.m / 60) * 30 : C.ck.m * 6, a = deg * Math.PI / 180, rr0 = k.r * (which === 'h' ? 0.48 : 0.72); return [k.x + Math.sin(a) * rr0, k.y - Math.cos(a) * rr0]; };
+  function dragClock(x, y, first) {
     const k = C.close && C.close.dial; if (!k) return;
-    const dx = x - k.x, dy = y - k.y, d = Math.hypot(dx, dy), ang = (Math.atan2(dx, -dy) * 180 / Math.PI + 360) % 360;
-    if (C.drag === null) C.drag = d > k.r * 0.66 ? 'm' : 'h';
-    if (C.drag === 'h') { const h = Math.round(ang / 30) % 12; if (h !== C.ck.h) { C.ck.h = h; A.tick(); } }
-    else { const m = (Math.round(ang / 30) * 5) % 60; if (m !== C.ck.m) { C.ck.m = m; A.tick(); } }
+    const ang = (Math.atan2(x - k.x, -(y - k.y)) * 180 / Math.PI + 360) % 360;
+    if (first) { // chọn kim gần ngón tay hơn (hai chặng đầu chỉ cần kim giờ)
+      if (C.stage < 3) C.drag = 'h'; else { const th = tipOf(k, 'h'), tmn = tipOf(k, 'm'); C.drag = Math.hypot(x - th[0], y - th[1]) <= Math.hypot(x - tmn[0], y - tmn[1]) ? 'h' : 'm'; }
+      C.ang = { h: null, m: null }; C.lastTick = -1; }
+    C.ang[C.drag] = ang;
+    const idx = Math.round(ang / 30) % 12; if (idx !== C.lastTick) { C.lastTick = idx; A.tick(); try { if (navigator.vibrate) navigator.vibrate(6); } catch (e) { /* bỏ qua */ } }
   }
   const SOLVED = '0830';
   function tapCard(i) {
@@ -309,15 +354,16 @@
     if (C.cards.join('') === SOLVED) { C.unoDone = true; C.found.uno = 1; C.spark = 1; A.bell(659.3, 0.07, 2.5); for (let k = 0; k < 4; k++) setTimeout(() => A.flip(), 500 + k * 160); setTimeout(() => { if (C.close && C.close.id === 'uno') shut(); got(); }, 3600); }
   }
   // Chạm theo nhịp bài hát để anh bước
-  const beatPhase = () => { const t = A.el && !A.el.paused ? A.el.currentTime : C.t; return (t % 0.75) / 0.75; };
-  function beatTap() {
-    const ph = beatPhase(), off = Math.min(ph, 1 - ph) * 0.75, good = off < 0.15;
-    C.pending += good ? 30 : 9; C.beatFlash = good ? 1 : 0.35; C.idle = 0;
-    A.step(good ? 0.7 : 0.3, (C.tapN = (C.tapN || 0) + 1) & 1 ? 0.3 : -0.3);
+  function footTap(x) {
+    const a = R.a, bx = a.x + a.w * 0.5, side = x < bx ? 0 : 1;
+    if (side !== C.foot) { A.tick(); return; }
+    C.foot ^= 1; C.pending += 21; C.beatFlash = 1; C.idle = 0; A.step(0.75, side ? 0.35 : -0.35);
+    try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) { /* bỏ qua */ }
   }
 
   function tap(x, y) {
     C.idle = 0;
+    if (cardOn()) return;
     if (C.stage === 0) return;
     if (C.close) {
       const c = C.close, inside = inR(R[c.side], x, y);
@@ -330,19 +376,20 @@
     }
     const side = inR(R.a, x, y) ? 'a' : inR(R.e, x, y) ? 'e' : null; if (!side) return;
     const id = hit(side, x, y);
+    if (C.stage === 5) { if (side === 'e' && id === 'loa' && C.sub !== 'coi') { C.sub = 'coi'; A.siren(4.4); setTimeout(() => K().gateB(), 3400); } else if (id) A.tick(); return; }
     if (side === 'a' && !C.car && id === 'phone' && (C.stage === 1 || C.stage === 3 || (C.stage === 2 && C.flip < 0.5 && !C.phoneE))) { A.tick(); open('a', 'note'); return; }
     if (side === 'a' && C.car && C.stage === 3 && C.sub !== 'walk') { A.tick(); open('a', 'note'); return; } // trên xe: chạm để xem lại ba mốc giờ
     if (side === 'a' && !C.car && (id === 'lamp' || id === 'laptop') && C.stage === 1) { C.lamp = !C.lamp; A.lamp(); return; }
-    if (side === 'e' && id === 'clock' && C.sub !== 'coi' && C.sub !== 'walk' && !(C.stage === 2 && C.phoneE) && !(C.stage === 3 && C.found.khay)) { A.tick(); open('e', 'clock'); return; }
+    if (side === 'e' && id === 'clock' && C.stage < 3 && C.sub !== 'coi' && C.sub !== 'walk' && !(C.stage === 2 && C.phoneE) && !(C.stage === 3 && C.found.khay)) { A.tick(); open('e', 'clock'); return; }
     if (C.stage === 1 && side === 'e' && id === 'loa') { hint('chưa tới giờ còi'); return; }
     if (C.stage === 2 && C.sub !== 'walk') {
-      if (side === 'e' && id === 'phone') { if (!C.phoneE) hint('chưa tới giờ nhận máy'); else if (C.talk < 0) open('e', 'call'); return; }
+      if (side === 'e' && id === 'phone') { if (!C.phoneE) hint('chưa tới lúc em gọi'); else if (C.talk < 0) open('e', 'call'); return; }
       if (side === 'a' && id === 'phone' && C.flip > 0.5) { open('a', 'answer'); return; }
       if (side === 'a' && id === 'phone') { hint('máy úp xuống, im lìm'); return; }
     }
     if (C.stage === 3 && C.sub !== 'walk') {
-      if (side === 'e' && id === 'shutter' && !C.found.khay) { hint('nhà ăn chưa tới giờ mở'); return; }
-      if (side === 'e' && id === 'bench' && !C.found.uno) { A.flip(); C.deck = Math.max(C.deck, 0.01); C.deckOut = true; setTimeout(() => open('e', 'uno'), 500); return; }
+      if (side === 'e' && id === 'shutter' && !C.found.khay) { A.shutter(); C.found.khay = 1; setTimeout(() => { open('e', 'khay'); A.clink(); say('“Cơm hôm nay có mùi xà phòng. Em trốn ra ngoài rồi, không ăn nữa.”', 6); }, 900); setTimeout(() => { if (C.close && C.close.id === 'khay') shut(); got(); }, 5600); return; }
+      if (side === 'e' && id === 'bench' && !C.found.uno) { A.flip(); C.deck = Math.max(C.deck, 0.01); C.deckOut = true; setTimeout(() => { open('e', 'uno'); say('“Ở đây ai cũng biết, chỉ mỗi em là không.”', 6); }, 500); return; }
       if (side === 'e' && id === 'hill' && !C.found.hill) { hint('chạm và giữ ngọn đồi'); return; }
     }
   }
@@ -353,12 +400,13 @@
   }
 
   function down(x, y) {
-    if (C.stage === 0) { C.holding = true; return; }
+    if (C.stage === 0) { wake(); return; }
+    if (cardOn()) return;
     C.idle = 0;
-    if (C.close && C.close.id === 'clock' && C.close.dial && Math.hypot(x - C.close.dial.x, y - C.close.dial.y) < C.close.dial.r * 1.2) { C.drag = null; C.dragging = true; dragClock(x, y); return; }
+    if (C.close && C.close.id === 'clock' && C.close.dial && Math.hypot(x - C.close.dial.x, y - C.close.dial.y) < C.close.dial.r * 1.3) { C.dragging = true; dragClock(x, y, true); return; }
     if (C.close && C.close.id === 'answer' && C.close.track && C.talk < 0) { const t = C.close.track; if (Math.abs(y - t.y) < t.r * 2.2 && x > t.x - t.r && x < t.x + t.w + t.r) { C.sliding = true; return; } }
-    if (C.sub === 'walk' && inR(R.a, x, y) && !C.close && C.count < C.cap) { beatTap(); return; }
-    if (C.stage === 3 && !C.close && !C.found.hill && inR(R.e, x, y) && hit('e', x, y) === 'hill') { C.lidHold = true; A.windTo(0.05, 1.5); return; }
+    if (C.sub === 'walk' && inR(R.a, x, y) && !C.close && C.count < C.cap) { footTap(x); return; }
+    if (C.stage === 3 && !C.close && !C.found.hill && inR(R.e, x, y) && hit('e', x, y) === 'hill') { C.lidHold = true; A.windTo(0.05, 1.5); C.dream = A.frag(22.9, 11.4, 0.34); say('“Hôm nay em ngủ gật trên đồi anh ạ.”', 6); return; }
     C.tapAt = [x, y, now];
   }
   function move(x, y) {
@@ -367,9 +415,9 @@
   }
   function up() {
     C.holding = false;
-    if (C.dragging) { C.dragging = false; C.drag = null; const tg = TARGET[C.stage]; if (tg && C.ck.h === tg[0] && C.ck.m === tg[1]) clockRight(); return; }
-    if (C.sliding) { C.sliding = false; if (C.slide > 0.8) { C.slide = 1; C.talk = 0; C.buzz = 0; A.tick(); C.spark = 1; } else C.slide = 0; return; }
-    if (C.lidHold) { C.lidHold = false; C.lidFull = 0; A.windTo(0.3, 2); if (C.lid > 0.92) { C.found.hill = 1; got(); } return; }
+    if (C.dragging) { C.dragging = false; const an = C.ang && C.ang[C.drag]; if (an != null) { if (C.drag === 'h') C.ck.h = ((Math.round((an - C.ck.m / 2) / 30) % 12) + 12) % 12; else C.ck.m = (Math.round(an / 30) * 5) % 60; } C.ang = null; C.drag = null; const tg = TARGET[C.stage]; if (tg && C.ck.h === tg[0] && C.ck.m === tg[1]) clockRight(); return; }
+    if (C.sliding) { C.sliding = false; if (C.slide > 0.8) { C.slide = 1; C.talk = 0; C.buzz = 0; A.tick(); C.spark = 1; A.frag(10.7, 12.2, 0.2); } else C.slide = 0; return; }
+    if (C.lidHold) { C.lidHold = false; C.lidFull = 0; A.windTo(0.3, 2); if (C.dream) C.dream.stop(C.lid > 0.92 ? 4 : 1.5); if (C.lid > 0.92) { C.found.hill = 1; got(); } return; }
     if (C.tapAt && now - C.tapAt[2] < 0.6) tap(C.tapAt[0], C.tapAt[1]);
     C.tapAt = null;
   }
@@ -384,8 +432,6 @@
     C.shutter = Math.min(1, C.shutter + (C.found.khay ? dt * 1.4 : 0)); C.deck = Math.min(1, C.deck + (C.deckOut ? dt * 2 : 0));
     C.lid = clamp(C.lid + (C.lidHold ? dt / 2.4 : -dt * 1.6));
     if (C.lidHold && C.lid >= 1) { C.lidFull = (C.lidFull || 0) + dt; if (C.lidFull > 1.4) up(); } // ngủ đủ một giấc thì tự mở mắt
-    // bài hát ở phần chơi: chỉ đoạn dạo và đoạn đầu, lặp đúng 60 phách (đoạn rap để dành cho cao trào)
-    if (C.stage < 4 && A.el && !A.el.paused && A.el.currentTime > 56.25) { try { A.el.currentTime -= 45; } catch (e) { /* bỏ qua */ } }
     // cuộc gọi
     if (C.calling > 0) { C.calling -= dt; if (C.calling <= 0 && C.calls >= 3 && C.flip < 0.5) { C.flip = 1; A.tick(); shut(); setTimeout(() => { C.buzz = 30; A.buzz(2); }, 900); } }
     if (C.buzz > 0) { C.buzz -= dt; if (C.flip > 0.5 && C.talk < 0 && Math.floor(C.buzz * 0.55) !== Math.floor((C.buzz + dt) * 0.55)) A.buzz(1); }
@@ -403,20 +449,10 @@
     }
     if (C.sub === 'done' && !C.auto && C.count >= C.cap && C.stage === 3) goStage(4);
     if (C.msg && C.t > C.msgUntil) { C.msg = ''; K().setText('cap', ''); }
-    // gợi ý khi em đứng lâu (ngắn, không kể chuyện)
-    if (C.idle > 16 && !C.dragging) { C.idle = 4;
-      const tg = TARGET[C.stage], right = tg && C.ck.h === tg[0] && C.ck.m === tg[1];
-      if (C.stage === 0 && !C.stepped) hint('chạm và giữ dấu chân của em');
-      else if (C.sub === 'walk') hint('chạm theo nhịp, bên anh');
-      else if (C.close && C.close.id === 'clock') hint(C.stage === 3 ? 'vòng ngoài là kim phút' : 'kéo kim giờ');
-      else if (C.close && C.close.id === 'uno') hint('chiếc đồng hồ trên xe anh');
-      else if (C.close) { /* đang xem */ }
-      else if (C.stage === 1 && !C.noteSeen) hint('điện thoại trên bàn anh đang sáng');
-      else if (C.stage === 1 && C.sub !== 'coi') hint('đồng hồ bên em vẫn chỉ hai giờ');
-      else if (C.stage === 2 && !C.phoneE && !right) hint('mấy giờ em mới được nhận lại máy?');
-      else if (C.stage === 2 && C.flip < 0.5) hint(C.calls ? 'gọi nữa đi' : 'máy của em, trên bậu cửa sổ');
-      else if (C.stage === 2 && C.talk < 0 && C.talk > -2) hint('máy bên anh đã lật lên');
-      else if (C.stage === 3) hint(!C.found.khay ? 'nhà ăn mở lúc mấy giờ?' : !C.found.uno ? 'dưới gầm ghế đá' : 'chạm và giữ ngọn đồi'); }
+    // Luôn có một dòng nhỏ nói việc cần làm lúc này (không để em đứng không biết làm gì)
+    const o = objective(), h = document.getElementById('hint');
+    if (o !== C.obj) { C.obj = o; C.objT = C.t; h.classList.remove('on'); }
+    if (o && C.t - C.objT > 1.2 && (h.textContent !== o || !h.classList.contains('on'))) { h.textContent = o; h.classList.add('on'); }
     const n = document.getElementById('count-n'); if (n.textContent !== String(C.count)) n.textContent = C.count;
     document.getElementById('count').classList.toggle('on', C.stage >= 1 && C.count > 0);
   }
@@ -428,10 +464,35 @@
     if (cap.style.top !== top) { cap.style.top = top; cap.style.bottom = L.P ? 'auto' : ''; }
     g.save(); g.beginPath(); g.rect(R.a.x, R.a.y, R.a.w, R.a.h); g.clip(); if (C.car) drawCar(R.a); else drawRoom(R.a); g.restore();
     g.save(); g.beginPath(); g.rect(R.e.x, R.e.y, R.e.w, R.e.h); g.clip(); drawCamp(R.e); g.restore();
+    if (C.aim && !C.close) { const r = R[C.aim[0]]; invite(r.x + r.w * C.aim[1], r.y + r.h * C.aim[2], Math.max(26, L.m * 0.075)); }
     drawGateBar(); drawClose();
+    // lúc đầu tối om: chỉ còn dấu chân nét đứt. Chạm rồi thì ánh sáng loang ra từ dấu chân, màn tối tan dần.
+    if (C.dark > 0.005) {
+      if (C.woke != null) C.dark = 1 - ss(3.6, 8.4, C.t - C.woke);
+      g.fillStyle = 'rgba(0,0,2,' + C.dark + ')'; g.fillRect(0, 0, L.W, L.H);
+      const f = footPos(), fr = Math.max(18, L.m * 0.055), pu = pulse();
+      if (C.woke == null) { g.setLineDash([4, 5]); g.strokeStyle = 'rgba(240,232,216,' + (0.4 + 0.4 * pu) + ')'; g.lineWidth = 1.5; g.beginPath(); g.ellipse(f.x, f.y, fr, fr * 0.5, 0, 0, 6.29); g.stroke(); g.setLineDash([]);
+        g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.18 + 0.14 * pu; g.drawImage(K().SP.glow, f.x - fr * 2, f.y - fr * 1.2, fr * 4, fr * 2.4); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; }
+      else { const w = C.t - C.woke, sp = fr * (2 + 26 * ss(0, 2.2, w)), al = (1 - ss(1.2, 4.5, w)) * C.dark;
+        g.globalCompositeOperation = 'lighter'; g.globalAlpha = al; g.drawImage(K().SP.glow, f.x - sp, f.y - sp * 0.6, sp * 2, sp * 1.2); g.globalAlpha = Math.min(1, al * 1.4); g.drawImage(K().SP.glow, f.x - fr * 2.4, f.y - fr * 1.4, fr * 4.8, fr * 2.8); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+        g.fillStyle = 'rgba(255,241,210,' + (1 - ss(2.5, 6, w)) + ')'; g.beginPath(); g.ellipse(f.x, f.y, fr * 0.8, fr * 0.4, 0, 0, 6.29); g.fill(); }
+    }
+    if (C.card != null) { const k = ss(0, 0.6, C.t - C.card) * (1 - ss(4.2, 5.4, C.t - C.card)); if (k > 0.01) { g.fillStyle = 'rgba(2,3,8,' + 0.82 * k + ')'; g.fillRect(0, 0, L.W, L.H); } }
     // chữ đầu: mời em bước
     if (C.stage === 0 && !C.stepped && C.t > 3.5 && !C.asked) { C.asked = true; K().setText('line', 'Bước một bước thôi.'); }
   }
-  function start() { C.t = 0; C.stage = 0; A.bedStart(); }
+  function revisit() {
+    C.stage = 5; C.sub = ''; C.close = null; C.car = 0; C.lamp = false; C.sky = C.skyTo = 0.92; C.lit = 1; C.hourA = 11; C.ck = { h: 11, m: 0 };
+    C.count = C.cap = 999; C.pending = 0; C.auto = false; C.card = null; C.t0 = C.t; C.obj = null; C.phoneE = true;
+  }
+  function start() { C.t = 0; C.stage = 0; C.asked = true; C.dark = 1; C.woke = null; A.bedStart(); }
+  // Chạm nhẹ lần đầu: dấu chân bừng sáng, tựa phim hiện ra, rồi cả hai nửa hửng dần lên
+  function wake() {
+    if (C.woke != null) return; C.woke = C.t; A.boom(); A.bell(329.6, 0.09, 4); A.bell(493.9, 0.05, 4, 0.6);
+    try { if (navigator.vibrate) navigator.vibrate(20); } catch (e) { /* bỏ qua */ }
+    setTimeout(() => document.getElementById('title').classList.add('on'), 900);
+    setTimeout(() => document.getElementById('title').classList.remove('on'), 6200);
+    setTimeout(() => goStage(1), 9000);
+  }
   window.ConLaiChoi = { start, frame, down, move, up, C };
 })();
