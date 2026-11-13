@@ -58,7 +58,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Patrick+Hand&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="home.css?v=42" />
+  <link rel="stylesheet" href="home.css?v=43" />
 </head>
 <body data-weather="nang">
   <script>document.body.dataset.weather = LPN_SKY; document.body.classList.toggle('night', LPN_NIGHT); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
@@ -326,6 +326,19 @@
     <span class="v-count" id="viewer-count"></span>
   </div>
 
+  <!-- Thiệp 100 ngày (một lần mỗi máy, từ 13/11 23:38:58 tới hết ngày thứ 102) -->
+  <div class="tram" id="tram" role="dialog" aria-modal="true" aria-labelledby="tram-title" hidden>
+    <div class="tram-card">
+      <span class="tram-date">13 · 11 · 2026</span>
+      <span class="tram-pre">Ngày thứ</span>
+      <span class="tram-num"><b>100</b><svg viewBox="0 0 220 120" aria-hidden="true"><path pathLength="1" d="M58 22C96 6 168 8 196 34c22 21 12 54-30 70-44 17-110 14-140-8C2 79 8 45 40 28c30-16 84-20 120-12" /></svg></span>
+      <h2 id="tram-title">Chúc mừng hai đứa mình tròn 100 ngày bên nhau!</h2>
+      <p id="tram-text">Từ đêm 6/8 lúc 23:38 tới giờ là tròn một trăm ngày rồi đó. Ngày nào cũng có em.</p>
+      <span class="tram-sign">anh</span>
+      <button class="tram-ok" id="tram-ok" type="button">Đi tiếp trăm ngày nữa nha</button>
+    </div>
+  </div>
+
   <!-- Thông báo chương mới (một lần mỗi máy) -->
   <div class="news" id="news" role="dialog" aria-modal="true" aria-labelledby="news-title" hidden>
     <div class="news-card">
@@ -384,7 +397,7 @@
   <script src="push.js?v=2"></script>
   <script src="offline.js?v=1"></script>
   <script src="diary.js?v=8"></script>
-  <script src="home.js?v=39"></script>
+  <script src="home.js?v=40"></script>
   <script src="../shop/skins.js?v=34"></script>
   <script>
     // Tiệm Sâu đang có sự kiện thì gắn nhãn lên ô; máy này chưa xem thì nhãn nhấp nháy.

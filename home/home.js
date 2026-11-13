@@ -586,6 +586,27 @@
     catch (e) { return false; }
   };
   const forceBao = () => { try { return new URLSearchParams(location.search).get('bao'); } catch (e) { return null; } };
+  // ================= Thiệp 100 ngày =================
+  // Một lần mỗi máy, từ ngày thứ 100 (13/11 23:38:58) tới hết ngày thứ 102. Xem thử: home/?bao=100 (không đánh dấu đã xem).
+  const Tram = {
+    day() { return Math.floor((Date.now() - new Date(ANNIVERSARY)) / 864e5) + 1; },
+    show() {
+      const force = forceBao() === '100';
+      const d = this.day();
+      if (!force && (d < 100 || d > 102)) return false;
+      if (!force && (store.get('lpn:news') || {}).ngay100) return false;
+      if (document.documentElement.classList.contains('need-lock') || !$('tram').hidden) return false;
+      $('news').hidden = true;
+      $('tram').hidden = false;
+      this.preview = force;
+      return true;
+    },
+    close() {
+      if (!this.preview) { const seen = store.get('lpn:news') || {}; seen.ngay100 = Date.now(); store.set('lpn:news', seen); }
+      $('tram').hidden = true;
+      if (News.item) setTimeout(() => News.show(), 350);
+    },
+  };
   // ================= Thông báo chương mới =================
   // Chương có releaseAt thì ẩn tới giờ đó (máy có early thấy sớm hơn), giống trang cốt truyện.
   const WHO = currentWho();
@@ -672,7 +693,7 @@
     },
     show() {
       const it = this.item;
-      if (!it || document.documentElement.classList.contains('need-lock') || !$('news').hidden) return;
+      if (!it || document.documentElement.classList.contains('need-lock') || !$('news').hidden || !$('tram').hidden) return;
       const a = it.a;
       // Bảng báo kiểu cuộn băng (Băng số 1) có hình cuộn băng; chương thường chỉ có chữ;
       // sâu thám tử chỉ còn dùng cho hồ sơ vụ án, ảnh bìa cho bài hát mới.
@@ -765,7 +786,7 @@
   if (AskPush.ready()) {
     let tries = 0;
     const wait = setInterval(() => {
-      const free = !document.documentElement.classList.contains('need-lock') && $('news').hidden && $('backdrop').hidden;
+      const free = !document.documentElement.classList.contains('need-lock') && $('news').hidden && $('tram').hidden && $('backdrop').hidden;
       if (free) { clearInterval(wait); setTimeout(() => { if ($('news').hidden) AskPush.show(); }, 1200); }
       else if (++tries > 900) clearInterval(wait);
     }, 1000);
@@ -783,6 +804,7 @@
   $('ask-later').addEventListener('click', () => AskPush.close(Push.state() === 'install'));
   $('news-ok').addEventListener('click', () => { News.seen(); clearInterval(News.timer); News.item = null; });
   $('news-later').addEventListener('click', () => News.close());
+  $('tram-ok').addEventListener('click', () => Tram.close());
   window.addEventListener('pageshow', (e) => { if (e.persisted && !News.item) $('news').hidden = true; });
 
   const Lock = {
@@ -884,9 +906,10 @@
       pendingSyncReload = false;
       if (reloadOnce()) return;
     }
-    setTimeout(() => News.show(), 400);
+    setTimeout(() => { Tram.show(); News.show(); }, 400);
   };
   Lock.syncPrompt();
+  setTimeout(() => Tram.show(), 300); // sau khi màn khoá (nếu có) đã bật
   $('lock-who').addEventListener('click', async (e) => {
     const b = e.target.closest('button');
     const S = window.Sync;
