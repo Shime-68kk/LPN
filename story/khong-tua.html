@@ -12,13 +12,13 @@
   <script>
     document.documentElement.style.background = '#000';
     try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df' || (localStorage.getItem('lpn:preview') !== '1' && (!localStorage.getItem('lpn:relock2') || (localStorage.getItem('lpn:who') === 'quang' && !localStorage.getItem('lpn:relock1'))))) location.replace('../home/'); } catch (e) { /* bỏ qua */ }
-    // Chương 22 mở lúc 23:38:58 ngày 13/11/2026. Trước giờ đó trang khoá với mọi tài khoản; chỉ link riêng của anh Quang (?k=…) vào được,
+    // Chương 22 tạm ẩn (anh Quang, 13/11): game dựng xong mới mở. Trang khoá với mọi tài khoản; chỉ link riêng của anh Quang (?k=…) vào được,
     // và vào bằng link riêng thì không lưu gì (window.KHONGTUA_XEMTHU). Trong trang chỉ có mã băm của khoá, không có khoá thật.
     (function () {
       var k = (location.search.match(/[?&]k=([a-z0-9]+)/) || [])[1] || '', h = 0x811c9dc5, s = 'khongtua:' + k;
       for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
       window.KHONGTUA_XEMTHU = !!k && h.toString(16) === 'f85071a7';
-      if (Date.now() < Date.parse('2026-11-13T23:38:58+07:00') && !window.KHONGTUA_XEMTHU && !/^(localhost|127\.0\.0\.1|192\.168\.)/.test(location.hostname)) location.replace('./?play=c24');
+      if (!window.KHONGTUA_XEMTHU && !/^(localhost|127\.0\.0\.1|192\.168\.)/.test(location.hostname)) location.replace('./');
     })();
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />

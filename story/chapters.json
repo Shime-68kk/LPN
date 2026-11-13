@@ -920,10 +920,9 @@
       "id": "c24",
       "title": "Không tua nhanh được",
       "cost": 0,
-      "openAt": "2026-11-13T23:38:58+07:00",
+      "releaseAt": "2099-01-01T00:00:00+07:00",
       "scene": "dem",
       "cast": ["quang"],
-      "announce": { "kicker": "Đêm nay, 23:38", "title": "Đã có chương mới!", "text": "Chương 22 · Không tua nhanh được", "ok": "Xem đếm ngược", "later": "Để sau" },
       "game": { "page": "khong-tua.html", "title": "Không tua nhanh được", "text": "Đeo tai nghe vào nha.", "btn": "Bấm play" },
       "lines": [
         { "who": "none", "text": "(lời dẫn chờ anh Quang duyệt)" }
