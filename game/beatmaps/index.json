@@ -1,6 +1,19 @@
 {
   "songs": [
     {
+      "id": "co-em-cho",
+      "title": "Có Em Chờ",
+      "src": "../assets/sound/Có Em Chờ.mp3",
+      "cover": "../assets/thumbs/cover-11.webp",
+      "map": "beatmaps/co-em-cho.json",
+      "bpm": 80.18,
+      "preview": 201.608,
+      "message": "Em chỉ cần nhích lại một chút. Đoạn đường còn lại để anh đi hết cho.",
+      "offset": 0,
+      "announce": true,
+      "isNew": true
+    },
+    {
       "id": "danh-het-xuan-thi",
       "title": "Dành Hết Xuân Thì Để Chờ Nhau",
       "src": "../assets/sound/Dành Hết Xuân Thì Để Chờ Nhau.mp3",
@@ -10,7 +23,6 @@
       "preview": 234.325,
       "message": "Bao lâu cũng được. Mình chờ nhau.",
       "offset": 0,
-      "announce": true,
       "isNew": true
     },
     {

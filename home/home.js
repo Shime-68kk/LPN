@@ -244,6 +244,7 @@
           card.href = '../story/';
           card.classList.remove('is-case', 'is-new', 'has-new');
           $('story-fill').style.width = (list.length ? (n / list.length) * 100 : 0) + '%';
+          News.update(list, done, open);
           News.check(list, done, flags);
           const cs = list.find((c) => c.case && done[c.id] && !flags[c.case.id + 'Done']);
           if (cs) {
@@ -274,7 +275,7 @@
           $('story-eyebrow').textContent = 'Cốt truyện · Chương ' + (ch.no || nextI + 1) + (fresh ? ' · Mới' : '/' + list.length) + (locked ? ' · cần ' + ch.cost + ' đốt cây' : '');
           $('story-title').textContent = locked ? 'Một chương bí mật' : ch.title;
         })
-        .catch(() => {});
+        .catch(() => { News.update([], {}, {}); });
     },
 
     gameStars() {
@@ -550,40 +551,118 @@
   // ================= Màn khoá =================
   // Lưu mã băm của mật khẩu (giống trang cũ: 4680) thay vì ghi thẳng số ra.
   const LOCK_HASH = 'a9ed65df';
+  // Mở khoá tạm chọn nick Anh Quang qua link ?anh=<khoá> (chỉ lưu mã băm tiền tố 'anhmo:', không lưu khoá thật).
+  const ANH_HASH = '23b87826';
   const fnv = (str) => {
     let h = 0x811c9dc5;
     for (const ch of str) { h ^= ch.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0; }
     return h.toString(16);
   };
+  (() => {
+    try {
+      const p = new URLSearchParams(location.search);
+      const anh = p.get('anh');
+      if (anh === null) return;
+      if (anh && fnv('anhmo:' + anh) === ANH_HASH) localStorage.setItem('lpn:anhmo', '1');
+      p.delete('anh');
+      const q = p.toString();
+      history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
+    } catch (e) { /* bỏ qua */ }
+  })();
+  // Nháp thiệp sau cập nhật (chờ anh Quang duyệt): sửa câu chữ tại đây.
+  const UPDATE_CARD = {
+    kicker: 'Có gì mới',
+    title: 'Bản cập nhật mới',
+    text: 'Sâu Tím vừa có thêm bài Có Em Chờ.',
+    lead: 'Trước khi có chương mới, em đọc lại mấy chương gần đây nha:',
+    ok: 'Đọc ngay',
+    later: 'Để sau',
+    href: '../story/',
+  };
+  const currentWho = () => { try { return localStorage.getItem('lpn:who'); } catch (e) { return null; } };
+  const isAnhMo = () => { try { return localStorage.getItem('lpn:anhmo') === '1'; } catch (e) { return false; } };
+  const hasCapnhat1 = () => {
+    try { const v = localStorage.getItem('lpn:capnhat1'); return !!v && v !== '0' && v !== 'false'; }
+    catch (e) { return false; }
+  };
+  const forceBao = () => { try { return new URLSearchParams(location.search).get('bao'); } catch (e) { return null; } };
   // ================= Thông báo chương mới =================
   // Chương có releaseAt thì ẩn tới giờ đó (máy có early thấy sớm hơn), giống trang cốt truyện.
-  const WHO = (() => { try { return localStorage.getItem('lpn:who'); } catch (e) { return null; } })();
+  const WHO = currentWho();
   const released = (ch) => {
     if (!ch.releaseAt) return true;
+    const who = currentWho();
     let at = Date.parse(ch.releaseAt);
-    if (ch.early && ch.early[WHO]) at = Math.min(at, Date.parse(ch.early[WHO]));
+    if (ch.early && ch.early[who]) at = Math.min(at, Date.parse(ch.early[who]));
     return Date.now() >= at;
+  };
+  // Giờ mở chương (openAt + early) và các chương đã mở mà nick này chưa đọc — đúng luật status/openAt trong story.js.
+  const waitLeft = (ch) => {
+    let at = ch && ch.openAt ? Date.parse(ch.openAt) : 0;
+    const who = currentWho();
+    if (at && ch.early && ch.early[who]) at = Math.min(at, Date.parse(ch.early[who]));
+    return at ? Math.max(0, Math.ceil((at - Date.now()) / 1000)) : 0;
+  };
+  const openUnread = (list, done, open) => {
+    const out = [];
+    for (let i = 0; i < list.length; i++) {
+      const ch = list[i];
+      if (waitLeft(ch) > 0 || done[ch.id]) continue;
+      const ready = i === 0 || !!ch.anyOrder || !!done[list[i - 1].id];
+      const opened = !ch.cost || !!open[ch.id] || !!done[ch.id];
+      if (ready && opened) out.push(ch.title);
+    }
+    return out;
   };
   // Báo một lần trên mỗi máy, sau khi đã qua màn khoá: chương mới có announce (chưa đọc),
   // hoặc hồ sơ vụ án được mở lại (case.announce, đã đọc chương nhưng chưa phá án lượt này).
   const News = {
     item: null,
+    songs: null,
     check(list, done, flags) {
-      if (this.item) return;
       const seen = store.get('lpn:news') || {};
       // Xem thử bảng báo của một chương: home/?bao=c22 (không đánh dấu đã xem).
-      const force = new URLSearchParams(location.search).get('bao');
+      const force = forceBao();
       const fc = force && list.find((c) => c.id === force && c.announce);
       if (fc) { this.item = { key: fc.id, a: fc.announce, href: '../story/?play=' + encodeURIComponent(fc.id), openAt: fc.openAt, preview: true }; this.show(); return; }
+      if (this.item) return;
       const ch = list.find((c) => c.announce && !done[c.id] && !seen[c.id]);
       const cs = list.find((c) => c.case && c.case.announce && done[c.id] && !flags[c.case.id + 'Done'] && !seen[c.case.announce.key]);
       if (ch) this.item = { key: ch.id, a: ch.announce, href: '../story/?play=' + encodeURIComponent(ch.id), openAt: ch.openAt }; // chưa tới giờ mở: trang cốt truyện hiện đếm ngược
       else if (cs) this.item = { key: cs.case.announce.key, a: cs.case.announce, href: '../story/' + cs.case.page, isCase: true };
       this.show();
     },
+    // Thiệp một lần cho nick Thủy sau khi cập nhật: gộp thông báo bài Sâu Tím mới + các chương mở rồi chưa đọc.
+    update(list, done, open) {
+      if (this.item || forceBao() || currentWho() !== 'thuy' || hasCapnhat1()) return;
+      const unread = openUnread(list, done, open);
+      const extraSeen = ['song:co-em-cho'];
+      if (Array.isArray(this.songs)) {
+        for (const s of this.songs) if (s.announce && !s.locked && s.id !== 'co-em-cho') extraSeen.push('song:' + s.id);
+      }
+      for (const ch of list) if (ch.announce && waitLeft(ch) <= 0) extraSeen.push(ch.id);
+      this.item = {
+        key: 'capnhat1',
+        isCapnhat: true,
+        extraSeen,
+        list: unread,
+        href: UPDATE_CARD.href,
+        a: {
+          kicker: UPDATE_CARD.kicker,
+          title: UPDATE_CARD.title,
+          text: UPDATE_CARD.text,
+          lead: unread.length ? UPDATE_CARD.lead : '',
+          ok: UPDATE_CARD.ok,
+          later: UPDATE_CARD.later,
+        },
+      };
+      this.show();
+    },
     // Bài mới trong Sâu Tím (announce trong game/beatmaps/index.json): báo một lần "Chúc mừng em đã mở khoá bài hát mới"
     song(list) {
-      if (this.item) return;
+      this.songs = list;
+      if (this.item || forceBao()) return;
+      if (currentWho() === 'thuy' && !hasCapnhat1()) return;
       const seen = store.get('lpn:news') || {};
       const s = list.find((x) => x.announce && !x.locked && !seen['song:' + x.id]);
       if (!s) return;
@@ -622,6 +701,19 @@
       $('news-kicker').textContent = a.kicker || 'Cốt truyện · Chương mới';
       $('news-title').textContent = a.title;
       $('news-text').textContent = a.text;
+      const hasList = !!(a.lead && it.list && it.list.length);
+      $('news-lead').textContent = hasList ? a.lead : '';
+      $('news-lead').hidden = !hasList;
+      const ul = $('news-list');
+      ul.innerHTML = '';
+      if (hasList) {
+        for (const t of it.list) {
+          const li = document.createElement('li');
+          li.textContent = '– ' + t;
+          ul.appendChild(li);
+        }
+      }
+      ul.hidden = !hasList;
       $('news-ok').textContent = a.ok || 'Đọc ngay';
       $('news-ok').href = it.href;
       $('news-later').textContent = a.later || 'Để sau';
@@ -630,11 +722,18 @@
     seen() {
       if (!this.item || this.item.preview) return;
       const seen = store.get('lpn:news') || {};
-      seen[this.item.key] = Date.now();
+      if (this.item.isCapnhat) {
+        try { localStorage.setItem('lpn:capnhat1', '1'); } catch (e) { /* bỏ qua */ }
+        for (const k of (this.item.extraSeen || [])) seen[k] = Date.now();
+      } else {
+        seen[this.item.key] = Date.now();
+      }
       store.set('lpn:news', seen);
     },
     close() {
       this.seen();
+      clearInterval(this.timer);
+      this.item = null;
       $('news').hidden = true;
     },
   };
@@ -682,14 +781,26 @@
     setTimeout(() => AskPush.close(st === 'on' || st === 'denied'), 2600);
   });
   $('ask-later').addEventListener('click', () => AskPush.close(Push.state() === 'install'));
-  $('news-ok').addEventListener('click', () => News.seen());
+  $('news-ok').addEventListener('click', () => { News.seen(); clearInterval(News.timer); News.item = null; });
   $('news-later').addEventListener('click', () => News.close());
+  window.addEventListener('pageshow', (e) => { if (e.persisted && !News.item) $('news').hidden = true; });
 
   const Lock = {
     pin: '',
+    syncPrompt() {
+      let isUp = false;
+      try { isUp = sessionStorage.getItem('lpn:capnhat') === '1'; } catch (e) { /* bỏ qua */ }
+      $('lock-title').textContent = isUp ? 'Có bản cập nhật mới' : 'Nhập mật khẩu nha';
+      $('lock-sub').textContent = 'Nhập mật khẩu để cập nhật nha';
+      $('lock-sub').hidden = !isUp;
+    },
     show() {
       this.pin = '';
       this.draw();
+      this.syncPrompt();
+      $('lock-dots').hidden = false;
+      $('lock-pad').hidden = false;
+      $('lock-who').hidden = true;
       $('lock-msg').textContent = '';
       document.documentElement.classList.add('need-lock');
       try { localStorage.removeItem('lpn:unlock'); } catch (e) { /* bỏ qua */ }
@@ -725,39 +836,72 @@
       }
     },
   };
+  Lock.syncWhoButtons = function () {
+    const S = window.Sync;
+    if (!S) return;
+    const anhMo = isAnhMo();
+    for (const b of $('lock-who').children) {
+      const locked = b.dataset.who === 'quang' && !anhMo;
+      b.disabled = locked;
+      b.classList.toggle('on', b.dataset.who === S.who && !locked);
+      b.querySelector('small').textContent = locked ? 'tạm khoá' : (b.dataset.who === S.who ? 'đang dùng' : '');
+    }
+  };
   // Sau khi mở khoá: hỏi ai đang dùng máy. Chọn người kia thì đổi tài khoản (sync.js) rồi tải lại trang.
   Lock.askWho = function () {
     const S = window.Sync;
     if (!S || S.preview) { this.done(); return; }
     $('lock-title').textContent = 'Ai đang dùng máy này?';
+    $('lock-sub').hidden = true;
     $('lock-dots').hidden = true;
     $('lock-pad').hidden = true;
-    for (const b of $('lock-who').children) {
-      b.classList.toggle('on', b.dataset.who === S.who);
-      b.querySelector('small').textContent = b.dataset.who === S.who ? 'đang dùng' : '';
-      b.disabled = false;
-    }
+    this.syncWhoButtons();
     $('lock-who').hidden = false;
   };
+  let pendingSyncReload = false;
+  const reloadOnce = () => {
+    const key = 'lpn:syncReload:' + location.pathname;
+    try {
+      if (sessionStorage.getItem(key)) return false;
+      sessionStorage.setItem(key, '1');
+    } catch (e) { return false; }
+    location.reload();
+    return true;
+  };
+  window.LPN_onSync = () => {
+    if (document.documentElement.classList.contains('need-lock')) { pendingSyncReload = true; return; }
+    reloadOnce();
+  };
   Lock.done = function () {
-    $('lock-title').textContent = 'Nhập mật khẩu nha';
+    try { sessionStorage.removeItem('lpn:capnhat'); } catch (e) { /* bỏ qua */ }
+    this.syncPrompt();
     $('lock-dots').hidden = false;
     $('lock-pad').hidden = false;
     $('lock-who').hidden = true;
     $('lock-msg').textContent = '';
     document.documentElement.classList.remove('need-lock');
+    if (pendingSyncReload) {
+      pendingSyncReload = false;
+      if (reloadOnce()) return;
+    }
     setTimeout(() => News.show(), 400);
   };
+  Lock.syncPrompt();
   $('lock-who').addEventListener('click', async (e) => {
     const b = e.target.closest('button');
     const S = window.Sync;
-    if (!b || !S) return;
+    if (!b || b.disabled || !S) return;
+    if (b.dataset.who === 'quang' && !isAnhMo()) return;
     if (b.dataset.who === S.who) { Lock.done(); return; }
     for (const x of $('lock-who').children) x.disabled = true;
     $('lock-msg').textContent = 'Đang chuyển sang ' + S.WHO[b.dataset.who] + '…';
-    if (await S.switchTo(b.dataset.who)) { location.reload(); return; }
+    if (await S.switchTo(b.dataset.who)) {
+      try { sessionStorage.removeItem('lpn:capnhat'); } catch (e) { /* bỏ qua */ }
+      location.reload();
+      return;
+    }
     $('lock-msg').textContent = 'Cần có mạng để chuyển, thử lại nha';
-    for (const x of $('lock-who').children) x.disabled = false;
+    Lock.syncWhoButtons();
   });
   $('lock-pad').addEventListener('click', (e) => {
     const b = e.target.closest('button');

@@ -1,0 +1,23 @@
+/* Khung trang chương 22 (c24 · "Không tua nhanh được"): nền tối tràn 100vw × 100dvh, chữ tối giản chờ dựng thân chương. */
+:root {
+  --ink: #F7EFE3;
+  --sl: max(14px, env(safe-area-inset-left));
+  --sr: max(14px, env(safe-area-inset-right));
+  --st: max(8px, env(safe-area-inset-top));
+  --sb: max(12px, env(safe-area-inset-bottom));
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: var(--ink); }
+body { font: 400 14px/1.5 'Be Vietnam Pro', system-ui, sans-serif; overscroll-behavior: none; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+
+#cv { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; touch-action: none; }
+
+.top { position: fixed; left: 0; right: 0; top: 0; padding: var(--st) var(--sr) 0 var(--sl); display: flex; justify-content: flex-start; z-index: 8; pointer-events: none; }
+.ic { pointer-events: auto; width: 38px; height: 38px; display: grid; place-items: center; border: 0; border-radius: 50%; background: none; opacity: .42; cursor: pointer; transition: opacity .3s; }
+.ic:hover { opacity: .82; }
+.ic svg { width: 19px; height: 19px; fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.wip { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); margin: 0; z-index: 5; pointer-events: none;
+  width: max-content; max-width: 92vw; text-align: center; text-wrap: balance;
+  font: 400 clamp(15px, 4.2vw, 18px)/1.4 'Be Vietnam Pro', sans-serif; letter-spacing: .04em; color: rgba(247, 239, 227, .78);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, .9); }

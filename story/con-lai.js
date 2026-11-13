@@ -869,8 +869,20 @@
     if (S.gate !== 'key') return;
   }
   const foundKet = () => { try { return JSON.parse(localStorage.getItem('lpn:conlai')) || {}; } catch (e) { return {}; } };
+  // Chơi hết chương 21: ghi bài "Có Em Chờ" vào lpn:songs (trừ khi mở bằng link xem thử).
+  const SONG_ID = 'co-em-cho';
+  function moBai() {
+    if (window.CONLAI_XEMTHU) return;
+    try {
+      const opened = JSON.parse(localStorage.getItem('lpn:songs')) || {};
+      if (!opened[SONG_ID]) { opened[SONG_ID] = true; localStorage.setItem('lpn:songs', JSON.stringify(opened)); }
+      if (window.Sync) window.Sync.dirty();
+    } catch (e) { /* bỏ qua */ }
+  }
+  try { const f = foundKet(); if (f.a || f.b) moBai(); } catch (e) { /* bỏ qua */ }
   // Chữ cuối phim: đã tìm mấy kết, còn kết nào
   function showAfter() {
+    moBai(); $('end-song').hidden = false;
     $('af-ket').textContent = KET === 'a' ? 'Một nghìn bước, đủ cả.' : 'Cánh cổng có một chỗ khác đi. Em có bảy giây.';
     $('btn-other').textContent = 'Về lại cổng'; $('btn-other').hidden = KET === 'a'; $('after').hidden = false;
   }

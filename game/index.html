@@ -8,6 +8,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Sâu Tím</title>
   <script>
+    // Chưa qua màn cập nhật một lần (lpn:relock2): về trang chủ để cập nhật và chọn lại người dùng.
+    try { if (!localStorage.getItem('lpn:relock2') && localStorage.getItem('lpn:preview') !== '1') location.replace('../home/'); } catch (e) { /* bỏ qua */ }
     // Ngày / đêm đoán ngay từ đầu, trước khi tải CSS, và mọi trang đoán cùng một cách (giờ mặt trời mọc / lặn
     // trang chủ lưu lại, không có thì theo đồng hồ) để chuyển trang không bao giờ trang này tối trang kia sáng.
     (() => {

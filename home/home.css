@@ -609,7 +609,9 @@ html.need-lock body { overflow: hidden; }
   gap: 12px;
 }
 .lock-photo { width: 112px; height: 112px; border-radius: 28px; object-fit: cover; border: 4px solid var(--surface); }
-.lock-card h2 { margin: 0; font-family: 'Fraunces', serif; font-weight: 600; font-size: 24px; }
+.lock-card h2 { margin: 0; font-family: 'Fraunces', serif; font-weight: 600; font-size: 24px; text-align: center; }
+.lock-sub { margin: -6px 0 0; font-size: 13px; color: var(--muted); text-align: center; }
+.lock-sub[hidden] { display: none; }
 .dots { display: flex; gap: 14px; height: 16px; align-items: center; }
 .dots i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #8C6BC8; transition: background-color .15s, transform .15s; }
 .dots i.on { background: #8C6BC8; transform: scale(1.1); }
@@ -902,9 +904,10 @@ button.d-av:active { transform: scale(.94); }
   place-items: center;
   padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 16px);
   background: var(--scrim);
+  overflow-y: auto;
   animation: fade .25s ease-out;
 }
-.news[hidden] { display: none; }
+.news[hidden], .news-lead[hidden], .news-list[hidden] { display: none; }
 .ask {
   position: fixed; left: 12px; right: 12px; bottom: calc(var(--safe-bottom) + 12px); z-index: 25;
   max-width: 420px; margin: 0 auto; display: flex; gap: 12px; padding: 16px;
@@ -1001,10 +1004,13 @@ body.night .news-card .btn.ghost { color: #D9BE98; border-color: rgba(246, 231, 
 .news.is-plain .news-kicker, body.night .news.is-plain .news-kicker { order: 1; font: 18px 'Patrick Hand', cursive; letter-spacing: 0; text-transform: none; color: #B0412E; }
 .news.is-plain .news-card h2 { order: 2; font: 31px/1.15 'Patrick Hand', cursive; color: #22180E; }
 .news.is-plain .news-card p, body.night .news.is-plain .news-card p { order: 3; margin: 2px 0 0; font: 20px/1.4 'Patrick Hand', cursive; color: #4E3A26; }
-.news.is-plain .news-count { order: 4; align-self: flex-start; padding: 0; background: none; box-shadow: none; font: 18px 'Patrick Hand', cursive; letter-spacing: 0; color: #8A6A48; }
-.news.is-plain .news-card .btn { order: 5; align-self: flex-start; min-height: 40px; padding: 0; border: 0 !important; background: none !important; font: 22px 'Patrick Hand', cursive; }
+.news.is-plain .news-lead, body.night .news.is-plain .news-lead { order: 4; margin: 8px 0 0; font: 20px/1.4 'Patrick Hand', cursive; color: #4E3A26; }
+.news.is-plain .news-list, body.night .news.is-plain .news-list { order: 5; list-style: none; margin: 2px 0 2px; padding: 0 0 0 6px; font: 20px/1.45 'Patrick Hand', cursive; color: #2E2114; }
+.news.is-plain .news-list li { margin: 0; }
+.news.is-plain .news-count { order: 6; align-self: flex-start; padding: 0; background: none; box-shadow: none; font: 18px 'Patrick Hand', cursive; letter-spacing: 0; color: #8A6A48; }
+.news.is-plain .news-card .btn { order: 7; align-self: flex-start; min-height: 40px; padding: 0; border: 0 !important; background: none !important; font: 22px 'Patrick Hand', cursive; }
 .news.is-plain .news-ok, body.night .news.is-plain .news-ok { margin-top: 10px; color: #22180E !important; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 5px; }
-.news.is-plain .news-card .btn.ghost, body.night .news.is-plain .news-card .btn.ghost { order: 6; min-height: 34px; font-size: 18px; color: #8A6A48; }
+.news.is-plain .news-card .btn.ghost, body.night .news.is-plain .news-card .btn.ghost { order: 8; min-height: 34px; font-size: 18px; color: #8A6A48; }
 
 /* Bấm nhanh hai lần (nhập mật khẩu, nút bấm) không bị iPhone phóng to màn hình; vẫn chụm hai ngón để phóng được */
 .lock, .lock *, button, a, .btn { touch-action: manipulation; }

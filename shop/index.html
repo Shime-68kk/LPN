@@ -10,7 +10,7 @@
   <title>Tiệm Sâu</title>
   <script>
     // Chưa mở khoá trên máy này thì quay về trang chủ để nhập mật khẩu.
-    try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df' || (localStorage.getItem('lpn:who') === 'quang' && !localStorage.getItem('lpn:relock1') && localStorage.getItem('lpn:preview') !== '1')) location.replace('../home/'); }
+    try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df' || (localStorage.getItem('lpn:preview') !== '1' && (!localStorage.getItem('lpn:relock2') || (localStorage.getItem('lpn:who') === 'quang' && !localStorage.getItem('lpn:relock1'))))) location.replace('../home/'); }
     catch (e) { location.replace('../home/'); }
   </script>
   <script>
@@ -38,7 +38,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Dancing+Script:wght@600;700&display=swap" />
-  <link rel="stylesheet" href="../home/home.css?v=14" />
+  <link rel="stylesheet" href="../home/home.css?v=42" />
   <link rel="stylesheet" href="shop.css?v=25" />
 </head>
 <body data-weather="nang">

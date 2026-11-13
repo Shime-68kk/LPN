@@ -13,12 +13,20 @@
   <title>Yêu Lệ Thủy</title>
   <script>
     // Chưa mở khoá trên máy này thì hiện màn khoá ngay, tránh lộ nội dung.
-    // Một lần duy nhất (11/11/2026, anh Quang dặn): máy nào đang ở tài khoản Quang thì khoá lại,
-    // nhập mật khẩu rồi chọn lại "Ai đang dùng máy này?". Cờ lpn:relock1 ghi ngay, nên chỉ xảy ra một lần mỗi máy.
+    // Đợt 1 (11/11/2026): máy nào đang ở tài khoản Quang thì khoá lại một lần (lpn:relock1).
+    // Đợt 2 (13/11/2026): bản cập nhật đưa mọi máy (mọi tài khoản, trừ chế độ xem trước lpn:preview='1')
+    // về màn khoá MỘT lần (lpn:relock2), báo có bản cập nhật mới và chọn lại người dùng.
     try {
-      if (localStorage.getItem('lpn:who') === 'quang' && !localStorage.getItem('lpn:relock1') && localStorage.getItem('lpn:preview') !== '1') {
-        localStorage.setItem('lpn:relock1', '1');
-        localStorage.removeItem('lpn:unlock');
+      if (localStorage.getItem('lpn:preview') !== '1') {
+        if (localStorage.getItem('lpn:who') === 'quang' && !localStorage.getItem('lpn:relock1')) {
+          localStorage.setItem('lpn:relock1', '1');
+          localStorage.removeItem('lpn:unlock');
+        }
+        if (!localStorage.getItem('lpn:relock2')) {
+          localStorage.setItem('lpn:relock2', '1');
+          localStorage.removeItem('lpn:unlock');
+          sessionStorage.setItem('lpn:capnhat', '1');
+        }
       }
     } catch (e) { /* bỏ qua */ }
     try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df') document.documentElement.classList.add('need-lock'); }
@@ -50,7 +58,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Patrick+Hand&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="home.css?v=41" />
+  <link rel="stylesheet" href="home.css?v=42" />
 </head>
 <body data-weather="nang">
   <script>document.body.dataset.weather = LPN_SKY; document.body.classList.toggle('night', LPN_NIGHT); const lpnEarly = document.getElementById('lpn-early'); if (lpnEarly) lpnEarly.remove();</script>
@@ -328,6 +336,8 @@
       <span class="news-kicker" id="news-kicker">Cốt truyện · Chương mới</span>
       <h2 id="news-title">Đã có chương truyện mới!</h2>
       <p id="news-text"></p>
+      <p class="news-lead" id="news-lead" hidden></p>
+      <ul class="news-list" id="news-list" hidden></ul>
       <a class="btn primary news-ok" id="news-ok" href="../story/">Sẵn sàng!</a>
       <button class="btn ghost" id="news-later" type="button">Để sau</button>
     </div>
@@ -352,6 +362,7 @@
     <div class="lock-card">
       <img class="lock-photo" src="../assets/img/Anhnen.JPG" alt="" width="112" height="112" />
       <h2 id="lock-title">Nhập mật khẩu nha</h2>
+      <p class="lock-sub" id="lock-sub" hidden>Nhập mật khẩu để cập nhật nha</p>
       <div class="dots" id="lock-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       <p class="lock-msg" id="lock-msg" aria-live="polite"></p>
       <div class="pad" id="lock-pad">
@@ -373,7 +384,7 @@
   <script src="push.js?v=2"></script>
   <script src="offline.js?v=1"></script>
   <script src="diary.js?v=8"></script>
-  <script src="home.js?v=38"></script>
+  <script src="home.js?v=39"></script>
   <script src="../shop/skins.js?v=34"></script>
   <script>
     // Tiệm Sâu đang có sự kiện thì gắn nhãn lên ô; máy này chưa xem thì nhãn nhấp nháy.

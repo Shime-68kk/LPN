@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Không tua nhanh được</title>
+  <!-- Trang luôn tối: tô nền ngay từ đầu để chuyển trang không chớp sáng. Chưa mở khoá web thì về trang nhà. -->
+  <script>
+    document.documentElement.style.background = '#000';
+    try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df' || (localStorage.getItem('lpn:preview') !== '1' && (!localStorage.getItem('lpn:relock2') || (localStorage.getItem('lpn:who') === 'quang' && !localStorage.getItem('lpn:relock1'))))) location.replace('../home/'); } catch (e) { /* bỏ qua */ }
+    // Chương 22 mở lúc 23:38:58 ngày 13/11/2026. Trước giờ đó trang khoá với mọi tài khoản; chỉ link riêng của anh Quang (?k=…) vào được,
+    // và vào bằng link riêng thì không lưu gì (window.KHONGTUA_XEMTHU). Trong trang chỉ có mã băm của khoá, không có khoá thật.
+    (function () {
+      var k = (location.search.match(/[?&]k=([a-z0-9]+)/) || [])[1] || '', h = 0x811c9dc5, s = 'khongtua:' + k;
+      for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+      window.KHONGTUA_XEMTHU = !!k && h.toString(16) === 'f85071a7';
+      if (Date.now() < Date.parse('2026-11-13T23:38:58+07:00') && !window.KHONGTUA_XEMTHU && !/^(localhost|127\.0\.0\.1|192\.168\.)/.test(location.hostname)) location.replace('./?play=c24');
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600&family=Be+Vietnam+Pro:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&display=swap" />
+  <link rel="stylesheet" href="khong-tua.css?v=1" />
+</head>
+<body>
+  <canvas id="cv" aria-label="Không tua nhanh được"></canvas>
+  <header class="top">
+    <a class="ic" href="../story/" aria-label="Về cốt truyện"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" /></svg></a>
+  </header>
+  <p class="wip">Băng số 2 · đang dựng</p>
+  <script src="khong-tua.js?v=1"></script>
+  <script src="../home/offline.js?v=1"></script>
+</body>
+</html>

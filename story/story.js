@@ -99,12 +99,27 @@
     return at ? Math.max(0, Math.ceil((at - Date.now()) / 1000)) : 0;
   };
   const clock = (sec) => {
+    if (sec >= 86400) {
+      const d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600);
+      return d + ' ngày' + (h ? ' ' + h + ' giờ' : '');
+    }
     const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
     return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(s).padStart(2, '0');
   };
-  const openTime = (i) => new Date(CHAPTERS[i].openAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  const openAtOf = (i) => {
+    const ch = CHAPTERS[i];
+    let at = ch && ch.openAt ? Date.parse(ch.openAt) : 0;
+    if (at && ch.early && ch.early[WHO]) at = Math.min(at, Date.parse(ch.early[WHO]));
+    return at;
+  };
+  const openTime = (i) => new Date(openAtOf(i)).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   // Buổi theo giờ mở: sáng / trưa / chiều / tối.
-  const openPart = (i) => { const h = new Date(CHAPTERS[i].openAt).getHours(); return h < 11 ? 'sáng' : h < 14 ? 'trưa' : h < 18 ? 'chiều' : 'tối'; };
+  const openPart = (i) => { const h = new Date(openAtOf(i)).getHours(); return h < 11 ? 'sáng' : h < 14 ? 'trưa' : h < 18 ? 'chiều' : 'tối'; };
+  const openDay = (i) => {
+    const d = new Date(openAtOf(i)), n = new Date();
+    const diff = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - new Date(n.getFullYear(), n.getMonth(), n.getDate())) / 864e5);
+    return diff <= 0 ? 'nay' : diff === 1 ? 'mai' : 'ngày ' + d.getDate() + '/' + (d.getMonth() + 1);
+  };
 
   let waitTimer = 0;
   function openWait(i) {
@@ -114,7 +129,7 @@
     const tick = () => {
       const left = waitLeft(i);
       if (!left) { clearInterval(waitTimer); closeDialog(); renderMap(); return; }
-      $('shop-text').textContent = 'Chương này mở lúc ' + openTime(i) + ' ' + openPart(i) + ' nay. Còn ' + clock(left) + ' nữa thôi, chờ anh chút nhé.';
+      $('shop-text').textContent = 'Chương này mở lúc ' + openTime(i) + ' ' + openPart(i) + ' ' + openDay(i) + '. Còn ' + clock(left) + ' nữa thôi, chờ anh chút nhé.';
     };
     dialog('Chờ chút…', '', 'Em đợi được', () => {
       clearInterval(waitTimer);
