@@ -580,7 +580,8 @@
     href: '../story/',
   };
   const currentWho = () => { try { return localStorage.getItem('lpn:who'); } catch (e) { return null; } };
-  const isAnhMo = () => { try { return localStorage.getItem('lpn:anhmo') === '1'; } catch (e) { return false; } };
+  // 14/11: anh Quang mở lại nick cho mọi máy (trước đó chỉ máy có link ?anh= mới chọn được).
+  const isAnhMo = () => true;
   const hasCapnhat1 = () => {
     try { const v = localStorage.getItem('lpn:capnhat1'); return !!v && v !== '0' && v !== 'false'; }
     catch (e) { return false; }
