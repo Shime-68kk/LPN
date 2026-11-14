@@ -184,16 +184,16 @@
 
   // ---- đóng clip: dựng tiếng KHÔNG theo thời gian thực (OfflineAudioContext), cùng nhạc, cùng bộ nén như trên trang.
   // Thu tiếng lúc máy đang bận vẽ hình thì bộ phát tiếng hụt nhịp → lẹt xẹt; dựng tính từng mẫu thì không bao giờ hụt.
-  TR.renderAudio = async (DUR = 93.6) => {
+  TR.renderAudio = async (DUR = 93.6, dry = false, noMusic = false) => { // dry: không bộ nén · noMusic: chỉ tiếng hiệu ứng (nhạc ghép sau, nguyên bản)
     const SR = 48000, oac = new OfflineAudioContext(2, Math.ceil(SR * DUR), SR);
     ac = oac; master = oac.createGain(); master.gain.value = 0; master.connect(oac.destination);
     noiseBuf = oac.createBuffer(2, SR * 4, SR);
     for (let ch = 0; ch < 2; ch++) { const d = noiseBuf.getChannelData(ch); let b0 = 0, b1 = 0, b2 = 0; for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; b0 = 0.997 * b0 + w * 0.029; b1 = 0.985 * b1 + w * 0.032; b2 = 0.95 * b2 + w * 0.048; d[i] = (b0 + b1 + b2 + w * 0.02) * 0.5; } }
     try { FX = makeFX(); } catch (e) { /* bỏ qua */ }
-    TR.bus = oac.createGain(); TR.bus.gain.value = 0.9; const lim = oac.createDynamicsCompressor(); lim.threshold.value = -8; lim.knee.value = 6; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.2; TR.bus.connect(lim).connect(oac.destination);
+    TR.bus = oac.createGain(); TR.bus.gain.value = 0.9; const lim = oac.createDynamicsCompressor(); lim.threshold.value = -8; lim.knee.value = 6; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.2; if (dry) TR.bus.connect(oac.destination); else TR.bus.connect(lim).connect(oac.destination);
     SCARE_LIM = null; scareLim(); try { SCARE_LIM.disconnect(); } catch (e) { /* bỏ qua */ } SCARE_LIM.connect(TR.bus);
     const mus = await oac.decodeAudioData(await (await fetch('am/trailer.mp3')).arrayBuffer());
-    const src = oac.createBufferSource(), g2 = oac.createGain(); src.buffer = mus; g2.gain.value = 0.95; src.connect(g2).connect(TR.bus); TR.mg = g2; src.start(0);
+    const src = oac.createBufferSource(), g2 = oac.createGain(); src.buffer = mus; g2.gain.value = noMusic ? 0 : 0.95; src.connect(g2).connect(TR.bus); TR.mg = g2; src.start(0);
     const q = (t) => Math.max(0, Math.round(t * SR / 128) * 128 / SR);
     const times = new Set(); SHOTS.forEach((s) => { times.add(q(s.at)); if (s.cut && s.cut !== 2) times.add(q(s.at - 0.35)); }); EV.forEach((e) => times.add(q(e.at)));
     const safe = (fn) => { try { fn(); } catch (e) { /* cảnh chưa sẵn: chỉ cần tiếng */ } };

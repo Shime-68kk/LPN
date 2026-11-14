@@ -580,8 +580,8 @@
     href: '../story/',
   };
   const currentWho = () => { try { return localStorage.getItem('lpn:who'); } catch (e) { return null; } };
-  // 14/11 tối: khoá tạm lại nick Anh Quang (để Lệ Thủy chơi bằng nick của em). Chỉ máy đã mở bằng link ?anh= sau đợt khoá này (lpn:anhmo3) mới chọn được.
-  const isAnhMo = () => { try { return localStorage.getItem('lpn:anhmo3') === '1'; } catch (e) { return false; } };
+  // 14/11 tối khoá tạm nick Anh Quang; 15/11 anh Quang bảo mở lại: chọn được bình thường.
+  const isAnhMo = () => true;
   const hasCapnhat1 = () => {
     try { const v = localStorage.getItem('lpn:capnhat1'); return !!v && v !== '0' && v !== 'false'; }
     catch (e) { return false; }
