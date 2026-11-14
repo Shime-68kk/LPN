@@ -321,7 +321,7 @@ SC.lock1 = {
   move(p) { if (!wdrag) return; wdrag.off = p[1] - wdrag.y0; while (wdrag.off > 46) { P1.code[wdrag.i] = (P1.code[wdrag.i] + 9) % 10; wdrag.off -= 92; wdrag.y0 += 92; wdrag.moved = true; FX.wheel(); } while (wdrag.off < -46) { P1.code[wdrag.i] = (P1.code[wdrag.i] + 1) % 10; wdrag.off += 92; wdrag.y0 -= 92; wdrag.moved = true; FX.wheel(); } },
   up(p) {
     if (!wdrag) return false; if (!wdrag.moved) { const up = p[1] < LOCK.y + LOCK.ch / 2; P1.code[wdrag.i] = (P1.code[wdrag.i] + (up ? 9 : 1)) % 10; FX.wheel(); }
-    wdrag = null; nudge(); if (P1.code.join('') !== '3143') missHint('vali', ['Sau ô cuối có chữ "m": đây là một độ cao.', 'Nơi cao nhất hai đứa từng đứng cùng nhau.', 'Lau kính cửa sổ, chờ chớp sáng, đọc tấm bia trên đỉnh núi.'], 30); if (P1.code.join('') === '3143' && !P1.open) setTimeout(() => { P1.open = true; FX.latch(); musicNear(); HINT.text = ''; HINT.off = true; setTimeout(() => go('open1'), 900); }, 380); return true;
+    wdrag = null; nudge(); if (P1.code.join('') !== '3143') missHint('vali', ['Sau ô cuối có chữ "m": đây là một độ cao.', 'Nơi cao nhất hai đứa từng đứng cùng nhau.', 'Lau kính cửa sổ, chờ chớp sáng, đọc tấm bia trên đỉnh núi.'], 30); if (P1.code.join('') === '3143' && !P1.open) setTimeout(() => { P1.open = true; FX.latch(); HINT.text = ''; HINT.off = true; setTimeout(() => go('open1'), 900); }, 380); return true;
   },
 };
 // ---------- vali mở: quần áo gấp vuông, cuộn băng ----------

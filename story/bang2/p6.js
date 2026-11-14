@@ -71,7 +71,7 @@ SC.cuatro.tap = function (p) {
   for (let i = 0; i < 4; i++) { if (P6.placed[i] || !P5.manh[i]) continue; const [x, y] = ctrTray(i); if (Math.abs(p[0] - x) < 84 && Math.abs(p[1] - y) < 62) { P6.sel = P6.sel === i ? -1 : i; FX.paper(); return; } }
   // đặt mảnh vào khung: phải đặt gần đúng chỗ của nó, sai thì mảnh trượt về khay
   if (P6.sel >= 0 && inR(p, K)) { const i = P6.sel, hx = K.x + BD.home[i][0] * K.w, hy = K.y + BD.home[i][1] * K.h;
-    if (Math.hypot(p[0] - hx, p[1] - hy) < Math.min(K.w, K.h) * 0.2) { P6.placed[i] = true; P6.sel = -1; FX.put(); nz(ac.currentTime, 0.2, 'bandpass', 2600, 0.6, 0.15); if (P6.placed.every(Boolean)) setTimeout(() => { const t = ac.currentTime; tone(t, 392, 392, 0.012, 2); tone(t + 0.3, 587.33, 587.33, 0.01, 2); sayNow('Đường chấm chấm đi liền một mạch. Chỉ còn ô trống cạnh ngôi đình.'); cuaNen(0.05, 900, 4); cuaHints(); }, 500); }
+    if (Math.hypot(p[0] - hx, p[1] - hy) < Math.min(K.w, K.h) * 0.2) { P6.placed[i] = true; P6.sel = -1; FX.put(); nz(ac.currentTime, 0.2, 'bandpass', 2600, 0.6, 0.15); if (P6.placed.every(Boolean)) setTimeout(() => { const t = ac.currentTime; tone(t, 392, 392, 0.012, 2); tone(t + 0.3, 587.33, 587.33, 0.01, 2); sayNow('Đường chấm chấm đi liền một mạch. Chỉ còn ô trống cạnh ngôi đình.'); cuaHints(); }, 500); }
     else { P6.sel = -1; nz(ac.currentTime, 0.15, 'bandpass', 2400, 0.8, 0.12); missHint('ghep', ['Mỗi mảnh có một đoạn đường chấm chấm.', 'Mảnh có khu trại ở góc trên, toà nhà ở góc dưới.', 'Nối đường chấm chấm từ chiếc giường tới ô cửa sổ sáng.'], 3); }
     return; }
   // ô "Anh vẫn ___" trên bản đồ
@@ -80,7 +80,7 @@ SC.cuatro.tap = function (p) {
 function cuaSolved() {
   P6.solved = true; P6.pick = false; HINT.text = ''; HINT.off = true; FX.latch();
   const t = ac.currentTime; [392, 493.88, 587.33, 783.99].forEach((f, i) => tone(t + 0.4 + i * 0.35, f, f, 0.016, 2.4));
-  cuaNen(0.16, 4800, 4);
+  // nhạc nền chỉ vào khi bức thư hiện ra (startThu), không vang lúc đang giải đố
   setTimeout(() => { CTR.den = 'xanh'; const t2 = ac.currentTime; tone(t2, 1320, 1320, 0.04, 0.12, 'square'); nz(t2 + 0.05, 0.25, 'lowpass', 300, 1, 0.9); FX.click(t2 + 0.06, 1); }, 3800);
   setTimeout(() => { const T0 = performance.now(); const run = () => { CTR.mo = Math.min(1, (performance.now() - T0) / 2200); if (CTR.mo < 1) requestAnimationFrame(run); }; run(); nz(ac.currentTime, 2.2, 'bandpass', 900, 0.5, 0.12); }, 4600);
   setTimeout(() => { if (typeof startThu === 'function') startThu(); }, 7600);

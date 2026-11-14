@@ -20,7 +20,7 @@ const THU = [
 const SCRIPT = "'Dancing Script', cursive";
 const SIG = new Image(); SIG.src = '../../assets/img/chu-ky.svg';
 const TH = { shown: 0, t: [], scroll: 0, want: 0, lines: null, sig: 0, done: false };
-function startThu() { TH.shown = 1; TH.t = [performance.now()]; TH.lines = null; go('thu', 2200); }
+function startThu() { if (typeof cuaNen === 'function') cuaNen(0.16, 4800, 5); TH.shown = 1; TH.t = [performance.now()]; TH.lines = null; go('thu', 2200); }
 function thuLayout(c) { // gói chữ theo bề rộng giấy, nhớ dòng bắt đầu của mỗi đoạn
   c.font = `34px ${SCRIPT}`; const out = []; const maxW = 760;
   THU.forEach((para, k) => { const words = para.split(' '); let line = k >= 2 && k < THU.length - 1 ? '      ' : ''; const start = out.length;

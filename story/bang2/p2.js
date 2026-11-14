@@ -268,7 +268,7 @@ SC.hop2 = {
   tap(p) {
     if (P2.open) { if (!P2.bang && P2.lid > 0.9 && p[1] > 420 && p[1] < 650 && p[0] > 560 && p[0] < 1040) { P2.bang = true; FX.pick(); bagAdd('bang2', 'cuộn băng 10/11', (c, s) => drawCassette(c, 0, 0, s * 0.42, '10/11')); P2.done = true; HINT.off = true; HINT.text = ''; setTimeout(() => tapeStart('10/11', 'am/giong2.mp3', SUB2, hallG, afterTape2, flipToAnh2), 900); } return; }
     for (let i = 0; i < 7; i++) { const x = slotX(i); if (p[0] > x && p[0] < x + 126 && p[1] > 430 && p[1] < 580) { P2.slots[i] = (P2.slots[i] + 1) % SLOT_SYM.length; FX.wheel(); nudge();
-      if (P2.slots.every((v, j) => SLOT_SYM[v] === SIGN_ORDER[j])) setTimeout(() => { P2.open = true; FX.latch(); const t = ac.currentTime; nz(t + 0.2, 0.4, 'bandpass', 900, 3, 0.4); hallHints(); musicNear(); }, 400);
+      if (P2.slots.every((v, j) => SLOT_SYM[v] === SIGN_ORDER[j])) setTimeout(() => { P2.open = true; FX.latch(); const t = ac.currentTime; nz(t + 0.2, 0.4, 'bandpass', 900, 3, 0.4); hallHints(); }, 400);
       else if (P2.slots.every((v) => v > 0)) { setTimeout(() => FX.jam(), 250); missHint('hop2', ['Chưa đúng. Mỗi dấu em thấy đều có vài chấm đi kèm.', 'Dưới mỗi ô của hộp cũng khắc chấm.', 'Dấu có một chấm vào ô một chấm, hai chấm vào ô hai chấm, cứ thế.'], 3); }
       return; } }
   },
