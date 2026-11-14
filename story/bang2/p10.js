@@ -39,7 +39,7 @@ function scareHit(k = 1) {
 const dormDraw10 = SC.dorm.draw;
 SC.dorm.draw = function (c, now, dt) {
   dormDraw10.call(this, c, now, dt);
-  if (P1.flash !== GH.lastFlash) { GH.lastFlash = P1.flash; GH.flashN++; if (P1.torch && !P1.done && (GH.flashN === 2 || GH.flashN === 5)) { GH.dormT = P1.flash; scareHit(1); setTimeout(() => ghostSound(0.6), 380); } }
+  if (P1.flash !== GH.lastFlash) { GH.lastFlash = P1.flash; GH.flashN++; if (false) { GH.dormT = P1.flash; scareHit(1); setTimeout(() => ghostSound(0.6), 380); } }
   const fe = (now - GH.dormT) / 1000;
   if (fe >= 0 && fe < 0.6) { const fl = fe < 0.08 ? 1 : fe < 0.16 ? 0.25 : fe < 0.24 ? 0.85 : Math.max(0, 1 - (fe - 0.24) / 0.32) * 0.5;
     const near = GH.flashN >= 5; drawGhost(c, (m) => puppet2(m, { her: false, H: near ? 304 : 262, base: near ? 534 : 506, x: near ? 760 : 800, fx: 1, t: now * 0.001, look: -0.3 }), 0.92 * fl, 4); } // lần sau: đứng sát kính hơn // đứng ngay trước khung cửa sổ: chớp sáng thì in đen lên kính
@@ -51,7 +51,7 @@ SC.hall.draw = function (c, now, dt) {
   hallDraw10.call(this, c, now, dt);
   if (!GH.hallStart) GH.hallStart = now;
   const since = (now - GH.hallStart) / 1000, busy = typeof P2 !== 'undefined' && (P2.done || P2.calm);
-  if (!busy && ((GH.hallN === 0 && since > 18) || (GH.hallN === 1 && since > 78))) { GH.hallN++; GH.hallT = now; const t = ac.currentTime; for (let i = 0; i < 4; i++) nz(t + [0, 0.5, 0.8, 1.05][i], 0.07, 'bandpass', 160 + i * 20, 5, 0.18); setTimeout(() => scareHit(0.9), 200); setTimeout(() => ghostSound(0.6), 700); }
+  if (false && !busy && since < 0) { GH.hallN++; GH.hallT = now; const t = ac.currentTime; for (let i = 0; i < 4; i++) nz(t + [0, 0.5, 0.8, 1.05][i], 0.07, 'bandpass', 160 + i * 20, 5, 0.18); setTimeout(() => scareHit(0.9), 200); setTimeout(() => ghostSound(0.6), 700); }
   const e = (now - GH.hallT) / 1000;
   if (e >= 0 && e < 1.3) {
     const off = e < 0.2 || (e > 0.52 && e < 0.64) || (e > 0.82 && e < 0.9);
@@ -62,7 +62,7 @@ SC.hall.draw = function (c, now, dt) {
 
 // ---- đêm 98, cầu thang: một lần đèn pha quét qua in ra một cái bóng người ngồi trên bậc ----
 const quet10 = CT.quet;
-CT.quet = function (dir) { const r = quet10.apply(this, arguments); GH.stairN++; if ((GH.stairN === 3 || GH.stairN === 9) && typeof P3 !== 'undefined' && !P3.calm) { GH.stairT = performance.now(); GH.stairDir = dir || 1; setTimeout(() => scareHit(0.85), 450); setTimeout(() => ghostSound(0.6), 900); } return r; };
+CT.quet = function (dir) { const r = quet10.apply(this, arguments); GH.stairN++; if (false /* bỏ 14/11: bóng chỉ hiện khi em bí */) { GH.stairT = performance.now(); GH.stairDir = dir || 1; setTimeout(() => scareHit(0.85), 450); setTimeout(() => ghostSound(0.6), 900); } return r; };
 const stairDraw10 = SC.cauthang.draw;
 SC.cauthang.draw = function (c, now, dt) {
   stairDraw10.call(this, c, now, dt);
@@ -77,43 +77,74 @@ function lying(c, id, x, y, rot, s) { c.save(); c.translate(x, y); c.rotate(rot)
 const hsDraw10 = SC.hopsat.draw; // hộp sắt: hình nhân chàng trai nằm chéo trên mảnh giấy
 SC.hopsat.draw = function (c, now, dt) { hsDraw10.call(this, c, now, dt); if (P3.open && HS.mo > 0.9 && !P3.manh) lying(c, 'nhan_anh', 700, 482, -1.47, 0.72); };
 const rdDraw10 = SC.radio.draw; // lòng radio: hình nhân cô gái nằm cạnh mảnh giấy
-SC.radio.draw = function (c, now, dt) { rdDraw10.call(this, c, now, dt); if (P5.radioLat && P5.radioFace > 0.9 && P5.radioOpen > 0.6 && !P5.manh[2]) lying(c, 'nhan_em', 650, 398, -1.42, 0.78); };
+SC.radio.draw = function (c, now, dt) { rdDraw10.call(this, c, now, dt); /* hình nhân cô gái giờ nằm trên bàn của anh (p9.js) */ };
 const bdDraw10 = SC.banda.draw; // ngăn bàn đá: nửa khuôn nằm dưới mảnh giấy
 SC.banda.draw = function (c, now, dt) { bdDraw10.call(this, c, now, dt); if (P5.banOpen > 0.5 && !P5.manh[3]) { const a = BD5.notch, k = ease(P5.banOpen), x = BD5.cx + Math.cos(a) * (BD5.r + 20 + 70 * k), y = BD5.cy + Math.sin(a) * (BD5.r + 20 + 70 * k); lying(c, 'khuon_nam', x + 46, y + 4, 0.18, 0.22); c.save(); c.translate(x - 30, y - 4); drawManh(c, 3, 0, 0, 0.3); c.restore(); } };
 
 // ================= BÓNG CHỈ LỐI =================
-// Mỗi lần em bí (thử sai nhiều lần, hoặc đứng lâu) và dòng gợi ý hiện ra, một bóng nam ngược sáng thoáng hiện ở mép khung,
-// tay chỉ vào giữa, rồi vụt mất; có lần nó lướt ngang phía sau. Lúc chơi: rợn, như có ai theo dõi.
-// Sau danh đề (mặt khuất): những dòng gợi ý ấy hiện lại bằng nét chữ tay của anh, anh đứng chỉ từng dòng → hoá ra anh luôn bên cạnh chỉ lối.
-const HELP = { log: [], at: -1e9, n: 0, side: 1, mode: 0, listSeen: null, tierSeen: 0 };
+// Không hiện ngẫu nhiên. Chỉ khi em bí thật (đứng lâu tới bậc gợi ý thứ hai, hoặc thử sai nhiều lần), bóng nam bật ra ngay cạnh
+// đúng chỗ cần chạm, tay chỉ vào đó, giật mình một cái rồi tắt phụt; chỗ ấy còn lại một vệt sáng lạnh mờ một lúc.
+// Mỗi câu đố nhiều nhất một lần, hai lần hiện cách nhau ít nhất 90 giây. Sau danh đề (mặt khuất) em mới hiểu: bóng ấy là anh chỉ đường.
+const HELP = { log: [], at: -1e9, n: 0, x: 0, y: 0, fx: 1, done: {}, listSeen: null, tierSeen: 0 };
 const NO_HELP = /^(tape|tui|ket|thu|manh|khuon)$/;
-function helpFire(text) {
-  if (!text) return; if (!HELP.log.includes(text)) HELP.log.push(text);
-  const now = performance.now();
-  if (NO_HELP.test(V.cur || '') || /play|phones|armed/.test(TAPE.phase) || now - HELP.at < 25000 || now - GH.dormT < 8000 || now - GH.hallT < 8000 || now - GH.stairT < 8000) return;
-  HELP.at = now; HELP.n++; HELP.side = -HELP.side; HELP.mode = HELP.n % 3 === 2 ? 1 : 0; if (HELP.mode === 0) { scareHit(0.8); setTimeout(() => ghostSound(0.4), 420); } else { scareHit(0.45); ghostSound(0.6); }
+const hcen = (r) => (r && r.w ? [r.x + r.w / 2, r.y + r.h / 2] : null);
+function helpTarget() { // chỗ cần chạm tiếp theo ở cảnh hiện tại (toạ độ khung 1600×900), không có thì bóng không hiện
+  try {
+    const s = V.cur, L0 = (HINT.list && HINT.list[0]) || '', pocket = [POCKET.r.x + POCKET.r.w / 2, POCKET.r.y + POCKET.r.h / 2];
+    if (s === 'dorm') { if (/sáng trên giường/.test(L0)) return hcen(HOT.phone); if (/khe cửa/.test(L0)) return hcen(HOT.door);
+      return hcen({ goi: HOT.pillow, ao: HOT.uniform, tu: HOT.tu, trongtu: HOT.tu, vali: HOT.win, bang: HOT.vali }[P1.hintKey]); }
+    if (s === 'win1') return [WIN_C.x + 430, WIN_C.y + 520]; // tấm bia sau màn mưa
+    if (s === 'tuopen') return hcen(!P1.may ? HOT.may : HOT.tai);
+    if (s === 'open1') return hcen(HOT.tape1);
+    if (s === 'hall') { const f = Object.keys(P2.found); if (f.length >= 7) return hcen(HOT2.end);
+      const R = { kinh: HOT2.door2, dep: H2.dep, lancan: H2.lancan, vung: H2.vung, den: H2.den, ao: HOT2.ao, dt: HOT2.phone };
+      const w = ['kinh', 'dep', 'lancan', 'vung', 'den', 'ao', 'dt'].find((k) => R[k] && !f.some((id) => SIGN_WHERE[id] === k)); return w ? hcen(R[w]) : null; }
+    if (s === 'cauthang') return P3.open ? null : hcen(HOT.hop_sat);
+    if (s === 'buctuong') { if (P4.marks < 15) return hcen(BT.xoa); if (P4.peel < 1) return [1150, 470]; if (!P4.solved) return pocket; return BT.o && BT.o[100] ? [BT.o[100].x, BT.o[100].y] : null; }
+    if (s === 'dinhngoai') return hcen(!P5.cong ? HOT_D.cong : HOT_D.tuong_phai);
+    if (s === 'dinhtrong') return hcen(!P5.manh[2] ? HOT_D.radio : HOT_D.ban_da);
+    if (s === 'benphai') return hcen(HOT_D.loi);
+    if (s === 'cuatro') { const i = P6.placed.findIndex((v) => !v); return i >= 0 ? ctrTray(i) : pocket; }
+  } catch (e) { /* cảnh chưa sẵn: thôi */ }
+  return null;
 }
-const missHint10 = missHint; // gợi ý theo số lần thử sai
-missHint = function (key, list, every) { const s0 = HINT.show; missHint10(key, list, every); if (HINT.show !== s0 && HINT.text) helpFire(HINT.text); };
-const drawHint10 = drawHint; // gợi ý theo thời gian đứng yên
+function helpFire(key) {
+  const now = performance.now(); if (HELP.done[key] || NO_HELP.test(V.cur || '') || /play|phones|armed/.test(TAPE.phase) || now - HELP.at < 90000) return;
+  const tg = helpTarget(); if (!tg || !isFinite(tg[0]) || !isFinite(tg[1])) return;
+  HELP.done[key] = 1; HELP.at = now; HELP.n++; HELP.x = tg[0]; HELP.y = tg[1]; HELP.fx = tg[0] > 800 ? 1 : -1; // đứng phía rộng hơn, quay mặt vào chỗ cần chạm
+  const k = P9.has.nhan_anh ? 0.4 : 0.7; scareHit(k); setTimeout(() => ghostSound(0.5 * k), 420); // đã cầm hình nhân chàng trai thì biết bóng là ai: dọa nhẹ hơn
+}
+const helpLog = (t) => { if (t && !HELP.log.includes(t)) HELP.log.push(t); };
+const missHint10 = missHint; // thử sai: tới bậc gợi ý thứ hai trở đi mới gọi bóng
+missHint = function (key, list, every = 2) { const s0 = HINT.show; missHint10(key, list, every); if (HINT.show !== s0 && HINT.text) { helpLog(HINT.text); if ((MISS[key] || 0) / every >= 2) helpFire('sai:' + V.cur + ':' + key); } };
+const drawHint10 = drawHint; // đứng lâu: bậc gợi ý thứ hai trở đi
 drawHint = function (c, now) { drawHint10(c, now);
   if (HINT.list !== HELP.listSeen) { HELP.listSeen = HINT.list; HELP.tierSeen = HINT.tier; }
-  else if (HINT.tier > HELP.tierSeen) { HELP.tierSeen = HINT.tier; helpFire(HINT.text); } };
+  else if (HINT.tier > HELP.tierSeen) { HELP.tierSeen = HINT.tier; helpLog(HINT.text); if (HINT.tier >= 2) helpFire('lau:' + V.cur + ':' + (HINT.list[0] || '')); } };
 function coldBack(c, x, y, r, a) { c.save(); c.globalCompositeOperation = 'lighter'; const gg = c.createRadialGradient(x, y, 10, x, y, r); gg.addColorStop(0, `rgba(150,170,210,${a})`); gg.addColorStop(1, 'rgba(150,170,210,0)'); c.fillStyle = gg; c.fillRect(x - r, y - r, r * 2, r * 2); c.restore(); }
 OVER.push((c, now) => {
-  const e = (now - HELP.at) / 1000; if (e < 0 || e > 1.0 || NO_HELP.test(V.cur || '')) return; const sd = HELP.side;
-  if (HELP.mode === 0) { // bật lên đột ngột sát mép khung, ngược sáng lạnh, tay đã chỉ sẵn vào giữa; giật nhẹ rồi tắt phụt
-    const fl = e < 0.06 ? 1 : e < 0.1 ? 0 : e < 0.78 ? 1 : 0; if (!fl) return;
-    if (e < 0.16) { c.fillStyle = 'rgba(0,0,0,.4)'; c.fillRect(-300, -300, W + 600, H + 600); } // đèn như sụt xuống một nhịp
-    const jit = e < 0.32 ? (Math.random() - 0.5) * 10 : 0, x = W / 2 + sd * 560 + jit, base = 920, Hh = 520;
-    coldBack(c, x, base - Hh * 0.6, Hh * 0.85, 0.22);
-    drawGhost(c, (m) => puppet2(m, { her: false, H: Hh, base, x, fx: -sd, t: now * 0.001, reach: 1, look: -0.12 }), 0.95, 5);
-  } else { // lướt ngang phía sau, rất nhanh
-    const k = clamp(e / 0.6, 0, 1), x = W / 2 - sd * (720 - 1440 * k), fl = k < 1 ? 1 : 0;
-    coldBack(c, x, 470, 260, 0.12 * fl);
-    drawGhost(c, (m) => puppet2(m, { her: false, H: 270, base: 640, x, fx: sd, t: now * 0.001, walk: 1, ph: now * 0.012 }), 0.75 * fl, 4);
+  const e = (now - HELP.at) / 1000; if (e < 0 || e > 7 || NO_HELP.test(V.cur || '')) return;
+  const H0 = 400, fx = HELP.fx, gx = HELP.x - fx * 0.33 * H0, base = HELP.y + 0.76 * H0;
+  if (e < 0.78 && !(e >= 0.06 && e < 0.1)) { // bật lên đột ngột ngay cạnh, tay chỉ vào chỗ cần chạm; giật nhẹ rồi tắt phụt
+    if (e < 0.16) { c.fillStyle = 'rgba(0,0,0,.4)'; c.fillRect(-300, -300, W + 600, H + 600); }
+    const jit = e < 0.32 ? (Math.random() - 0.5) * 10 : 0;
+    coldBack(c, gx + jit, base - H0 * 0.6, H0 * 0.85, 0.22);
+    drawGhost(c, (m) => puppet2(m, { her: false, H: H0, base, x: gx + jit, fx, t: now * 0.001, reach: 1, look: -0.12 }), 0.95, 5);
+  }
+  if (e > 0.7) { // vệt sáng lạnh mờ ở đúng chỗ tay vừa chỉ
+    const a = Math.min(1, (e - 0.7) / 0.4) * Math.max(0, 1 - (e - 5.5) / 1.5) * (0.55 + 0.45 * Math.sin(now * 0.005));
+    c.save(); c.globalCompositeOperation = 'lighter'; const gg = c.createRadialGradient(HELP.x, HELP.y, 2, HELP.x, HELP.y, 54); gg.addColorStop(0, `rgba(190,210,240,${0.42 * a})`); gg.addColorStop(1, 'rgba(160,180,220,0)'); c.fillStyle = gg; c.fillRect(HELP.x - 60, HELP.y - 60, 120, 120); c.restore();
   }
 });
+
+// ---- đêm 96, cửa sổ: đang lau kính chờ chớp để đọc số, lần chớp thứ hai có người đứng cạnh tấm bia, tay chỉ vào dãy số ----
+const GW = { flash: null, n: 0, t: -1e9 };
+function winGhost(c, now, fl) {
+  if (P1.flash !== GW.flash) { GW.flash = P1.flash; GW.n++; if (false /* bỏ 14/11: bóng chỉ hiện khi em bí */) { GW.t = P1.flash; scareHit(1); setTimeout(() => ghostSound(0.5), 420); } }
+  if (GW.t !== P1.flash || fl <= 0.02) return;
+  const mx = WIN_C.x + 430, my = WIN_C.y + 560;
+  drawGhost(c, (m) => puppet2(m, { her: false, H: 330, base: my + 200, x: mx - 330, fx: 1, t: now * 0.001, reach: 1, look: -0.05 }), Math.min(1, fl * 1.1), 3);
+}
 
 // ---- mặt khuất (sau "Hết cuộn băng số 2"): băng tưởng đã dừng lại chạy tiếp ----
 const MK = { t0: 133, lines: null, snd: {} };
@@ -152,3 +183,8 @@ function matKhuat(c, now, s) {
 }
 const ketDraw10 = SC.ket.draw;
 SC.ket.draw = function (c, now, dt) { ketDraw10.call(this, c, now, dt); const s = ketT() - MK.t0; if (s >= 0) { setT(c); matKhuat(c, now, s); } };
+
+// ---- nhặt hình nhân chàng trai trong hộp sắt: một câu cho em nhận ra cái bóng chỉ đường chính là dáng này ----
+const manhAdd10 = manhAdd;
+manhAdd = function (i) { const had = P9.has.nhan_anh; manhAdd10(i);
+  if (!had && P9.has.nhan_anh && !P9.quiet) setTimeout(() => sayNow(HELP.n > 0 ? 'Dáng người này… giống hệt cái bóng ban nãy. Lần ấy, tay nó chỉ đúng vào chỗ em cần tìm.' : 'Dáng người này lạ mà quen. Lúc nào em bí quá, có khi sẽ gặp lại nó.'), 7000); };

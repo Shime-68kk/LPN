@@ -8,10 +8,11 @@ const P9 = { has: {}, placed: {}, sel: null, glow: 0, done: false, hintKey: '', 
 const ITEM9 = {
   nhan_anh: { label: 'hình nhân chàng trai', say: 'Kẹp trong đó còn một hình nhân giấy cắt hình một chàng trai, có dây buộc.' },
   khuon_nu: { label: 'nửa khuôn trái', say: 'Rơi ra cùng là nửa tấm khuôn gỗ, khoét hình một cô gái.' },
-  nhan_em: { label: 'hình nhân cô gái', say: 'Còn một hình nhân giấy cắt hình một cô gái tóc buộc.' },
+  nhan_em: { label: 'hình nhân cô gái', say: 'Trên bàn của anh, một hình nhân giấy cắt hình cô gái tóc buộc.' },
   khuon_nam: { label: 'nửa khuôn phải', say: 'Dưới mảnh giấy là nửa tấm khuôn gỗ, khoét hình một chàng trai.' },
 };
-const PAIR9 = { 0: 'nhan_anh', 1: 'khuon_nu', 2: 'nhan_em', 3: 'khuon_nam' };
+const PAIR9 = { 0: 'nhan_anh', 1: 'khuon_nu', 3: 'khuon_nam' }; // hình nhân cô gái không đi theo mảnh giấy: nó nằm trên bàn của anh (DESK9)
+const DESK9 = { x: 1268, y: 468 }; // trên mặt bàn, bên phải khuôn, dưới ánh đèn
 const ORDER9 = ['khuon_nu', 'khuon_nam', 'nhan_em', 'nhan_anh'];
 const PAPER9 = '#ece3cf';
 // dáng đứng yên của hình nhân trong khuôn: cô gái nhìn sang phải, chàng trai nhìn sang trái (nhìn nhau)
@@ -43,7 +44,8 @@ function drawItem9(c, id, x, y, s) {
 }
 function khuonHints() {
   const both = P9.placed.khuon_nu && P9.placed.khuon_nam; let k, L;
-  if (!both) { k = 'k0'; L = ['Hai nửa khuôn gỗ và hai hình nhân em mang theo.', 'Mỗi nửa khuôn có một chỗ của nó.', 'Chạm một nửa khuôn dưới khay, rồi chạm vào chỗ của nó trên bàn.']; }
+  if (!P9.has.nhan_em) { k = 'kx'; L = ['Đây là bàn của anh. Trên bàn còn một thứ.', 'Dưới ngọn đèn, bên phải chiếc khuôn.', 'Chạm vào hình nhân giấy nằm trên mặt bàn.']; }
+  else if (!both) { k = 'k0'; L = ['Hai nửa khuôn gỗ và hai hình nhân em mang theo.', 'Mỗi nửa khuôn có một chỗ của nó.', 'Chạm một nửa khuôn dưới khay, rồi chạm vào chỗ của nó trên bàn.']; }
   else { k = 'k1'; L = ['Mỗi chỗ khoét vừa đúng một dáng người.', 'Hình nhân nào vừa với chỗ nào?', 'Cô gái tóc buộc vào chỗ khoét dáng cô gái, chàng trai vào chỗ còn lại.']; }
   if (P9.hintKey !== k) { P9.hintKey = k; hints(L); }
 }
@@ -66,6 +68,8 @@ SC.khuon = {
     if (keep9 > 0) { c.save(); c.globalAlpha *= keep9;
       if (P9.placed.nhan_em) drawPuppetPaper(c, true, SEAM.x - HALF.w + 120, SEAM.y + HALF.h - 40, 300);
       if (P9.placed.nhan_anh) drawPuppetPaper(c, false, SEAM.x + HALF.w - 120, SEAM.y + HALF.h - 40, 300); c.restore(); }
+    // hình nhân cô gái nằm sẵn trên bàn của anh, chưa nhặt
+    if (!P9.has.nhan_em) { c.save(); c.translate(DESK9.x + 8, DESK9.y + 12); c.rotate(-1.38); c.globalAlpha *= 0.3; c.fillStyle = '#000'; c.beginPath(); c.ellipse(0, 4, 26, 78, 0, 0, Math.PI * 2); c.fill(); c.restore(); c.save(); c.translate(DESK9.x, DESK9.y); c.rotate(-1.38); drawItem9(c, 'nhan_em', 0, 0, 0.95); c.restore(); }
     // khay: những món chưa đặt
     ORDER9.forEach((id, i) => { if (P9.placed[id] || !P9.has[id]) return; const x = trayX(i), up = P9.sel === id ? -14 : 0;
       if (P9.sel === id) { const g = c.createRadialGradient(x, TRAY_Y + up, 8, x, TRAY_Y + up, 110); g.addColorStop(0, 'rgba(255,214,160,.25)'); g.addColorStop(1, 'rgba(255,214,160,0)'); c.fillStyle = g; c.fillRect(x - 110, TRAY_Y - 110 + up, 220, 220); }
@@ -79,6 +83,7 @@ SC.khuon = {
   },
   tap(p) {
     if (P9.done) return;
+    if (!P9.has.nhan_em && Math.abs(p[0] - DESK9.x) < 130 && Math.abs(p[1] - DESK9.y) < 90) { P9.has.nhan_em = true; FX.paper(); sayNow(ITEM9.nhan_em.say); khuonHints(); nudge(); return; }
     for (let i = 0; i < ORDER9.length; i++) { const id = ORDER9[i]; if (P9.placed[id] || !P9.has[id]) continue; if (Math.abs(p[0] - trayX(i)) < 85 && Math.abs(p[1] - TRAY_Y) < 90) { P9.sel = P9.sel === id ? null : id; FX.pick(); return; } }
     if (!P9.sel) return;
     const id = P9.sel, inL = inR(p, halfRect('nu')), inRt = inR(p, halfRect('nam'));

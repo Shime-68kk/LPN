@@ -283,6 +283,7 @@ SC.win1 = {
       c.fillStyle = '#c8102e'; c.fillRect(mx + 213, WIN_C.y + 70, 180, 120); c.fillStyle = '#ffcd00'; star(c, mx + 303, WIN_C.y + 130, 28, 11);
       c.restore();
     }
+    if (typeof winGhost === 'function') winGhost(c, now, fl); // bóng ngoài kính lúc chớp (p10.js)
     // hơi nước (mờ lại sau ~2 giây) + giọt mưa ngoài kính
     if (!fogC.width) resetFog();
     fogAcc += dt; while (fogAcc > 0.15) { fogAcc -= 0.15; setT(fogG); fogG.fillStyle = 'rgba(140,156,170,.045)'; fogG.fillRect(WIN_C.x, WIN_C.y, WIN_C.w, WIN_C.h); }
