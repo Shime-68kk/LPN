@@ -920,12 +920,18 @@
       "id": "c24",
       "title": "Không tua nhanh được",
       "cost": 0,
-      "releaseAt": "2099-01-01T00:00:00+07:00",
+      "anyOrder": true,
       "scene": "dem",
       "cast": ["quang"],
-      "game": { "page": "khong-tua.html", "title": "Không tua nhanh được", "text": "Đeo tai nghe vào nha.", "btn": "Bấm play" },
+      "announce": { "theme": "tape", "tape": "BĂNG SỐ 2", "kicker": "Băng số 2 · Đã mở", "title": "Có chương mới cho em rồi!", "text": "Chương 22 · Không tua nhanh được. Cuộn băng thứ hai đây. Đeo tai nghe, tắt bớt đèn rồi mở nha.", "ok": "Mở ngay", "later": "Để sau" },
+      "game": { "page": "bang2/", "title": "Không tua nhanh được", "text": "Đeo tai nghe vào, xoay ngang điện thoại nha.", "btn": "Bấm play" },
       "lines": [
-        { "who": "none", "text": "(lời dẫn chờ anh Quang duyệt)" }
+        { "who": "none", "text": "Ngày thứ 100" },
+        { "who": "ke", "text": "Ba lá thư em đưa, ba câu hỏi." },
+        { "who": "ke", "text": "Cậu không viết thư trả lời. Cậu thu vào băng." },
+        { "who": "ke", "text": "Mỗi câu một cuộn, giấu lại đúng đêm em viết nó." },
+        { "who": "ke", "text": "Có cuộn nằm trong căn phòng mưa gõ cửa kính. Có cuộn chỉ hiện ra khi đèn xe quét qua cầu thang." },
+        { "who": "ke", "text": "Còn nếu thấy ai đứng trong bóng tối… đừng sợ quá nhé." }
       ]
     }
   ]

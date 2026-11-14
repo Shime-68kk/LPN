@@ -971,7 +971,7 @@ body.night .news-card .btn.ghost { color: #D9BE98; border-color: rgba(246, 231, 
 .news-art[hidden], .news-count[hidden] { display: none; }
 .news-art .cas { width: 120px; height: 80px; filter: drop-shadow(0 10px 20px rgba(0, 0, 0, .6)); }
 .cas-b { fill: #241C17; stroke: rgba(236, 230, 218, .25); stroke-width: 1; }
-.cas-l { fill: #ECE3CF; } .cas text { font: 700 6.4px 'Be Vietnam Pro', sans-serif; letter-spacing: .1em; fill: #8C3B3B; text-anchor: middle; }
+.cas-l { fill: #ECE3CF; } .cas text { font: 700 6.4px 'Be Vietnam Pro', sans-serif; letter-spacing: .1em; fill: #8C3B3B; stroke: none; text-anchor: middle; }
 .cas-w { fill: #0B0806; }
 .reel circle { fill: #3A302A; stroke: #ECE3CF; stroke-width: 1.4; } .reel path { stroke: #ECE3CF; stroke-width: 1.1; }
 .reel { transform-box: fill-box; transform-origin: center; animation: reel 2.4s linear infinite; }

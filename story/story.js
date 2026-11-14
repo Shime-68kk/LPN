@@ -250,7 +250,34 @@
   // Banner Băng số 1 (thay banner hồ sơ vụ án đã phá xong): trước 20:00 ngày 1/11 đếm ngược, sau đó mời đọc Chương 17.
   // Chạm vào: mở Chương 17 (chưa tới giờ thì hiện hộp đếm ngược). Cuộn băng thật vẫn phải tự tìm theo lời dặn trong chương.
   let tbTimer = 0;
+  // Băng số 2 (chương 22 · Không tua nhanh được) đã mở thì banner thành cuộn băng số 2: chưa đọc lời dẫn thì mở chương,
+  // đọc rồi thì vào thẳng game (bang2/ tự chơi tiếp chặng đang dở).
+  function tape2Banner() {
+    const i = CHAPTERS.findIndex((c) => c.id === 'c24');
+    if (i < 0) return false;
+    const st = status(i);
+    if (st.wait) return false;
+    const card = $('tape-card'), ls = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+    card.hidden = false;
+    card.classList.add('b2');
+    card.href = '?play=c24';
+    const lab = card.querySelector('.cas text'); if (lab) lab.textContent = 'BĂNG SỐ 2';
+    if (lab && !card.querySelector('.b2-ring')) { const r = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse'); r.setAttribute('class', 'b2-ring'); r.setAttribute('cx', '49.5'); r.setAttribute('cy', '12.3'); r.setAttribute('rx', '3.7'); r.setAttribute('ry', '4.4'); r.setAttribute('transform', 'rotate(-12 49.5 12.3)'); lab.after(r); }
+    const dang = ls('lpn:bang2'), xong = ls('lpn:bang2xong');
+    $('tb-kicker').textContent = xong ? 'Băng số 2 · Đã xem' : dang ? 'Băng số 2 · Đang dở' : 'Băng số 2 · Mới mở';
+    $('tb-title').textContent = 'Chương ' + chNo(i) + ' · ' + CHAPTERS[i].title;
+    $('tb-note').textContent = xong ? 'Tua lại từ đầu thì xem lại được nha.' : dang ? 'Chạm để chơi tiếp chỗ em đang dở.' : 'Đeo tai nghe, tắt bớt đèn, rồi mở nha.';
+    clearInterval(tbTimer);
+    card.onclick = (e) => {
+      e.preventDefault();
+      if (st.state === 'locked' || st.state === 'buy') return;
+      if (save.done.c24) location.href = 'bang2/' + (xong && !dang ? '?moi=1' : '');
+      else play(i);
+    };
+    return true;
+  }
   function tapeBanner() {
+    if (tape2Banner()) return;
     const i = CHAPTERS.findIndex((c) => c.id === 'c19');
     const card = $('tape-card');
     card.hidden = i < 0;

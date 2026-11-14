@@ -704,6 +704,7 @@
       $('news').classList.toggle('is-plain', plain);
       $('news-logo').hidden = tape || plain;
       $('news-art').hidden = !tape;
+      if (tape) { const lab = $('news-art').querySelector('text'); if (lab) lab.textContent = a.tape || 'BĂNG SỐ 1'; } // Băng số 2 ghi nhãn riêng
       clearInterval(this.timer);
       const counting = !!((tape || plain) && it.openAt);
       $('news-count').hidden = !counting;

@@ -66,7 +66,7 @@ body.night .shop-icon { color: #9FE0B2; }
 .tb-art { flex: none; display: grid; place-items: center; width: 70px; height: 52px; border-radius: 10px; background: rgba(236, 230, 218, .05); box-shadow: inset 0 0 0 1px rgba(236, 230, 218, .08); }
 .cas { width: 60px; height: 40px; }
 .cas-b { fill: #241C17; stroke: rgba(236, 230, 218, .25); stroke-width: 1; }
-.cas-l { fill: #ECE3CF; } .cas text { font: 700 6.4px 'Be Vietnam Pro', sans-serif; letter-spacing: .1em; fill: #8C3B3B; text-anchor: middle; }
+.cas-l { fill: #ECE3CF; } .cas text { font: 700 6.4px 'Be Vietnam Pro', sans-serif; letter-spacing: .1em; fill: #8C3B3B; stroke: none; text-anchor: middle; }
 .cas-w { fill: #0B0806; }
 .reel circle { fill: #3A302A; stroke: #ECE3CF; stroke-width: 1.4; } .reel path { stroke: #ECE3CF; stroke-width: 1.1; }
 .reel { transform-box: fill-box; transform-origin: center; animation: reel 2.4s linear infinite; }
@@ -330,3 +330,13 @@ body.night .song-meta small { color: #FF9FB2; }
 /* Chỗ của nút cũ ở góc phải: giữ khoảng để tên chương vẫn nằm giữa */
 .chip-icon-space { width: 44px; height: 44px; flex: none; }
 .play { touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+
+/* Băng số 2: cùng dáng cuộn băng, ánh đèn vàng ấm rọi từ phải (như ngọn đèn trên bức tường bóng), nhãn có nét bút đỏ khoanh số 2 */
+.tape-banner.b2 { background: radial-gradient(90% 150% at 100% 0%, rgba(232, 168, 92, .26), rgba(0, 0, 0, 0) 58%), radial-gradient(70% 120% at 0% 100%, rgba(140, 59, 59, .2), rgba(0, 0, 0, 0) 60%), linear-gradient(135deg, #1C140F, #0B0807); box-shadow: inset 0 0 0 1px rgba(244, 214, 170, .16), 0 12px 30px rgba(20, 10, 4, .45); }
+.tape-banner.b2 .tb-art { background: rgba(244, 214, 170, .07); box-shadow: inset 0 0 0 1px rgba(244, 214, 170, .14), 0 0 22px rgba(232, 168, 92, .18); }
+.tape-banner.b2 .cas-b { fill: #2A1E15; stroke: rgba(244, 214, 170, .32); }
+.tape-banner.b2 .cas-l { fill: #F1E6CF; }
+.tape-banner.b2 .tb-meta b { color: #FFF3E0; }
+.tape-banner.b2 .b2-ring { fill: none; stroke: #C8302A; stroke-width: 1.1; stroke-linecap: round; stroke-dasharray: 30; stroke-dashoffset: 30; animation: b2ring 1.4s .5s ease-out forwards; }
+@keyframes b2ring { to { stroke-dashoffset: 0; } }
+
