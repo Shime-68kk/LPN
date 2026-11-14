@@ -16,7 +16,7 @@
   try {
     var q = new URLSearchParams(location.search);
     if (q.get('moi') === '1') { localStorage.removeItem('lpn:bang2'); q.delete('moi'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '')); }
-    else if (!q.get('phong')) { var sv = JSON.parse(localStorage.getItem('lpn:bang2') || '{}'); if (sv.phong) { q.set('phong', sv.phong); history.replaceState(null, '', location.pathname + '?' + q); } }
+    else if (!q.get('phong') && !q.get('trailer')) { var sv = JSON.parse(localStorage.getItem('lpn:bang2') || '{}'); if (sv.phong) { q.set('phong', sv.phong); history.replaceState(null, '', location.pathname + '?' + q); } }
   } catch (e) { /* bỏ qua */ }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -47,7 +47,8 @@
 <script src="p7.js?v=32"></script>
 <script src="p9.js?v=7"></script>
 <script src="p10.js?v=16"></script>
-<script src="luu.js?v=1"></script>
+<script src="luu.js?v=2"></script>
+<script src="trailer.js?v=5"></script>
 <script src="../../home/offline.js?v=1"></script>
 </body>
 </html>
