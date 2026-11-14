@@ -86,7 +86,7 @@ function dinhHints() {
   let k, L;
   if (!P5.cong) { k = 'd0'; L = ['Cổng đình này em từng mở rồi.', 'Bên phải cổng, men theo tường đình, có lối riêng của nó.', 'Chạm vào cánh cổng để vào sân.']; }
   else if (!P5.manh[2] || !P5.manh[3]) { k = 'd1' + (P5.manh[2] ? 'r' : '') + (P5.manh[3] ? 'b' : ''); L = ['Trong sân còn hai thứ của hai đứa: chiếc radio và bộ bàn ghế đá.', !P5.manh[2] ? 'Chiếc radio vẫn chỉnh ở chỗ cũ. Mặt sau nó có bốn con ốc.' : 'Bàn đá: hai chiếc ghế đã bị ai kéo đi.', !P5.manh[2] ? 'Mỗi con ốc khắc một ký hiệu. Ghép lại thành con số trên mặt radio.' : 'Đưa hai ghế về đúng vết cũ trên nền, rồi xoay mặt bàn cho vết nứt khớp với chân bàn.']; }
-  else if (!P5.loi) { k = 'd2'; L = ['Đường tới chỗ anh không đi xuyên qua đình.', 'Bên phải đình là hồ. Có lối nào men theo tường không?', 'Soi đèn xuống chân tường đình, sát mép nước.']; }
+  else if (!P5.loi) { k = 'd2'; L = ['Đường tới chỗ anh không đi xuyên qua đình.', 'Bên phải đình là hồ. Có lối nào men theo tường không?', 'Chạm vào lối đá nhỏ sát chân tường đình, mép hồ.']; }
   else return;
   if (P5.hintKey !== k) { P5.hintKey = k; hints(L); }
 }
@@ -283,6 +283,7 @@ function loiCheck() { const s = BP.soi; if (!s || P5.seenLoi) return; if (typeof
 function loiFound() { P5.seenLoi = true; const t0 = ac.currentTime; nz(t0, 1.2, 'bandpass', 600, 1, 0.08); tone(t0 + 0.2, 392, 392, 0.01, 1.4); sayNow(typeof BP.reveal === 'number' ? 'Sát chân tường đình, mép hồ có một lối đá nhỏ.' : 'Chân tường bên phải có một khe hẹp, vừa một người đi.'); }
 SC.benphai.down = function (p) { bpDown.call(this, p); if (!this.lit) { this.lit = true; FX.torch && FX.torch(); } loiCheck(); return false; };
 SC.benphai.move = function (p, b) { bpMove.call(this, p, b); if (b) loiCheck(); };
+const bpEnter5 = SC.benphai.enter; SC.benphai.enter = function () { bpEnter5.call(this); if (!P5.seenLoi) setTimeout(() => { if (V.cur === 'benphai' && !P5.seenLoi) loiFound(); }, 1500); }; // cảnh tự sáng: vài giây sau tự báo có lối đá
 const bpDraw = SC.benphai.draw; SC.benphai.draw = function (c, now, dt) { bpDraw.call(this, c, now, dt); if (BP.soi && !P5.seenLoi && typeof BP.reveal === 'number' && BP.reveal > 0.6) loiFound(); };
 SC.benphai.up = function () { return false; };
 SC.benphai.tap = function (p) {

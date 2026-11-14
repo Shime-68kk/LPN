@@ -1656,7 +1656,7 @@ var HOT_D = {};
     const sy = hasTorch ? clamp(Number(soi[1]), -200, H + 200) : 0;
 
     // Tính mức lộ của lối đá khi soi xuống chân tường đình sát mép nước & ghi vào BP.reveal
-    const reveal = hasTorch ? calcBpReveal(soi) : 0;
+    const reveal = BP.sang ? 1 : hasTorch ? calcBpReveal(soi) : 0; // BP.sang: cảnh tự sáng, lối đá hiện sẵn (anh Quang 14/11)
     BP.reveal = reveal;
 
     // 1. Nền chi tiết đã bake
@@ -1728,7 +1728,7 @@ var HOT_D = {};
     dm.globalCompositeOperation = 'source-over';
 
     c.setTransform(1, 0, 0, 1, 0, 0);
-    c.drawImage(bpDarkMaskC, 0, 0, cv.width, cv.height);
+    { const ga = c.globalAlpha; if (BP.sang) c.globalAlpha = ga * 0.3; c.drawImage(bpDarkMaskC, 0, 0, cv.width, cv.height); c.globalAlpha = ga; } // tự sáng: bóng đêm chỉ còn mờ nhẹ
     setT(c);
 
     // 3. Phần động rẻ tiền: vệt sáng lăn tăn trên mặt hồ + đèn cổng chào xa + quầng đèn pin
@@ -1799,6 +1799,7 @@ var HOT_D = {};
     bake: bakeBenPhai,
     enter() {
       ensureBenPhaiBaked();
+      BP.sang = true;
       BP.reveal = calcBpReveal(BP.soi);
       if (typeof nudge === 'function') nudge();
     },
