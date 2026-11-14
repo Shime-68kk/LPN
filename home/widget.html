@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Ngày bên nhau trên màn hình khoá</title>
   <script>
-    try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df' || (localStorage.getItem('lpn:preview') !== '1' && (!localStorage.getItem('lpn:relock2') || (localStorage.getItem('lpn:who') === 'quang' && !localStorage.getItem('lpn:relock1'))))) location.replace('./'); }
+    try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df' || (localStorage.getItem('lpn:preview') !== '1' && (!localStorage.getItem('lpn:relock2') || !localStorage.getItem('lpn:relock3') || (localStorage.getItem('lpn:who') === 'quang' && localStorage.getItem('lpn:anhmo3') !== '1') || (localStorage.getItem('lpn:who') === 'quang' && !localStorage.getItem('lpn:relock1'))))) location.replace('./'); }
     catch (e) { location.replace('./'); }
   </script>
   <script>
@@ -36,7 +36,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-  <link rel="stylesheet" href="home.css?v=44" />
+  <link rel="stylesheet" href="home.css?v=45" />
   <style>
     .wg { max-width: 560px; margin: 0 auto; padding: calc(var(--safe-top) + 14px) 20px calc(var(--safe-bottom) + 32px); display: flex; flex-direction: column; gap: 18px; }
     .wg-head { display: flex; align-items: center; justify-content: space-between; }

@@ -55,6 +55,17 @@
     thunder() { const t = ac.currentTime; nz(t, 0.06, 'highpass', 2500, 0.7, 0.5, 0, 0, TR.bus); nz(t + 0.25, 3.2, 'lowpass', 160, 0.8, 0.9, 0, 70, TR.bus); nz(t + 0.4, 2.2, 'lowpass', 420, 0.7, 0.35, -0.3, 0, TR.bus); },
     car(dir) { const t = ac.currentTime; nz(t, 2.6, 'bandpass', 380, 1.2, 0.35, -0.8 * dir, 0, TR.bus); nz(t + 0.6, 1.8, 'lowpass', 220, 0.8, 0.3, 0.6 * dir, 0, TR.bus); },
     chirps() { const ct = ac.currentTime; for (let r = 0; r < 4; r++) { const f = 4300 + Math.random() * 500, t0 = ct + r * (0.6 + Math.random() * 0.9); for (let i = 0; i < 3; i++) nz(t0 + i * 0.055, 0.03, 'bandpass', f, 12, 0.05, Math.random() - 0.5, 0, TR.bus); } },
+    play() { const t = ac.currentTime; nz(t, 0.018, 'bandpass', 2300, 2, 0.55, 0, 0, TR.bus); tone(t, 160, 70, 0.35, 0.16, 'sine', TR.bus); nz(t + 0.09, 0.012, 'bandpass', 3400, 3, 0.25, 0, 0, TR.bus); }, // bấm play: cạch
+    drone(on, sec) { // tiếng trầm rền dồn lên trong khoảng lặng
+      if (!amb.drone) { const o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), lp = ac.createBiquadFilter(); o.frequency.value = 46; o2.frequency.value = 46.7; o2.type = 'triangle'; lp.type = 'lowpass'; lp.frequency.value = 180; g.gain.value = 0; o.connect(lp); o2.connect(lp); lp.connect(g).connect(TR.bus); o.start(); o2.start(); amb.drone = { gain: g, o, lp }; }
+      ramp(amb.drone.gain.gain, on, sec); },
+    ffJam() { // tua nhanh rít lên rồi kẹt cứng: "không tua nhanh được"
+      const t = ac.currentTime, o = ac.createOscillator(), bp = ac.createBiquadFilter(), g = ac.createGain(); o.type = 'sawtooth'; o.frequency.setValueAtTime(220, t); o.frequency.exponentialRampToValueAtTime(1500, t + 0.85);
+      bp.type = 'bandpass'; bp.frequency.setValueAtTime(900, t); bp.frequency.exponentialRampToValueAtTime(3200, t + 0.85); bp.Q.value = 1.2; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.25); g.gain.setValueAtTime(0.09, t + 0.8); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+      o.connect(bp).connect(g).connect(TR.bus); o.start(t); o.stop(t + 0.95);
+      nz(t, 0.85, 'highpass', 2500, 0.7, 0.08, 0, 6000, TR.bus); for (let i = 0; i < 9; i++) nz(t + i * 0.09, 0.02, 'bandpass', 1400 + i * 120, 4, 0.1, 0, 0, TR.bus); // rít + lạch cạch bánh răng
+      nz(t + 0.86, 0.06, 'bandpass', 900, 2, 0.8, 0, 0, TR.bus); tone(t + 0.86, 120, 55, 0.6, 0.35, 'sine', TR.bus); nz(t + 0.9, 0.3, 'lowpass', 300, 0.8, 0.5, 0, 0, TR.bus); }, // kẹt: cụp
+    water() { const ct = ac.currentTime; for (let i = 0; i < 6; i++) nz(ct + i * 0.45 + Math.random() * 0.2, 0.35, 'bandpass', 500 + Math.random() * 400, 2, 0.06, Math.random() - 0.5, 0, TR.bus); }, // nước vỗ mép hồ
     clunk() { const t = ac.currentTime; nz(t, 0.02, 'bandpass', 2400, 2, 0.6, 0, 0, TR.bus); tone(t, 140, 60, 0.4, 0.2, 'sine', TR.bus); nz(t + 0.2, 0.03, 'bandpass', 1800, 2, 0.4, 0, 0, TR.bus); },
   };
 
@@ -82,7 +93,7 @@
     { at: 27.0, sc: 'anh1', cut: 1, flash: 1, z: [1.0, 1.06], p: [800, 480], set() { ANH.mode = 2; ANH.dur = 1e9; ANH.done = null; fade('gio', 0, 0.6); }, after() { ANH.t = 6; } },
     { at: 31.2, sc: 'buctuong', cut: 1, z: [1.0, 1.08], p: [700, 420], set() { Object.assign(P4, { marks: 15, peel: 1, solved: true, done: false, lightT: 0 }); } },
     { at: 34.8, sc: 'dinhngoai', cut: 1, z: [1.0, 1.07], p: [800, 470], set() { sfx.chirps(); } },
-    { at: 37.6, sc: 'benphai', cut: 1, z: [1.04, 1.0], p: [900, 600], set() { if (typeof BP !== 'undefined') BP.reveal = 1; P5.seenLoi = true; } },
+    { at: 37.6, sc: 'benphai', cut: 1, z: [1.04, 1.0], p: [900, 600], set() { if (typeof BP !== 'undefined') BP.reveal = 1; P5.seenLoi = true; sfx.water(); } },
     { at: 40.2, sc: 'luotngo', cut: 1, z: [1.0, 1.08], p: [800, 450], set() { sfx.chirps(); } },
     { at: 44.6, sc: 'hall', z: [1.0, 1.05], p: [800, 470], set() { bed('gio', 0.06, 'bandpass', 520, 0.6, 3); } },
     { at: 55.6, sc: 'khuon', cut: 2, z: [1.06, 1.0], p: [800, 380], set() { Object.assign(P9.placed, { khuon_nu: true, khuon_nam: true }); P9.glow = 0.4; fade('gio', 0, 0.4); } },
@@ -113,7 +124,7 @@
   SHOTS.forEach((s) => { if (s.cut) K.cut(s.at, s.cut === 2); if (s.flash) K.flash(s.at); });
   // các mốc khác: chớp, đèn xe, tim, bóng, tên phim, nhả băng
   const EV = [
-    { at: 0, fn: () => K.dark(1, 0.01) },
+    { at: 0, fn: () => { K.dark(1, 0.01); sfx.play(); bed('xi', 0.012, 'highpass', 3600, 0.7, 0.4); } },
     { at: 0.05, fn: () => K.bars(1, 2.5) },
     { at: 2.6, fn: () => K.dark(0, 2.6) },
     { at: 5.0, fn: () => { P1.flash = performance.now(); sfx.thunder(); } },
@@ -124,16 +135,20 @@
     { at: 24.6, fn: () => KS('riser', 2.3) },
     { at: 42.0, fn: () => K.dark(1, 1.6) },
     { at: 45.0, fn: () => K.dark(0.45, 3.5) },
+    { at: 45.2, fn: () => sfx.drone(0.16, 7.5) },
     { at: 48.6, fn: () => KS('heart', 2) },
     { at: 51.4, fn: () => KS('heart', 1) },
+    { at: 52.55, fn: () => sfx.drone(0, 0.08) }, // lặng hẳn một nhịp trước khi bóng bật ra
     { at: 52.9, fn: () => { K.dark(0.05, 0.05); HELP.at = performance.now(); HELP.x = 1060; HELP.y = 430; HELP.fx = 1; scareHit(1); } },
     { at: 53.9, fn: () => K.dark(0.5, 1.2) },
     { at: 55.4, fn: () => K.dark(0, 0.3) },
     { at: 59.6, fn: () => { K.dark(1, 1.4); KS('riser', 1.9); } },
     { at: 61.6, fn: () => { K.dark(0, 0.05); KS('boom'); } },
-    { at: 81.4, fn: () => K.dark(1, 0.25) },
+    { at: 80.45, fn: () => sfx.ffJam() },
+    { at: 81.32, fn: () => { K.dark(1, 0.06); if (TR.mg) ramp(TR.mg.gain, 0, 0.05); } }, // băng kẹt: nhạc tắt phụt theo
+    { at: 82.36, fn: () => { if (TR.mg) ramp(TR.mg.gain, 0.95, 0.35); } },
     { at: 82.4, fn: () => KS('boom') },
-    { at: 92.4, fn: () => { sfx.clunk(); TR.end = true; } },
+    { at: 92.4, fn: () => { sfx.clunk(); fade('xi', 0, 0.3); TR.end = true; } },
   ];
 
   // ---- đồng hồ & điều khiển ----
@@ -167,10 +182,10 @@
   START = () => {
     st0(); INTRO.t = 99; HINT.off = true; HINT.text = '';
     master.gain.value = 0; // tiếng của game tắt hẳn
-    TR.bus = ac.createGain(); TR.bus.gain.value = 1; TR.bus.connect(ac.destination);
+    TR.bus = ac.createGain(); TR.bus.gain.value = 0.9; const lim = ac.createDynamicsCompressor(); lim.threshold.value = -8; lim.knee.value = 6; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.2; TR.bus.connect(lim).connect(ac.destination); // chặn đỉnh: cú dội to mà không rè
     scareLim(); try { SCARE_LIM.disconnect(); } catch (e) { /* bỏ qua */ } SCARE_LIM.connect(TR.bus);
     const el = new Audio('am/trailer.mp3'); el.preload = 'auto'; TR.el = el;
-    try { const src = ac.createMediaElementSource(el), g2 = ac.createGain(); g2.gain.value = 0.95; src.connect(g2).connect(TR.bus); } catch (e) { /* bỏ qua */ }
+    try { const src = ac.createMediaElementSource(el), g2 = ac.createGain(); g2.gain.value = 0.95; src.connect(g2).connect(TR.bus); TR.mg = g2; } catch (e) { /* bỏ qua */ }
     const sk = +(new URLSearchParams(location.search).get('t') || 0); TR.sk = sk;
     if (sk) { const go2 = () => { el.currentTime = sk; }; if (el.readyState >= 1) go2(); else el.addEventListener('loadedmetadata', go2, { once: true }); }
     el.play().catch(() => {}); TR.t0 = performance.now() - sk * 1000; TR.started = true;

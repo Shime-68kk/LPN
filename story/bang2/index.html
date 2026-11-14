@@ -11,7 +11,7 @@
 <!-- Trang luôn tối: tô nền ngay từ đầu để chuyển trang không chớp sáng. Chưa mở khoá web thì về trang nhà. -->
 <script>
   document.documentElement.style.background = '#000';
-  try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df' && !/^(localhost|127\.0\.0\.1|192\.168\.)/.test(location.hostname)) location.replace('../../home/'); } catch (e) { /* bỏ qua */ }
+  try { if ((localStorage.getItem('lpn:unlock') !== 'a9ed65df' || (localStorage.getItem('lpn:preview') !== '1' && (!localStorage.getItem('lpn:relock3') || (localStorage.getItem('lpn:who') === 'quang' && localStorage.getItem('lpn:anhmo3') !== '1') || false))) && !/^(localhost|127\.0\.0\.1|192\.168\.)/.test(location.hostname)) location.replace('../../home/'); } catch (e) { /* bỏ qua */ }
   // Chơi dở thì lần sau vào tiếp từ chặng đã tới (lpn:bang2 chỉ lưu số chặng, không đồng bộ). ?moi=1: chơi lại từ đầu.
   try {
     var q = new URLSearchParams(location.search);
@@ -46,9 +46,9 @@
 <script src="p6.js?v=6"></script>
 <script src="p7.js?v=32"></script>
 <script src="p9.js?v=7"></script>
-<script src="p10.js?v=16"></script>
+<script src="p10.js?v=17"></script>
 <script src="luu.js?v=2"></script>
-<script src="trailer.js?v=5"></script>
+<script src="trailer.js?v=6"></script>
 <script src="../../home/offline.js?v=1"></script>
 </body>
 </html>

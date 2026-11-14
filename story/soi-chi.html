@@ -11,7 +11,7 @@
   <!-- Trang luôn tối: tô nền ngay từ đầu để chuyển trang không chớp sáng. Chưa mở khoá web thì về trang nhà. -->
   <script>
     document.documentElement.style.background = '#000';
-    try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df' || (localStorage.getItem('lpn:preview') !== '1' && (!localStorage.getItem('lpn:relock2') || (localStorage.getItem('lpn:who') === 'quang' && !localStorage.getItem('lpn:relock1'))))) location.replace('../home/'); } catch (e) { /* bỏ qua */ }
+    try { if (localStorage.getItem('lpn:unlock') !== 'a9ed65df' || (localStorage.getItem('lpn:preview') !== '1' && (!localStorage.getItem('lpn:relock2') || !localStorage.getItem('lpn:relock3') || (localStorage.getItem('lpn:who') === 'quang' && localStorage.getItem('lpn:anhmo3') !== '1') || (localStorage.getItem('lpn:who') === 'quang' && !localStorage.getItem('lpn:relock1'))))) location.replace('../home/'); } catch (e) { /* bỏ qua */ }
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

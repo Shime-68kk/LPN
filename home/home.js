@@ -563,7 +563,7 @@
       const p = new URLSearchParams(location.search);
       const anh = p.get('anh');
       if (anh === null) return;
-      if (anh && fnv('anhmo:' + anh) === ANH_HASH) localStorage.setItem('lpn:anhmo', '1');
+      if (anh && fnv('anhmo:' + anh) === ANH_HASH) localStorage.setItem('lpn:anhmo3', '1');
       p.delete('anh');
       const q = p.toString();
       history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
@@ -580,8 +580,8 @@
     href: '../story/',
   };
   const currentWho = () => { try { return localStorage.getItem('lpn:who'); } catch (e) { return null; } };
-  // 14/11: anh Quang mở lại nick cho mọi máy (trước đó chỉ máy có link ?anh= mới chọn được).
-  const isAnhMo = () => true;
+  // 14/11 tối: khoá tạm lại nick Anh Quang (để Lệ Thủy chơi bằng nick của em). Chỉ máy đã mở bằng link ?anh= sau đợt khoá này (lpn:anhmo3) mới chọn được.
+  const isAnhMo = () => { try { return localStorage.getItem('lpn:anhmo3') === '1'; } catch (e) { return false; } };
   const hasCapnhat1 = () => {
     try { const v = localStorage.getItem('lpn:capnhat1'); return !!v && v !== '0' && v !== 'false'; }
     catch (e) { return false; }
@@ -1008,11 +1008,7 @@
       reveal(e.deltaX > 0);
     }, { passive: false });
   })();
-  // Thẻ trailer: tới giờ mở thì đổi lời, gợi ý đọc Chương 17 để tìm cuộn băng thật
-  if (!TAPE_HOLD && Date.now() >= Date.parse('2026-11-01T20:00:00+07:00')) {
-    const tc = document.querySelector('.trailer-card');
-    if (tc) { tc.querySelector('.eyebrow').textContent = 'Băng số 1 · Đã mở'; tc.querySelector('.tr-sub').textContent = 'Cuộn băng thật đang trốn đâu đó. Đọc Chương 17 nha.'; }
-  }
+  // Thẻ trailer giờ là Băng số 2 (home/index.html .trailer-card.b2); lời cố định, không đổi theo giờ như Băng số 1.
   fetch('../game/beatmaps/index.json')
     .then((r) => r.json())
     .then((d) => {

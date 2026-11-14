@@ -188,3 +188,17 @@ SC.ket.draw = function (c, now, dt) { ketDraw10.call(this, c, now, dt); const s 
 const manhAdd10 = manhAdd;
 manhAdd = function (i) { const had = P9.has.nhan_anh; manhAdd10(i);
   if (!had && P9.has.nhan_anh && !P9.quiet) setTimeout(() => sayNow(HELP.n > 0 ? 'Dáng người này… giống hệt cái bóng ban nãy. Lần ấy, tay nó chỉ đúng vào chỗ em cần tìm.' : 'Dáng người này lạ mà quen. Lúc nào em bí quá, có khi sẽ gặp lại nó.'), 7000); };
+
+// ---- phòng ngủ, bước vali (đã mở tủ, có máy và tai nghe, vali chưa mở): em đang loay hoay chưa biết mở vali kiểu gì.
+// Ở phòng chính chừng 5 giây thì chớp lóe lên: cái bóng đứng ngay trước cửa sổ, tay chỉ vào kính, rồi tắt phụt; kính còn vệt sáng lạnh. Chỉ một lần.
+const WSC = { since: 0, done: false };
+OVER.push((c, now) => {
+  const ready = V.cur === 'dorm' && P1.tuOpen && P1.may && P1.tai && !P1.open && !/play|phones|armed/.test(TAPE.phase);
+  if (WSC.done || !ready) { WSC.since = 0; return; }
+  if (!WSC.since) WSC.since = now;
+  if (now - WSC.since < 5000 || !HOT.win) return;
+  WSC.done = true; const r = HOT.win;
+  HELP.at = now; HELP.n++; HELP.x = r.x + r.w / 2; HELP.y = r.y + r.h * 0.55; HELP.fx = HELP.x > 800 ? 1 : -1;
+  HELP.done['lau:dorm:' + ((HINT.list && HINT.list[0]) || '')] = 1; // bóng chỉ lối của câu vali coi như đã hiện
+  P1.flash = now; if (typeof thunder === 'function') thunder(); scareHit(1); setTimeout(() => ghostSound(0.55), 420);
+});
