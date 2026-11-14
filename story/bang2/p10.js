@@ -119,7 +119,8 @@ const missHint10 = missHint; // thử sai: tới bậc gợi ý thứ hai trở 
 missHint = function (key, list, every = 2) { const s0 = HINT.show; missHint10(key, list, every); if (HINT.show !== s0 && HINT.text) { helpLog(HINT.text); if ((MISS[key] || 0) / every >= 2) helpFire('sai:' + V.cur + ':' + key); } };
 const drawHint10 = drawHint; // đứng lâu: bậc gợi ý thứ hai trở đi
 drawHint = function (c, now) { drawHint10(c, now);
-  if (HINT.list !== HELP.listSeen) { HELP.listSeen = HINT.list; HELP.tierSeen = HINT.tier; }
+  if (HINT.list !== HELP.listSeen) { HELP.listSeen = HINT.list; HELP.tierSeen = HINT.tier; HELP.listAt = now; }
+  else if (HINT.list && HINT.list.length && now - (HELP.listAt || now) > 75000) helpFire('lau:' + V.cur + ':' + (HINT.list[0] || '')); // ở cùng một bước quá 75 giây: coi là bí
   else if (HINT.tier > HELP.tierSeen) { HELP.tierSeen = HINT.tier; helpLog(HINT.text); if (HINT.tier >= 2) helpFire('lau:' + V.cur + ':' + (HINT.list[0] || '')); } };
 function coldBack(c, x, y, r, a) { c.save(); c.globalCompositeOperation = 'lighter'; const gg = c.createRadialGradient(x, y, 10, x, y, r); gg.addColorStop(0, `rgba(150,170,210,${a})`); gg.addColorStop(1, 'rgba(150,170,210,0)'); c.fillStyle = gg; c.fillRect(x - r, y - r, r * 2, r * 2); c.restore(); }
 OVER.push((c, now) => {
@@ -192,11 +193,11 @@ manhAdd = function (i) { const had = P9.has.nhan_anh; manhAdd10(i);
 // ---- phòng ngủ, bước vali (đã mở tủ, có máy và tai nghe, vali chưa mở): em đang loay hoay chưa biết mở vali kiểu gì.
 // Ở phòng chính chừng 5 giây thì chớp lóe lên: cái bóng đứng ngay trước cửa sổ, tay chỉ vào kính, rồi tắt phụt; kính còn vệt sáng lạnh. Chỉ một lần.
 const WSC = { since: 0, done: false };
-OVER.push((c, now) => {
+OVER.push((c, now, dt) => {
   const ready = V.cur === 'dorm' && P1.tuOpen && P1.may && P1.tai && !P1.open && !/play|phones|armed/.test(TAPE.phase);
-  if (WSC.done || !ready) { WSC.since = 0; return; }
-  if (!WSC.since) WSC.since = now;
-  if (now - WSC.since < 5000 || !HOT.win) return;
+  if (WSC.done || !ready) return;
+  WSC.since += dt || 0.016; // cộng dồn thời gian ở phòng chính (không cần đứng liền): quay về phòng chính chừng 2 giây là hù
+  if (WSC.since < 2.2 || !HOT.win) return;
   WSC.done = true; const r = HOT.win;
   HELP.at = now; HELP.n++; HELP.x = r.x + r.w / 2; HELP.y = r.y + r.h * 0.55; HELP.fx = HELP.x > 800 ? 1 : -1;
   HELP.done['lau:dorm:' + ((HINT.list && HINT.list[0]) || '')] = 1; // bóng chỉ lối của câu vali coi như đã hiện

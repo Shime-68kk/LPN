@@ -182,6 +182,33 @@
     if (TR.ask && !TR.end) { c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(-300, -300, W + 600, H + 600); c.fillStyle = 'rgba(240,232,220,.9)'; c.beginPath(); c.moveTo(W / 2 - 22, H / 2 - 30); c.lineTo(W / 2 + 30, H / 2); c.lineTo(W / 2 - 22, H / 2 + 30); c.closePath(); c.fill(); text(c, 'chạm để xem tiếp', W / 2, H / 2 + 86, 28, 0.8); }
   });
 
+  // ---- đóng clip: dựng tiếng KHÔNG theo thời gian thực (OfflineAudioContext), cùng nhạc, cùng bộ nén như trên trang.
+  // Thu tiếng lúc máy đang bận vẽ hình thì bộ phát tiếng hụt nhịp → lẹt xẹt; dựng tính từng mẫu thì không bao giờ hụt.
+  TR.renderAudio = async (DUR = 93.6) => {
+    const SR = 48000, oac = new OfflineAudioContext(2, Math.ceil(SR * DUR), SR);
+    ac = oac; master = oac.createGain(); master.gain.value = 0; master.connect(oac.destination);
+    noiseBuf = oac.createBuffer(2, SR * 4, SR);
+    for (let ch = 0; ch < 2; ch++) { const d = noiseBuf.getChannelData(ch); let b0 = 0, b1 = 0, b2 = 0; for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; b0 = 0.997 * b0 + w * 0.029; b1 = 0.985 * b1 + w * 0.032; b2 = 0.95 * b2 + w * 0.048; d[i] = (b0 + b1 + b2 + w * 0.02) * 0.5; } }
+    try { FX = makeFX(); } catch (e) { /* bỏ qua */ }
+    TR.bus = oac.createGain(); TR.bus.gain.value = 0.9; const lim = oac.createDynamicsCompressor(); lim.threshold.value = -8; lim.knee.value = 6; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.2; TR.bus.connect(lim).connect(oac.destination);
+    SCARE_LIM = null; scareLim(); try { SCARE_LIM.disconnect(); } catch (e) { /* bỏ qua */ } SCARE_LIM.connect(TR.bus);
+    const mus = await oac.decodeAudioData(await (await fetch('am/trailer.mp3')).arrayBuffer());
+    const src = oac.createBufferSource(), g2 = oac.createGain(); src.buffer = mus; g2.gain.value = 0.95; src.connect(g2).connect(TR.bus); TR.mg = g2; src.start(0);
+    const q = (t) => Math.max(0, Math.round(t * SR / 128) * 128 / SR);
+    const times = new Set(); SHOTS.forEach((s) => { times.add(q(s.at)); if (s.cut && s.cut !== 2) times.add(q(s.at - 0.35)); }); EV.forEach((e) => times.add(q(e.at)));
+    const safe = (fn) => { try { fn(); } catch (e) { /* cảnh chưa sẵn: chỉ cần tiếng */ } };
+    [...times].filter((t) => t > 0 && t < DUR - 0.01).sort((x, y) => x - y).forEach((t) => oac.suspend(t).then(() => {
+      viaBus(() => K.tick(t + 0.001));
+      SHOTS.forEach((s) => { if (q(s.at) === t && s.set) safe(() => s.set()); });
+      EV.forEach((e) => { if (q(e.at) === t && !e.done) { e.done = true; safe(e.fn); } });
+      oac.resume();
+    }));
+    // giây 0: các tiếng mở màn
+    viaBus(() => K.tick(0)); SHOTS.forEach((s) => { if (s.at === 0 && s.set) safe(() => s.set()); }); EV.forEach((e) => { if (e.at === 0) { e.done = true; safe(e.fn); } });
+    const out = await oac.startRendering(); const L = out.getChannelData(0), R = out.getChannelData(1), n = out.length, o = new Float32Array(n * 2);
+    for (let i = 0; i < n; i++) { o[2 * i] = L[i]; o[2 * i + 1] = R[i]; } window.__tieng = o; let pk = 0; for (let i = 0; i < o.length; i++) pk = Math.max(pk, Math.abs(o[i])); return { n, pk };
+  };
+
   // ---- bắt đầu (cần cú chạm đầu tiên để có âm thanh) ----
   const st0 = START;
   START = () => {
