@@ -202,3 +202,17 @@ OVER.push((c, now) => {
   HELP.done['lau:dorm:' + ((HINT.list && HINT.list[0]) || '')] = 1; // bóng chỉ lối của câu vali coi như đã hiện
   P1.flash = now; if (typeof thunder === 'function') thunder(); scareHit(1); setTimeout(() => ghostSound(0.55), 420);
 });
+
+// ---- phim cuối: rời trang (chuyển ứng dụng, khoá máy) thì dừng hẳn, giữ nguyên khung hình; quay lại chạm để xem tiếp ----
+// (iPhone cần cú chạm mới phát lại tiếng; nhạc đứng quá 1.5 giây vì lý do khác cũng hỏi như vậy)
+OVER.push((c, now) => {
+  if (V.cur !== 'ket' || !KET.el || KET.end) return;
+  if (KET.elOk && !KET.endAt && !document.hidden) { const ct = KET.el.currentTime; if (KET.el.paused || ct !== KET.lastCT) { KET.lastCT = ct; KET.lastMove = now; } else if (now - KET.lastMove > 1500) KET.ask = true; if (KET.el.paused && !KET.el.ended) KET.ask = true; }
+  if (!KET.ask || KET.endAt) return;
+  c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(-300, -300, W + 600, H + 600); c.fillStyle = 'rgba(240,232,220,.9)'; c.beginPath(); c.moveTo(W / 2 - 22, H / 2 - 30); c.lineTo(W / 2 + 30, H / 2); c.lineTo(W / 2 - 22, H / 2 + 30); c.closePath(); c.fill();
+  text(c, 'chạm để xem tiếp', W / 2, H / 2 + 86, 28, 0.8);
+});
+const ketAway = () => { if (V.cur !== 'ket' || !KET.el) return; if (!KET.endAt && !KET.el.paused) { KET.el.pause(); KET.ask = true; } if (KET.endAt && !KET.hidAt) KET.hidAt = performance.now(); };
+document.addEventListener('visibilitychange', () => { if (document.hidden) ketAway(); else if (KET.hidAt) { if (KET.endAt) KET.endAt += performance.now() - KET.hidAt; KET.hidAt = 0; } }); // sau khi hết nhạc: danh đề cũng không chạy vượt lên lúc vắng
+addEventListener('pagehide', ketAway);
+addEventListener('pointerdown', () => { if (V.cur === 'ket' && KET.ask && KET.el && !KET.endAt) { try { ac.resume(); } catch (e) { /* bỏ qua */ } KET.el.play().then(() => { KET.ask = false; KET.lastMove = performance.now(); }).catch(() => {}); } });

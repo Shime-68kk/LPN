@@ -792,11 +792,13 @@ function startKet(goDelay = 0) {
   const el = new Audio('am/ydk-ket3.mp3'); el.preload = 'auto'; KET.el = el;
   try { const s = ac.createMediaElementSource(el), g = ac.createGain(); g.gain.value = 0.95; s.connect(g).connect(master); } catch (e) {}
   el.play().catch(() => {}); KET.t0 = performance.now();
+  el.addEventListener('playing', () => { KET.elOk = true; KET.ask = false; KET.lastMove = performance.now(); });
   el.onended = () => { KET.endAt = performance.now(); KET.endT = el.duration || 117.5; }; // hết nhạc: đồng hồ vẫn chạy cho danh đề
   for (const k of ['ketduong', 'ketdinh']) if (SC[k] && SC[k].enter) SC[k].enter();
   if (goDelay) setTimeout(() => go('ket', 2600), goDelay); else go('ket', 2600); // từ bàn khuôn: để hai hình nhân bay lên trước rồi mới vào phim
 }
-const ketT = () => (KET.endAt ? KET.endT + (performance.now() - KET.endAt) / 1000 : KET.el && !KET.el.paused && KET.el.currentTime > 0 ? KET.el.currentTime : (performance.now() - KET.t0) / 1000);
+// đã phát được nhạc thì luôn bám theo nhạc: nhạc dừng (rời trang) thì phim đứng yên cùng chỗ, không chạy vượt lên
+const ketT = () => (KET.endAt ? KET.endT + (performance.now() - KET.endAt) / 1000 : KET.el && KET.elOk ? KET.el.currentTime : KET.el && !KET.el.paused && KET.el.currentTime > 0 ? KET.el.currentTime : (performance.now() - KET.t0) / 1000);
 const LAMP_T = 52.3; // giây cho 99 ngọn đèn đầu
 const kseg = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
 SC.ket = {

@@ -4,6 +4,7 @@
 // Lớp khung phim (viền đen, hạt phim, thẻ chữ, tiếng chuyển cảnh) lấy từ tr-khung.js nếu có (TRK), không có thì dùng bản tối giản bên dưới.
 (() => {
   if (!/[?&]trailer=1\b/.test(location.search)) return;
+  const QS = new URLSearchParams(location.search), QUAY = QS.get('quay') === '1', GHI = QS.get('ghitieng') === '1'; // chỉ dùng khi đóng clip: vẽ từng khung (không tiếng) / thu riêng tiếng
   const TR = { el: null, T: 0, t0: 0, i: -1, bus: null, z: 1, px: 800, py: 450, tn: 58, started: false, end: false };
   window.TR = TR;
 
@@ -152,7 +153,8 @@
   ];
 
   // ---- đồng hồ & điều khiển ----
-  const clock = () => (TR.el && !TR.el.paused && TR.el.currentTime > 0 && TR.el.currentTime > (TR.sk || 0) - 1 ? TR.el.currentTime : TR.started ? (performance.now() - TR.t0) / 1000 : 0);
+  // đã phát được nhạc thì luôn bám theo nhạc (nhạc dừng thì hình đứng yên cùng chỗ, không chạy vượt lên)
+  const clock = () => (TR.el && TR.elOk && TR.el.currentTime > (TR.sk || 0) - 1 ? TR.el.currentTime : TR.started ? (performance.now() - TR.t0) / 1000 : 0);
   function shotAt(T) { let i = -1; for (let j = 0; j < SHOTS.length; j++) if (T >= SHOTS[j].at) i = j; return i; }
   function enterShot(i) {
     const s = SHOTS[i]; TR.i = i; if (s.end) return;
@@ -172,9 +174,12 @@
     if (s && !s.end) { if (s.up) s.up(T); const nx = SHOTS[TR.i + 1], e = nx ? lerpT(T, s.at, nx.at) : 0, z = s.z || [1, 1]; TR.z = z[0] + (z[1] - z[0]) * e; TR.px = (s.p || [800, 450])[0]; TR.py = (s.p || [800, 450])[1]; }
     else TR.z = 1;
     for (const ev of EV) if (!ev.done && T >= ev.at) { ev.done = true; if (T - ev.at < 0.5) ev.fn(); }
+    // nhạc đứng (rời trang, máy ngưng tiếng, mạng chậm) quá 1.5 giây: hỏi chạm để xem tiếp
+    if (TR.elOk && !TR.end && !document.hidden && TR.el) { const ct = TR.el.currentTime; if (TR.el.paused || ct !== TR.lastCT) { TR.lastCT = ct; TR.lastMove = now; } else if (now - TR.lastMove > 1500) TR.ask = true; if (TR.el.paused && !TR.el.ended) TR.ask = true; }
     camApply(c);
     setT(c); viaBus(() => K.tick(T)); K.draw(c, T, now, dt);
     if (TR.end && T > 93.5) { text(c, 'chạm để xem lại', W / 2, H - 160, 24, 0.35 + 0.1 * Math.sin(now * 0.003)); }
+    if (TR.ask && !TR.end) { c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(-300, -300, W + 600, H + 600); c.fillStyle = 'rgba(240,232,220,.9)'; c.beginPath(); c.moveTo(W / 2 - 22, H / 2 - 30); c.lineTo(W / 2 + 30, H / 2); c.lineTo(W / 2 - 22, H / 2 + 30); c.closePath(); c.fill(); text(c, 'chạm để xem tiếp', W / 2, H / 2 + 86, 28, 0.8); }
   });
 
   // ---- bắt đầu (cần cú chạm đầu tiên để có âm thanh) ----
@@ -184,14 +189,29 @@
     master.gain.value = 0; // tiếng của game tắt hẳn
     TR.bus = ac.createGain(); TR.bus.gain.value = 0.9; const lim = ac.createDynamicsCompressor(); lim.threshold.value = -8; lim.knee.value = 6; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.2; TR.bus.connect(lim).connect(ac.destination); // chặn đỉnh: cú dội to mà không rè
     scareLim(); try { SCARE_LIM.disconnect(); } catch (e) { /* bỏ qua */ } SCARE_LIM.connect(TR.bus);
+    if (GHI) { // thu không nén 4 kênh: tiếng hiệu ứng (0,1) + nhạc (2,3, chỉ để căn khớp) ngay từ lúc bấm
+      window.__cap = []; const mg = ac.createChannelMerger(4), s1 = ac.createChannelSplitter(2), sp = ac.createScriptProcessor(4096, 4, 1), mute = ac.createGain(); mute.gain.value = 0;
+      TR.bus.connect(s1); s1.connect(mg, 0, 0); s1.connect(mg, 1, 1); TR.capMg = mg;
+      sp.channelCountMode = 'explicit'; sp.channelCount = 4; mg.connect(sp); sp.connect(mute).connect(ac.destination);
+      sp.onaudioprocess = (e) => { const b = e.inputBuffer, n = b.length, o = new Float32Array(n * 4); for (let ch = 0; ch < 4; ch++) { const d = b.getChannelData(ch); for (let i = 0; i < n; i++) o[i * 4 + ch] = d[i]; } window.__cap.push(o); };
+      window.__capSr = ac.sampleRate; }
+    if (QUAY) { TR.bus.gain.value = 0; TR.t0 = performance.now(); TR.started = true; return; } // đóng clip: hình chạy theo đồng hồ ảo, tiếng ghép sau
     const el = new Audio('am/trailer.mp3'); el.preload = 'auto'; TR.el = el;
-    try { const src = ac.createMediaElementSource(el), g2 = ac.createGain(); g2.gain.value = 0.95; src.connect(g2).connect(TR.bus); TR.mg = g2; } catch (e) { /* bỏ qua */ }
+    try { const src = ac.createMediaElementSource(el), g2 = ac.createGain(); g2.gain.value = 0.95; src.connect(g2); if (GHI) { TR.mbus = ac.createGain(); g2.connect(TR.mbus); TR.mbus.connect(ac.destination); const s2 = ac.createChannelSplitter(2); TR.mbus.connect(s2); s2.connect(TR.capMg, 0, 2); s2.connect(TR.capMg, 1, 3); } else g2.connect(TR.bus); TR.mg = g2; } catch (e) { /* bỏ qua */ }
     const sk = +(new URLSearchParams(location.search).get('t') || 0); TR.sk = sk;
     if (sk) { const go2 = () => { el.currentTime = sk; }; if (el.readyState >= 1) go2(); else el.addEventListener('loadedmetadata', go2, { once: true }); }
+    el.addEventListener('playing', () => { TR.elOk = true; TR.ask = false; TR.lastMove = performance.now(); });
     el.play().catch(() => {}); TR.t0 = performance.now() - sk * 1000; TR.started = true;
     if (sk) { K.dark(sk > 81.4 || (sk > 42 && sk < 45) ? 1 : 0, 0.01); K.bars(1, 0.01); EV.forEach((ev) => { if (ev.at < sk) ev.done = true; }); } // nhảy tới giây sk (để thử)
     setTimeout(() => { HINT.off = true; HINT.text = ''; }, 50);
   };
-  // xem xong: chạm để xem lại
-  addEventListener('pointerdown', () => { if (TR.end && TR.T > 93.5) location.reload(); });
+  // xem xong: chạm để xem lại · đang dừng giữa chừng: chạm để xem tiếp (iPhone cần cú chạm mới phát lại tiếng)
+  addEventListener('pointerdown', () => {
+    if (TR.end && TR.T > 93.5) { location.reload(); return; }
+    if (TR.ask && TR.el) { try { ac.resume(); } catch (e) { /* bỏ qua */ } TR.el.play().then(() => { TR.ask = false; TR.lastMove = performance.now(); }).catch(() => {}); }
+  });
+  // rời trang (chuyển ứng dụng, khoá máy): dừng hẳn nhạc để hình và tiếng giữ nguyên chỗ; quay lại thì chạm để xem tiếp
+  const away = () => { if (TR.started && !TR.end && TR.el && !TR.el.paused) { TR.el.pause(); TR.ask = true; } };
+  document.addEventListener('visibilitychange', () => { if (document.hidden) away(); });
+  addEventListener('pagehide', away);
 })();
