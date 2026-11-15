@@ -45,6 +45,9 @@ SONGS = [
      "Anh là người sẽ thương em thật lâu."),
     ("cho-chut", "chờ chút...", "Chờ Chút.mp3", "Anh (7).jpg",
      "Chờ anh chút nữa thôi, rồi mình còn đi thật nhiều nơi."),
+    # Bài của Chương 22 · Không tua nhanh được (Cuộn băng số 2). Mở sẵn cho cả hai; trang chủ báo một lần (ANNOUNCE). Bìa cover-12: ảnh Fansipan.
+    ("yeu-duoc-khong", "Yêu Được Không", "Yêu Được Không.mp3", "Anh (12).jpg",
+     "Anh vẫn ở đây với em thôi."),
     # Bài của Chương 21 · Phần còn lại (12/11/2026). Mở sẵn cho cả hai; trang chủ báo một lần (ANNOUNCE).
     # Bìa cover-11: chụp cảnh cổng có ánh sáng trong story/con-lai.html?k=9092b1eaotbi&fin=1.
     ("co-em-cho", "Có Em Chờ", "Có Em Chờ.mp3", "Anh (11).jpg",
@@ -64,9 +67,9 @@ SONGS = [
 # Bài chơi cả bài (không cắt đoạn 96 giây) và bài gắn nhãn NEW, đứng đầu danh sách.
 # Anh Quang muốn mọi bài chỉ chơi một đoạn, không để cả bài (kể cả "chờ chút...").
 FULL_SONG = set()
-NEW_SONGS = ["co-em-cho", "danh-het-xuan-thi", "sinh-ra", "giu-mai"]
+NEW_SONGS = ["yeu-duoc-khong", "co-em-cho", "danh-het-xuan-thi", "sinh-ra", "giu-mai"]
 # Bài mới báo một lần ở trang chủ (home.js News.song).
-ANNOUNCE = {"co-em-cho"}
+ANNOUNCE = {"yeu-duoc-khong"}
 
 
 def load_audio(path):

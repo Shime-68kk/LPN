@@ -1,6 +1,19 @@
 {
   "songs": [
     {
+      "id": "yeu-duoc-khong",
+      "title": "Yêu Được Không",
+      "src": "../assets/sound/Yêu Được Không.mp3",
+      "cover": "../assets/thumbs/cover-12.webp",
+      "map": "beatmaps/yeu-duoc-khong.json",
+      "bpm": 85.16,
+      "preview": 261.678,
+      "message": "Anh vẫn ở đây với em thôi.",
+      "offset": 0,
+      "announce": true,
+      "isNew": true
+    },
+    {
       "id": "co-em-cho",
       "title": "Có Em Chờ",
       "src": "../assets/sound/Có Em Chờ.mp3",
@@ -10,7 +23,6 @@
       "preview": 201.608,
       "message": "Em chỉ cần nhích lại một chút. Đoạn đường còn lại để anh đi hết cho.",
       "offset": 0,
-      "announce": true,
       "isNew": true
     },
     {
