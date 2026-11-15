@@ -4,9 +4,11 @@
   const doc = (k) => {
     try { return localStorage.getItem(k); } catch (e) { return null; }
   };
-  if (!doc('lpn:bang2xong')) return;
-
   const q = new URLSearchParams(location.search);
+  // xem thử trong mạng nhà: ?thu=chon hiện màn chọn dù máy chưa xem hết (không ghi gì vào máy)
+  const thu = q.get('thu') === 'chon' && /^(localhost|127\.0\.0\.1|192\.168\.)/.test(location.hostname);
+  if (!doc('lpn:bang2xong') && !thu) return;
+
   if (q.has('phong') || q.has('trailer') || q.has('tu')) return;
 
   let phong = 0;
