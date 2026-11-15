@@ -391,7 +391,7 @@ function roomHints() {
   let k, L;
   if (!P1.noteSeen) { k = 'goi'; L = ['Có thứ gì đó dưới gối em.', 'Đèn soi tới đâu thấy tới đó. Gối ở đầu giường em.', 'Soi đèn vào chiếc gối rồi chạm vào.']; }
   else if (!P1.strip) { k = 'ao'; L = ['Bộ quân phục treo ở đầu giường.', 'Túi ngực có gì đó ló ra.', 'Soi vào áo rồi chạm vào túi áo.']; }
-  else if (!P1.tuOpen) { k = 'tu'; L = ['Chiếc tủ sắt sát tường có khoá bốn số.', 'Mẩu giấy trên tủ nói về một ngày.', 'Chạm vào chiếc máy để mở túi, xem mặt sau dải ảnh.']; }
+  else if (!P1.tuOpen) { k = 'tu'; L = ['Chiếc tủ sắt sát tường có khoá bốn số.', 'Mẩu giấy trên tủ nói về một ngày.', 'Chạm vào túi nhỏ ở góc, xem lại dải ảnh rồi lật mặt sau.']; }
   else if (!P1.may || !P1.tai) { k = 'trongtu'; L = ['Trong tủ còn đồ chưa lấy.', 'Dây tai nghe rối: vòng nào đang bị đè thì chưa kéo ra được.', 'Gỡ vòng nằm trên cùng trước.']; }
   else if (!P1.open) { k = 'vali'; L = ['Chiếc vali dưới gầm giường có khoá bốn số, sau ô cuối có chữ "m".', 'Một con số đo bằng mét. Nơi cao nhất hai đứa từng đứng cùng nhau.', 'Lau kính cửa sổ, chờ chớp, đọc tấm bia trên đỉnh.']; }
   else if (!P1.bang) { k = 'bang'; L = ['Vali đã mở.', 'Trong vali có thứ không phải quần áo.', 'Chạm vào chiếc vali dưới gầm giường.']; }
@@ -463,7 +463,7 @@ SC.tu1 = {
   move(p) { if (!tdrag) return; tdrag.off = p[1] - tdrag.y0; while (tdrag.off > 44) { P1.tuCode[tdrag.i] = (P1.tuCode[tdrag.i] + 9) % 10; tdrag.off -= 88; tdrag.y0 += 88; tdrag.moved = true; FX.wheel(); } while (tdrag.off < -44) { P1.tuCode[tdrag.i] = (P1.tuCode[tdrag.i] + 1) % 10; tdrag.off += 88; tdrag.y0 -= 88; tdrag.moved = true; FX.wheel(); } },
   up(p) {
     if (!tdrag) return false; if (!tdrag.moved) { const up = p[1] < TL.y + TL.ch / 2; P1.tuCode[tdrag.i] = (P1.tuCode[tdrag.i] + (up ? 9 : 1)) % 10; FX.wheel(); }
-    tdrag = null; nudge(); if (P1.tuCode.join('') !== '2010') missHint('tu', ['Bốn số là một ngày: hai số ngày, hai số tháng.', 'Dải ảnh Sa Pa có ghi một ngày ở mặt sau.', 'Chạm vào chiếc máy để mở túi, chạm dải ảnh rồi lật lại.'], 30); if (P1.tuCode.join('') === '2010' && !P1.tuOpen) setTimeout(() => { P1.tuOpen = true; FX.latch(); HINT.text = ''; const t = ac.currentTime; nz(t + 0.3, 0.5, 'bandpass', 700, 4, 0.5); tone(t + 0.3, 210, 160, 0.06, 0.6, 'triangle'); setTimeout(() => go('tuopen'), 900); }, 380); return true;
+    tdrag = null; nudge(); if (P1.tuCode.join('') !== '2010') missHint('tu', ['Bốn số là một ngày: hai số ngày, hai số tháng.', 'Dải ảnh Sa Pa có ghi một ngày ở mặt sau.', 'Chạm vào túi nhỏ ở góc, xem lại dải ảnh rồi lật mặt sau.'], 30); if (P1.tuCode.join('') === '2010' && !P1.tuOpen) setTimeout(() => { P1.tuOpen = true; FX.latch(); HINT.text = ''; const t = ac.currentTime; nz(t + 0.3, 0.5, 'bandpass', 700, 4, 0.5); tone(t + 0.3, 210, 160, 0.06, 0.6, 'triangle'); setTimeout(() => go('tuopen'), 900); }, 380); return true;
   },
 };
 // máy cát-sét nhỏ (trong tủ, trong túi đồ): nhãn "HỒI ỨC" cùng nét với biển đình Băng 1

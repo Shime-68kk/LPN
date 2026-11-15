@@ -33,14 +33,17 @@ const BAG = { items: [], open: true, sel: null }; // sel: món đang cầm trên
 const held = (id) => BAG.sel === id;
 const BAG_VIEW = {}; // món xem kỹ được (dải ảnh): chạm trong túi thì mở ra xem, không cầm
 // Không còn thanh đồ: em luôn cầm chiếc máy cát-sét có tai nghe (góc dưới phải). Chạm máy mở hộp băng (nghe lại) và túi nhỏ.
-const POCKET = { on: false, flash: -9, ret: 'dorm', r: { x: 1395, y: 640, w: 170, h: 140 }, intro: -1e9, msg: null, seen: false };
+const POCKET = { on: false, may: false, flash: -9, ret: 'dorm', r: { x: 1395, y: 640, w: 170, h: 140 }, intro: -1e9, msg: null, seen: false };
 // lời nhắn cạnh chiếc máy (lần đầu cầm máy, lần đầu có băng để nghe lại): hiện tới khi em mở túi, tối đa 14 giây
 function pocketTell(a, b) { POCKET.intro = performance.now(); POCKET.msg = [a, b]; POCKET.seen = false; }
 const TAPES = [];
 function tapeAdd(label, url, subs, noBed) { if (!TAPES.find((t) => t.label === label)) TAPES.push({ label, url, subs, noBed }); }
 function bagAdd(id, label, draw) {
-  if (id === 'may' || id === 'tai') { if (!POCKET.on) pocketTell('máy và tai nghe giờ luôn theo em', 'chạm vào máy để mở túi'); POCKET.on = true; POCKET.flash = performance.now(); FX && ac && FX.pocket(); return; }
+  if (id === 'may' || id === 'tai') { if (!POCKET.may) pocketTell('máy và tai nghe giờ luôn theo em', 'túi đồ cất cùng máy, chạm vào máy để mở'); POCKET.on = POCKET.may = true; POCKET.flash = performance.now(); FX && ac && FX.pocket(); return; }
   if (id.startsWith('bang')) return; // cuộn băng: vào hộp băng khi nghe
+  // món đầu tiên (dải ảnh) đã có túi vải nhỏ ở góc: chạm vào xem lại được bất cứ lúc nào (quên số thì mở ra xem)
+  if (!POCKET.on) pocketTell(label + ' đã cất vào túi', 'quên gì thì chạm vào túi để xem lại');
+  POCKET.on = true;
   if (!BAG.items.find((x) => x.id === id)) BAG.items.push({ id, label, draw, t: 0 }); POCKET.flash = performance.now(); FX && ac && FX.pocket();
 }
 function bagHas(id) { return !!BAG.items.find((x) => x.id === id); }
@@ -48,8 +51,9 @@ function drawPocket(c, now) {
   if (!POCKET.on || typeof drawMiniWalkman !== 'function') return;
   const r = POCKET.r, cx = r.x + r.w / 2, cy = r.y + r.h / 2 - 6, f = clamp(1 - (now - POCKET.flash) / 1400, 0, 1);
   if (f > 0) { const g = c.createRadialGradient(cx, cy, 10, cx, cy, 110); g.addColorStop(0, `rgba(255,214,160,${0.35 * f})`); g.addColorStop(1, 'rgba(255,214,160,0)'); c.fillStyle = g; c.fillRect(cx - 110, cy - 110, 220, 220); }
-  c.save(); c.globalAlpha = 0.82; c.translate(cx, cy); c.rotate(-0.08); drawMiniWalkman(c, 0.5); c.restore();
-  c.strokeStyle = 'rgba(236,232,224,.55)'; c.lineWidth = 2; c.lineCap = 'round'; c.beginPath(); c.moveTo(cx - 40, cy - 40); c.bezierCurveTo(cx - 70, cy - 90, cx - 10, cy - 100, cx - 30, cy - 62); c.stroke();
+  if (POCKET.may) { c.save(); c.globalAlpha = 0.82; c.translate(cx, cy); c.rotate(-0.08); drawMiniWalkman(c, 0.5); c.restore(); }
+  else drawPouch(c, cx, cy + 6, 0.82); // chưa có máy: túi vải nhỏ thắt dây
+  if (POCKET.may) { c.strokeStyle = 'rgba(236,232,224,.55)'; c.lineWidth = 2; c.lineCap = 'round'; c.beginPath(); c.moveTo(cx - 40, cy - 40); c.bezierCurveTo(cx - 70, cy - 90, cx - 10, cy - 100, cx - 30, cy - 62); c.stroke(); }
   // món đang cầm trên tay: nổi cạnh chiếc máy, ấm nhẹ
   const it = BAG.sel && BAG.items.find((x) => x.id === BAG.sel);
   if (it) { const hx = r.x - 70, hy = cy + 10, gl = c.createRadialGradient(hx, hy, 6, hx, hy, 70); gl.addColorStop(0, `rgba(255,214,160,${0.22 + 0.08 * Math.sin(now * 0.004)})`); gl.addColorStop(1, 'rgba(255,214,160,0)'); c.fillStyle = gl; c.fillRect(hx - 70, hy - 70, 140, 140); c.save(); c.translate(hx, hy); c.rotate(-0.2); it.draw(c, 0.75); c.restore(); text(c, 'đang cầm', hx, hy + 52, 18, 0.5); }
@@ -60,6 +64,17 @@ function drawPocket(c, now) {
     text(c, POCKET.msg[0], 1300, 560 + bob, 25, 0.85 * a); text(c, POCKET.msg[1], 1300, 594 + bob, 22, 0.6 * a);
     c.strokeStyle = `rgba(236,230,218,${0.55 * a})`; c.lineWidth = 2.5; c.beginPath(); c.moveTo(1360, 612 + bob); c.quadraticCurveTo(1400, 625, 1420, 662); c.stroke(); c.beginPath(); c.moveTo(1408, 652); c.lineTo(1421, 664); c.lineTo(1426, 647); c.stroke();
   }
+}
+// túi vải nhỏ vẽ tay (thân túi bo tròn, miệng túm, dây rút buông xuống)
+function drawPouch(c, x, y, a) {
+  c.save(); c.translate(x, y); c.rotate(-0.06); c.globalAlpha = a;
+  c.fillStyle = '#5b4a3a'; c.beginPath(); c.moveTo(-18, -30); c.bezierCurveTo(-52, -18, -58, 34, -30, 44); c.bezierCurveTo(-12, 52, 14, 52, 32, 44); c.bezierCurveTo(58, 32, 50, -18, 18, -30); c.closePath(); c.fill();
+  c.strokeStyle = 'rgba(236,222,200,.55)'; c.lineWidth = 2.5; c.lineCap = 'round'; c.lineJoin = 'round'; c.stroke();
+  c.fillStyle = '#4a3b2e'; c.beginPath(); c.moveTo(-18, -30); c.lineTo(-24, -46); c.quadraticCurveTo(0, -52, 24, -46); c.lineTo(18, -30); c.closePath(); c.fill(); c.stroke();
+  c.strokeStyle = 'rgba(236,222,200,.7)'; c.beginPath(); c.moveTo(-20, -31); c.quadraticCurveTo(0, -25, 20, -31); c.stroke();
+  c.beginPath(); c.moveTo(4, -29); c.quadraticCurveTo(12, -8, 6, 12); c.moveTo(4, -29); c.quadraticCurveTo(-6, -6, -2, 16); c.stroke();
+  c.fillStyle = 'rgba(236,222,200,.7)'; c.beginPath(); c.arc(6, 13, 3, 0, 7); c.arc(-2, 17, 3, 0, 7); c.fill();
+  c.restore();
 }
 function drawBag(c, now) {
   if (!BAG.items.length) return;
@@ -357,19 +372,22 @@ SC.tui = {
   draw(c, now) {
     const g = c.createRadialGradient(W / 2, H / 2, 80, W / 2, H / 2, 900); g.addColorStop(0, '#1d1814'); g.addColorStop(1, '#060504'); c.fillStyle = g; c.fillRect(-300, -300, W + 600, H + 600);
     // hộp băng: các cuộn đã nghe, chạm để nghe lại
+    SC.tui.tapeR = []; const BX = POCKET.may ? 900 : 625, TX = POCKET.may ? 1100 : 800; // chưa có máy: chỉ có túi nhỏ, ở giữa
+    if (POCKET.may) {
     text(c, 'nghe lại', 520, 200, 26, 0.5);
     c.fillStyle = '#16120e'; roundRect(c, 250, 230, 540, 470, 22); c.fill(); c.strokeStyle = 'rgba(236,220,190,.12)'; c.lineWidth = 2; c.stroke();
     SC.tui.tapeR = [];
     for (let i = 0; i < 3; i++) { const y = 320 + i * 140; if (TAPES[i]) { drawCassette(c, 520, y, 0.55, TAPES[i].label); SC.tui.tapeR.push({ x: 420, y: y - 70, w: 210, h: 130, t: TAPES[i] }); } else { c.strokeStyle = 'rgba(236,220,190,.08)'; c.setLineDash([8, 8]); roundRect(c, 430, y - 55, 180, 110, 10); c.stroke(); c.setLineDash([]); } }
     if (!TAPES.length) text(c, 'chưa có cuộn băng nào', 520, 470, 24, 0.35);
+    }
     // túi nhỏ: vài món mang theo
-    text(c, 'trong túi', 1100, 200, 26, 0.5);
+    text(c, 'trong túi', TX, 200, 26, 0.5);
     SC.tui.itemR = [];
-    BAG.items.forEach((it, i) => { const x = 900 + (i % 3) * 175, y = 310 + Math.floor(i / 3) * 172, on = BAG.sel === it.id;
+    BAG.items.forEach((it, i) => { const x = BX + (i % 3) * 175, y = 310 + Math.floor(i / 3) * 172, on = BAG.sel === it.id;
       if (on) { c.fillStyle = 'rgba(255,214,160,.13)'; roundRect(c, x - 82, y - 70, 164, 160, 14); c.fill(); c.strokeStyle = 'rgba(255,214,160,.45)'; c.lineWidth = 2; c.stroke(); }
       c.save(); c.translate(x, y - 6); it.draw(c, 0.82); c.restore(); text(c, on ? it.label + ' · đang cầm' : it.label, x, y + 72, 19, on ? 0.85 : 0.55); SC.tui.itemR.push({ x: x - 82, y: y - 70, w: 164, h: 160, it }); });
-    if (!BAG.items.length) text(c, 'trống', 1100, 470, 24, 0.35);
-    else text(c, 'chạm một món để cầm lên, hoặc xem kỹ', 1100, 740, 20, 0.35);
+    if (!BAG.items.length) text(c, 'trống', TX, 470, 24, 0.35);
+    else text(c, 'chạm một món để cầm lên, hoặc xem kỹ', TX, 740, 20, 0.35);
   },
   tap(p) {
     const ih = (SC.tui.itemR || []).find((r) => inR(p, r));
