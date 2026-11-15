@@ -9,7 +9,7 @@
   window.TR = TR;
 
   // ---- ẩn giao diện chơi ----
-  drawPocket = () => {}; drawHint = () => {}; drawBack = () => {};
+  const drawBack0 = drawBack; drawPocket = () => {}; drawHint = () => {}; drawBack = () => {};
   HINT.off = true;
 
   // ---- lớp khung phim tối giản (khi chưa có tr-khung.js) ----
@@ -178,9 +178,31 @@
     if (TR.elOk && !TR.end && !document.hidden && TR.el) { const ct = TR.el.currentTime; if (TR.el.paused || ct !== TR.lastCT) { TR.lastCT = ct; TR.lastMove = now; } else if (now - TR.lastMove > 1500) TR.ask = true; if (TR.el.paused && !TR.el.ended) TR.ask = true; }
     camApply(c);
     setT(c); viaBus(() => K.tick(T)); K.draw(c, T, now, dt);
-    if (TR.end && T > 93.5) { text(c, 'chạm để xem lại', W / 2, H - 160, 24, 0.35 + 0.1 * Math.sin(now * 0.003)); }
-    if (TR.ask && !TR.end) { c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(-300, -300, W + 600, H + 600); c.fillStyle = 'rgba(240,232,220,.9)'; c.beginPath(); c.moveTo(W / 2 - 22, H / 2 - 30); c.lineTo(W / 2 + 30, H / 2); c.lineTo(W / 2 - 22, H / 2 + 30); c.closePath(); c.fill(); text(c, 'chạm để xem tiếp', W / 2, H / 2 + 86, 28, 0.8); }
+    if (TR.end && !TR.endAt) TR.endAt = now;
+    if (endOn(now)) drawEndBtns(c, now);
+    if (TR.ask && !TR.end) { c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(-300, -300, W + 600, H + 600); c.fillStyle = 'rgba(240,232,220,.9)'; c.beginPath(); c.moveTo(W / 2 - 22, H / 2 - 30); c.lineTo(W / 2 + 30, H / 2); c.lineTo(W / 2 - 22, H / 2 + 30); c.closePath(); c.fill(); text(c, 'chạm để xem tiếp', W / 2, H / 2 + 86, 28, 0.8);
+      drawBack0(c); text(c, 'về trang chủ', 182, 172, 22, 0.55, 'left'); }
   });
+  // ---- hết phim: hai nút vẽ tay (xem lại · về trang chủ). Nhạc dài đúng 93.0 giây nên đếm theo giờ thật kể từ tiếng "cạch" cuối.
+  const BTN = { lai: [W / 2 - 200, H / 2 + 20], ve: [W / 2 + 190, H / 2 + 20] };
+  const endOn = (now) => TR.end && TR.endAt && now - TR.endAt > 900;
+  function drawEndBtns(c, now) {
+    const a = Math.min(1, (now - TR.endAt - 900) / 900), p = 0.75 + 0.08 * Math.sin(now * 0.003);
+    c.save(); c.globalAlpha = a; c.strokeStyle = `rgba(236,230,218,${0.75 * p})`; c.lineWidth = 4; c.lineCap = 'round'; c.lineJoin = 'round';
+    // xem lại: vòng tròn hở, mũi tên ở đầu vòng
+    let [x, y] = BTN.lai; const cx = x - 62, cy = y - 10, r = 19, a0 = -Math.PI / 3;
+    c.beginPath(); c.arc(cx, cy, r, a0, a0 + Math.PI * 1.65); c.stroke();
+    const tx = cx + r * Math.cos(a0), ty = cy + r * Math.sin(a0), dx = Math.sin(a0), dy = -Math.cos(a0);
+    c.beginPath(); c.moveTo(tx - 11 * dx + 8 * dy, ty - 11 * dy - 8 * dx); c.lineTo(tx + 2 * dx, ty + 2 * dy); c.lineTo(tx - 11 * dx - 8 * dy, ty - 11 * dy + 8 * dx); c.stroke();
+    text(c, 'Xem lại', x - 30, y, 32, 0.9 * p, 'left', '240,232,220');
+    // về trang chủ: mái nhà nhỏ
+    [x, y] = BTN.ve; const hx = x - 92, hy = y - 10;
+    c.beginPath(); c.moveTo(hx - 20, hy - 1); c.lineTo(hx, hy - 20); c.lineTo(hx + 20, hy - 1); c.stroke();
+    c.beginPath(); c.moveTo(hx - 13, hy - 6); c.lineTo(hx - 13, hy + 16); c.lineTo(hx + 13, hy + 16); c.lineTo(hx + 13, hy - 6); c.stroke();
+    text(c, 'Về trang chủ', x - 58, y, 32, 0.9 * p, 'left', '240,232,220');
+    c.restore();
+  }
+  const goHome = () => { location.href = '../../home/'; };
 
   // ---- đóng clip: dựng tiếng KHÔNG theo thời gian thực (OfflineAudioContext), cùng nhạc, cùng bộ nén như trên trang.
   // Thu tiếng lúc máy đang bận vẽ hình thì bộ phát tiếng hụt nhịp → lẹt xẹt; dựng tính từng mẫu thì không bao giờ hụt.
@@ -233,8 +255,10 @@
     setTimeout(() => { HINT.off = true; HINT.text = ''; }, 50);
   };
   // xem xong: chạm để xem lại · đang dừng giữa chừng: chạm để xem tiếp (iPhone cần cú chạm mới phát lại tiếng)
-  addEventListener('pointerdown', () => {
-    if (TR.end && TR.T > 93.5) { location.reload(); return; }
+  addEventListener('pointerdown', (e) => {
+    const [px, py] = toD(e);
+    if (endOn(performance.now())) { if (py > H / 2 - 110 && py < H / 2 + 130) { if (px > W / 2 && px < W / 2 + 420) goHome(); else if (px < W / 2 && px > W / 2 - 380) location.reload(); } return; }
+    if (TR.ask && !TR.end && px < 330 && py < 260) { goHome(); return; }
     if (TR.ask && TR.el) { try { ac.resume(); } catch (e) { /* bỏ qua */ } TR.el.play().then(() => { TR.ask = false; TR.lastMove = performance.now(); }).catch(() => {}); }
   });
   // rời trang (chuyển ứng dụng, khoá máy): dừng hẳn nhạc để hình và tiếng giữ nguyên chỗ; quay lại thì chạm để xem tiếp

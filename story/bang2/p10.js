@@ -190,17 +190,19 @@ const manhAdd10 = manhAdd;
 manhAdd = function (i) { const had = P9.has.nhan_anh; manhAdd10(i);
   if (!had && P9.has.nhan_anh && !P9.quiet) setTimeout(() => sayNow(HELP.n > 0 ? 'Dáng người này… giống hệt cái bóng ban nãy. Lần ấy, tay nó chỉ đúng vào chỗ em cần tìm.' : 'Dáng người này lạ mà quen. Lúc nào em bí quá, có khi sẽ gặp lại nó.'), 7000); };
 
-// ---- phòng ngủ, bước vali (đã mở tủ, có máy và tai nghe, vali chưa mở): em đang loay hoay chưa biết mở vali kiểu gì.
-// Ở phòng chính chừng 5 giây thì chớp lóe lên: cái bóng đứng ngay trước cửa sổ, tay chỉ vào kính, rồi tắt phụt; kính còn vệt sáng lạnh. Chỉ một lần.
-const WSC = { since: 0, done: false };
+// ---- phòng ngủ: mở xong mật khẩu điện thoại (0608) chừng 3 giây, em đang ở phòng chính thì chớp lóe lên:
+// cái bóng đứng ngay trước cửa sổ, tay chỉ vào kính, rồi tắt phụt. Chỉ một lần. (anh Quang 15/11: hù sớm, ngay sau mật khẩu)
+// Nếu lúc đó em còn đang xem điện thoại thì hù khi em vừa về phòng chính được 1 giây.
+const WSC = { since: 0, done: false, uAt: 0 };
 OVER.push((c, now, dt) => {
-  const ready = V.cur === 'dorm' && P1.tuOpen && P1.may && P1.tai && !P1.open && !/play|phones|armed/.test(TAPE.phase);
-  if (WSC.done || !ready) return;
-  WSC.since += dt || 0.016; // cộng dồn thời gian ở phòng chính (không cần đứng liền): quay về phòng chính chừng 2 giây là hù
-  if (WSC.since < 2.2 || !HOT.win) return;
+  if (WSC.done) return;
+  if (P1.unlocked && !WSC.uAt) WSC.uAt = now;
+  const ready = WSC.uAt && V.cur === 'dorm' && V.k >= 1 && !P1.open && !/play|phones|armed/.test(TAPE.phase);
+  if (!ready) return;
+  WSC.since += dt || 0.016;
+  if (now - WSC.uAt < 3000 || WSC.since < 1 || !HOT.win) return;
   WSC.done = true; const r = HOT.win;
   HELP.at = now; HELP.n++; HELP.x = r.x + r.w / 2; HELP.y = r.y + r.h * 0.55; HELP.fx = HELP.x > 800 ? 1 : -1;
-  HELP.done['lau:dorm:' + ((HINT.list && HINT.list[0]) || '')] = 1; // bóng chỉ lối của câu vali coi như đã hiện
   P1.flash = now; if (typeof thunder === 'function') thunder(); scareHit(1); setTimeout(() => ghostSound(0.55), 420);
 });
 
