@@ -36,20 +36,327 @@ function bakeAnh() {
   poly(c, [P(L, 0, NEAR), P(RW, 0, NEAR), P(RW, 0, BW), P(L, 0, BW)], '#16171a');
   for (let i = 0; i < 4500; i++) { c.fillStyle = `rgba(${rnd() < 0.5 ? '255,255,255' : '0,0,0'},${rnd() * 0.03})`; c.fillRect(rnd() * W, rnd() * H, 2, 2); }
   seg(c, P(RW, 0, BW), P(RW, TOP, BW), 1.2, 'rgba(0,0,0,.35)');
-  // đồng hồ dán tường số to (trang trí) trên tường sau, phía trái
-  c.save(); c.fillStyle = 'rgba(14,14,16,.55)'; c.textAlign = 'center'; c.font = `600 ${Math.round(820 * 0.16 / BW)}px Georgia, serif`;
-  [['12', -1.75, 2.25], ['9', -2.25, 1.8]].forEach(([t, x, y]) => { const q = P(x, y, BW); c.fillText(t, q[0], q[1]); });
-  const hc = P(-1.75, 1.8, BW); c.strokeStyle = 'rgba(14,14,16,.6)'; c.lineWidth = 3; c.beginPath(); c.moveTo(hc[0], hc[1]); c.lineTo(hc[0], hc[1] - 50); c.moveTo(hc[0], hc[1]); c.lineTo(hc[0] + 38, hc[1] + 12); c.stroke(); c.restore(); c.textAlign = 'left';
-  // dải photobooth, lịch PTIT, khung Fansipan có chun buộc tóc, hai dây thẻ: tất cả nằm phẳng trên tường sau
+  // các đồ vật phẳng trên tường sau z = BW (tối dần theo khoảng cách tới đèn bàn qua kA)
   const onBack = (x0, x1, y0, y1, z = BW - 0.005) => [P(x0, y1, z), P(x1, y1, z), P(x1, y0, z), P(x0, y0, z)];
-  poly(c, onBack(-1.32, -1.2, 1.38, 1.72), '#7f7c76'); for (let i = 0; i < 3; i++) poly(c, onBack(-1.31, -1.21, 1.62 - i * 0.11, 1.70 - i * 0.11), ['#6d8299', '#82949f', '#76889a'][i]);
-  poly(c, onBack(-1.0, -0.42, 1.18, 1.98), '#7d8187'); poly(c, onBack(-1.0, -0.42, 1.6, 1.98), '#5f6d79'); for (let i = 0; i < 12; i++) { const q = P(-0.98 + i * 0.048, 1.985, BW - 0.006); c.strokeStyle = 'rgba(30,30,30,.7)'; c.lineWidth = 1.2; c.beginPath(); c.arc(q[0], q[1], 2.5, Math.PI, 0); c.stroke(); }
-  { const q = P(-0.98, 1.3, BW); c.fillStyle = '#284c78'; c.font = `700 ${Math.round(820 * 0.07 / BW)}px 'Be Vietnam Pro', sans-serif`; c.fillText('11', q[0], q[1]); for (let r = 0; r < 3; r++) for (let k = 0; k < 7; k++) poly(c, onBack(-0.95 + k * 0.07, -0.91 + k * 0.07, 1.22 + r * 0.035 - 0.12, 1.24 + r * 0.035 - 0.12), 'rgba(40,50,70,.4)'); }
-  poly(c, onBack(-0.935, -0.495, 1.445, 1.955, BW - 0.02), 'rgba(0,0,0,.35)'); poly(c, onBack(-0.93, -0.5, 1.45, 1.95, BW - 0.03), '#9c9b96'); poly(c, onBack(-0.9, -0.53, 1.48, 1.92, BW - 0.031), '#151515');
-  { const q = onBack(-0.885, -0.545, 1.495, 1.905, BW - 0.032), g = c.createLinearGradient(0, q[0][1], 0, q[3][1]); g.addColorStop(0, '#506478'); g.addColorStop(1, '#8a949c'); poly(c, q, g);
-    poly(c, [P(-0.85, 1.52, BW - 0.033), P(-0.77, 1.72, BW - 0.033), P(-0.69, 1.52, BW - 0.033)], '#8d8f93'); poly(c, onBack(-0.66, -0.61, 1.8, 1.84, BW - 0.033), '#b0182c'); poly(c, onBack(-0.62, -0.6, 1.52, 1.62, BW - 0.033), '#2a2d36'); poly(c, onBack(-0.6, -0.575, 1.53, 1.6, BW - 0.033), '#d9d6cc'); }
-  { const h = P(-0.68, 1.97, BW - 0.04); c.fillStyle = '#a9a69f'; for (let i = 0; i < 7; i++) { c.beginPath(); c.arc(h[0] + Math.cos(i) * 13, h[1] + Math.sin(i * 1.7) * 7, 8, 0, Math.PI * 2); c.fill(); } }
-  seg(c, P(-0.74, 1.45, BW - 0.04), P(-0.75, 1.15, BW - 0.04), 3, '#2f5fb5'); seg(c, P(-0.66, 1.45, BW - 0.04), P(-0.63, 1.12, BW - 0.04), 3, '#a52a2a'); poly(c, onBack(-0.67, -0.58, 1.06, 1.12, BW - 0.045), '#b84444');
+  const shadeC = (r, g, b, k, a = 1) => `rgba(${Math.round(r * k)},${Math.round(g * k)},${Math.round(b * k)},${a})`;
+
+  // 1. đồng hồ dán tường DIY không viền (-1.75, 1.85), bán kính ~0.42, chỉ 3:07
+  {
+    const cxW = -1.75, cyW = 1.85, rQuad = 0.48, qs = 240;
+    const qb = onBack(cxW - rQuad, cxW + rQuad, cyW - rQuad, cyW + rQuad, BW - 0.002);
+    quadImg(c, [qb[0], qb[1], qb[3]], qs, qs, (g) => {
+      const m = qs / 2, sc = qs / (rQuad * 2);
+      const rDial = 0.355 * sc, shX = -1.8, shY = 1.4;
+      const drawClockMarks = (isShadow) => {
+        g.save();
+        if (isShadow) g.translate(shX, shY);
+        g.fillStyle = isShadow ? 'rgba(0,0,0,0.22)' : 'rgba(16,17,20,0.88)';
+        g.strokeStyle = isShadow ? 'rgba(0,0,0,0.20)' : 'rgba(18,19,22,0.84)';
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.font = "600 28px Georgia, 'Fraunces', serif";
+        [[12, '12'], [3, '3'], [6, '6'], [9, '9']].forEach(([hr, label]) => {
+          const ang = (hr / 12) * Math.PI * 2;
+          g.fillText(label, m + Math.sin(ang) * rDial, m - Math.cos(ang) * rDial);
+        });
+        g.lineWidth = 2.8;
+        g.lineCap = 'round';
+        [1, 2, 4, 5, 7, 8, 10, 11].forEach((hr) => {
+          const ang = (hr / 12) * Math.PI * 2;
+          const dx = Math.sin(ang), dy = -Math.cos(ang);
+          g.beginPath();
+          g.moveTo(m + dx * (rDial - 3), m + dy * (rDial - 3));
+          g.lineTo(m + dx * (rDial + 6), m + dy * (rDial + 6));
+          g.stroke();
+        });
+        g.restore();
+      };
+      drawClockMarks(true);
+      drawClockMarks(false);
+
+      const ah = ((3 + 7 / 60) / 12) * Math.PI * 2;
+      const am = (7 / 60) * Math.PI * 2;
+      const as = (38 / 60) * Math.PI * 2;
+      const drawHand = (ang, len, tail, w0, w1, col) => {
+        const dx = Math.sin(ang), dy = -Math.cos(ang);
+        const px = -dy, py = dx;
+        g.fillStyle = col;
+        g.beginPath();
+        g.moveTo(m - dx * tail + px * w0 * 0.5, m - dy * tail + py * w0 * 0.5);
+        g.lineTo(m + dx * len + px * w1 * 0.5, m + dy * len + py * w1 * 0.5);
+        g.lineTo(m + dx * len - px * w1 * 0.5, m + dy * len - py * w1 * 0.5);
+        g.lineTo(m - dx * tail - px * w0 * 0.5, m - dy * tail - py * w0 * 0.5);
+        g.closePath();
+        g.fill();
+      };
+      // bóng đổ mềm của kim lên tường (lệch ~2px)
+      g.save();
+      g.translate(-2.2, 1.8);
+      drawHand(ah, 0.22 * sc, 6, 6.2, 4.2, 'rgba(0,0,0,0.14)');
+      drawHand(am, 0.33 * sc, 7, 5.0, 3.2, 'rgba(0,0,0,0.14)');
+      drawHand(as, 0.34 * sc, 14, 2.4, 1.8, 'rgba(0,0,0,0.11)');
+      g.restore();
+      g.save();
+      g.translate(-1.5, 1.2);
+      drawHand(ah, 0.22 * sc, 6, 4.8, 3.0, 'rgba(0,0,0,0.20)');
+      drawHand(am, 0.33 * sc, 7, 3.6, 2.2, 'rgba(0,0,0,0.20)');
+      drawHand(as, 0.34 * sc, 14, 1.4, 1.0, 'rgba(0,0,0,0.16)');
+      g.restore();
+
+      // kim giờ, phút đen dẹt và kim giây mảnh đỏ sẫm
+      drawHand(ah, 0.22 * sc, 6, 4.8, 3.0, '#14161a');
+      drawHand(am, 0.33 * sc, 7, 3.6, 2.2, '#14161a');
+      drawHand(as, 0.34 * sc, 14, 1.3, 0.9, '#6e1c22');
+
+      // núm tròn tâm có bóng nhẹ
+      g.fillStyle = 'rgba(0,0,0,0.28)';
+      g.beginPath();
+      g.arc(m - 1.5, m + 1.4, 5.4, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = '#14161a';
+      g.beginPath();
+      g.arc(m, m, 5.2, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = 'rgba(130,136,146,0.35)';
+      g.beginPath();
+      g.arc(m + 0.8, m + 0.6, 1.8, 0, Math.PI * 2);
+      g.fill();
+    });
+  }
+
+  // 2. dải ảnh photobooth nhỏ gọn bên trái lịch (x -1.32 -> -1.18, y 1.35 -> 1.75)
+  {
+    const kp = clamp(0.45 + 0.55 * kA(-1.25, 1.55, BW), 0.55, 0.95);
+    poly(c, onBack(-1.33, -1.186, 1.342, 1.744, BW - 0.002), 'rgba(0,0,0,0.24)');
+    const qp = onBack(-1.32, -1.18, 1.35, 1.75, BW - 0.004);
+    quadImg(c, [qp[0], qp[1], qp[3]], 36, 104, (g) => {
+      const bg = g.createLinearGradient(0, 0, 36, 104);
+      bg.addColorStop(0, shadeC(196, 193, 187, kp));
+      bg.addColorStop(1, shadeC(218, 214, 206, kp));
+      g.fillStyle = bg;
+      g.fillRect(0, 0, 36, 104);
+      const skies = [
+        ['#6d8aa6', '#9bb2c2', '#4c5f70'],
+        ['#7a96ac', '#b6beaa', '#566873'],
+        ['#678099', '#8ca2b4', '#465868'],
+      ];
+      for (let i = 0; i < 3; i++) {
+        const fy = 5 + i * 31;
+        const sk = g.createLinearGradient(0, fy, 0, fy + 26);
+        sk.addColorStop(0, skies[i][0]);
+        sk.addColorStop(1, skies[i][1]);
+        g.fillStyle = sk;
+        g.fillRect(4, fy, 28, 26);
+        g.fillStyle = skies[i][2];
+        g.beginPath();
+        g.moveTo(4, fy + 26);
+        g.lineTo(4, fy + 19 - (i % 2) * 2);
+        g.lineTo(15 + i * 2, fy + 13);
+        g.lineTo(25 - i, fy + 18);
+        g.lineTo(32, fy + 15 + i);
+        g.lineTo(32, fy + 26);
+        g.closePath();
+        g.fill();
+        g.fillStyle = `rgba(18,22,28,${0.32 * (1 - kp * 0.45)})`;
+        g.fillRect(4, fy, 28, 26);
+      }
+    });
+  }
+
+  // 3. lịch treo tường thẳng, gọn (x -1.02 -> -0.40, y 1.05 -> 2.00)
+  {
+    const kcTop = clamp(0.42 + 0.58 * kA(-0.71, 1.85, BW), 0.65, 0.96);
+    const kcBot = clamp(0.48 + 0.52 * kA(-0.58, 1.25, BW), 0.72, 1.0);
+    poly(c, onBack(-1.032, -0.406, 1.04, 1.994, BW - 0.002), 'rgba(0,0,0,0.22)');
+    poly(c, onBack(-1.026, -0.403, 1.045, 1.997, BW - 0.003), 'rgba(0,0,0,0.16)');
+    const qc = onBack(-1.02, -0.40, 1.05, 2.00, BW - 0.005);
+    quadImg(c, [qc[0], qc[1], qc[3]], 160, 244, (g) => {
+      const Wc = 160, Hc = 244, illusH = 144;
+      // nửa trên (~60%): nền xanh da trời nhạt + các khối hình học mềm
+      const skyG = g.createLinearGradient(0, 0, 0, illusH);
+      skyG.addColorStop(0, shadeC(148, 192, 224, kcTop));
+      skyG.addColorStop(1, shadeC(186, 216, 236, kcTop));
+      g.fillStyle = skyG;
+      g.fillRect(0, 0, Wc, illusH);
+
+      // dải nền chân trời dịu để khối đứng vững
+      g.fillStyle = shadeC(164, 194, 212, kcTop);
+      g.fillRect(0, illusH - 26, Wc, 26);
+      g.fillStyle = 'rgba(28,46,68,0.15)';
+      g.beginPath();
+      g.ellipse(80, illusH - 21, 52, 6, 0, 0, Math.PI * 2);
+      g.fill();
+
+      // các khối hình học mềm xếp chồng (lam, vàng, cam, tím - không chữ, không logo)
+      const drawBlock = (bx, by, bw, bh, r, fCol, sCol) => {
+        g.fillStyle = 'rgba(22,36,56,0.16)';
+        roundRect(g, bx - 2, by + 2, bw, bh, r);
+        g.fill();
+        g.fillStyle = fCol;
+        roundRect(g, bx, by, bw, bh, r);
+        g.fill();
+        g.fillStyle = sCol;
+        roundRect(g, bx + bw * 0.68, by, bw * 0.32, bh, Math.min(r, 3));
+        g.fill();
+      };
+      drawBlock(34, 72, 48, 50, 4, shadeC(76, 128, 178, kcTop), shadeC(58, 102, 148, kcTop));
+      drawBlock(78, 86, 48, 36, 4, shadeC(232, 188, 86, kcTop), shadeC(204, 158, 62, kcTop));
+      drawBlock(50, 44, 38, 30, 4, shadeC(224, 122, 76, kcTop), shadeC(194, 96, 56, kcTop));
+      drawBlock(86, 58, 28, 28, 4, shadeC(138, 112, 174, kcTop), shadeC(112, 88, 146, kcTop));
+
+      // nửa dưới (~40%): giấy trắng ngà hoà ánh đèn bàn
+      const papG = g.createLinearGradient(0, illusH, Wc, Hc);
+      papG.addColorStop(0, shadeC(222, 220, 214, kcTop));
+      papG.addColorStop(1, shadeC(236, 232, 224, kcBot));
+      g.fillStyle = papG;
+      g.fillRect(0, illusH, Wc, Hc - illusH);
+      g.fillStyle = 'rgba(30,48,72,0.14)';
+      g.fillRect(0, illusH, Wc, 1);
+
+      // tiêu đề nhỏ "Tháng 11" màu xanh lam đậm, căn trái trong lề, kiểm bề rộng không tràn
+      const padX = 11, innerW = Wc - padX * 2;
+      g.fillStyle = shadeC(28, 66, 118, kcBot);
+      g.textAlign = 'left';
+      g.textBaseline = 'middle';
+      let fs = 13;
+      while (fs > 8) {
+        g.font = `600 ${fs}px 'Be Vietnam Pro', sans-serif`;
+        if (g.measureText('Tháng 11').width <= innerW) break;
+        fs--;
+      }
+      g.fillText('Tháng 11', padX, illusH + 14);
+      g.fillStyle = 'rgba(32,64,108,0.16)';
+      g.fillRect(padX, illusH + 24, innerW, 1);
+
+      // lưới ngày 7 cột x 5 hàng (1 ở cột CN hàng đầu; 28-29 ở hàng thứ 5 cột T7-CN)
+      const gX = padX, gY = illusH + 31, colW = innerW / 7, rowH = 12.2;
+      for (let r = 0; r < 5; r++) {
+        for (let k = 0; k < 7; k++) {
+          if (r === 0 && k < 6) continue;
+          const cx = gX + (k + 0.5) * colW;
+          const cy = gY + (r + 0.5) * rowH;
+          g.fillStyle = k === 6 ? 'rgba(154,50,56,0.68)' : 'rgba(56,64,78,0.46)';
+          roundRect(g, cx - 3.2, cy - 2, 6.4, 4, 1.2);
+          g.fill();
+        }
+      }
+
+      // vòng mảnh màu đỏ nét tay khoanh chung ô 28 và 29
+      const lx = gX + 6 * colW;
+      const ly = gY + 4.5 * rowH;
+      const rx = colW * 1.05, ry = rowH * 0.54;
+      g.strokeStyle = 'rgba(176,38,42,0.88)';
+      g.lineWidth = 1.6;
+      g.lineCap = 'round';
+      g.beginPath();
+      for (let i = 0; i <= 26; i++) {
+        const a = (i / 26) * Math.PI * 2 - 0.25;
+        const wob = 1 + 0.05 * Math.sin(a * 3 + 0.7);
+        const px = lx + Math.cos(a) * rx * wob;
+        const py = ly + Math.sin(a) * ry * wob;
+        if (i === 0) g.moveTo(px, py);
+        else g.lineTo(px, py);
+      }
+      g.stroke();
+
+      // phủ tối nhẹ góc trên trái lịch theo khoảng cách đèn bàn
+      const shMask = g.createLinearGradient(0, 0, Wc * 0.85, Hc * 0.9);
+      shMask.addColorStop(0, 'rgba(10,14,20,0.20)');
+      shMask.addColorStop(1, 'rgba(10,14,20,0)');
+      g.fillStyle = shMask;
+      g.fillRect(0, 0, Wc, Hc);
+    });
+
+    // móc treo tường nhỏ ở giữa phía trên và dãy gáy lò xo trắng bạc đều trên mép lịch
+    c.save();
+    const kHook = clamp(0.42 + 0.58 * kA(-0.71, 2.02, BW), 0.65, 0.96);
+    const hk = P(-0.71, 2.035, BW - 0.006);
+    c.fillStyle = 'rgba(0,0,0,0.28)';
+    roundRect(c, hk[0] - 5, hk[1] - 5, 10, 10, 2);
+    c.fill();
+    c.fillStyle = shadeC(216, 212, 204, kHook);
+    roundRect(c, hk[0] - 4.5, hk[1] - 6, 9, 9, 2);
+    c.fill();
+    c.strokeStyle = shadeC(172, 178, 186, kHook);
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.arc(hk[0], hk[1] + 4, 2.4, 0, Math.PI);
+    c.stroke();
+
+    for (let i = 0; i < 14; i++) {
+      const rx = -0.992 + i * (0.564 / 13);
+      const hole = P(rx, 1.984, BW - 0.006);
+      c.fillStyle = 'rgba(26,32,40,0.75)';
+      c.beginPath();
+      c.arc(hole[0], hole[1], 1.7, 0, Math.PI * 2);
+      c.fill();
+      c.strokeStyle = shadeC(208, 214, 222, kHook);
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.arc(hole[0], hole[1] - 4, 3.2, Math.PI * 0.9, Math.PI * 2.15);
+      c.stroke();
+    }
+
+    // 4. scrunchie trắng ngà nhăn bồng có 2 dải ruy băng xanh nhạt treo trên móc, vắt qua gáy lò xo
+    const scPos = P(-0.71, 1.995, BW - 0.008);
+    const sx = scPos[0], sy = scPos[1];
+    // bóng nhẹ của scrunchie và ruy băng lên lịch
+    c.fillStyle = 'rgba(0,0,0,0.24)';
+    c.beginPath();
+    c.ellipse(sx - 1.5, sy + 4, 15, 7.5, 0, 0, Math.PI * 2);
+    c.fill();
+
+    // hai dải ruy băng xanh nhạt mảnh buông xuống ~0.12m (~31px)
+    const ribLen = (820 * 0.12) / BW;
+    c.strokeStyle = 'rgba(0,0,0,0.18)';
+    c.lineWidth = 3.2;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.moveTo(sx - 3.5, sy + 4);
+    c.quadraticCurveTo(sx - 6.5, sy + 4 + ribLen * 0.5, sx - 8.5, sy + 4 + ribLen);
+    c.moveTo(sx + 2.5, sy + 4);
+    c.quadraticCurveTo(sx + 5.5, sy + 4 + ribLen * 0.55, sx + 7, sy + 4 + ribLen * 0.92);
+    c.stroke();
+
+    c.strokeStyle = shadeC(166, 204, 232, kHook);
+    c.lineWidth = 2.6;
+    c.beginPath();
+    c.moveTo(sx - 2.5, sy + 3);
+    c.quadraticCurveTo(sx - 5.5, sy + 3 + ribLen * 0.5, sx - 7.5, sy + 3 + ribLen);
+    c.stroke();
+    c.strokeStyle = shadeC(184, 218, 240, kHook);
+    c.lineWidth = 2.4;
+    c.beginPath();
+    c.moveTo(sx + 3.2, sy + 3);
+    c.quadraticCurveTo(sx + 6.2, sy + 3 + ribLen * 0.55, sx + 7.6, sy + 3 + ribLen * 0.92);
+    c.stroke();
+
+    // 7 cụm vải tròn trắng ngà chồng nhau tạo vòng nhăn bồng
+    const puffs = [
+      [-10, -1, 5.4],
+      [-7, -5, 5.0],
+      [-1, -6, 5.2],
+      [6, -5, 5.0],
+      [10, -1, 5.3],
+      [6, 3.5, 4.9],
+      [-5, 3.5, 5.0],
+    ];
+    puffs.forEach(([px, py, pr]) => {
+      c.fillStyle = shadeC(212, 206, 194, kHook);
+      c.beginPath();
+      c.arc(sx + px, sy + py + 1.2, pr, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = shadeC(240, 235, 224, kHook);
+      c.beginPath();
+      c.arc(sx + px, sy + py, pr * 0.88, 0, Math.PI * 2);
+      c.fill();
+    });
+    c.fillStyle = shadeC(250, 246, 236, kHook);
+    c.beginPath();
+    c.arc(sx + 1, sy - 4.5, 2.8, 0, Math.PI * 2);
+    c.fill();
+    c.restore();
+  }
   // 6 tranh Van Gogh trên tường phải, đúng phối cảnh (mặt phẳng x = 1.4)
   const onRight = (z0, z1, y0, y1) => [P(RW - 0.005, y1, z1), P(RW - 0.005, y1, z0), P(RW - 0.005, y0, z1)]; // trên-trái (xa), trên-phải (gần), dưới-trái
   [['cay', 2.85, 2.7, 1.42, 1.72], ['sao', 2.6, 2.15, 1.62, 1.95], ['hoa', 2.05, 1.8, 1.55, 1.95], ['quan', 2.55, 2.35, 1.3, 1.55], ['song', 2.25, 1.85, 1.28, 1.52], ['bach', 1.7, 1.5, 1.32, 1.68]].forEach(([k, z1, z0, y0, y1]) => {
@@ -114,8 +421,8 @@ function bakeAnh() {
     for (const J of [J0, J1, J2]) { const q = P(...J); c.fillStyle = '#18181a'; c.beginPath(); c.arc(q[0], q[1], 5, 0, Math.PI * 2); c.fill(); c.fillStyle = 'rgba(255,215,170,.2)'; c.beginPath(); c.arc(q[0] - 1.5, q[1] - 1.5, 1.6, 0, Math.PI * 2); c.fill(); }
     const top = P(-0.45, 1.41, 2.93), op = ellH(-0.38, 1.25, 2.88, 0.085, 0.06, 24);
     const lft = op.reduce((m, q) => (q[0] < m[0] ? q : m)), rgt = op.reduce((m, q) => (q[0] > m[0] ? q : m));
-    const sg = c.createLinearGradient(lft[0], 0, rgt[0], 0); sg.addColorStop(0, '#060607'); sg.addColorStop(0.4, '#202024'); sg.addColorStop(1, '#09090a'); poly(c, [top, rgt, ...op.filter((q) => q[1] >= (lft[1] + rgt[1]) / 2 - 1).sort((u, v) => v[0] - u[0]), lft], sg);
-    seg(c, top, rgt, 1.2, 'rgba(255,215,170,.25)');
+    const sg = c.createLinearGradient(lft[0], 0, rgt[0], 0); sg.addColorStop(0, '#060607'); sg.addColorStop(0.4, '#202024'); sg.addColorStop(1, '#09090a');
+    if (!window.ANH_KHONG_CHAO) { poly(c, [top, rgt, ...op.filter((q) => q[1] >= (lft[1] + rgt[1]) / 2 - 1).sort((u, v) => v[0] - u[0]), lft], sg); seg(c, top, rgt, 1.2, 'rgba(255,215,170,.25)'); } // phòng 502: đèn xoay lên thì chao vẽ ở lớp động
     ANH.shade = op; }
   // điện thoại úp cạnh laptop (chỗ để; rung vẽ ở lớp động)
   ANH.phone = P(0.24, 0.766, 2.8);

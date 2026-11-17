@@ -126,12 +126,12 @@ function audioStart() {
   for (let ch = 0; ch < 2; ch++) { const d = noiseBuf.getChannelData(ch); let b0 = 0, b1 = 0, b2 = 0; for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; b0 = 0.997 * b0 + w * 0.029; b1 = 0.985 * b1 + w * 0.032; b2 = 0.95 * b2 + w * 0.048; d[i] = (b0 + b1 + b2 + w * 0.02) * 0.5; } }
   FX = makeFX();
 }
-function nz(t, dur, type, f, q, gain, pan = 0, f2 = 0, dest = null) {
+function nz(t, dur, type, f, q, gain, pan = 0, f2 = 0, dest = null) { if (window.KET2_PHIM_DANG) return;
   const o = ac.createBufferSource(); o.buffer = noiseBuf; const b = ac.createBiquadFilter(); b.type = type; b.frequency.setValueAtTime(f, t); if (f2) b.frequency.exponentialRampToValueAtTime(f2, t + dur); b.Q.value = q;
   const e = ac.createGain(); e.gain.setValueAtTime(0.0001, t); e.gain.exponentialRampToValueAtTime(gain, t + Math.min(0.004, dur / 4)); e.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   const p = ac.createStereoPanner(); p.pan.value = pan; o.connect(b).connect(e).connect(p).connect(dest || master); o.start(t, Math.random() * 3, dur + 0.05);
 }
-function tone(t, f0, f1, g0, dur, type = 'sine', dest = null) { const o = ac.createOscillator(); o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur); const e = ac.createGain(); e.gain.setValueAtTime(g0, t); e.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(e).connect(dest || master); o.start(t); o.stop(t + dur + 0.02); }
+function tone(t, f0, f1, g0, dur, type = 'sine', dest = null) { if (window.KET2_PHIM_DANG) return; const o = ac.createOscillator(); o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur); const e = ac.createGain(); e.gain.setValueAtTime(g0, t); e.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(e).connect(dest || master); o.start(t); o.stop(t + dur + 0.02); }
 function loopNoise(gain, type, f, q, rate = 1) { const s = ac.createBufferSource(); s.buffer = noiseBuf; s.loop = true; s.playbackRate.value = rate; const b = ac.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; const g2 = ac.createGain(); g2.gain.value = gain; s.connect(b).connect(g2); s.start(); return { src: s, filt: b, gain: g2 }; }
 function rampF(param, v, sec) { const t = ac.currentTime; param.cancelScheduledValues(t); param.setValueAtTime(Math.max(1, param.value), t); param.exponentialRampToValueAtTime(v, t + sec); }
 function ramp(param, v, sec) { const t = ac.currentTime; param.cancelScheduledValues(t); param.setValueAtTime(param.value, t); param.linearRampToValueAtTime(v, t + sec); }
@@ -385,7 +385,7 @@ SC.tui = {
     SC.tui.itemR = [];
     BAG.items.forEach((it, i) => { const x = BX + (i % 3) * 175, y = 310 + Math.floor(i / 3) * 172, on = BAG.sel === it.id;
       if (on) { c.fillStyle = 'rgba(255,214,160,.13)'; roundRect(c, x - 82, y - 70, 164, 160, 14); c.fill(); c.strokeStyle = 'rgba(255,214,160,.45)'; c.lineWidth = 2; c.stroke(); }
-      c.save(); c.translate(x, y - 6); it.draw(c, 0.82); c.restore(); text(c, on ? it.label + ' · đang cầm' : it.label, x, y + 72, 19, on ? 0.85 : 0.55); SC.tui.itemR.push({ x: x - 82, y: y - 70, w: 164, h: 160, it }); });
+      c.save(); c.translate(x, y - 6); it.draw(c, 0.82); c.restore(); text(c, it.label, x, y + (on ? 64 : 72), it.label.length > 16 ? 16 : 19, on ? 0.85 : 0.55); if (on) text(c, 'đang cầm', x, y + 84, 15, 0.7); SC.tui.itemR.push({ x: x - 82, y: y - 70, w: 164, h: 160, it }); });
     if (!BAG.items.length) text(c, 'trống', TX, 470, 24, 0.35);
     else text(c, 'chạm một món để cầm lên, hoặc xem kỹ', TX, 740, 20, 0.35);
   },
