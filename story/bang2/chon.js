@@ -25,6 +25,10 @@
         if (k2.xong === true) ket2Xong = true;
       }
     } catch (e) { /* bỏ qua */ }
+    try { // tài khoản đã xong kết 2 thì luôn xem lại được, kể cả khi đang chơi lại dở
+      const st = JSON.parse(doc('lpn:story') || 'null');
+      if (st && st.flags && st.flags.b2k2) ket2Xong = true;
+    } catch (e) { /* bỏ qua */ }
     try {
       const m2 = JSON.parse(doc('lpn:bang2manh') || 'null');
       if (Array.isArray(m2) && m2.length >= 1) ket2Co = true;

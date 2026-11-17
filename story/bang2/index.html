@@ -12,6 +12,31 @@
 <script>
   document.documentElement.style.background = '#000';
   try { if ((localStorage.getItem('lpn:unlock') !== 'a9ed65df' || (localStorage.getItem('lpn:preview') !== '1' && (!localStorage.getItem('lpn:relock3') || false))) && !/^(localhost|127\.0\.0\.1|192\.168\.)/.test(location.hostname)) location.replace('../../home/'); } catch (e) { /* bỏ qua */ }
+  // Đã xem kết 1 / đã xong kết 2 lưu theo tài khoản (lpn:story.flags b2k1, b2k2; sync.js ở trang truyện đưa lên Firebase).
+  // Máy mới hay bị xoá dữ liệu thì lấy lại từ đó, vào là đứng ở sân đình, xem lại kết nào cũng được. Không bao giờ xoá.
+  (function () {
+    var KEYS = ['Mi4', 'Si4', 'La4', 'Fa#5', 'Đô#5'];
+    var rd = function (k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
+    var b2luu = function (mo) {
+      try {
+        var st = rd('lpn:story'), f = (st && st.flags) || {}, doi = false;
+        var x1 = localStorage.getItem('lpn:bang2xong'), k2 = rd('lpn:ket2');
+        if (!k2 || typeof k2 !== 'object') k2 = null;
+        // lấy lại từ tài khoản: chỉ lúc mở trang, và kết 2 chỉ khi máy chưa có gì (đang "chơi lại kết 2" thì để yên)
+        if (mo === true && f.b2k1 && !x1) localStorage.setItem('lpn:bang2xong', x1 = String(f.b2k1));
+        if (mo === true && f.b2k2 && !k2) {
+          localStorage.setItem('lpn:ket2', JSON.stringify(k2 = { manh: KEYS.slice(), lap: KEYS.slice(), denLen: true, chia: true, chiatu: true, tuMo: true, cuc: [true, true], xong: true }));
+        }
+        if (x1 && !f.b2k1) { f.b2k1 = +x1 || Date.now(); doi = true; }
+        if (k2 && k2.xong === true && !f.b2k2) { f.b2k2 = Date.now(); doi = true; }
+        if (doi) { st = st && typeof st === 'object' ? st : { done: {}, flags: {}, ver: 2 }; st.flags = f; localStorage.setItem('lpn:story', JSON.stringify(st)); }
+      } catch (e) { /* bỏ qua */ }
+    };
+    b2luu(true);
+    addEventListener('pagehide', b2luu);
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') b2luu(); });
+    window.LPN_B2LUU = b2luu;
+  })();
   // Chơi dở thì lần sau vào tiếp từ chặng đã tới (lpn:bang2 chỉ lưu số chặng, không đồng bộ). ?moi=1: chơi lại từ đầu.
   try {
     var q = new URLSearchParams(location.search);
@@ -55,7 +80,7 @@
 <script src="ket2gl.js?v=9"></script>
 <script src="san.js?v=2"></script>
 <script src="luu.js?v=2"></script>
-<script src="chon.js?v=5"></script>
+<script src="chon.js?v=6"></script>
 <script src="trailer.js?v=9"></script>
 <script src="../../home/offline.js?v=1"></script>
 </body>
