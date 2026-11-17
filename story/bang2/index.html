@@ -22,10 +22,14 @@
         var st = rd('lpn:story'), f = (st && st.flags) || {}, doi = false;
         var x1 = localStorage.getItem('lpn:bang2xong'), k2 = rd('lpn:ket2');
         if (!k2 || typeof k2 !== 'object') k2 = null;
-        // lấy lại từ tài khoản: chỉ lúc mở trang, và kết 2 chỉ khi máy chưa có gì (đang "chơi lại kết 2" thì để yên)
+        // lấy lại từ tài khoản lúc mở trang: đã xong kết 2 thì đàn luôn lắp đủ phím, dù máy còn ván dở cũ.
+        // Chỉ khi chính tay chọn "Chơi lại kết 2" (lpn:ket2lai, đặt ở phong502.js) mới để ván chơi lại yên; xong ván thì bỏ dấu.
+        if (k2 && k2.xong === true) localStorage.removeItem('lpn:ket2lai');
         if (mo === true && f.b2k1 && !x1) localStorage.setItem('lpn:bang2xong', x1 = String(f.b2k1));
-        if (mo === true && f.b2k2 && !k2) {
-          localStorage.setItem('lpn:ket2', JSON.stringify(k2 = { manh: KEYS.slice(), lap: KEYS.slice(), denLen: true, chia: true, chiatu: true, tuMo: true, cuc: [true, true], xong: true }));
+        if (mo === true && f.b2k2 && !(k2 && k2.xong === true) && localStorage.getItem('lpn:ket2lai') !== '1') {
+          var d = k2 || {}, gop = function (a) { a = Array.isArray(a) ? a : []; KEYS.forEach(function (id) { if (a.indexOf(id) < 0) a.push(id); }); return a; };
+          d.manh = gop(d.manh); d.lap = gop(d.lap); d.denLen = d.chia = d.chiatu = d.tuMo = true; d.cuc = [true, true]; d.xong = true;
+          localStorage.setItem('lpn:ket2', JSON.stringify(k2 = d));
         }
         if (x1 && !f.b2k1) { f.b2k1 = +x1 || Date.now(); doi = true; }
         if (k2 && k2.xong === true && !f.b2k2) { f.b2k2 = Date.now(); doi = true; }
@@ -74,7 +78,7 @@
 <script src="p10.js?v=20"></script>
 <script src="dan.js?v=23"></script>
 <script src="rot.js?v=5"></script>
-<script src="phong502.js?v=18"></script>
+<script src="phong502.js?v=19"></script>
 <script src="ngoai.js?v=6"></script>
 <script src="ket2phim.js?v=3"></script>
 <script src="ket2gl.js?v=9"></script>

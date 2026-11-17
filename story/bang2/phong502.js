@@ -19,8 +19,8 @@
 
   // ================= TRẠNG THÁI & LƯU KẾT 2 ('lpn:ket2') =================
   const KET2_KEY = 'lpn:ket2';
-  // ?xoa502=1: xoá tiến trình Kết 2 để chơi lại từ đầu (thử nghiệm)
-  try { if (/[?&]xoa502=1/.test(location.search)) { ['lpn:ket2', 'lpn:ket2ngoai', 'lpn:bang2manh'].forEach(k => localStorage.removeItem(k)); history.replaceState(null, '', location.pathname + location.search.replace(/[?&]xoa502=1/, '').replace(/^&/, '?')); } } catch (e) {}
+  // ?xoa502=1: xoá tiến trình Kết 2 để chơi lại từ đầu (bảng dấu sao "Chơi lại kết 2"); lpn:ket2lai báo cho index.html đừng trả lại trạng thái "đã xong" giữa ván
+  try { if (/[?&]xoa502=1/.test(location.search)) { ['lpn:ket2', 'lpn:ket2ngoai', 'lpn:bang2manh'].forEach(k => localStorage.removeItem(k)); localStorage.setItem('lpn:ket2lai', '1'); history.replaceState(null, '', location.pathname + location.search.replace(/[?&]xoa502=1/, '').replace(/^&/, '?')); } } catch (e) {}
   const MANH2_KEY = 'lpn:bang2manh';
 
   const MANH_META = {
