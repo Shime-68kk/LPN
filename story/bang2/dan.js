@@ -1913,7 +1913,7 @@ const DCT_AT = 3.85; // am/dct.mp3 cắt từ giây 50 của bài gốc (Erik, g
   };
 
   const BTN_REPLAY = { x: 670, y: 774, hw: 98, hh: 34, label: 'Xem lại' };
-  const BTN_HOME = { x: 930, y: 774, hw: 120, hh: 34, label: 'Về trang chủ' };
+  const BTN_HOME = { x: 930, y: 774, hw: 120, hh: 34, label: 'Về sân đình' }; // về không gian chung (san.js)
 
   const CAL_LOOP_PTS = [];
   (function buildCalLoop() {
@@ -1964,7 +1964,7 @@ const DCT_AT = 3.85; // am/dct.mp3 cắt từ giây 50 của bài gốc (Erik, g
     Promise.all([
       document.fonts.load(`700 74px ${SCRIPT}`, 'Đến ôm em bằng được. đón em'),
       document.fonts.load(`600 40px ${CAL_FONT}`, 'Tháng 11'),
-      document.fonts.load(`600 22px ${UI_FONT}`, 'Xem lại Về trang chủ đón em'),
+      document.fonts.load(`600 22px ${UI_FONT}`, 'Xem lại Về sân đình đón em'),
     ]).then(() => {
       calW = 0;
       ket2.lineW = 0;
@@ -2650,7 +2650,7 @@ const DCT_AT = 3.85; // am/dct.mp3 cắt từ giây 50 của bài gốc (Erik, g
   function leaveToHome() {
     if (ket2.navigated) return;
     ket2.navigated = true;
-    location.href = '../../home/';
+    location.replace('?phong=13&tu=1');
   }
 
   function hitKet2Btn(p, btn) {
