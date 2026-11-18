@@ -73,7 +73,7 @@
     if (t !== namTxt) { namTxt = t; nm.textContent = t; }
     let nop = S < 7 ? 0 : Math.min(1, (S - 7) / 2);
     if (S > 220) nop = Math.max(0, 1 - (S - 220) / 3);
-    nm.style.opacity = (nop * 0.82).toFixed(3);
+    nm.style.opacity = (nop * 0.92).toFixed(3);
     // chữ cuối
     const kt = $('ket');
     while (ketShown < KET.length && S >= KET[ketShown][0]) {

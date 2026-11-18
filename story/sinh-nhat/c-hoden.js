@@ -162,7 +162,7 @@
   }
   SN.dung.push((T) => {
     const mesh = SN.quad(FRAG, {
-      uNB: { value: SN.DT ? 110 : 160 }, uDt: { value: SN.DT ? 0.085 : 0.062 }, uT0: { value: 0 },
+      uNB: { value: SN.HQ ? 260 : (SN.DT ? 110 : 160) }, uDt: { value: SN.HQ ? 0.045 : (SN.DT ? 0.085 : 0.062) }, uT0: { value: 0 },
       uMW: { value: new T.Vector3(0.25, 0.92, 0.3).normalize() }, uNeb: { value: new T.Vector3(0.64, 0.12, -0.77).normalize() },
       uDisk: { value: 1 }, uHalo: { value: 0.035 },
     });

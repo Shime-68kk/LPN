@@ -90,8 +90,8 @@
     return out;
   }
   SN.dung.push((T) => {
-    const mesh = SN.quad(FRAG, { uNS: { value: SN.DT ? 26 : 40 }, uLs: { value: new T.Vector3(30, 240, -330) }, uDark: { value: 0 } }, { low: true });
-    const low = SN.lowres(mesh, SN.DT ? 0.36 : 0.46);
+    const mesh = SN.quad(FRAG, { uNS: { value: SN.HQ ? 64 : (SN.DT ? 26 : 40) }, uLs: { value: new T.Vector3(30, 240, -330) }, uDark: { value: 0 } }, { low: true });
+    const low = SN.lowres(mesh, SN.HQ ? 1 : (SN.DT ? 0.36 : 0.46));
     const tr = [];
     SN.them({
       ten: 'tinhvan', tu: 46, den: 106.5, lop: 20, low, warmS: 75,

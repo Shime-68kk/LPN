@@ -43,6 +43,8 @@
   let DT = false; try { DT = matchMedia('(pointer: coarse)').matches; } catch (e) { /* bỏ qua */ }
   SN.DT = DT;
   const DO = Q.get('do') === '1' && NHA;
+  // ?hq=1 (chỉ mạng nhà): chụp ảnh tĩnh chất lượng cao nhất — đủ độ phân giải màn hình, cảnh nặng vẽ đủ nét; &bars=0 bỏ dải đen
+  SN.HQ = NHA && Q.get('hq') === '1';
 
   // ================= HẬU KỲ =================
   const P = {};
@@ -264,7 +266,7 @@
   function resize() {
     if (!renderer) return;
     const w = window.innerWidth, h = window.innerHeight;
-    basePR = Math.min(window.devicePixelRatio || 1, DT ? 1.5 : 1.75);
+    basePR = SN.HQ ? (window.devicePixelRatio || 1) : Math.min(window.devicePixelRatio || 1, DT ? 1.5 : 1.75);
     const pr = basePR * quality;
     renderer.setPixelRatio(pr); renderer.setSize(w, h, false);
     W = Math.floor(w * pr); H = Math.floor(h * pr);
@@ -310,6 +312,7 @@
     SN.beforeFrame && SN.beforeFrame(S);
     setupWorlds(S);
     SN.afterSetup && SN.afterSetup(S);
+    if (SN.HQ) { if (Q.get('bars') === '0') GR.bars = 0; GR.grain *= 0.6; }
     for (const L of SN.lows) {
       if (!L.upMesh.visible) continue;
       renderer.setRenderTarget(L.rt); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(L.sc, P.oc);
