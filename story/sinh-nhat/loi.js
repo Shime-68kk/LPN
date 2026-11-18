@@ -145,8 +145,82 @@
     c *= smoothstep(bar - .0015, bar + .0015, yb);
     gl_FragColor = vec4(c * uFade, 1.);
   }`;
+  // ---------- ĐỘ SÂU TRƯỜNG ẢNH (nhoè trước/sau như ống kính thật) + SƯƠNG HẮT SÁNG quanh các nguồn sáng ----------
+  // Chỉ chạy khi cảnh đặt SN.dof cho khung đó (cảnh đất). Thứ tự: vẽ vật đặc (lớp 0) → ảnh nửa độ phân giải kèm độ nhoè từng điểm
+  // → nhoè kiểu "gom thay vì rải" (vật xa không lem đè lên vật gần đang rõ) → ghép lại với ảnh nét + cộng ánh sáng tán xạ trong sương
+  // → vẽ các hiệu ứng sáng (lớp 1: sao băng, tàn lửa, đốm sáng…) tự so độ sâu để bị che đúng chỗ.
+  const DOF_HAM = `uniform vec4 uDof; uniform float uMaxR;   // tiêu cự (m), độ nhoè ở vô cực (điểm ảnh nửa độ phân giải), near, far
+  float linz(float d){ float z = d * 2. - 1.; return 2. * uDof.z * uDof.w / (uDof.w + uDof.z - z * (uDof.w - uDof.z)); }
+  float coc(float d){ return clamp(uDof.y * (1. - uDof.x / linz(d)), -uMaxR, uMaxR); }`;
+  const DOF_PRE = DOF_HAM + `
+  uniform sampler2D tS; uniform sampler2D tD; uniform vec2 uTxF;
+  void main(){
+    vec2 uv = gl_FragCoord.xy * 2. * uTxF;
+    vec3 c = texture(tS, uv).rgb;   // một lần lọc tuyến tính ở góc giữa 4 điểm ảnh = trung bình 2×2
+    float d = min(min(texture(tD, uv + vec2(-.5, -.5) * uTxF).r, texture(tD, uv + vec2(.5, -.5) * uTxF).r), min(texture(tD, uv + vec2(-.5, .5) * uTxF).r, texture(tD, uv + vec2(.5, .5) * uTxF).r));
+    gl_FragColor = vec4(min(c, vec3(40.)), coc(d));
+  }`;
+  const DOF_BLUR = `uniform sampler2D tA; uniform vec2 uTxH; uniform float uMaxR, uBuoc;
+  void main(){
+    vec2 uv = gl_FragCoord.xy * uTxH;
+    vec4 c0 = texture(tA, uv);
+    float cs = abs(c0.a);
+    vec3 col = c0.rgb; float tot = 1.;
+    float rad = uBuoc;
+    for (int i = 0; i < 96; i++) {
+      if (rad > uMaxR) break;
+      float ang = float(i) * 2.39996323;
+      vec4 sm = texture(tA, uv + vec2(cos(ang), sin(ang)) * rad * uTxH);
+      float ss = abs(sm.a);
+      if (sm.a > c0.a) ss = clamp(ss, 0., cs * 2.);
+      float m = smoothstep(rad - .5, rad + .5, ss);
+      col += mix(col / tot, sm.rgb, m);
+      tot += 1.;
+      rad += uBuoc / rad;
+    }
+    gl_FragColor = vec4(col / tot, c0.a);
+  }`;
+  const DOF_GHEP = DOF_HAM + `
+  uniform sampler2D tS; uniform sampler2D tD; uniform sampler2D tB; uniform vec2 uTxF, uTxH, uVp;
+  uniform mat4 uInvPV; uniform vec3 uCamP; uniform vec4 uLP[20]; uniform vec4 uLC[20]; uniform vec4 uMist; uniform float uDofOn;
+  void main(){
+    vec2 uv = gl_FragCoord.xy * uTxF;
+    vec3 col = texture(tS, uv).rgb;
+    float d = texture(tD, uv).r;
+    if (uDofOn > .5) {
+      float c = coc(d) * 2.;
+      vec4 b = texture(tB, gl_FragCoord.xy * .5 * uTxH);
+      float k = max(smoothstep(.7, 2.4, abs(c)), smoothstep(.7, 2.4, -b.a * 2.));
+      col = mix(col, b.rgb, k);
+    }
+    // ánh sáng tán xạ trong sương: tích phân đúng của một đèn điểm dọc tia nhìn (mật độ sương theo độ cao chỗ tia đi gần đèn nhất)
+    vec2 q = gl_FragCoord.xy / uVp * 2. - 1.;
+    vec4 w4 = uInvPV * vec4(q, d * 2. - 1., 1.);
+    vec3 rd = w4.xyz / w4.w - uCamP; float T = length(rd); rd /= max(T, 1e-4);
+    if (d >= .99999) T = 4000.;
+    vec3 sc = vec3(0.);
+    for (int i = 0; i < 20; i++) {
+      if (uLP[i].w <= 0.) continue;
+      vec3 dp = uLP[i].xyz - uCamP;
+      float t0 = dot(dp, rd);
+      float h = sqrt(max(dot(dp, dp) - t0 * t0, .09));
+      float I = (atan((T - t0) / h) - atan(-t0 / h)) / h;
+      float y = uCamP.y + rd.y * clamp(t0, 0., T);
+      float den = uMist.x * (1. + uMist.w * exp(-max(y - uMist.y, 0.) / uMist.z));
+      sc += uLC[i].rgb * (uLP[i].w * I * den);
+    }
+    gl_FragColor = vec4(col + min(sc, vec3(30.)), 1.);
+  }`;
   function buildPost() {
     P.scene = rt(1, 1, { depthBuffer: true });
+    { const dt = new T.DepthTexture(1, 1); dt.type = T.UnsignedIntType; dt.format = T.DepthFormat; dt.minFilter = dt.magFilter = T.NearestFilter; P.scene.depthTexture = dt; }
+    P.dA = rt(1, 1); P.dB = rt(1, 1); P.comp = rt(1, 1);
+    const v4 = () => { const a = []; for (let i = 0; i < 20; i++) a.push(new T.Vector4(0, 0, 0, 0)); return a; };
+    P.mDofPre = passMat(DOF_PRE, { tS: { value: null }, tD: { value: null }, uTxF: { value: new T.Vector2() }, uDof: { value: new T.Vector4(100, 0, 0.1, 9000) }, uMaxR: { value: 8 } });
+    P.mDofBlur = passMat(DOF_BLUR, { tA: { value: null }, uTxH: { value: new T.Vector2() }, uMaxR: { value: 8 }, uBuoc: { value: 1 } });
+    P.mDofGhep = passMat(DOF_GHEP, { tS: { value: null }, tD: { value: null }, tB: { value: null }, uTxF: { value: new T.Vector2() }, uTxH: { value: new T.Vector2() }, uVp: { value: new T.Vector2(1, 1) },
+      uDof: { value: new T.Vector4(100, 0, 0.1, 9000) }, uMaxR: { value: 8 }, uDofOn: { value: 1 }, uInvPV: { value: new T.Matrix4() }, uCamP: { value: new T.Vector3() },
+      uLP: { value: v4() }, uLC: { value: v4() }, uMist: { value: new T.Vector4(0.003, 0, 6, 2) } });
     P.down = []; P.mats = {};
     for (let i = 0; i < 6; i++) P.down.push(rt(1, 1));
     P.s0 = rt(1, 1); P.s1 = rt(1, 1);
@@ -168,7 +242,10 @@
     P.oc = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1);
   }
   function sizePost() {
+    P.scene.depthTexture.image.width = W; P.scene.depthTexture.image.height = H;
     P.scene.setSize(W, H); if (P.acc) P.acc.setSize(W, H);
+    P.comp.setSize(W, H); P.dA.setSize(Math.max(1, W >> 1), Math.max(1, H >> 1)); P.dB.setSize(Math.max(1, W >> 1), Math.max(1, H >> 1));
+    if (SN.uChung) SN.uChung.uDepTx.value.set(1 / W, 1 / H);
     let w = W >> (DT ? 2 : 1), h = H >> (DT ? 2 : 1);   // điện thoại: ánh sáng lan bắt đầu ở 1/4 (vốn mềm, nhìn không khác) cho nhẹ
     for (let i = 0; i < 6; i++) { P.down[i].setSize(Math.max(1, w), Math.max(1, h)); w >>= 1; h >>= 1; }
     P.s0.setSize(Math.max(1, W >> 2), Math.max(1, H >> 3)); P.s1.setSize(Math.max(1, W >> 2), Math.max(1, H >> 3));
@@ -337,6 +414,7 @@
     SN.uChung.uS.value = S;
     SN.uChung.uPxA.value = 2 * Math.tan(cam3.fov * Math.PI / 360) / Math.max(1, Hs);
     SN.gradeReset();
+    SN.dof = null;
     SN.beforeFrame && SN.beforeFrame(S);
     setupWorlds(S);
     SN.afterSetup && SN.afterSetup(S);
@@ -363,11 +441,49 @@
       }
       P.scene.viewport.set(0, 0, Ws, Hs); P.scene.scissor.set(0, 0, Ws, Hs); P.scene.scissorTest = true;
       renderer.setRenderTarget(P.scene); renderer.setClearColor(0x000000, 1); renderer.clear();
+      cam3.layers.set(0);
       renderer.render(scene, cam3);
-      if (K > 1) { P.mAcc.uniforms.tS.value = P.scene.texture; P.mAcc.uniforms.uK.value = 1 / K; blit(P.mAcc, P.acc); }
+      let ra = P.scene;
+      if (SN.dof) { veDof(); ra = P.comp; }
+      if (K > 1) { P.mAcc.uniforms.tS.value = ra.texture; P.mAcc.uniforms.uK.value = 1 / K; blit(P.mAcc, P.acc); }
+      else nguonCuoi = ra;
     }
     if (K > 1) { cam3.clearViewOffset(); SN.uChung.uSeed.value = 0; SN.uChung.uJit.value.set(0, 0); }
-    postRender(K > 1 ? P.acc : P.scene);
+    postRender(K > 1 ? P.acc : nguonCuoi);
+  }
+  let nguonCuoi = null;
+  let _ipv = null;
+  function veDof() {
+    const D = SN.dof, wh = Math.max(1, Math.ceil(Ws / 2)), hh = Math.max(1, Math.ceil(Hs / 2));
+    const maxR = clamp(D.max || 8, 1, DT ? 7 : 12);
+    const on = D.k > 0.05 ? 1 : 0;
+    cam3.updateMatrixWorld();
+    if (on) {
+      const a = P.mDofPre.uniforms;
+      a.tS.value = P.scene.texture; a.tD.value = P.scene.depthTexture; a.uTxF.value.set(1 / W, 1 / H); a.uDof.value.set(D.f, D.k, cam3.near, cam3.far); a.uMaxR.value = maxR;
+      P.dA.viewport.set(0, 0, wh, hh); P.dA.scissor.set(0, 0, wh, hh); P.dA.scissorTest = true;
+      blit(P.mDofPre, P.dA);
+      const b = P.mDofBlur.uniforms;
+      b.tA.value = P.dA.texture; b.uTxH.value.set(1 / P.dA.width, 1 / P.dA.height); b.uMaxR.value = maxR; b.uBuoc.value = DT ? 1.25 : 0.85;
+      P.dB.viewport.set(0, 0, wh, hh); P.dB.scissor.set(0, 0, wh, hh); P.dB.scissorTest = true;
+      blit(P.mDofBlur, P.dB);
+    }
+    const g = P.mDofGhep.uniforms;
+    g.tS.value = P.scene.texture; g.tD.value = P.scene.depthTexture; g.tB.value = P.dB.texture;
+    g.uTxF.value.set(1 / W, 1 / H); g.uTxH.value.set(1 / P.dB.width, 1 / P.dB.height); g.uVp.value.set(Ws, Hs);
+    g.uDof.value.set(D.f, D.k, cam3.near, cam3.far); g.uMaxR.value = maxR; g.uDofOn.value = on;
+    if (!_ipv) _ipv = new T.Matrix4();
+    _ipv.multiplyMatrices(cam3.projectionMatrix, cam3.matrixWorldInverse).invert(); g.uInvPV.value.copy(_ipv);
+    g.uCamP.value.setFromMatrixPosition(cam3.matrixWorld);
+    const L = D.den || [];
+    for (let i = 0; i < 20; i++) { const l = L[i]; if (l && l[3] > 0) { g.uLP.value[i].set(l[0], l[1], l[2], l[3]); g.uLC.value[i].set(l[4], l[5], l[6], 0); } else g.uLP.value[i].w = 0; }
+    if (D.mist) g.uMist.value.set(D.mist[0], D.mist[1], D.mist[2], D.mist[3]);
+    P.comp.viewport.set(0, 0, Ws, Hs); P.comp.scissor.set(0, 0, Ws, Hs); P.comp.scissorTest = true;
+    blit(P.mDofGhep, P.comp);
+    // hiệu ứng sáng (lớp 1) vẽ đè lên, tự so độ sâu với ảnh vật đặc
+    SN.uChung.uNF.value.set(cam3.near, cam3.far); SN.uChung.uDofF.value.set(D.f, on ? D.k * 2 : 0, maxR * 2);
+    renderer.setRenderTarget(P.comp);
+    cam3.layers.set(1); renderer.render(scene, cam3); cam3.layers.set(0);
   }
   function halton(i, b) { let f = 1, r = 0; while (i > 0) { f /= b; r += f * (i % b); i = Math.floor(i / b); } return r; }
   SN.renderAt = renderAt;
@@ -428,9 +544,11 @@
     cam3 = new T.PerspectiveCamera(50, 1, 0.05, 2e6);
     quadGeo = new T.PlaneGeometry(2, 2);
     noise3 = SN_GLSL.noiseTexture(T);
-    SN.uChung = { uN3: { value: noise3 }, uS: { value: 0 }, uRes: { value: new T.Vector2(1, 1) }, uPxA: { value: 0.001 }, uSeed: { value: 0 }, uJit: { value: new T.Vector2() } };
+    SN.uChung = { uN3: { value: noise3 }, uS: { value: 0 }, uRes: { value: new T.Vector2(1, 1) }, uPxA: { value: 0.001 }, uSeed: { value: 0 }, uJit: { value: new T.Vector2() },
+      tDep: { value: null }, uDepTx: { value: new T.Vector2(1, 1) }, uNF: { value: new T.Vector2(0.1, 9000) }, uDofF: { value: new T.Vector3(100, 0, 8) } };
     if (pinQ) quality = clamp(pinQ, 0.35, 1); else if (DT) dr = 0.85;
     buildPost();
+    SN.uChung.tDep.value = P.scene.depthTexture;
     resize();
     window.addEventListener('resize', () => { needResize = true; });
     cvs.addEventListener('webglcontextlost', (e) => { e.preventDefault(); failed = true; ready = false; SN.fallback && SN.fallback(new Error('mất ngữ cảnh đồ hoạ')); });

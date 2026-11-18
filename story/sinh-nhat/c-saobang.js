@@ -1,27 +1,34 @@
 'use strict';
-// SAO BĂNG LÚC NỬA ĐÊM (S 211.7–242), vẽ thật trong không gian 3D để máy quay bay theo được.
-// Thân sao: đầu chói xanh trắng, vệt khí ion hoá còn lơ lửng sau lưng, loang rộng và trôi theo gió.
-// 212.72 (phách mạnh): một mảnh sáng tách khỏi đầu sao, lao về doanh trại rồi hãm dần như chiếc đèn trời hạ xuống,
-// nguội từ trắng xanh sang vàng ấm, đuôi lửa ngắn lại theo tốc độ. Lơ lửng trên doanh trại một nhịp, đập sáng hai lần,
-// 217.72 nở bung thành 19 đốm sáng ấm và kim tuyến lấp lánh rơi chậm.
-// Tàn lửa và kim tuyến vẽ thành vệt nhoè theo chuyển động (không phải chấm tròn); đuôi là dải lụa sáng cong theo đường bay.
+// SAO BĂNG LÚC NỬA ĐÊM (S 210.4–242): một đường bay duy nhất, đúng hướng tia sáng tới từ sao Eta Cassiopeiae (chòm W).
+// Ở cảnh Trái Đất, tia sáng lao vào khí quyển trên Việt Nam rồi chui vào mây. Dưới đất: đám mây cạnh chòm W sáng lên từ bên trong,
+// 211.72 nó xé mây lao ra, cắm thẳng về đồi chè cạnh trại theo đường thẳng (không bẻ lái), hãm dần nhưng vẫn rất nhanh;
+// 212.72 lớp ngoài bốc cháy, bung một chùm tàn lửa (nó nhỏ lại, nóng trắng hơn); vệt khí ion hoá xanh lục treo lại trên trời.
+// 217.62 (phách mạnh nhất của đoạn nhạc) va vào đỉnh đồi chè: loé trắng, quầng sáng nở tròn trong sương, sóng sáng chạy theo
+// từng vòng hàng chè như gợn nước, tàn lửa bắn tung, khói hồng bốc lên; gió từ chỗ va chạm tới doanh trại sau nửa giây.
+// Từ đỉnh đồi còn rực, 19 đốm sáng (mười chín năm) bay lên, toả khắp thung lũng; một đốm bay vào cửa sổ của em.
 (() => {
   const SN = window.SN, M = SN.M, { clamp, mix, ease } = SN.u;
-  const T_SPLIT = 212.72, T_ARR = 216.95, T_BLOOM = 217.72;
-  const T_MAIN = 2.35;
+  const T_RA = 211.72, T_FL = 212.72, T_IMP = 217.62;
+  const VE = 160, AC = 145;                       // tốc độ lúc chạm đất (m/s), hệ số hãm: d = VE·τ + AC·τ² (τ: giây còn lại tới lúc va)
   const add = (a, b, k = 1) => [a[0] + b[0] * k, a[1] + b[1] * k, a[2] + b[2] * k];
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
   const len = (a) => Math.hypot(a[0], a[1], a[2]);
   const nrm = (a) => { const l = len(a) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
-  const lerp3 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
   const ss = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+  const dOf = (S) => { const t = Math.max(0, T_IMP - S); return VE * t + AC * t * t; };
+  const tAtD = (d) => T_IMP - (-VE + Math.sqrt(VE * VE + 4 * AC * Math.max(d, 0))) / (2 * AC);
+  const D_RA = dOf(T_RA);
 
-  // ---------- vệt nhoè (đầu sao, tàn lửa, kim tuyến, đốm sáng) ----------
-  // mỗi vệt là một hình con nhộng trên màn hình nối vị trí hiện tại với vị trí một chút trước đó; độ sáng chia đều theo chiều dài
+  // so độ sâu mềm với ảnh vật đặc (hiệu ứng vẽ sau lớp nhoè ống kính): khuất sau đồi, nhà thì tắt; sát mặt vật thì mờ dần
+  const MEM = `
+  uniform sampler2D tDep; uniform vec2 uDepTx, uNF; uniform vec3 uDofF;
+  float zLin(float d){ return 2. * uNF.x * uNF.y / (uNF.y + uNF.x - (d * 2. - 1.) * (uNF.y - uNF.x)); }
+  float mem(float soft){ float zs = zLin(texture(tDep, gl_FragCoord.xy * uDepTx).r), zf = zLin(gl_FragCoord.z); return sat((zs - zf) / soft); }`;
+  // ---------- vệt nhoè (đầu sao, tàn lửa, đốm sáng) ----------
   const STREAK_V = `
   attribute vec4 iA;   // vị trí hiện tại, bán kính (m)
   attribute vec4 iB;   // vị trí trước đó, độ sáng
-  attribute vec4 iC;   // màu, loại (0 tàn/kim tuyến, 1 đốm sáng, 2 đầu sao)
+  attribute vec4 iC;   // màu, loại (0 tàn lửa, 1 đốm sáng, 2 đầu sao)
   varying vec2 vQ; varying vec3 vC; varying float vI; varying float vL; varying float vR; varying float vK; varying float vBok; varying float vRR;
   void main(){
     vI = iB.w; vC = iC.rgb; vK = iC.w;
@@ -30,24 +37,24 @@
     if (vI <= 0. || c1.w < .2) { gl_Position = vec4(2., 2., 2., 1.); return; }
     vec2 h = .5 * uRes;
     vec2 s1 = c1.xy / c1.w * h, s0 = c0.xy / max(c0.w, .2) * h;
-    float pxm = projectionMatrix[1][1] * h.y / c1.w;              // điểm ảnh trên một mét ở độ sâu này
+    float pxm = projectionMatrix[1][1] * h.y / c1.w;
     float r = iA.w * pxm;
-    vBok = vK > .5 && vK < 1.5 ? smoothstep(16., 3., c1.w) : 0.;   // đốm sáng ở sát máy quay: nhoè thành vòng bokeh
-    float rmin = (vK > 1.5 ? 1.6 : (vK > .5 ? 2.6 : 1.1)) * uRes.y / 900.;
-    float rr = max(r, rmin);
-    vI *= min(1., (r * r + .3) / (rr * rr + .3)) ;                 // nhỏ hơn một điểm ảnh: giữ đúng tổng ánh sáng
+    float cocPx = uDofF.y > 0. ? min(uDofF.y * abs(1. - uDofF.x / c1.w), uDofF.z) * uRes.y / 900. : 0.;   // ngoài vùng nét: thành đốm tròn
+    vBok = vK < 1.5 ? smoothstep(1.5, 6., cocPx) : 0.;
+    float rmin = (vK > 1.5 ? 1.6 : (vK > .5 ? 2.4 : 1.0)) * uRes.y / 900.;
+    float rr = max(max(r, rmin), cocPx);
+    vI *= min(1., (r * r + .3) / (rr * rr + .3));
     vec2 d = s1 - s0; float L = length(d);
-    L = min(L, 420. * uRes.y / 900.);
+    L = min(L, 520. * uRes.y / 900.);
     vec2 ax = L > .01 ? d / max(length(d), 1e-4) : vec2(1., 0.), ay = vec2(-ax.y, ax.x);
-    float halo = vK > 2.5 ? 3.2 : (vK > 1.5 ? 9. : (vK > .5 ? mix(4.5, 1.6, vBok) : 3.5));
-    float R = min(rr * halo, (vK > 1.5 ? 110. : 60.) * uRes.y / 900.);
-    if (vK > 1.5 && vK < 2.5) vI *= mix(.45, 1., smoothstep(12., 110., c1.w));    // đầu sao ở sát máy quay: bớt chói, khỏi loá thành mảng trắng
+    float halo = vK > 1.5 ? 7. : (vK > .5 ? mix(4.5, 1.5, vBok) : mix(3.2, 1.4, vBok));
+    float R = min(rr * halo, (vK > 1.5 ? 150. : 60.) * uRes.y / 900.);
     vRR = R;
     vec2 mid = s1 - ax * L * .5;
     vec2 p = mid + ax * position.x * (L * .5 + R) + ay * position.y * R;
     vQ = vec2(position.x * (L * .5 + R), position.y * R);
     vL = L * .5; vR = rr;
-    vI *= rr / (rr + L * .5);                                       // nhoè dài thì mờ đi (cùng một lượng ánh sáng)
+    vI *= rr / (rr + L * .5);
     gl_Position = vec4(p / h * c1.w, c1.z, c1.w);
   }`;
   const STREAK_F = `
@@ -56,19 +63,19 @@
     float dx = max(abs(vQ.x) - vL, 0.);
     float dp = length(vec2(dx, vQ.y));
     float d = dp / vR;
-    float edge = smoothstep(vRR, vRR * .55, dp);                    // tắt hẳn trước mép khung vẽ (không lộ ô vuông)
+    float edge = smoothstep(vRR, vRR * .55, dp);
     float a;
-    if (vK > 2.5) a = exp(-d * d * 1.1) * 1.3 + exp(-d * 1.2) * .25;                          // vỏ sáng quanh mảnh
-    else if (vK > 1.5) a = exp(-d * d * 1.6) * 5. + exp(-d * .9) * .5 + exp(-d * .28) * .06;      // đầu sao: lõi chói + quầng rộng
-    else if (vK > .5) {
-      float core = exp(-d * d * mix(2.2, .35, vBok)) * mix(2.4, 1.1, vBok);
-      float ring = vBok * smoothstep(1.05, 1.4, d) * smoothstep(1.75, 1.45, d) * .55;
-      a = core + exp(-d * .8) * .62 + ring;
-    } else a = exp(-d * d * 1.8) * 3.2 + exp(-d * 1.1) * .35;
-    gl_FragColor = vec4(vC * a * vI * edge, 1.);
+    if (vK > 1.5) a = exp(-d * d * 1.5) * 5. + exp(-d * 1.1) * .55 + exp(-d * .4) * .08;            // đầu sao: lõi chói + quầng
+    else {
+      // đốm sáng / tàn lửa; ngoài vùng nét thì thành đĩa bokeh: mặt phẳng, mép sáng hơn một chút
+      float disk = (1. - smoothstep(.86, 1.02, d)) * (.75 + .3 * smoothstep(.55, .95, d));
+      float core = vK > .5 ? exp(-d * d * 2.2) * 2.4 + exp(-d * .8) * .62 : exp(-d * d * 1.8) * 3.2 + exp(-d * 1.1) * .32;
+      a = mix(core, disk * 1.1, vBok);
+    }
+    gl_FragColor = vec4(vC * a * vI * edge * mem(vK > 1.5 ? 4. : 1.2), 1.);
   }`;
 
-  // ---------- dải lụa sáng (vệt khí của thân sao, đuôi lửa của mảnh) ----------
+  // ---------- dải lụa sáng (vệt khí ion hoá) ----------
   const RIB_V = `
   attribute vec3 aP; attribute vec3 aT; attribute float aS; attribute float aW; attribute float aI; attribute float aG; attribute float aU;
   varying float vV; varying float vI; varying float vG; varying float vU;
@@ -77,165 +84,136 @@
     vec3 tv = mat3(viewMatrix) * aT;
     vec3 sd = cross(tv, cc.xyz); float sl = length(sd); sd = sl > 1e-6 ? sd / sl : vec3(1., 0., 0.);
     float pxm = projectionMatrix[1][1] * .5 * uRes.y / max(-cc.z, .1);
-    float wpx = aW * pxm, wmin = 1.15 * uRes.y / 900.;
-    float wmax = 26. * uRes.y / 900.;
+    float wpx = aW * pxm, wmin = 1.2 * uRes.y / 900., wmax = 40. * uRes.y / 900.;
     float k = max(wpx, wmin) / max(wpx, 1e-5);
-    if (wpx > wmax) k = wmax / wpx;                                  // sát máy quay: giữ dải lụa mảnh, không thành mảng sáng
+    if (wpx > wmax) k = wmax / wpx;
     float sinA = length(cross(normalize(tv + 1e-6), normalize(cc.xyz)));
-    vI = aI / max(k, 1.) * smoothstep(5., 32., -cc.z) * smoothstep(.12, .55, sinA); vV = aS; vG = aG; vU = aU;
+    vI = aI / max(k, 1.) * smoothstep(8., 60., -cc.z) * smoothstep(.06, .4, sinA); vV = aS; vG = aG; vU = aU;
     gl_Position = projectionMatrix * vec4(cc.xyz + sd * aW * k * aS, 1.);
   }`;
   const RIB_F = `
-  uniform vec3 uC0, uC1, uC2;   // màu theo tuổi: mới, giữa, cũ
+  uniform vec3 uC0, uC1, uC2;
   uniform float uNz, uSeed2;
   varying float vV; varying float vI; varying float vG; varying float vU;
   void main(){
     float across = exp(-vV * vV * 2.6);
     float core = exp(-vV * vV * 14.) * (1. - vG) * .8;
-    float n = .55 + .9 * sat(.5 + pn(vec3(vU * uNz, uSeed2, uS * .35)) * 1.6 + pn(vec3(vU * uNz * 3.1, uSeed2 + 3.7, uS * .7)) * .7);
+    float n = .5 + .9 * sat(.5 + pn(vec3(vU * uNz, uSeed2, uS * .25)) * 1.6 + pn(vec3(vU * uNz * 3.1, uSeed2 + 3.7, uS * .5)) * .7);
     vec3 c = mix(mix(uC0, uC1, sat(vG * 2.)), uC2, sat(vG * 2. - 1.));
-    gl_FragColor = vec4(c * (across + core) * vI * mix(1., n, sat(vG * 3.)), 1.);
+    gl_FragColor = vec4(c * (across + core) * vI * mix(1., n, sat(vG * 3.)) * mem(8.), 1.);
+  }`;
+
+  // ---------- quầng sáng va chạm: vỏ cầu nở ra trong sương (sáng ở viền như bong bóng ánh sáng) ----------
+  const SHELL_V = `varying vec3 vN; varying vec3 vW; void main(){ vN = normalize(mat3(modelMatrix) * normal); vW = (modelMatrix * vec4(position, 1.)).xyz; gl_Position = projectionMatrix * viewMatrix * vec4(vW, 1.); }`;
+  const SHELL_F = `
+  uniform float uShI; uniform vec3 uShC, uShO;
+  varying vec3 vN; varying vec3 vW;
+  void main(){
+    vec3 v = normalize(cameraPosition - vW);
+    float f = 1. - abs(dot(vN, v));
+    float nz = .7 + .6 * (pn((vW - uShO) * .03 + vec3(0., uS * .8, 0.)) + .5);
+    float low = smoothstep(-.1, .5, vN.y) * .6 + .4;                           // sát đất dày hơn (sương)
+    gl_FragColor = vec4(uShC * (pow(f, 6.) * 1.1 + .015) * uShI * nz * low * mem(10.), 1.);
+  }`;
+  // ---------- khói hồng bốc lên từ chỗ va chạm (tấm mờ quay mặt về máy quay, ánh lửa hắt từ dưới) ----------
+  const KHOI_V = `
+  attribute vec4 iS; attribute vec4 iK;    // tâm, bán kính · độ sáng, hạt giống, độ hồng
+  varying vec2 vP; varying vec4 vK; varying vec3 vW;
+  void main(){
+    vec3 r = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]), u = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
+    vec3 wp = iS.xyz + (r * position.x + u * position.y) * iS.w;
+    vP = position.xy; vK = iK; vW = wp;
+    gl_Position = iK.x > 0. ? projectionMatrix * viewMatrix * vec4(wp, 1.) : vec4(2., 2., 2., 1.);
+  }`;
+  const KHOI_F = `
+  varying vec2 vP; varying vec4 vK; varying vec3 vW;
+  void main(){
+    float r = length(vP);
+    float n = fbm3(vec3(vW.xz * .05 + vK.y, vW.y * .05 - uS * .12));
+    float a = smoothstep(1., .25, r + n * .55) * (.55 + .9 * (n + .5));
+    vec3 c = mix(vec3(.55, .48, .5), vec3(1., .5, .2), vK.z) * (1. - .45 * smoothstep(.2, -.6, vP.y));   // dưới sáng ấm (lửa hắt lên)
+    gl_FragColor = vec4(c * a * vK.x * mem(5.), 1.);
   }`;
 
   SN.dat.dungSaoBang = function (T, U, ctx) {
-    const { camP, MA, MB, tC, Yp, hDat, cuaSo, cuaSoN } = ctx;
-    // ---------- đường bay của thân sao: đường thẳng trong không gian, từ hướng sao Eta Cassiopeiae ----------
-    const MA3 = add(camP, MA, 3400), MB3 = add(camP, MB, 2600);
-    const mainU = (S) => { const u = clamp((S - M.BOOM) / T_MAIN, 0, 1); return u * (1.18 - 0.18 * u); };
-    const mainPos = (S) => lerp3(MA3, MB3, mainU(S));
-    const mainDirV = nrm(sub(MB3, MA3));
-    const tEnd = M.BOOM + T_MAIN;
-    function mainI(S) {
-      const t = S - M.BOOM;
-      if (t < 0 || S > tEnd + 0.05) return 0;
-      const grow = ease(t / 0.12) * (0.7 + 0.55 * ease(t / 1.0));
-      const die = S < T_SPLIT ? 1 : 1 - 0.86 * ease((S - T_SPLIT) / 1.3);
-      const end = 1 - ease((S - (tEnd - 0.22)) / 0.25);
-      const fl = 1 + 0.16 * Math.sin(S * 61) * Math.sin(S * 37 + 1) + 0.07 * Math.sin(S * 113 + 2);
-      return grow * die * end * fl + 1.5 * Math.exp(-Math.pow((S - T_SPLIT) / 0.065, 2));
-    }
-    // ---------- đường bay của mảnh tách: cong Hermite từ đầu sao (giữ đà) tới trên doanh trại, đi theo độ dài cung ----------
-    const W = (x, y, z) => tC(x, 0, z).map((v, k) => (k === 1 ? Yp + y : v));
-    const BP = W(-4, 46, 6);
-    const dirEnd = nrm(sub(W(0.35, -0.13, 1), W(0, 0, 0)).map((v, k) => (k === 1 ? -0.13 : v)));
-    // hai đoạn: bổ nhào từ trên trời xuống thấp (Pm, cách trại 420 m, cao hơn sân trại 90 m) rồi lướt chậm dần về trại
-    const P0 = mainPos(T_SPLIT);
-    const hz = nrm([BP[0] - P0[0], 0, BP[2] - P0[2]]);
-    const Pm = [BP[0] - hz[0] * 420, BP[1] + 90, BP[2] - hz[2] * 420];
-    const dM = nrm(sub(BP, Pm));
-    const LA = len(sub(Pm, P0)), LB = len(sub(BP, Pm));
-    const herm = (A, mA, B, mB, u) => { const u2 = u * u, u3 = u2 * u; const a = 2 * u3 - 3 * u2 + 1, b = u3 - 2 * u2 + u, c = -2 * u3 + 3 * u2, d = u3 - u2; return [0, 1, 2].map((k) => a * A[k] + b * mA[k] + c * B[k] + d * mB[k]); };
-    const mA0 = mainDirV.map((v) => v * LA * 0.7), mA1 = dM.map((v) => v * LA * 0.55);
-    const mB0 = dM.map((v) => v * LB * 0.9), mB1 = dirEnd.map((v) => v * LB * 0.7);
-    const NP = 480, PP = [], CUM = [0];
-    for (let i = 0; i <= NP; i++) {
-      const u = i / NP;
-      PP.push(u < 0.5 ? herm(P0, mA0, Pm, mA1, u * 2) : herm(Pm, mB0, BP, mB1, u * 2 - 1));
-      if (i) CUM.push(CUM[i - 1] + len(sub(PP[i], PP[i - 1])));
-    }
-    const LP = CUM[NP];
-    function byS(s) {
-      s = clamp(s, 0, LP);
-      let lo = 0, hi = NP;
-      while (hi - lo > 1) { const m = (lo + hi) >> 1; if (CUM[m] <= s) lo = m; else hi = m; }
-      const f = (s - CUM[lo]) / Math.max(1e-6, CUM[hi] - CUM[lo]);
-      return lerp3(PP[lo], PP[hi], f);
-    }
-    // tốc độ: lao rất nhanh lúc tách, hãm mạnh dần (luỹ thừa 2.5) tới 4 m/s khi tới nơi; không có khung nào dừng hẳn
-    const TF = T_ARR - T_SPLIT, Q = 2.5, VE = 4;
-    const V0 = VE + (LP - VE * TF) * (Q + 1) / TF;
-    const sOf = (t) => VE * t + (V0 - VE) * TF / (Q + 1) * (1 - Math.pow(1 - t / TF, Q + 1));
-    function fragPos(S) {
-      if (S <= T_SPLIT) return mainPos(S);
-      const t = S - T_SPLIT;
-      if (t < TF) return byS(sOf(t));
-      const dt = t - TF;
-      const d = 1.2 * dt + (VE - 1.2) * 1.8 * (1 - Math.exp(-dt / 1.8));   // trôi chậm dần, vẫn đi tiếp
-      const p = add(BP, dirEnd, d);
-      p[1] += Math.sin(dt * 2.6) * 0.35 * ss(0, 0.8, dt);
-      return p;
-    }
-    const fragVel = (S) => { const a = fragPos(S - 0.004), b = fragPos(S + 0.004); return [0, 1, 2].map((k) => (b[k] - a[k]) / 0.008); };
-    const fragSpeed = (S) => len(fragVel(S));
-    function fragI(S) {
-      if (S < T_SPLIT - 0.01) return 0;
-      const v = fragSpeed(S);
-      let I = ss(T_SPLIT - 0.01, T_SPLIT + 0.1, S) * (0.62 + 0.5 * clamp(v / 700, 0, 1));
-      I *= 1 + 0.14 * Math.sin(S * 57) * Math.sin(S * 23 + 2) + 0.06 * Math.sin(S * 131);
-      // lơ lửng: thở nhẹ, đập sáng hai lần theo nhạc rồi phồng lên
-      I += 0.5 * Math.exp(-Math.pow((S - (T_BLOOM - 0.5)) / 0.07, 2)) + 0.9 * ease((S - (T_BLOOM - 0.22)) / 0.22);
-      if (S > T_BLOOM) I *= Math.max(0, 1 - (S - T_BLOOM) / 0.12);
+    const { E, IMP, hDat, cuaSo, cuaSoN, tC, Yp } = ctx;   // E: hướng tới sao Eta Cas (đơn vị), IMP: đỉnh đồi chè
+    const posAt = (S) => add(IMP, E, dOf(S));
+    const speedAt = (S) => VE + 2 * AC * Math.max(0, T_IMP - S);
+    const velAt = (S) => E.map((v) => -v * speedAt(S));
+    // độ sáng đầu sao: loé ra khỏi mây, chập chờn, bùng ở 212.72 (nhỏ lại sau đó), sát đất thì nóng trắng
+    function headI(S) {
+      if (S < T_RA - 0.06 || S >= T_IMP) return 0;
+      const t = S - T_RA;
+      let I = ss(-0.06, 0.1, t) * (1 + 0.6 * Math.exp(-t / 0.25));
+      I *= 1 + 0.14 * Math.sin(S * 61) * Math.sin(S * 37 + 1) + 0.07 * Math.sin(S * 113 + 2);
+      I *= S < T_FL ? 1 : 0.82;
+      I += 2.4 * Math.exp(-Math.pow((S - T_FL) / 0.07, 2)) + 0.8 * Math.exp(-Math.pow((S - T_FL - 0.12) / 0.12, 2));
       return I;
     }
-    // độ nguội: 0 trắng xanh (lúc lao nhanh) → 1 vàng ấm (lúc chậm)
-    const coolOf = (S) => S < T_SPLIT ? 0 : clamp(1 - fragSpeed(S) / 900, 0, 1) * ss(T_SPLIT, T_SPLIT + 1.2, S);
-    const fragCol = (S) => { const k = coolOf(S); return [mix(0.82, 1.0, k), mix(1.0, 0.8, k), mix(0.95, 0.52, k)]; };
+    const headCol = (S) => { const k = ss(T_IMP - 3.5, T_IMP - 0.4, S); return [mix(0.78, 1.0, k), 1.0, mix(0.86, 0.9, k)]; };
+    // ánh đèn đám mây: trước khi ló ra, mây cạnh chòm W sáng dần từ bên trong
+    const mayI = (S) => ss(210.4, 211.6, S) * (1 - ss(212.0, 213.4, S)) * (1 + 0.3 * Math.sin(S * 23) * Math.sin(S * 7.1));
 
-    // ---------- 19 đốm sáng: nở từ chỗ mảnh lơ lửng, toả chậm rồi lả lướt về chỗ hạ ----------
+    // ---------- 19 đốm sáng: bay lên từ đỉnh đồi còn rực, toả đi rồi đáp xuống ----------
     const MOTES = [];
     {
       let s = 77;
       const r = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
-      const PB = fragPos(T_BLOOM), VB = fragVel(T_BLOOM);
-      const targets = [[-72, 176], [-182, 268], [62, 306], [-26, 424], [-276, 150], [152, 236], [-118, 66], [-130, 560], [190, 470], [-360, 420]];
-      const trai = [[-12, -15], [14, -2], [-6, 24], [10, 30], [20, 18], [-20, 6], [0, -12], [-14, 44]];   // vườn trong, sân điều lệnh, trước cổng
       const land = [];
-      for (let i = 0; i < 18; i++) {
-        if (i % 9 >= 5) { const q = trai[(i * 5) % trai.length], p = tC(q[0] + (r() - 0.5) * 3, 0, q[1] + (r() - 0.5) * 3); land.push([p[0], Yp + 1.2, p[2]]); continue; }
-        const T0 = targets[i % targets.length];
-        const a = r() * 6.283, rr = (0.15 + r() * 0.55) * 70;
-        const x = T0[0] + Math.cos(a) * rr, z = -(T0[1] + Math.sin(a) * rr);
-        land.push([x, hDat(x, z) + 0.6, z]);
-      }
-      land.push([cuaSo[0] + cuaSoN[0] * 0.35, cuaSo[1], cuaSo[2] + cuaSoN[2] * 0.35]);
+      // trong trại: vườn trong, sân, quanh cột cờ (toạ độ khung trại)
+      for (const q of [[-12, -15], [14, -2], [-6, 24], [10, 30], [20, 18], [-20, 6]]) { const p = tC(q[0] + (r() - 0.5) * 3, 0, q[1] + (r() - 0.5) * 3); land.push([p[0], Yp + 1.2, p[2]]); }
+      // sườn đồi trại, thung lũng giữa hai đồi, xóm, sườn đồi chè (để sóng sáng lan ở nhiều nơi)
+      for (const [x, z] of [[-30, -112], [70, -96], [-58, -64], [24, -40], [-14, -26], [52, -18], [-96, -150], [118, -180], [-150, -40], [160, -110], [-70, -210], [8, -250]]) land.push([x, hDat(x, z) + 0.6, z]);
+      land.push([cuaSo[0] + cuaSoN[0] * 0.35, cuaSo[1], cuaSo[2] + cuaSoN[2] * 0.35]);    // đốm thứ 19: cửa sổ của em
+      // lúc đáp: rải 222.4 → 236.6, dồn vài đốm vào cao trào nhạc 228.85; đốm cửa sổ 239.4
+      const lich = [222.6, 223.5, 224.6, 225.4, 226.3, 227.2, 228.7, 228.85, 229.0, 229.15, 229.9, 230.8, 231.9, 232.8, 233.9, 234.8, 235.7, 236.6];
       for (let i = 0; i < 19; i++) {
-        const L = land[i], dist = len(sub(L, PB));
-        const tLand = i === 18 ? 239.4 : clamp(T_BLOOM + 3.6 + dist / 34 + (r() - 0.5) * 1.6, 222.2, 236.8);
-        // hướng toả: đều mọi phía, hơi ngửa lên như hoa nở; tốc độ nhẹ 3–9 m/s
-        let dx = r() * 2 - 1, dy = r() * 2 - 1, dz = r() * 2 - 1; const dl = Math.hypot(dx, dy, dz) || 1; dx /= dl; dy /= dl; dz /= dl;
-        const hue = r();
-        MOTES.push({ L, tLand, sway: 2 + r() * 7, ph: r() * 6.28, fr: 0.25 + r() * 0.35, dir: [dx, dy * 0.6 + 0.25, dz], sp: 3 + r() * 6, sz: 0.85 + r() * 0.5,
-          col: [1, mix(0.72, 0.84, hue), mix(0.4, 0.56, hue)], tw: 0.7 + r() * 0.8 });
+        const L = land[i];
+        const t0 = T_IMP + 1.25 + i * 0.075 + r() * 0.25;
+        const tLand = i === 18 ? 239.4 : lich[i];
+        const a = r() * 6.283, rr = 1 + r() * 4;
+        const st = [IMP[0] + Math.cos(a) * rr, IMP[1] + 0.5, IMP[2] + Math.sin(a) * rr];
+        const top = add(st, [Math.cos(a) * (4 + r() * 6), 9 + r() * 14, Math.sin(a) * (4 + r() * 6)]);
+        const hc = 14 + r() * 26;
+        MOTES.push({ L, st, top, hc, t0, tLand, sway: 1.5 + r() * 4, ph: r() * 6.28, fr: 0.3 + r() * 0.4, sz: 0.85 + r() * 0.45, col: [1, mix(0.74, 0.86, r()), mix(0.42, 0.58, r())], tw: 0.7 + r() * 0.8 });
       }
-      MOTES.PB = PB; MOTES.VB = VB.map((v) => v * 0.5);
     }
     function moteAt(i, S, out) {
-      const mo = MOTES[i], B = MOTES.PB, V = MOTES.VB;
-      if (S < T_BLOOM) { out[3] = 0; return out; }
-      const dt = S - T_BLOOM;
-      const life = mo.tLand - T_BLOOM;
-      const t = clamp(dt / life, 0, 1);
-      const kV = 1.2 * (1 - Math.exp(-dt / 1.2)), kR = 1.3 * (1 - Math.exp(-dt / 1.3));
-      const sx = B[0] + V[0] * kV + mo.dir[0] * mo.sp * kR, sy = B[1] + V[1] * kV + mo.dir[1] * mo.sp * kR - 0.35 * dt, sz = B[2] + V[2] * kV + mo.dir[2] * mo.sp * kR;
-      const k = Math.pow(t, 1.35);
-      const kk = k * k * (3 - 2 * k);
-      const sw = Math.sin(dt * mo.fr * 2 + mo.ph) * mo.sway * Math.sin(Math.PI * t);
-      out[0] = mix(sx, mo.L[0], kk) + sw; out[1] = mix(sy, mo.L[1], kk) + Math.sin(dt * 0.7 + mo.ph) * 1.5 * (1 - t); out[2] = mix(sz, mo.L[2], kk) + sw * 0.6;
-      const flash = Math.exp(-dt * 3) * 1.4;
-      out[3] = (1 + flash) * (t < 1 ? 1 : Math.exp(-(S - mo.tLand) * 3));
+      const mo = MOTES[i], dt = S - mo.t0;
+      if (dt < 0) { out[3] = 0; return out; }
+      const kR = 1 - Math.exp(-dt / 0.7);   // vọt lên khỏi đỉnh đồi rồi chậm lại
+      const life = mo.tLand - mo.t0;
+      const u = clamp((dt - 1.2) / Math.max(0.5, life - 1.2), 0, 1), k = u * u * u * (u * (u * 6 - 15) + 10);
+      const A = [mix(mo.st[0], mo.top[0], kR), mix(mo.st[1], mo.top[1], kR), mix(mo.st[2], mo.top[2], kR)];
+      // đường cong bậc hai: đỉnh → điểm giữa nâng cao → chỗ đáp
+      const C = [(mo.top[0] + mo.L[0]) / 2, Math.max(mo.top[1], mo.L[1]) + mo.hc, (mo.top[2] + mo.L[2]) / 2];
+      const b0 = (1 - k) * (1 - k), b1 = 2 * (1 - k) * k, b2 = k * k;
+      const P = [b0 * mo.top[0] + b1 * C[0] + b2 * mo.L[0], b0 * mo.top[1] + b1 * C[1] + b2 * mo.L[1], b0 * mo.top[2] + b1 * C[2] + b2 * mo.L[2]];
+      const w = ss(0.6, 1.6, dt);
+      const sw = Math.sin(dt * mo.fr * 2 + mo.ph) * mo.sway * Math.sin(Math.PI * k);
+      out[0] = mix(A[0], P[0], w) + sw; out[1] = mix(A[1], P[1], w) + Math.sin(dt * 0.9 + mo.ph) * 0.8 * (1 - k); out[2] = mix(A[2], P[2], w) + sw * 0.6;
+      const born = ss(0, 0.35, dt) * (1 + 0.7 * Math.exp(-dt / 0.4));
+      out[3] = born * (S < mo.tLand ? 1 : Math.exp(-(S - mo.tLand) * 2.5));
       return out;
     }
 
-    // ---------- tàn lửa và kim tuyến ----------
+    // ---------- tàn lửa ----------
     const SPK = [];
     {
       let s2 = 4242; const r = () => { s2 = (s2 * 16807) % 2147483647; return (s2 - 1) / 2147483646; };
       const rs = (m) => { let x = r() * 2 - 1, y = r() * 2 - 1, z = r() * 2 - 1; const l = Math.hypot(x, y, z) || 1; return [x / l * m, y / l * m, z / l * m]; };
-      const vMain = (S) => { const a = mainPos(S - 0.005), b = mainPos(S + 0.005); return [0, 1, 2].map((k) => (b[k] - a[k]) / 0.01); };
-      for (let i = 0; i < 26; i++) {   // thân sao bốc cháy, rụng tàn xanh trắng
-        const tb = M.BOOM + 0.15 + r() * (T_MAIN - 0.35), v = vMain(tb), j = rs(30 + r() * 50);
-        SPK.push({ tb, p: mainPos(tb), v: [0, 1, 2].map((k) => v[k] * 0.72 + j[k]), life: 0.3 + r() * 0.55, sz: 1.6 + r() * 1.2, c: [0.7, 1, 0.86], tau: 0.6, g: 9, tw: 0 });
+      for (let i = 0; i < 70; i++) {   // dọc đường bay: đầu sao rụng tàn xanh trắng
+        const tb = T_RA + 0.08 + r() * (T_IMP - T_RA - 0.4), v = velAt(tb), j = rs(25 + r() * 60);
+        SPK.push({ tb, p: posAt(tb), v: [0, 1, 2].map((k) => v[k] * 0.55 + j[k]), life: 0.35 + r() * 0.6, sz: 0.9 + r() * 1.3 + dOf(tb) * 0.0004, c: [0.75, 1, 0.86], tau: 0.5, g: 9, tw: 0 });
       }
-      for (let i = 0; i < 46; i++) {   // mảnh tách rụng tàn: dày khi còn lao nhanh, thưa dần khi chậm
-        const u = Math.pow(r(), 1.7), tb = T_SPLIT + 0.06 + u * (TF + 0.4), v = fragVel(tb), sp = len(v), j = rs(6 + 0.03 * sp + r() * 10);
-        const c = fragCol(tb), wr = 0.5 + 0.5 * r();
-        SPK.push({ tb, p: fragPos(tb), v: [0, 1, 2].map((k) => v[k] * 0.28 + j[k]), life: 0.25 + r() * 0.5, sz: 0.05 + r() * 0.07 + 0.00012 * sp, c: [1, mix(c[1], 0.62, wr), mix(c[2], 0.3, wr)], tau: 0.4, g: 9, tw: 0 });
+      for (let i = 0; i < 56; i++) {   // 212.72: lớp ngoài bốc cháy, bung một chùm tàn lửa toả nón quanh hướng bay
+        const tb = T_FL + r() * 0.06, v = velAt(tb), j = rs(160 + r() * 380);
+        SPK.push({ tb, p: posAt(tb), v: [0, 1, 2].map((k) => v[k] * 0.7 + j[k]), life: 0.5 + r() * 1.0, sz: 1.6 + r() * 2.4, c: [1, 0.86 + r() * 0.1, 0.55 + r() * 0.3], tau: 0.35, g: 9, tw: 0 });
       }
-      const PB = MOTES.PB, VB = MOTES.VB;
-      for (let i = 0; i < 96; i++) {   // nở: kim tuyến vàng lấp lánh, rơi chậm như mưa sao
-        const tb = T_BLOOM + r() * r() * 0.3, j = rs(3 + r() * 13);
-        SPK.push({ tb, p: PB.slice(), v: [0, 1, 2].map((k) => VB[k] + j[k] + (k === 1 ? 2.5 : 0)), life: 1.6 + r() * 2.2, sz: 0.07 + r() * 0.09,
-          c: [1, 0.82 + r() * 0.14, 0.5 + r() * 0.3], tau: 0.85, g: 2.4, tw: 7 + r() * 9, ph: r() * 6.28 });
+      for (let i = 0; i < 190; i++) {   // va chạm: vương miện tàn lửa bắn tung khỏi đỉnh đồi, rơi xuống sườn đồi
+        const tb = T_IMP + r() * r() * 0.25, az = r() * 6.283, el = (14 + r() * 62) * Math.PI / 180, sp = 10 + Math.pow(r(), 0.7) * 42;
+        const v = [Math.cos(az) * Math.cos(el) * sp, Math.sin(el) * sp, Math.sin(az) * Math.cos(el) * sp];
+        SPK.push({ tb, p: add(IMP, [Math.cos(az) * r() * 1.5, 0.4, Math.sin(az) * r() * 1.5]), v, life: 1.3 + r() * 2.2, sz: 0.06 + r() * 0.12, c: [1, 0.78 + r() * 0.18, 0.4 + r() * 0.3], tau: 1.5, g: 9.8, tw: r() < 0.4 ? 6 + r() * 9 : 0, ph: r() * 6.28, dat: true });
       }
     }
     function sparkAt(sp, S, out) {
@@ -243,16 +221,17 @@
       if (a < 0 || a > sp.life) { out[3] = 0; return out; }
       const e = sp.tau * (1 - Math.exp(-a / sp.tau));
       out[0] = sp.p[0] + sp.v[0] * e; out[1] = sp.p[1] + sp.v[1] * e - 0.5 * sp.g * a * a; out[2] = sp.p[2] + sp.v[2] * e;
-      const k = a / sp.life;
-      let I = Math.pow(1 - k, 1.5) * (1 + 1.3 * Math.exp(-a * 10));
-      if (sp.tw) I *= 0.35 + 0.65 * Math.pow(0.5 + 0.5 * Math.sin(a * sp.tw + sp.ph), 3);   // kim tuyến lấp lánh
+      let k = a / sp.life, nam = 1;
+      if (sp.dat) { const g = hDat(out[0], out[2]) + 0.25; if (out[1] < g) { out[1] = g; nam = 0.5; } }   // rơi xuống đất: nằm lại, cháy âm ỉ
+      let I = Math.pow(1 - k, 1.4) * (1 + 1.4 * Math.exp(-a * 9)) * nam;
+      if (sp.tw) I *= 0.35 + 0.65 * Math.pow(0.5 + 0.5 * Math.sin(a * sp.tw + sp.ph), 3);
       else I *= 0.8 + 0.2 * Math.sin(a * 47 + sp.tb * 13);
       out[3] = I;
       return out;
     }
 
     // ---------- bộ đệm vẽ ----------
-    const NI = 4 + 19 + SPK.length;
+    const NI = 1 + 19 + SPK.length;
     const base = new T.PlaneGeometry(2, 2);
     const ig = new T.InstancedBufferGeometry();
     ig.index = base.index; ig.setAttribute('position', base.attributes.position);
@@ -261,7 +240,7 @@
     [aA, aB, aC].forEach((a) => a.setUsage(T.DynamicDrawUsage));
     ig.setAttribute('iA', aA); ig.setAttribute('iB', aB); ig.setAttribute('iC', aC);
     ig.instanceCount = NI;
-    const stM = new T.ShaderMaterial({ uniforms: Object.assign({}, U), vertexShader: SN_GLSL.CHUNG + STREAK_V, fragmentShader: SN_GLSL.CHUNG + STREAK_F, transparent: true, blending: T.AdditiveBlending, depthWrite: false });
+    const stM = new T.ShaderMaterial({ uniforms: Object.assign({}, U), vertexShader: SN_GLSL.CHUNG + `uniform vec3 uDofF;` + STREAK_V, fragmentShader: SN_GLSL.CHUNG + MEM + STREAK_F, transparent: true, blending: T.AdditiveBlending, depthWrite: false });
     const streaks = new T.Mesh(ig, stM); streaks.frustumCulled = false; streaks.userData.ro = 7;
     function setI(i, p, q, rad, I, c, kind) {
       iA[i * 4] = p[0]; iA[i * 4 + 1] = p[1]; iA[i * 4 + 2] = p[2]; iA[i * 4 + 3] = rad;
@@ -278,88 +257,120 @@
       g.setAttribute('position', new T.BufferAttribute(new Float32Array(nv * 3), 3));
       const idx = []; for (let i = 0; i < n; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
       g.setIndex(idx);
-      const m = new T.ShaderMaterial({ uniforms: Object.assign({}, U, uni), vertexShader: SN_GLSL.CHUNG + RIB_V, fragmentShader: SN_GLSL.CHUNG + RIB_F, transparent: true, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide });
+      const m = new T.ShaderMaterial({ uniforms: Object.assign({}, U, uni), vertexShader: SN_GLSL.CHUNG + RIB_V, fragmentShader: SN_GLSL.CHUNG + MEM + RIB_F, transparent: true, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide });
       const mesh = new T.Mesh(g, m); mesh.frustumCulled = false; mesh.userData.ro = 6;
-      return { mesh, g, n, P, Tg, Wd, In, Ag, Uu,
+      return { mesh, g, n,
         set(i, p, t, w, I, age, u) { P.set(p, i * 6); P.set(p, i * 6 + 3); Tg.set(t, i * 6); Tg.set(t, i * 6 + 3); Wd[i * 2] = Wd[i * 2 + 1] = w; In[i * 2] = In[i * 2 + 1] = I; Ag[i * 2] = Ag[i * 2 + 1] = age; Uu[i * 2] = Uu[i * 2 + 1] = u; },
         done() { ['aP', 'aT', 'aW', 'aI', 'aG', 'aU'].forEach((k) => { g.attributes[k].needsUpdate = true; }); } };
     }
     const V3 = (a, b, c) => new T.Vector3(a, b, c);
-    const train = ribbon(96, { uC0: { value: V3(0.85, 1, 0.95) }, uC1: { value: V3(0.3, 1, 0.55) }, uC2: { value: V3(0.3, 0.42, 0.95) }, uNz: { value: 7 }, uSeed2: { value: 1.3 } });
-    const tail = ribbon(80, { uC0: { value: V3(1, 0.86, 0.62) }, uC1: { value: V3(1, 0.55, 0.2) }, uC2: { value: V3(0.75, 0.18, 0.12) }, uNz: { value: 1.6 }, uSeed2: { value: 5.1 } });
+    const train = ribbon(140, { uC0: { value: V3(0.85, 1, 0.92) }, uC1: { value: V3(0.28, 1, 0.5) }, uC2: { value: V3(0.25, 0.4, 0.9) }, uNz: { value: 9 }, uSeed2: { value: 1.3 } });
+    // quầng va chạm
+    const shM = new T.ShaderMaterial({ uniforms: Object.assign({}, U, { uShI: { value: 0 }, uShC: { value: V3(1, 0.78, 0.5) }, uShO: { value: V3(...IMP) } }), vertexShader: SHELL_V, fragmentShader: SN_GLSL.CHUNG + MEM + SHELL_F, transparent: true, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide });
+    const shell = new T.Mesh(new T.SphereGeometry(1, 48, 24), shM); shell.frustumCulled = false; shell.userData.ro = 6; shell.position.set(IMP[0], IMP[1], IMP[2]);
+    // khói
+    const NK = 18;
+    const kg = new T.InstancedBufferGeometry(); kg.index = base.index; kg.setAttribute('position', base.attributes.position);
+    const kS = new Float32Array(NK * 4), kK = new Float32Array(NK * 4);
+    const aKS = new T.InstancedBufferAttribute(kS, 4), aKK = new T.InstancedBufferAttribute(kK, 4); aKS.setUsage(T.DynamicDrawUsage); aKK.setUsage(T.DynamicDrawUsage);
+    kg.setAttribute('iS', aKS); kg.setAttribute('iK', aKK); kg.instanceCount = NK;
+    const kM = new T.ShaderMaterial({ uniforms: Object.assign({}, U), vertexShader: KHOI_V, fragmentShader: SN_GLSL.CHUNG + MEM + KHOI_F, transparent: true, blending: T.AdditiveBlending, depthWrite: false });
+    const khoi = new T.Mesh(kg, kM); khoi.frustumCulled = false; khoi.userData.ro = 5;
+    const KH = [];
+    { let s3 = 99; const r = () => { s3 = (s3 * 16807) % 2147483647; return (s3 - 1) / 2147483646; };
+      for (let i = 0; i < NK; i++) KH.push({ t0: T_IMP + r() * 0.8, a: r() * 6.283, rr: r() * 5, up: 2 + r() * 4.5, r0: 2 + r() * 3, gr: 2.5 + r() * 4, seed: r() * 10 }); }
     const group = new T.Group();
-    group.add(train.mesh); group.add(tail.mesh); group.add(streaks);
+    group.add(train.mesh); group.add(shell); group.add(khoi); group.add(streaks);
+    const FX = [train.mesh, shell, khoi, streaks];
+    FX.forEach((m) => { m.layers.set(1); m.material.depthTest = false; });   // lớp hiệu ứng: vẽ sau lớp nhoè ống kính (loi.js)
 
-    const WIND = [5.5, 0.4, 2.2];
+    const WIND = [3.2, 0.3, 1.6];
     const tmp4 = [0, 0, 0, 0], tmp4b = [0, 0, 0, 0];
+    // gió/chấn động tới một điểm: sóng đi ~360 m/s từ chỗ va chạm
+    const tToi = (p) => T_IMP + len(sub(p, IMP)) / 360;
     function cap(S, camPos) {
-      // vệt khí thân sao: từ lúc loé tới đầu sao hiện tại; điểm nào sinh ra càng lâu càng loang rộng, mờ, trôi theo gió
-      const te1 = Math.min(S, tEnd - 0.02);
-      const onTrain = S > M.BOOM + 0.01 && S < 226;
+      const hI = headI(S), d = dOf(S), hp = posAt(S), hq = posAt(S - 0.008);
+      // vệt khí: từ chỗ ló khỏi mây tới đầu sao (sau va chạm: tới đỉnh đồi), sáng mới thì trắng xanh, cũ thì xanh lục rồi tím nhạt, nở rộng và trôi theo gió
+      const dHead = S < T_IMP ? d : 0;
+      const on = S > T_RA && S < 241;
       for (let i = 0; i <= train.n; i++) {
-        if (!onTrain) { train.set(i, [0, -999, 0], [1, 0, 0], 0, 0, 1, 0); continue; }
+        if (!on) { train.set(i, [0, -999, 0], [1, 0, 0], 0, 0, 1, 0); continue; }
         const f = i / train.n;
-        const te = M.BOOM + (te1 - M.BOOM) * Math.pow(f, 0.85);
-        const age = Math.max(0, S - te);
-        const p = add(mainPos(te), WIND, age);
-        const tw = Math.sin(te * 2.1 + 0.7) * 0.7 + Math.sin(te * 4.3 + 2.1) * 0.3;
-        p[1] += tw * age * 3.5; p[0] += Math.cos(te * 1.7) * age * 2.5;
-        const hp = mainI(te) / 1.6;
-        const I = (Math.exp(-age / 0.3) * 1.15 + 0.2 * Math.exp(-age / 1.9)) * (0.35 + 0.65 * Math.min(1, hp)) * ss(0, 0.05, S - te + 0.001) * 3.2;
-        train.set(i, p, mainDirV, 3 + age * 13, I * (1 - 0.55 * clamp((age - 1.5) / 3, 0, 1)), clamp(age / 3.2, 0, 1), te * 3.0);
+        const dk = dHead + (D_RA - dHead) * Math.pow(f, 1.8);
+        const tk = tAtD(dk), age = Math.max(0, S - tk);
+        const p = add(add(IMP, E, dk), WIND, age);
+        const tw = Math.sin(dk * 0.004 + 0.7) * 0.7 + Math.sin(dk * 0.011 + 2.1) * 0.3;
+        p[1] += tw * age * 2.2; p[0] += Math.cos(dk * 0.006) * age * 1.6;
+        const hk = Math.max(0.3, headI(Math.min(tk, T_IMP - 0.01)));
+        const near = ss(150, 1400, p[1] - IMP[1]);   // vệt khí chỉ còn đọng lại trên cao; xuống thấp chỉ là vệt nhoè rất mờ (không thành cột sáng)
+        const I = (Math.exp(-age / 0.16) * 1.4 + 0.16 * Math.exp(-age / 1.6) + 0.06 * Math.exp(-age / 8)) * Math.min(1.5, hk) * ss(0, 0.05, S - tk + 0.001) * 1.1;
+        train.set(i, p, E, 0.6 + age * 2.6 + dk * 0.0003, I * (age < 0.25 ? 1 : 0.04 + 0.96 * near), clamp(age / 4, 0, 1), dk * 0.004);
       }
       train.done();
-      // đuôi lửa của mảnh: nửa giây đường vừa đi, nóng ở gần đầu, nguội và tản dần
-      const fI = fragI(S);
-      for (let i = 0; i <= tail.n; i++) {
-        if (fI <= 0.001) { tail.set(i, [0, -999, 0], [1, 0, 0], 0, 0, 1, 0); continue; }
-        const f = i / tail.n;
-        const age = 0.55 * f * f;
-        const te = Math.max(T_SPLIT, S - age);
-        const p = fragPos(te), vv = fragVel(te), sp = len(vv);
-        const a = S - te;
-        const wob = Math.sin(te * 31) * 0.3 * a * Math.min(1, sp / 200);
-        p[1] += wob;
-        const I = Math.exp(-a / 0.15) * fragI(te) * (0.35 + 0.65 * Math.min(1, sp / 300)) * 5 * clamp(len(sub(p, camPos)) / 60, 0.35, 1);
-        tail.set(i, p, nrm(vv), 0.3 + a * 5.5 + Math.min(1.2, sp * 0.0015), I, clamp(a / 0.4, 0, 1), te * 3);
-      }
-      tail.done();
-      // đầu sao, đầu mảnh, chớp nở
-      const mI = mainI(S), mp = mainPos(S), mq = mainPos(S - 0.006);
-      setI(0, mp, mq, 7 + 4 * mI, mI * 9, [0.86, 1, 0.97], 2);
-      const fp = fragPos(S), fq = fragPos(S - 0.006), fc = fragCol(S);
-      const gan = clamp(len(sub(fp, camPos)) / 70, 0.3, 1);                    // ở sát máy quay thì bớt chói (khỏi loá trắng cả khung)
-      setI(1, fp, fq, 0.2 + 0.08 * fI, fI * 5.5 * gan, [mix(fc[0], 1, 0.5), mix(fc[1], 1, 0.5), mix(fc[2], 1, 0.5)], 2);   // lõi trắng nóng
-      const fr = fragPos(S - 0.016), k1 = coolOf(S);
-      setI(3, fp, fr, 0.5 + 0.2 * fI, fI * 0.75 * mix(0.6, 1, gan), [1, mix(0.78, 0.62, k1), mix(0.5, 0.3, k1)], 3);    // vỏ sáng vàng cam, kéo về sau
-      const db = S - T_BLOOM;
-      const bl = db > -0.05 && db < 1.2 ? Math.exp(-Math.max(db, 0) * 3.5) * ss(-0.05, 0.05, db) : 0;
-      setI(2, MOTES.PB, MOTES.PB, 1.2 + 4.5 * ease(Math.max(db, 0) / 0.5), bl * 1.1, [1, 0.84, 0.6], 1);
+      // đầu sao
+      const gan = clamp(len(sub(hp, camPos)) / 260, 0.18, 1);
+      setI(0, hp, hq, 1.6 + 0.8 * hI, hI * 4.2 * gan, headCol(S), 2);
       // đốm sáng
       for (let i = 0; i < 19; i++) {
         moteAt(i, S, tmp4); moteAt(i, S - 0.02, tmp4b);
         const mo = MOTES[i];
-        const grow = S < T_BLOOM ? 0 : 0.35 + 0.65 * ease((S - T_BLOOM) / 1.3);
         const tw = 1 + 0.12 * Math.sin(S * mo.tw * 2.1 + mo.ph) + 0.05 * Math.sin(S * 7.3 + mo.ph * 3);
-        setI(4 + i, tmp4, tmp4b[3] > 0 ? tmp4b : tmp4, 0.42 * mo.sz * grow, tmp4[3] * tw * 1.4, mo.col, 1);
+        setI(1 + i, tmp4, tmp4b[3] > 0 ? tmp4b : tmp4, 0.36 * mo.sz, tmp4[3] * tw * 1.1, mo.col, 1);
       }
-      // tàn lửa, kim tuyến
+      // tàn lửa
       for (let i = 0; i < SPK.length; i++) {
         const sp = SPK[i];
         sparkAt(sp, S, tmp4); sparkAt(sp, S - 0.012, tmp4b);
-        setI(4 + 19 + i, tmp4, tmp4b[3] > 0 ? tmp4b : tmp4, sp.sz, tmp4[3] * 1.4, sp.c, 0);
+        setI(20 + i, tmp4, tmp4b[3] > 0 ? tmp4b : tmp4, sp.sz, tmp4[3] * 1.4, sp.c, 0);
       }
       aA.needsUpdate = true; aB.needsUpdate = true; aC.needsUpdate = true;
-      // ánh sáng hắt xuống cảnh vật
-      U.uFP.value.set(fp[0], fp[1], fp[2], fI * (6 + 14 * coolOf(S)) + bl * 60);
-      const md = nrm(sub(mp, camPos));
+      // quầng va chạm: nở nhanh rồi chậm lại, mờ dần
+      const ti = S - T_IMP;
+      if (ti > 0 && ti < 2.2) {
+        const R = 260 * (1 - Math.exp(-ti / 0.35)) + 40 * ti;
+        shell.visible = true; shell.scale.setScalar(Math.max(0.5, R));
+        shM.uniforms.uShI.value = Math.exp(-ti / 0.16) * 0.22 + 0.03 * Math.exp(-ti / 0.7);
+      } else { shell.visible = false; shM.uniforms.uShI.value = 0; }
+      // khói hồng
+      for (let i = 0; i < NK; i++) {
+        const k = KH[i], a = S - k.t0;
+        if (a <= 0 || a > 14) { kK[i * 4] = 0; continue; }
+        const up = k.up * 2.2 * (1 - Math.exp(-a / 2.2)) + 0.5 * a;
+        kS[i * 4] = IMP[0] + Math.cos(k.a) * k.rr + WIND[0] * a * 0.6; kS[i * 4 + 1] = IMP[1] + 1 + up; kS[i * 4 + 2] = IMP[2] + Math.sin(k.a) * k.rr + WIND[2] * a * 0.6;
+        kS[i * 4 + 3] = (k.r0 + k.gr * Math.sqrt(a)) * 0.7;
+        kK[i * 4] = (ss(0, 0.4, a) * (Math.exp(-a / 1.1) * 0.5 + 0.08 * Math.exp(-a / 5))) * 0.32; kK[i * 4 + 1] = k.seed; kK[i * 4 + 2] = Math.exp(-a / 2.5);
+      }
+      aKS.needsUpdate = true; aKK.needsUpdate = true;
+      // ---------- ánh sáng hắt xuống cảnh vật ----------
+      // xa: ánh sao băng như một vầng sáng trên trời (có hướng); gần (< ~900 m): một ngọn đèn thật có vị trí, có bóng
+      const kNear = S < T_IMP ? ss(950, 350, d) : 0;
+      const md = nrm(sub(hp, camPos));
       U.uMetP.value.set(md[0], md[1], md[2]);
-      U.uMet.value = mI * 0.42 + bl * 0.25;
+      U.uMet.value = S < T_IMP ? hI * 0.62 * Math.min(2.6, Math.pow(1500 / (d + 500), 1.15)) * (1 - kNear * 0.85) : 0;
+      let fpI = 0, fpP = hp;
+      if (S < T_IMP) fpI = hI * 110 * kNear;
+      else {   // va chạm: loé chói, đỉnh đồi còn rực đỏ một lúc lâu
+        fpP = [IMP[0], IMP[1] + 3, IMP[2]];
+        fpI = 1500 * Math.exp(-ti / 0.07) + 110 * Math.exp(-ti / 0.35) + 8 * Math.exp(-ti / 2) + 2 * Math.exp(-ti / 10);
+      }
+      U.uFP.value.set(fpP[0], fpP[1], fpP[2], fpI);
+      U.uIMP.value.set(IMP[0], IMP[1], IMP[2], T_IMP);
+      U.uMay.value = mayI(S);
       for (let i = 0; i < 19; i++) {
         moteAt(i, S, tmp4);
         U.uMP.value[i].set(tmp4[0], tmp4[1], tmp4[2]); U.uMI.value[i] = tmp4[3] * 0.6;
       }
     }
-    return { group, cap, mainPos, fragPos, fragVel, fragI, MOTES, moteAt, T_SPLIT, T_ARR, T_BLOOM, BP, PB: MOTES.PB };
+    // rung máy: tiếng gầm tăng dần khi sao lại gần; cú sốc tới chỗ máy quay sau va chạm (theo khoảng cách)
+    function rung(S, camPos) {
+      const d = dOf(S);
+      let A = S < T_IMP ? 0.012 * ss(T_RA, T_IMP, S) * Math.min(1, 300 / (d + 60)) : 0;
+      const ta = tToi(camPos), b = S - ta;
+      if (b > 0) A += 0.11 * Math.exp(-b / 0.38) * Math.min(1, 160 / len(sub(camPos, IMP)));
+      const n1 = Math.sin(S * 41.3) * 0.6 + Math.sin(S * 73.1 + 1) * 0.4, n2 = Math.sin(S * 37.7 + 2) * 0.6 + Math.sin(S * 91.3) * 0.4, n3 = Math.sin(S * 29.9 + 4) * 0.5 + Math.sin(S * 67.7 + 3) * 0.5;
+      return [n1 * A, n2 * A * 0.7, n3 * A, (n2 - n1) * A * 0.35];
+    }
+    const gio = (S, p) => { const b = S - tToi(p); return b > 0 ? Math.exp(-b / 1.4) * ss(0, 0.15, b) : 0; };
+    return { group, FX, cap, posAt, velAt, dOf, headI, MOTES, moteAt, rung, gio, T_RA, T_FL, T_IMP, IMP, E, D_RA, PB: IMP };
   };
 })();

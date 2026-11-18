@@ -154,12 +154,18 @@
     float grime = pn(vec3(vW.xz * .45, vW.y * .45));
     vec3 alb = vec3(.5), emi = vec3(0.); float ao = 1.;
     vec3 vdir = normalize(vW - uCam);
+    float pho = bid > 299.5 ? .42 : 1.;                              // nhà trong thành phố: tường chìm vào đêm, chỉ còn cửa sổ sáng
     if (mat < .5) {                                                  // ===== mặt tường =====
-      vec3 wall = (bid < 99.5 ? vec3(.6, .47, .24) : mauNha(hb)) * (.86 + .28 * grime);
-      wall *= .78 + .22 * smoothstep(0., 1.4, v);
-      alb = wall;
+      vec3 wall = (bid < 99.5 ? vec3(.54, .45, .27) : mauNha(hb)) * (.86 + .28 * grime);
+      wall *= .72 + .28 * smoothstep(0., 1.6, v);
       float fl = floor(v / fh), fv = v - fl * fh;
       float bay = floor(u / bw), bu = u - bay * bw;
+      // vệt ố: nước mưa chảy từ bậu cửa sổ xuống, rêu mốc loang ở chân tường (gần thì thấy, xa tự gộp)
+      float gan = 1. - smoothstep(.04, .2, max(fw.x, fw.y));
+      float ruou = smoothstep(.35, 1., 1. - abs(bu - bw * .5) / (bw * .32)) * smoothstep(.95, .1, fv) * (.5 + pn(vec3(u * 3.1, v * .35, bid)) ) * step(.5, st) * step(st, 1.5);
+      float moc = smoothstep(.2, .6, pn(vec3(u * .35, v * .8, bid * .3)) + .5 * (1. - smoothstep(0., 2.2, v)));
+      wall *= 1. - (.22 * sat(ruou) + .18 * moc) * gan;
+      alb = wall;
       float far = smoothstep(.2, .6, max(fw.x / bw, fw.y / fh));
       if (st < 1.5) {                                                // 1: cửa sổ phòng có song sắt (trại, nhà quê)
         vec2 lo = vec2(bw * .5 - min(.75, bw * .3), .95), hi = vec2(bw * .5 + min(.75, bw * .3), 2.55);
@@ -171,8 +177,16 @@
         float ed = min(min(bu - lo.x, hi.x - bu), min(fv - lo.y, hi.y - fv));
         float frame = 1. - smoothstep(.035, .06 + fw.x, ed);
         float bars = step(.82, fract((bu - lo.x) / .25)) * (1. - smoothstep(.03, .08, fw.x));
-        vec3 lc = mauDen(fract(h * 7.31));
-        vec3 ins = lit > .5 ? lc * (1.1 + .9 * fract(h * 3.17)) * (1. - .55 * smoothstep(.12, .5, abs(wc.x)) * step(.5, fract(h * 5.3))) : vec3(.006, .008, .013) + vec3(.02, .028, .045) * smoothstep(.7, -.4, wc.y + .3 * wc.x);
+        float hc = fract(h * 7.31);
+        vec3 lc = bid < 99.5 ? (hc < .62 ? vec3(.78, .9, 1.) : hc < .85 ? vec3(1., .86, .66) : vec3(1., .66, .36)) : mauDen(hc);   // trại: đèn tuýp trắng xanh là chính
+        float rem = step(.4, fract(h * 5.3));                                                // có rèm
+        float remX = abs(wc.x) * 2.;
+        float nep = .75 + .25 * sin(bu * 31. + h * 9.);                                     // nếp gấp của rèm
+        vec3 remC = mix(vec3(.55, .62, .8), vec3(.9, .7, .6), step(.5, fract(h * 9.7)));
+        vec3 sang = lc * (1.1 + .9 * fract(h * 3.17));
+        sang = mix(sang, sang * remC * nep * .75, rem * smoothstep(.25, .45, remX + .2 * wc.y));
+        vec3 toi = vec3(.004, .006, .011) + vec3(.016, .022, .036) * smoothstep(.7, -.4, wc.y + .3 * wc.x) + vec3(.02, .015, .01) * smoothstep(-.2, -.7, wc.y);   // kính tối: trời phản chiếu ở trên, đèn sân hắt ở dưới
+        vec3 ins = lit > .5 ? sang : toi;
         if (thuy) { ins = vec3(.36, .55, 1.15) * uThuy * 1.6 * (1.25 - .55 * length(wc)) + vec3(.02, .02, .03); lc = vec3(.4, .55, 1.) * uThuy; lit = 1.; }
         emi = mix(ins * (1. - frame) * (1. - bars * .8), vec3(1., .7, .4) * pr * .7 + vec3(.003), far) * w;
         alb = mix(alb, mix(vec3(.035, .08, .065), alb * .2, far), w);
@@ -192,18 +206,19 @@
         float cx = (bu - bw * .5) / bw;
         emi += alb * vec3(1., .72, .42) * pr * (.45 + 1.05 * exp(-cx * cx * 6.) * smoothstep(0., 2.6, fv)) * 1.05;
         emi = mix(emi, vec3(1., .78, .5) * (.35 * pr + .2), far);
-      } else if (st < 3.5) {                                         // 3: mặt tiền nhà ống
+      } else if (st < 3.5) {                                         // 3: mặt tiền nhà ống (một dãy có thể gồm nhiều căn: mỗi gian một màu sơn, đèn riêng)
+        alb = mauNha(h12(vec2(bid * .731 + bay * 1.37, 3.7))) * (.86 + .28 * grime) * (.78 + .22 * smoothstep(0., 1.4, v));
         if (fl < .5) {
           float s = oAA(vec2(bu, fv), vec2(.22, 0.), vec2(bw - .22, 2.75), fw);
           float nan = mix(.78 + .22 * sin(fv * 69.8), .78, smoothstep(.015, .05, fw.y));
-          float h = h12(vec2(bid, 1.7));
+          float h = h12(vec2(bid + bay * 7.13, 1.7));
           float mo = step(.88, h), khe = step(.55, h) * (1. - mo);
           alb = mix(alb, mo > .5 ? vec3(.02) : vec3(.34, .35, .36) * nan, s);
           emi += s * (mo * mauDen(fract(h * 5.1)) * 1.4 + khe * vec3(1., .66, .34) * 1.6 * (1. - smoothstep(0., .1, fv)));
         } else {
           vec2 lo = vec2(bw * .16, .12), hi = vec2(bw * .84, 2.55);
           float w = oAA(vec2(bu, fv), lo, hi, fw);
-          float h = h12(vec2(bid * 3.3, fl));
+          float h = h12(vec2(bid * 3.3 + bay * 5.71, fl));
           float lit = step(1. - pr, h);
           float mull = step(.9, fract((bu - lo.x) / ((hi.x - lo.x) * .25))) * (1. - smoothstep(.03, .08, fw.x));
           float rem = step(.35, abs(fract(bu * .9 + h) - .5));
@@ -214,8 +229,8 @@
         emi += alb * vec3(1., .6, .28) * .4 * exp(-v / 3.5);          // đèn đường hắt lên tầng dưới
       } else if (st < 5.5) {                                         // 4: chung cư · 5: nhà cao tầng kính
         bool kinh = st > 4.5;
-        alb *= .55;                                                  // ban đêm: tường khối nhà lớn tối hơn, cửa sổ nổi lên
-        if (kinh) alb = vec3(.05, .06, .075) * (.8 + .4 * grime);
+        alb *= .26;                                                  // ban đêm: tường khối nhà lớn chìm vào bóng tối, cửa sổ nổi lên
+        if (kinh) alb = vec3(.03, .036, .046) * (.8 + .4 * grime);
         vec2 lo = kinh ? vec2(.12, .35) : vec2(bw * .2, .95), hi = kinh ? vec2(bw - .12, fh - .35) : vec2(bw * .8, fh - .45);
         float w = oAA(vec2(bu, fv), lo, hi, fw);
         float h = h12(vec2(bay + bid * 11.7, fl * 1.31 + bid * 5.3));
@@ -224,7 +239,7 @@
         vec3 ins = lit > .5 ? lc * (.8 + .9 * fract(h * 3.7)) : vec3(.004, .006, .01);
         float band = kinh ? 0. : (1. - smoothstep(.0, .05 + fw.y, abs(fv - .9))) * .4;
         alb = mix(alb, kinh ? vec3(.02, .025, .03) : vec3(.04), w) * (1. + band);
-        emi += mix(ins, lc * pr * .6, far) * mix(w, (hi.x - lo.x) * (hi.y - lo.y) / (bw * fh), far);
+        emi += mix(ins * (.55 + .9 * fract(h * 13.7)), lc * pr * .42, far) * mix(w, (hi.x - lo.x) * (hi.y - lo.y) / (bw * fh), far);
       } else if (st < 6.5) {                                         // 6: đầu hồi trại: hai cửa sổ nhỏ mỗi tầng
         float w = oAA(vec2(fract(u / (bw * .5)) * bw * .5, fv), vec2(bw * .25 - .45, 1.1), vec2(bw * .25 + .45, 2.3), fw);
         float h = h12(vec2(floor(u / (bw * .5)) + bid * 3.1, fl + bid));
@@ -245,16 +260,16 @@
       }
     } else if (mat < 1.5) {                                          // ===== ngói =====
       float course = fract(v / .3), tile = fract(u / .24 + step(.5, fract(v / .6)) * .5);
-      alb = vec3(.22, .085, .05) * (.75 + .35 * grime) * (.72 + .28 * smoothstep(.0, .25, course)) * (.86 + .14 * smoothstep(.0, .12, tile));
+      alb = vec3(.16, .066, .045) * (.75 + .35 * grime) * (.68 + .32 * smoothstep(.0, .25, course)) * (.84 + .16 * smoothstep(.0, .12, tile));
       alb = mix(alb, vec3(.07, .08, .06), smoothstep(.3, .7, pn(vec3(vW.xz * .08, 3.3))) * .45);
     } else if (mat < 2.5) {                                          // ===== gờ, cột, viền =====
       alb = (bid < 99.5 ? vec3(.7, .65, .52) : vec3(.62, .62, .6)) * (.85 + .25 * grime);
     } else if (mat < 3.5) {                                          // ===== nền bê tông =====
-      alb = vec3(.21, .21, .2) * (.8 + .4 * grime);
+      alb = vec3(.13, .128, .122) * (.75 + .5 * grime);
       vec2 j = abs(fract(vec2(u, v) / 3.) - .5);
       alb *= 1. - .18 * (1. - smoothstep(.0, .02 + fwidth(u) * .5, min(j.x, j.y))) * (1. - smoothstep(.05, .2, fwidth(u)));
     } else if (mat < 4.5) {                                          // ===== sân điều lệnh: kẻ vạch trắng =====
-      alb = vec3(.23, .23, .22) * (.85 + .3 * grime);
+      alb = vec3(.13, .13, .125) * (.78 + .44 * grime) * (.85 + .3 * pn(vec3(vW.xz * .6, 4.1)));
       float lw = .07 + fwidth(u) * .7;
       float ln = 1. - smoothstep(lw * .5, lw, min(abs(abs(u) - 23.4), min(abs(v - 14.6), abs(v - 35.4))));
       ln = max(ln, (1. - smoothstep(lw * .5, lw, abs(u))) * step(15., v) * step(v, 35.));
@@ -262,7 +277,7 @@
       vec2 g = abs(fract(vec2(u / 1.6, (v - 15.) / 2.2)) - .5) * vec2(1.6, 2.2);
       ln = max(ln, (1. - smoothstep(.08, .08 + lw, max(g.x, g.y))) * step(17., v) * step(v, 33.) * step(abs(u), 20.) * step(3.8, length(vec2(u, v - 25.))));
       ln *= 1. - smoothstep(.06, .25, fwidth(u));
-      alb = mix(alb, vec3(.62, .62, .58), ln * .85);
+      alb = mix(alb, vec3(.42, .42, .4), ln * .8);
     } else if (mat < 5.5) {                                          // ===== lan can =====
       float fv = v - floor(v / max(fh, .5)) * max(fh, .5);
       if (bid < 99.5) {                                              // trại: con tiện bê tông, khe hở thấy hành lang sáng đèn
@@ -321,9 +336,11 @@
       vec3 c = hb < .4 ? vec3(.12, .2, .38) : hb < .7 ? vec3(.36, .1, .07) : vec3(.3, .31, .32);
       alb = c * (.8 + .2 * sin(u * 31.4)) * (.8 + .3 * grime);
     }
-    vec3 col = alb * anhTrang(n, ao);
+    float shD = bongDong(vW, n);
+    alb *= pho;
+    vec3 col = alb * anhTrang(n, ao, bongTrang(vW, n), shD);
     col += alb * denTrai(vW, n);
-    col += alb * dongDom(vW, n) * 2.;
+    col += alb * dongDom(vW, n, shD) * 2.;
     vec3 fc; float f = suongF(vW, fc);
     col = mix(col, fc, f) + emi * (1. - f * .8);
     if (!(dot(col, col) < 1e8)) col = vec3(0.);
@@ -331,11 +348,11 @@
   }`;
   // lá cờ: tấm vải lưới mịn, sóng gió chạy từ cán ra mép (đỉnh), cuộn nhẹ; đèn rọi từ chân bục
   const CO_V = `
-  uniform vec3 uCoO, uCoX, uCoN; uniform vec2 uCoS;
+  uniform vec3 uCoO, uCoX, uCoN; uniform vec2 uCoS; uniform float uGio;   // uGio: gió giật từ chỗ va chạm
   varying vec2 vF; varying vec3 vW; varying vec3 vNn;
   float song(float s, float t){
-    float T = uS;
-    return pow(s, 1.15) * (.23 * sin(TAU * (1.05 * s - .52 * T) + .5 * t) + .07 * sin(TAU * (2.3 * s - 1.13 * T) + 1.4 * t + 1.) + .03 * sin(TAU * (4.1 * s - 1.9 * T) + 2.2 * t));
+    float T = uS, g = 1. + 1.7 * uGio;
+    return pow(s, 1.15) * g * (.23 * sin(TAU * (1.05 * s - .52 * T * (1. + uGio)) + .5 * t) + .07 * sin(TAU * (2.3 * s - 1.13 * T) + 1.4 * t + 1.) + .03 * g * sin(TAU * (4.1 * s - 1.9 * T * (1. + uGio)) + 2.2 * t));
   }
   void main(){
     float s = uv.x, t = 1. - uv.y;
@@ -372,11 +389,12 @@
     vec3 alb = mix(vec3(.62, .02, .015), vec3(1., .78, .02), 1. - smoothstep(-aa, aa, sd));
     // vải: sợi dệt rất mịn, nếp gấp tối hơn
     alb *= .92 + .08 * sin(vF.x * 900.) * sin(vF.y * 600.);
-    vec3 col = alb * anhTrang(n, 1.) * .8;
+    float shD = bongDong(vW, n);
+    vec3 col = alb * anhTrang(n, 1., bongTrang(vW, n), shD) * .8;
     vec3 ld = uCoSpot - vW; float d2 = dot(ld, ld); ld *= inversesqrt(d2);
     float sp = max(dot(n, ld), 0.) + .35 * max(-dot(n, ld), 0.);       // vải mỏng: ánh đèn xuyên qua mặt sau
     col += alb * vec3(1., .86, .7) * sp * 190. / (d2 + 20.);
-    col += alb * dongDom(vW, n) * 2.;
+    col += alb * dongDom(vW, n, shD) * 2.;
     vec3 hh = normalize(ld + vd);
     col += vec3(1., .8, .6) * pow(max(dot(n, hh), 0.), 18.) * .06 * 190. / (d2 + 20.);
     vec3 fc; float f = suongF(vW, fc);
@@ -574,8 +592,7 @@
     const gateOut = tC(0, 0, 52), g2 = tC(0, 0, 60), g3 = tC(-5, 0, 67);
     const DUONG_TRAI = resample([[gateOut[0], gateOut[2]], [g2[0], g2[2]], [g3[0], g3[2]], [6, -76], [-10, -69], [-36, -63], [-70, -67], [-106, -86], [-150, -106]], 4);
     const DUONG_A = resample([[-330, 20], [-250, -55], [-190, -85], [-150, -106], [-126, -140], [-113, -185], [-108, -230], [-118, -275], [-100, -330], [-60, -385], [0, -420], [60, -446]], 4);
-    const VANH_DAI = (() => { const p = []; for (let az = 274; az <= 328; az += 2) p.push([Math.sin(az * D2R) * 1260, -Math.cos(az * D2R) * 1260]); return resample(p, 8); })();
-    BID = 40; duong(DUONG_TRAI, 4.2, 0); duong(DUONG_A, 6.5, 1); duong(VANH_DAI, 12, 1);
+    BID = 40; duong(DUONG_TRAI, 4.2, 0); duong(DUONG_A, 6.5, 1);
     // đèn dọc đường
     const denDuong = (R, every, side, h, col, sz, pool) => {
       let acc = 0, next = every * 0.5, k = 0;
@@ -595,7 +612,6 @@
     };
     denDuong(DUONG_TRAI, 17, -1, 6, [1, 0.62, 0.3], 1.0, 9);
     denDuong(DUONG_A, 27, 0, 7, [1, 0.6, 0.28], 1.1, 10);
-    denDuong(VANH_DAI, 38, 0, 10, [1, 0.62, 0.32], 5.0, 0);
 
     // ======================= XÓM PHỐ (nhà ống dọc đường A) =======================
     let nId = 100;
@@ -668,33 +684,115 @@
       const fh = kinh ? 3.3 : 3.0, H = fl * fh;
       const t0 = khung(x, 0, z, rot), cs = [t0(-w / 2, 0, -d / 2), t0(w / 2, 0, -d / 2), t0(-w / 2, 0, d / 2), t0(w / 2, 0, d / 2)].map((p) => hDat(p[0], p[2]));
       const by = Math.min(...cs), t = khung(x, by, z, rot);
-      const lp = kinh ? 0.22 + rnd() * 0.25 : 0.25 + rnd() * 0.2;
+      const lp = kinh ? 0.05 + rnd() * 0.09 : 0.09 + rnd() * 0.15;   // nửa đêm: văn phòng gần như tắt, chung cư còn lác đác
       kieu(kinh ? 5 : 4, fh, kinh ? 1.8 : 3.4, lp); hop(t, -w / 2, w / 2, -4, H, -d / 2, d / 2, { f: M_TUONG, b: M_TUONG, l: M_TUONG, r: M_TUONG });
       kieu(8, fh, 3, 0); maiBang(t, -w / 2, w / 2, -d / 2, d / 2, H, 1.0);
       hop(t, -w * 0.15, w * 0.15, H, H + 3.2, -d * 0.2, d * 0.2, { f: M_TUONG, b: M_TUONG, l: M_TUONG, r: M_TUONG, t: M_MAIBANG });
       if (kinh && rnd() < 0.55) { kieu(8, 3, 3, rnd() < 0.5 ? 2 : 0); hop(t, -w / 2 - 0.05, w / 2 + 0.05, H - 0.9, H - 0.55, -d / 2 - 0.05, d / 2 + 0.05, { f: M_PHAT, b: M_PHAT, l: M_PHAT, r: M_PHAT }); }
       if (H > 45) for (const c of [[-1, -1], [1, 1]]) { const p = t(c[0] * w * 0.15, H + 3.6, c[1] * d * 0.2); sang.push([p[0], p[1], p[2], 1, 0.08, 0.04, 4.0, 0.13 + rnd() * 0.7]); }
     };
-    // phía đông: vài khối chung cư
-    for (const [x, nb, fl] of [[330, 470, 12], [420, 432, 9], [480, 520, 15], [392, 600, 11], [560, 470, 10], [522, 640, 13]]) khoi(x, -nb, rnd() * 0.6 - 0.3, 30 + rnd() * 18, 14 + rnd() * 6, fl, false);
-    // thành phố xa phía tây tây bắc
-    const city = [];
-    for (let i = 0; i < 64 && city.length < 54; i++) {
-      const az = (285 + rnd() * 28) * D2R, dd = 1320 + Math.pow(rnd(), 0.8) * 1550;
-      const x = Math.sin(az) * dd, z = -Math.cos(az) * dd;
-      if (hDat(x, z) > -11) continue;
-      if (city.some((c) => Math.hypot(c[0] - x, c[1] - z) < 46)) continue;
-      const r = rnd(), fl = r < 0.62 ? 5 + Math.floor(rnd() * 7) : r < 0.9 ? 12 + Math.floor(rnd() * 10) : 24 + Math.floor(rnd() * 12);
-      city.push([x, z]);
-      khoi(x, z, (rnd() - 0.5) * 0.8 + az, 16 + rnd() * 20, 13 + rnd() * 12, fl, fl > 11);
+    // ======================= THÀNH PHỐ THÁI NGUYÊN =======================
+    // Đồng bằng phía bắc, sau doanh trại một quãng (từ ~470 m). Lưới phố xoay 14°, ô phố 96 m (gồm lòng đường 14 m).
+    // Lõi phố quanh TPC: tháp kính 22–46 tầng, viền đèn LED, đèn báo máy bay; vành giữa: chung cư 10–24 tầng xen dãy nhà ống;
+    // ngoài cùng: dãy nhà ống 3–6 tầng sát nhau, lác đác nhà 7–12 tầng; vài ô là công viên, trường học (cây, nhà thấp).
+    const phoK = SN.dat.phoK;
+    const TPC = [-140, -1020], ROT = 14 * D2R, BLK = 96, LD = 14;
+    const pq = (i, j) => [TPC[0] + i * BLK * Math.cos(ROT) - j * BLK * Math.sin(ROT), TPC[1] + i * BLK * Math.sin(ROT) + j * BLK * Math.cos(ROT)];
+    const thap = (x, z, rot, w, d, fl, led) => {   // tháp kính có đế, đỉnh thót lại, viền đèn
+      BID = cId++;
+      const fh = 3.4, H = fl * fh;
+      const t0 = khung(x, 0, z, rot), cs = [t0(-w / 2, 0, -d / 2), t0(w / 2, 0, -d / 2), t0(-w / 2, 0, d / 2), t0(w / 2, 0, d / 2)].map((p) => hDat(p[0], p[2]));
+      const by = Math.min(...cs), t = khung(x, by, z, rot);
+      const pw = w + 10, pd = d + 10;   // khối đế 4 tầng: sảnh, trung tâm thương mại sáng đèn
+      kieu(4, 4.5, 6, 0.75); hop(t, -pw / 2, pw / 2, -4, 18, -pd / 2, pd / 2, { f: M_TUONG, b: M_TUONG, l: M_TUONG, r: M_TUONG });
+      kieu(8, 3, 3, 0); maiBang(t, -pw / 2, pw / 2, -pd / 2, pd / 2, 18, 1.1);
+      BID = cId++;
+      kieu(5, fh, 1.8, 0.04 + rnd() * 0.09); hop(t, -w / 2, w / 2, 18, H, -d / 2, d / 2, { f: M_TUONG, b: M_TUONG, l: M_TUONG, r: M_TUONG });
+      const w2 = w * 0.72, d2 = d * 0.72, H2 = H + 7 + rnd() * 8;   // phần đỉnh thót vào
+      kieu(5, fh, 1.8, 0.24); hop(t, -w2 / 2, w2 / 2, H, H2, -d2 / 2, d2 / 2, { f: M_TUONG, b: M_TUONG, l: M_TUONG, r: M_TUONG, t: M_MAIBANG });
+      if (led) {   // viền đèn: bốn cạnh dọc thân tháp + đai sáng quanh đỉnh (kiểu LED trang trí ở các thành phố Việt Nam)
+        kieu(8, 3, 3, led); const e = 0.25;
+        for (const [sx, sz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) hop(t, sx * w / 2 - e, sx * w / 2 + e, 18, H, sz * d / 2 - e, sz * d / 2 + e, { f: M_PHAT, b: M_PHAT, l: M_PHAT, r: M_PHAT });
+        hop(t, -w2 / 2 - 0.1, w2 / 2 + 0.1, H2 - 1.6, H2 - 0.9, -d2 / 2 - 0.1, d2 / 2 + 0.1, { f: M_PHAT, b: M_PHAT, l: M_PHAT, r: M_PHAT });
+      }
+      for (const c of [[-1, -1], [1, 1], [1, -1]]) { const p = t(c[0] * w2 * 0.45, H2 + 0.6, c[1] * d2 * 0.45); sang.push([p[0], p[1], p[2], 1, 0.08, 0.04, 4.5, 0.13 + rnd() * 0.7]); }
+    };
+    const dayOng = (t, x0, x1, z, dDep, flMin, flMax) => {   // một dãy nhà ống mặt quay ra đường (khung t: +z là phía đường)
+      let x = x0;
+      while (x < x1 - 3) {
+        const len = Math.min(x1 - x, 9 + rnd() * 22), fl = flMin + Math.floor(rnd() * (flMax - flMin + 1)), fh = 3.3, H = fl * fh;
+        BID = cId++;
+        kieu(3, fh, 4.2 + rnd() * 1.4, 0.24 + rnd() * 0.3); hop(t, x, x + len, -3, H, z - dDep, z, { f: M_TUONG });
+        kieu(7, fh, 4, 0); hop(t, x, x + len, -3, H, z - dDep, z, { l: M_TUONG, r: M_TUONG, b: M_TUONG });
+        kieu(8, 3, 3, 0); quad(t(x, H, z), t(x + len, H, z), t(x + len, H, z - dDep), t(x, H, z - dDep), M_MAIBANG, [[x, z], [x + len, z], [x + len, z - dDep], [x, z - dDep]]);
+        if (rnd() < 0.3) { kieu(8, fh, 4, 1); hop(t, x + 0.3, x + len - 0.3, 2.8, 3.3, z, z + 0.15, { f: M_PHAT }); }   // biển hiệu
+        x += len;
+      }
+    };
+    const xe2 = [];   // đường lớn có xe chạy
+    let nB = 0;
+    for (let i = -17; i <= 17; i++) for (let j = -15; j <= 15; j++) {
+      const c = pq(i, j), dist = Math.hypot(c[0], c[1]);
+      if (phoK(c[0], c[1]) < 0.6) continue;
+      const dc = Math.hypot(c[0] - TPC[0], c[1] - TPC[1]);
+      const t = khung(c[0], 0, c[1], -ROT);
+      const H0b = hDat(c[0], c[1]), half = (BLK - LD) / 2, far = dist > 1700;
+      const kind = rnd();
+      if (kind < 0.06 && dc > 300) {   // công viên: cây, đèn vườn
+        for (let k = 0; k < 10; k++) { const p = t((rnd() - 0.5) * 70, 0, (rnd() - 0.5) * 70); cay.push([p[0], p[2], 10 + rnd() * 6, [0, 1, 3][Math.floor(rnd() * 3)]]); }
+        for (let k = 0; k < 5; k++) { const p = t((rnd() - 0.5) * 60, 0, (rnd() - 0.5) * 60); sang.push([p[0], H0b + 3.5, p[2], 1, 0.86, 0.66, 1.2, 0]); }
+        continue;
+      }
+      // mặt tiền bốn phía là dãy nhà ống (ở xa thì gộp thành ít dãy hơn)
+      const dDep = 13 + rnd() * 6;
+      for (let sd = 0; sd < 4; sd++) {
+        if (far && rnd() < 0.35) continue;
+        const ts = con(t, 0, 0, 0, sd * Math.PI / 2);
+        dayOng(ts, -half, half - (sd % 2 ? dDep : 0), half, dDep, dc < 600 ? 4 : 3, dc < 600 ? 7 : (far ? 5 : 6));
+      }
+      // giữa ô phố
+      if (dc < 420) {   // lõi: tháp kính
+        const m = 1 + Math.floor(rnd() * 2.4);
+        for (let k = 0; k < m; k++) {
+          const fl = Math.round(mix(40, 22, dc / 420) * (0.75 + rnd() * 0.45));
+          const led = rnd() < 0.45 ? (rnd() < 0.5 ? 1 : 2) : 0;
+          const p = t((m > 1 ? (k - (m - 1) / 2) * 30 : (rnd() - 0.5) * 12), 0, (rnd() - 0.5) * 14);
+          thap(p[0], p[2], -ROT + (rnd() < 0.3 ? 0.3 : 0), 22 + rnd() * 10, 20 + rnd() * 10, fl, led);
+          nB++;
+        }
+      } else if (dc < 1000 || rnd() < 0.3) {   // vành giữa: chung cư
+        const m = rnd() < 0.5 ? 1 : 2;
+        for (let k = 0; k < m; k++) {
+          const fl = dc < 1000 ? 10 + Math.floor(rnd() * 15) : 7 + Math.floor(rnd() * 6);
+          const p = t((m > 1 ? (k - 0.5) * 34 : 0) + (rnd() - 0.5) * 6, 0, (rnd() - 0.5) * 10);
+          khoi(p[0], p[2], -ROT + (rnd() < 0.5 ? Math.PI / 2 : 0), m > 1 ? 18 + rnd() * 6 : 34 + rnd() * 12, 15 + rnd() * 5, fl, fl > 16 && rnd() < 0.5);
+          nB++;
+        }
+      }
+      // đèn đường: hai cạnh đường phía nam và phía đông của ô (mỗi đường chỉ đặt một lần)
+      const nL = far ? 2 : 3;
+      for (let k = 0; k < nL; k++) {
+        const f = (k + 0.5) / nL - 0.5;
+        for (const [ax, az2, side] of [[f * BLK, BLK / 2, 1], [BLK / 2, f * BLK, -1]]) {
+          const p = t(ax + (side < 0 ? LD * 0.42 : 0), 0, az2 - (side > 0 ? LD * 0.42 : 0));
+          const led = (i + j + k) % 5 === 0;
+          sang.push([p[0], H0b + 8, p[2], led ? 0.85 : 1, led ? 0.9 : 0.6, led ? 1 : 0.28, far ? 3.2 : 2.2, 0]);
+          if (!far && dist < 1100) vung.push([p[0], p[2], 9, 1, 0.62, 0.32, 0.4]);
+        }
+      }
+      // mặt đường (một dải mỗi phía nam/đông của ô)
+      if (dist < 1500) {
+        BID = 42; kieu(0, 1, 1, 0);
+        const y = H0b + 0.25, e = BLK / 2, w2 = LD / 2;
+        const a1 = t(-e, 0, e - w2), a2 = t(e, 0, e - w2), a3 = t(e, 0, e + w2), a4 = t(-e, 0, e + w2);
+        quad([a4[0], y, a4[2]], [a3[0], y, a3[2]], [a2[0], y, a2[2]], [a1[0], y, a1[2]], M_DUONG, [[0, w2], [BLK, w2], [BLK, -w2], [0, -w2]]);
+      }
+      if (j % 3 === 0 && dist < 2200) xe2.push(c);
     }
-    // đèn phố trong thành phố (chuỗi chấm cam)
-    for (let k = 0; k < 7; k++) {
-      const az0 = (286 + k * 4 + rnd() * 2) * D2R;
-      for (let dd = 1300; dd < 2900; dd += 34) { const x = Math.sin(az0) * dd + (rnd() - 0.5) * 6, z = -Math.cos(az0) * dd; const y = hDat(x, z); if (y > -10) continue; sang.push([x, y + 8, z, 1, 0.6, 0.3, 4.5, 0]); }
-    }
-    for (let k = 0; k < 4; k++) { const dd = 1500 + k * 380; for (let az = 285; az < 313; az += 0.9) { const x = Math.sin(az * D2R) * dd, z = -Math.cos(az * D2R) * dd, y = hDat(x, z); if (y > -10) continue; sang.push([x, y + 8, z, 1, 0.62, 0.3, 4.5, 0]); } }
-
+    SN.dat.soNhaPho = nB;
+    // nóc một khu chung cư ở rìa thành phố phía đông: chỗ đặt máy quay cảnh 4 (nhìn ngang đường bay của sao băng)
+    { const x = 352, z = -246, rot = -0.32; const t0 = khung(x, 0, z, rot); const by = Math.min(...[[-15, -8], [15, -8], [-15, 8], [15, 8]].map(([a, b]) => { const p = t0(a, 0, b); return hDat(p[0], p[2]); }));
+      khoi(x, z, rot, 30, 16, 8, false); const c = t0(-12, 0, 0); SN.dat.nocV = [c[0], by + 24, c[2]]; }
     // ======================= LƯỚI + VẬT LIỆU =======================
     const g = new T.BufferGeometry();
     g.setAttribute('position', new T.Float32BufferAttribute(G.P, 3)); g.setAttribute('normal', new T.Float32BufferAttribute(G.N, 3));
@@ -708,7 +806,7 @@
     // lá cờ
     const coG = new T.PlaneGeometry(1, 1, 40, 26);
     const coM = new T.ShaderMaterial({
-      uniforms: Object.assign({}, U, { uCoO: { value: new T.Vector3(...coO) }, uCoX: { value: new T.Vector3(...coX).normalize() }, uCoN: { value: new T.Vector3(...coN).normalize() }, uCoS: { value: new T.Vector2(3.0, 2.0) }, uCoSpot: { value: new T.Vector3(...coSpot) } }),
+      uniforms: Object.assign({}, U, { uCoO: { value: new T.Vector3(...coO) }, uCoX: { value: new T.Vector3(...coX).normalize() }, uCoN: { value: new T.Vector3(...coN).normalize() }, uCoS: { value: new T.Vector2(3.0, 2.0) }, uCoSpot: { value: new T.Vector3(...coSpot) }, uGio: { value: 0 } }),
       vertexShader: SN_GLSL.CHUNG + CO_V, fragmentShader: SN_GLSL.CHUNG + SN.dat.CHUNG3 + CO_F, side: T.DoubleSide, extensions: { derivatives: true },
     });
     const co = new T.Mesh(coG, coM); co.frustumCulled = false;
@@ -734,9 +832,13 @@
     // xe chạy đêm: đèn pha trắng khi chạy về phía máy quay, đèn hậu đỏ khi chạy ra xa
     const xe = [];
     const duongXe = (R) => { const L = [0]; for (let i = 0; i < R.length - 1; i++) L.push(L[i] + Math.hypot(R[i + 1][0] - R[i][0], R[i + 1][1] - R[i][1])); return { R, L, len: L[L.length - 1] }; };
-    const dA = duongXe(DUONG_A), dV = duongXe(VANH_DAI);
+    const dA = duongXe(DUONG_A);
     for (let k = 0; k < 4; k++) xe.push({ d: dA, s0: rnd() * dA.len, v: (k % 2 ? -1 : 1) * (7 + rnd() * 5), lane: 1.5, w: k === 0 ? 0.75 : 0, h: 0.9, sz: k === 0 ? 0.55 : 0.4 });
-    for (let k = 0; k < 14; k++) xe.push({ d: dV, s0: rnd() * dV.len, v: (k % 2 ? -1 : 1) * (14 + rnd() * 8), lane: 3, w: 0.8, h: 1, sz: 3.2 });
+    // xe trên các trục phố lớn của thành phố (mỗi trục là một đường thẳng dọc lưới phố)
+    const truc = [];
+    for (const j of [-9, -6, -3, 0, 3, 6, 9]) { const R = []; for (let i = -17; i <= 17; i++) { const p = pq(i, j + 0.5); if (phoK(p[0], p[1]) > 0.5) R.push(p); } if (R.length > 3) truc.push(R); }
+    for (const i of [-9, -3, 3, 9]) { const R = []; for (let j = -15; j <= 15; j++) { const p = pq(i + 0.5, j); if (phoK(p[0], p[1]) > 0.5) R.push(p); } if (R.length > 3) truc.push(R); }
+    truc.forEach((R) => { const d = duongXe(R); for (let k = 0; k < 7; k++) xe.push({ d, s0: rnd() * d.len, v: (k % 2 ? -1 : 1) * (9 + rnd() * 7), lane: 2.5, w: 1.0, h: 1, sz: 1.6 }); });
     const NX = xe.length * 2, xp = new Float32Array(NX * 3), xc = new Float32Array(NX * 4), xb = new Float32Array(NX);
     const xg = new T.BufferGeometry(); xg.setAttribute('position', new T.BufferAttribute(xp, 3)); xg.setAttribute('aC', new T.BufferAttribute(xc, 4)); xg.setAttribute('aBl', new T.BufferAttribute(xb, 1));
     const xeP = new T.Points(xg, sangM); xeP.frustumCulled = false; xeP.userData.ro = 5;
@@ -763,8 +865,9 @@
     SN.dat.cuaSoN = TR.thuyN;
     SN.dat.Yp = TR.y;
     SN.dat.trai = TR; SN.dat.tC = tC;
+    const coDep = new T.ShaderMaterial({ uniforms: coM.uniforms, vertexShader: SN_GLSL.CHUNG + CO_V, fragmentShader: 'void main(){}', colorWrite: false, side: T.DoubleSide });
     return {
-      mesh, mat, co, coM, sangP, sangM, vungMesh, xeP, cay, lamps: lv,
+      mesh, mat, co, coM, coDep, sangP, sangM, vungMesh, xeP, cay, lamps: lv,
       cap(S, cam) { capXe(S, cam); },
       uPx(px) { sangM.uniforms.uPx.value = px; },
     };

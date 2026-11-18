@@ -23,6 +23,7 @@
   uniform vec3 uTA, uTB; uniform float uTrI, uTrW;   // vệt khí sao băng (đơn vị bán kính Trái Đất)
   uniform vec3 uLPn; uniform float uLI;              // điểm ngay dưới tia sáng, độ sáng hắt xuống mây
   uniform float uSpr, uSprS;                         // đèn li ti: độ sáng, độ nhoè (ô)
+  uniform sampler2D tVN; uniform float uVN, uVNb;    // Việt Nam (đất liền, đảo ven bờ, Hoàng Sa, Trường Sa): R tô kín, G nhoè (viền), B các đảo; uVNb: độ rõ của viền
   const float RA = 1.05, HR = .0066, HM = .0022;
   const vec3 BR = vec3(9.5, 22., 54.);
   const float BM = 5.;
@@ -38,6 +39,10 @@
     vec2 uvG = vec2(lon / TAU + .5, lat / PI + .5);
     vec3 dem = tex(tDem, uvG);
     float lonD = degrees(lon), latD = degrees(lat);
+    // mặt nạ Việt Nam theo bản đồ Việt Nam (vùng kinh độ 101.5–118.5, vĩ độ 6–24)
+    vec3 vn = vec3(0.);
+    vec2 uvV = vec2((lonD - 101.5) / 17., (latD - 6.) / 18.);
+    if (uVN > 0. && min(uvV.x, uvV.y) > 0. && max(uvV.x, uvV.y) < 1.) vn = texture(tVN, uvV).rgb;
     vec2 uvR = vec2((lonD - 92.) / 40., (latD + 5.) / 40.);
     float inR = smoothstep(0., .04, min(min(uvR.x, 1. - uvR.x), min(uvR.y, 1. - uvR.y)));
     if (inR > 0.) dem = mix(dem, tex(tDemR, uvR), inR);
@@ -54,6 +59,7 @@
       if (hh.w < pr) { vec2 o = (hh.xy - .5) * .6; float r2 = dot(fq - o, fq - o); lights = mix(lights, lights * .35, uSpr) + vec3(1., .76, .46) * exp(-r2 / (uSprS * uSprS)) * (.5 + hh.z) * uSpr * .9 / (uSprS * 4.); }
       else lights *= mix(1., .35, uSpr);
     }
+    lights *= 1. + .6 * vn.r * uVN;                    // đèn trên đất Việt Nam sáng hơn một chút
     float mu = dot(n, uMoon), su = dot(n, uSun);
     vec3 land = day * (max(mu, 0.) * uMoonK * vec3(.7, .8, 1.) + max(su, 0.) * uSunK * .55 * vec3(1., .96, .9));
     // chạng vạng: rìa phía ngày đỏ ấm
@@ -66,6 +72,10 @@
     vec3 col = land + lights * (1. - cl * .9) + spec * vec3(.82, .88, 1.) * (1. - cl);
     col = mix(col, cCol, cl * .93);
     col += lights * cl * .2;
+    // Việt Nam nổi lên trong đêm: đất phủ một lớp ánh vàng rất nhẹ, bờ biển và biên giới sáng mảnh hơn,
+    // các đảo ở Hoàng Sa, Trường Sa sáng lên như những đốm đèn nhỏ giữa biển (mây dày thì che bớt)
+    float vb = vn.g * (1. - vn.g) * 4.;
+    col += ((vec3(.011, .0088, .0056) * vn.r + vec3(1., .8, .52) * 1.1 * vn.b) * uVN + vec3(1., .74, .42) * .018 * vb * uVNb) * (1. - cl * .55);
     // tia sáng đang lao xuống hắt ánh vàng lên mây và đất ngay bên dưới
     float dp = length(n - uLPn);
     col += vec3(1., .78, .5) * uLI * (exp(-dp * dp / 1.2e-5) * (.35 + 1.4 * cl) + exp(-dp / .006) * .08);
@@ -275,14 +285,17 @@
   const sp = [0, 0, 0], tmp = [0, 0, 0], st = [1, 1, 1];
   SN.dung.push((T) => {
     const tDem = SN.taiAnh('anh/dem-toan-cau.jpg'), tDemR = SN.taiAnh('anh/dem-dong-nam-a.jpg'), tNgay = SN.taiAnh('anh/ngay-toan-cau.jpg');
+    const tVN = SN.taiAnh('anh/viet-nam.png');   // vẽ từ bản đồ Natural Earth theo quan điểm Việt Nam + toạ độ các đảo Hoàng Sa, Trường Sa
     [tDem, tDemR, tNgay].forEach((t) => { t.wrapS = T.RepeatWrapping; });
     tDemR.wrapS = tDemR.wrapT = T.ClampToEdgeWrapping;
+    tVN.wrapS = tVN.wrapT = T.ClampToEdgeWrapping;
     const mesh = SN.quad(FRAG, {
       tDem: { value: tDem }, tDemR: { value: tDemR }, tNgay: { value: tNgay },
       uSun: { value: new T.Vector3(...SUN) }, uMoon: { value: new T.Vector3(...MOON) }, uSunT: { value: new T.Vector3(1, 1, 1) },
       uSunK: { value: 1 }, uMoonK: { value: 0.035 }, uLightK: { value: 2 }, uStarK: { value: 1 }, uFine: { value: 0 }, uGlow: { value: 0 },
       uTA: { value: new T.Vector3() }, uTB: { value: new T.Vector3() }, uTrI: { value: 0 }, uTrW: { value: 0.00018 },
       uLPn: { value: new T.Vector3(0, 1, 0) }, uLI: { value: 0 }, uSpr: { value: 0 }, uSprS: { value: 0.3 },
+      tVN: { value: tVN }, uVN: { value: 0 }, uVNb: { value: 0 },
     });
     const tr = [];
     SN.them({
@@ -298,6 +311,9 @@
         const sunVis = (st[0] + st[1] + st[2]) / 3;
         u.uStarK.value = mix(0.25, 1.0, 1 - sunVis);
         const s = sAt(S);
+        // máy quay quay về châu Á thì Việt Nam sáng dần lên; xuống thấp (pha C) thì viền tắt hẳn, lớp ánh còn rất nhẹ (khỏi thành nét bản đồ)
+        const vnIn = ease((S - 186) / 3.5), vnHi = clamp((Math.hypot(c.pos[0], c.pos[1], c.pos[2]) - 1 - 0.07) / 0.11, 0, 1);
+        u.uVN.value = vnIn * mix(0.3, 1, vnHi); u.uVNb.value = vnIn * vnHi;
         u.uFine.value = clamp(1 - s / 0.5, 0, 1);
         u.uLightK.value = mix(1.6, 2.2, clamp(1 - s / 0.8, 0, 1));
         const mg = sunMargin(c.pos); u.uGlow.value = Math.exp(-Math.abs(mg) / 0.006) * (mg < 0 ? Math.exp(-(S - M.DROP) * 0.5) : 1) * 1.0;
