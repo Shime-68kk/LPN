@@ -36,10 +36,6 @@
   @keyframes tho { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
   #thu { position: fixed; inset: 0; z-index: 15; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; opacity: 0; pointer-events: none; transition: opacity 2.4s ease; background: radial-gradient(ellipse at 50% 40%, rgba(24,20,16,.92), rgba(0,0,0,.98)); }
   #thu.hien { opacity: 1; pointer-events: auto; }
-  #thu .giay { max-width: 620px; margin: 9vh auto 6vh; padding: 7vh 8vw 6vh; background: linear-gradient(180deg, #f6eedd, #efe4cf); color: #3a2f25; box-shadow: 0 30px 80px rgba(0,0,0,.6); border-radius: 3px; background-image: repeating-linear-gradient(180deg, transparent 0 33px, rgba(120,96,70,.13) 33px 34px), linear-gradient(180deg, #f6eedd, #efe4cf); }
-  #thu .giay p { margin: 0 0 1.05em; font: 400 clamp(17px, 2.3vw, 21px)/34px 'Patrick Hand', cursive; }
-  #thu .giay .ten { font: 600 clamp(22px, 2.9vw, 27px)/34px 'Dancing Script', cursive; color: #5a3d2a; }
-  #thu .giay .ky { display: block; text-align: right; font: 600 30px/34px 'Dancing Script', cursive; color: #5a3d2a; }
   #cuoi { position: fixed; left: 0; right: 0; bottom: calc(3.2vh + env(safe-area-inset-bottom)); z-index: 16; display: flex; justify-content: center; gap: 28px; opacity: 0; pointer-events: none; transition: opacity 1.6s ease; }
   #cuoi.hien { opacity: 1; pointer-events: auto; }
   #cuoi button { appearance: none; border: 0; background: rgba(0,0,0,.35); color: #f2e8d8; font: 300 15px/1 'Be Vietnam Pro', sans-serif; letter-spacing: .14em; padding: 12px 18px; border-radius: 22px; cursor: pointer; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
@@ -55,7 +51,7 @@
 <div id="dan" class="lop"></div>
 <div id="nam" class="lop"></div>
 <div id="ket" class="lop"></div>
-<div id="thu"><div class="giay"></div></div>
+<div id="thu"></div>
 <div id="cuoi"><button id="lai">Xem lại</button><button id="ve">Về trang truyện</button></div>
 <div id="mo">
   <h1>Phút đầu tiên</h1>
@@ -79,7 +75,8 @@
 <script src="c-saobang.js?v=7"></script>
 <script src="c-che.js?v=4"></script>
 <script src="c-kep.js?v=3"></script>
-<script src="chu.js?v=2"></script>
+<script src="thiep.js?v=1"></script>
+<script src="chu.js?v=3"></script>
 <script src="../../home/offline.js?v=1"></script>
 </body>
 </html>

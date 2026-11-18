@@ -1,7 +1,6 @@
 'use strict';
 // Chữ trên màn hình: màn mở đầu, dòng dẫn chuyện (kiểu phim tài liệu, cho người chưa biết gì về thiên văn vẫn theo được),
-// dòng năm/giờ chạy như phụ đề, chữ cuối và lá thư. Tất cả là chữ Claude viết nháp (C), chờ anh Quang duyệt;
-// riêng thư lấy từ bản nháp _hop-bang-2/14-thu-tay.md (cũng đang chờ duyệt).
+// dòng năm/giờ chạy như phụ đề, chữ cuối (chữ Claude viết nháp (C), chờ anh Quang duyệt) và tấm thiệp cuối phim (thiep.js, lời anh Quang).
 (() => {
   const SN = window.SN, M = SN.M;
   const $ = (id) => document.getElementById(id);
@@ -28,21 +27,6 @@
     [263.6, 'Chúc mừng sinh nhật mười chín tuổi.'],
   ];
   const THU_LUC = 272;
-  const THU = [
-    'Hà Nội, một đêm em đang ngủ.',
-    '<span class="ten">Thủy của anh,</span>',
-    'Ba lá thư em đưa anh hôm ở Thái Nguyên, đến tối hôm sau anh mới đọc. Anh đọc muộn. Nhưng anh đọc chậm, từng dòng một, không bỏ dòng nào.',
-    'Đọc xong anh mới hiểu: em không thiếu tình cảm của anh, em chỉ không nhìn thấy nó. Vì anh dựng một bức tường. Anh im lặng, gồng lên, làm tiếp, và nghĩ như thế là đang bảo vệ em. Anh không biết em đứng bên kia một mình, sợ từng khoảng lặng.',
-    'Anh xin lỗi. Vì đã vô tâm. Vì những tin nhắn em gửi rồi chờ tới hết ngày. Vì những lần anh im.',
-    'Em hỏi có phải em đang yêu sai cách không. Không đâu em. Người cần học lại cách yêu là anh.',
-    'Anh biết em đã xoá hết mọi thứ, chỉ còn nhắn với mỗi anh. Biết em thức tới một, hai giờ sáng dù bốn, năm giờ đã phải dậy. Biết em ngủ gật trên đồi. Biết cơm trong đó khó nuốt. Anh hơn em ba tuổi, vậy mà có lúc dỗi như trẻ con, còn em lại là người kéo anh về.',
-    'Cuộn băng này anh làm vào những đêm em ngủ. Mình không chung giờ, nhưng anh chưa bao giờ đi đâu cả.',
-    'Tháng Mười Một em nói em khóc nhiều nhất. Anh mong những ngày còn lại của tháng sẽ khác. Từ giờ, kể cả lúc giận, anh sẽ không im nữa. Có khi chỉ nói được một câu thôi: anh vẫn ở đây.',
-    'Sau này anh muốn được đi cùng em, học cùng em, làm cùng em, lớn lên cùng em. Hôm nào mệt quá, chỉ cần ôm em ngủ một ngày là đủ.',
-    '<span class="ten">Chúc mừng sinh nhật mười chín tuổi, em của anh.</span>',
-    'Anh vẫn ở đây.',
-    '<span class="ky">Anh.</span>',
-  ];
   // dòng năm / giờ ở chân màn hình
   function namAt(S) {
     if (S < 7) return '';
@@ -88,8 +72,7 @@
   function moThu() {
     const t = $('thu');
     if (!t.dataset.xong) {
-      const g = t.querySelector('.giay');
-      THU.forEach((s) => { const p = document.createElement('p'); p.innerHTML = s; g.appendChild(p); });
+      if (SN.thiep) SN.thiep(t);   // tấm thiệp (thiep.js) tự dựng bên trong #thu
       t.dataset.xong = '1';
       t.addEventListener('scroll', () => { if (!cuoiShown && t.scrollTop + t.clientHeight > t.scrollHeight - 40) { cuoiShown = true; $('cuoi').classList.add('hien'); } });
       setTimeout(() => { if (!cuoiShown && t.scrollHeight <= t.clientHeight + 40) { cuoiShown = true; $('cuoi').classList.add('hien'); } }, 9000);
