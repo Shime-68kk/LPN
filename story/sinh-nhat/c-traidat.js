@@ -20,6 +20,9 @@
   uniform sampler2D tDem, tDemR, tNgay;
   uniform vec3 uSun, uMoon, uSunT;
   uniform float uSunK, uMoonK, uLightK, uStarK, uFine, uGlow;
+  uniform vec3 uTA, uTB; uniform float uTrI, uTrW;   // vệt khí sao băng (đơn vị bán kính Trái Đất)
+  uniform vec3 uLPn; uniform float uLI;              // điểm ngay dưới tia sáng, độ sáng hắt xuống mây
+  uniform float uSpr, uSprS;                         // đèn li ti: độ sáng, độ nhoè (ô)
   const float RA = 1.05, HR = .0066, HM = .0022;
   const vec3 BR = vec3(9.5, 22., 54.);
   const float BM = 5.;
@@ -43,6 +46,14 @@
     // đèn thành phố: bỏ lớp nền xanh mờ của ảnh, giữ phần sáng; hạt mịn khi lại gần cho đỡ nhoè
     float lum = dot(dem, vec3(.45, .45, .1));
     vec3 lights = vec3(1., .74, .42) * pow(max(lum - .022, 0.), 1.15) * uLightK * (1. + uFine * (pn(n * 900.) * 1.6 + pn(n * 2600.) * 1.2));
+    if (uSpr > 0.) {   // xuống thấp: rắc những ngọn đèn li ti theo mật độ ảnh NASA, cho thành phố sắc nét thay vì một vệt nhoè
+      vec2 q = vec2(lonD, latD) * 260.;
+      vec2 ce = floor(q), fq = fract(q) - .5;
+      vec4 hh = h43(vec3(ce, 11.));
+      float pr = clamp((lum - .01) * 7., 0., .85);
+      if (hh.w < pr) { vec2 o = (hh.xy - .5) * .6; float r2 = dot(fq - o, fq - o); lights = mix(lights, lights * .35, uSpr) + vec3(1., .76, .46) * exp(-r2 / (uSprS * uSprS)) * (.5 + hh.z) * uSpr * .9 / (uSprS * 4.); }
+      else lights *= mix(1., .35, uSpr);
+    }
     float mu = dot(n, uMoon), su = dot(n, uSun);
     vec3 land = day * (max(mu, 0.) * uMoonK * vec3(.7, .8, 1.) + max(su, 0.) * uSunK * .55 * vec3(1., .96, .9));
     // chạng vạng: rìa phía ngày đỏ ấm
@@ -55,6 +66,9 @@
     vec3 col = land + lights * (1. - cl * .9) + spec * vec3(.82, .88, 1.) * (1. - cl);
     col = mix(col, cCol, cl * .93);
     col += lights * cl * .2;
+    // tia sáng đang lao xuống hắt ánh vàng lên mây và đất ngay bên dưới
+    float dp = length(n - uLPn);
+    col += vec3(1., .78, .5) * uLI * (exp(-dp * dp / 1.2e-5) * (.35 + 1.4 * cl) + exp(-dp / .006) * .08);
     return col;
   }
   // độ sâu quang học từ x tới đỉnh khí quyển theo hướng L (Rayleigh, Mie); chạm đất thì coi như bị che
@@ -126,9 +140,26 @@
     float fore = dot(-ro, rd) > 0. ? 1. : 0.;
     float lay = (sqrt(max(1.0172 * 1.0172 - b * b, 0.)) - sqrt(max(1.0140 * 1.0140 - b * b, 0.))) * fore;
     if (hit) lay *= .5;
-    col += vec3(.32, 1., .42) * lay * .22;
+    col += vec3(.32, 1., .42) * lay * .22 * (1. + 1.6 * uSpr);
     float layR = (sqrt(max(1.0245 * 1.0245 - b * b, 0.)) - sqrt(max(1.0185 * 1.0185 - b * b, 0.))) * fore * (hit ? .5 : 1.);
     col += vec3(1., .3, .25) * layR * .12;
+    // vệt sao băng: đoạn đường tia sáng đã đi trong khí quyển, phát sáng xanh lục (ôxy), sát đầu thì trắng; phần cũ loang rộng, mờ dần
+    if (uTrI > 0.) {
+      vec3 v = uTB - uTA, w0 = ro - uTA;
+      float bb = dot(rd, v), cc = dot(v, v), dd = dot(rd, w0), ee = dot(v, w0);
+      float den = cc - bb * bb;
+      float sp = den > 1e-14 ? (bb * ee - cc * dd) / den : 0.;
+      float tc = clamp((ee + sp * bb) / max(cc, 1e-14), 0., 1.);
+      sp = max(dot(uTA + v * tc - ro, rd), 0.);
+      float dT = length(ro + rd * sp - (uTA + v * tc));
+      float wd = uTrW * (.5 + 1.5 * pow(1. - tc, 1.4)) + sp * uPxA * .8;
+      float fl = .8 + .4 * pn(vec3(tc * 22., uS * .4, 3.1));        // vệt khí không đều: chỗ đậm chỗ nhạt
+      float tr = uTrI * exp(-dT * dT / (wd * wd)) * pow(tc, 1.3) * (uTrW / wd) * fl;
+      if (hit && sp > tp.x) tr = 0.;
+      vec3 trc = mix(vec3(1., .42, .25) * .55, vec3(.24, 1., .5), smoothstep(.0, .45, tc));
+      trc = mix(trc, vec3(.9, 1., .93), pow(tc, 12.));
+      col += trc * tr * 2.2;
+    }
     gl_FragColor = vec4(col * uA, uA);
   }`;
 
@@ -164,6 +195,8 @@
     [196, 0.0, 0.9],
     [204, 0.0, 1.0],
   ]);
+  // pha C: khoảng cách tới Thái Nguyên dọc đường bay (bán kính Trái Đất): 0.03 (khoảng 110 km cao) lúc 201.6 → 0.0016 lúc 206.6 → chạm mây
+  const SC = SN.duong([[200.6, 0.045], [201.6, 0.031], [204.2, 0.011], [206.6, 0.0016], [207.7, 0.0005]]);
   const C = { pos: [0, 0, 0], tgt: [0, 0, 0], up: [0, 1, 0], fov: 50 };
   // Pha B (sau khi Mặt Trời khuất): lượn sang đứng trên biển Đông, nhìn xuống như bản đồ (bắc ở trên), rồi lao về Thái Nguyên.
   // [S, vĩ độ, kinh độ, độ cao (bán kính Trái Đất), vĩ độ điểm nhìn, kinh độ điểm nhìn]
@@ -173,8 +206,9 @@
     [192.5, 20.5, 106.8, 0.56, 17.6, 106.6],
     [196.5, 17.2, 107.4, 0.44, 16.4, 106.8],
     [199.6, 20.3, 106.35, 0.2, 21.0, 106.1],
-    [202.4, 21.2, 106.05, 0.085, 21.62, 105.84],
-    [204.5, 21.5, 105.9, 0.04, 21.62, 105.84],
+    [202.3, 20.85, 107.0, 0.075, 21.6, 104.9],
+    [204.8, 21.2, 107.5, 0.041, 21.9, 102.2],
+    [207.7, 21.32, 107.42, 0.035, 21.9, 102.6],
   ]);
   function camAt(S) {
     const s = sAt(S), cpA = camOff(s);
@@ -188,29 +222,41 @@
     const dB = nrm([tg[0] - cpB[0], tg[1] - cpB[1], tg[2] - cpB[2]]);
     const kB = io((S - 185.4) / 5.2);
     const cp = [mix(cpA[0], cpB[0], kB), mix(cpA[1], cpB[1], kB), mix(cpA[2], cpB[2], kB)];
-    const d = nrm([mix(dA[0], dB[0], kB), mix(dA[1], dB[1], kB), mix(dA[2], dB[2], kB)]);
+    let d = nrm([mix(dA[0], dB[0], kB), mix(dA[1], dB[1], kB), mix(dA[2], dB[2], kB)]);
+    // pha C: hướng nhìn ghé về phía tia sáng đang lao xuống để nó luôn ở trong khung (chân trời vẫn ở trên)
+    const kL = 0.3 * ease((S - 202.6) / 1.6);
+    if (kL > 0) {
+      const lp = add(TN, ETA, SC(clamp(S, 200.6, 207.7))[0]);
+      const tl = nrm([lp[0] - cp[0], lp[1] - cp[1], lp[2] - cp[2]]);
+      d = nrm([mix(d[0], tl[0], kL), mix(d[1], tl[1], kL), mix(d[2], tl[2], kL)]);
+    }
     C.pos = cp; C.tgt = add(cp, d, 1);
     // "trên": pha A hướng ra xa tâm Trái Đất; pha B hướng bắc (bản đồ)
     const radial = nrm(cp);
     const north = nrm([-radial[0] * radial[1], 1 - radial[1] * radial[1], -radial[2] * radial[1]]);
-    const upRef = nrm([mix(radial[0], north[0], kB), mix(radial[1], north[1], kB), mix(radial[2], north[2], kB)]);
+    const kU = kB * (1 - ease((S - 199.8) / 3.4));     // pha C: "trên" lại là hướng ra xa tâm Trái Đất (chân trời nằm ngang)
+    const upRef = nrm([mix(radial[0], north[0], kU), mix(radial[1], north[1], kU), mix(radial[2], north[2], kU)]);
     const side = nrm(cross(d, upRef));
     const up0 = nrm(cross(side, d));
     const roll = (8 - 8 * ease((S - 185) / 5)) * R;
     C.up = [up0[0] * Math.cos(roll) + side[0] * Math.sin(roll), up0[1] * Math.cos(roll) + side[1] * Math.sin(roll), up0[2] * Math.cos(roll) + side[2] * Math.sin(roll)];
-    C.fov = mix(52, 48, ease((S - 189) / 5));
+    C.fov = mix(52, 48, ease((S - 189) / 5)) - 2 * ease((S - 202) / 4);
     C.kB = kB;
     return C;
   }
   // vị trí tia sáng: pha A trên đường thẳng từ ngôi sao; pha B ở giữa máy quay và Thái Nguyên
+  const sTrue = (S) => SC(clamp(S, 200.6, 207.7))[0];
   function sparkAt(S, out) {
     const pa = Ps(sAt(S));
     const c = camAt(S), kB = c.kB;
     const k = 0.3;
     const pb = [mix(c.pos[0], TN[0], k), mix(c.pos[1], TN[1], k), mix(c.pos[2], TN[2], k)];
     out[0] = mix(pa[0], pb[0], kB); out[1] = mix(pa[1], pb[1], kB); out[2] = mix(pa[2], pb[2], kB);
+    const kC = ease((S - 200.3) / 1.8);
+    if (kC > 0) { const pt = Ps(sTrue(S)); out[0] = mix(out[0], pt[0], kC); out[1] = mix(out[1], pt[1], kC); out[2] = mix(out[2], pt[2], kC); }
     return out;
   }
+  const S_IGN = 0.03;   // chỗ bắt đầu bốc cháy (khoảng 110 km)
   // ánh sáng Mặt Trời tới máy quay: bị khí quyển lọc (đỏ dần) rồi bị hành tinh che
   const BRv = [9.5, 22, 54], BMv = 5, HR = 0.0066, HM = 0.0022, RAv = 1.05;
   function sunTrans(x, out) {
@@ -235,11 +281,13 @@
       tDem: { value: tDem }, tDemR: { value: tDemR }, tNgay: { value: tNgay },
       uSun: { value: new T.Vector3(...SUN) }, uMoon: { value: new T.Vector3(...MOON) }, uSunT: { value: new T.Vector3(1, 1, 1) },
       uSunK: { value: 1 }, uMoonK: { value: 0.035 }, uLightK: { value: 2 }, uStarK: { value: 1 }, uFine: { value: 0 }, uGlow: { value: 0 },
+      uTA: { value: new T.Vector3() }, uTB: { value: new T.Vector3() }, uTrI: { value: 0 }, uTrW: { value: 0.00018 },
+      uLPn: { value: new T.Vector3(0, 1, 0) }, uLI: { value: 0 }, uSpr: { value: 0 }, uSprS: { value: 0.3 },
     });
     const tr = [];
     SN.them({
-      ten: 'traidat', tu: 179.5, den: 204.5, lop: 50, mesh, warmS: 186,
-      a: (S) => ramp(S, 180.6, 181.75) * (1 - ramp(S, 201.2, 202.9)),
+      ten: 'traidat', tu: 179.5, den: 207.7, lop: 50, mesh, warmS: 186,
+      a: (S) => ramp(S, 180.6, 181.75),
       cap(S, a) {
         const u = mesh.material.uniforms;
         const c0 = camAt(S), c = { pos: c0.pos.slice(), tgt: c0.tgt.slice(), up: c0.up.slice(), fov: c0.fov };
@@ -257,7 +305,23 @@
         const h = SN.chieu(mesh.material, sparkAt(S, sp), [0, 0, 0]);
         tr.length = 0;
         for (let k = 0; k < 14; k++) { const q = SN.chieu(mesh.material, sparkAt(S - k * 0.05, tmp), [0, 0, 0]); tr.push(q[2] > 0 ? [q[0], q[1]] : [-9, -9]); }
-        SN.tiaDat([h[0], h[1]], tr, a * (1 - ramp(S, 200.5, 202.5)), 1.8);
+        // vào khí quyển: bốc cháy, sáng lên, kéo vệt khí xanh lục; sát mây thì loé rồi lặn vào mây (207.2), cắt sang mặt đất
+        const sT = sTrue(S), ign = S > 200.6 ? ease((S_IGN + 0.002 - sT) / 0.006) : 0;
+        const dive = 1 - ease((S - 207.05) / 0.35);
+        const iH = a * (1 + 0.55 * ign * (1 + 0.12 * Math.sin(S * 47) * Math.sin(S * 29))) * dive + 1.2 * Math.exp(-Math.pow((S - 206.95) / 0.12, 2));
+        SN.tiaDat([h[0], h[1]], tr, iH, 1.8 + 0.5 * ign, 1 - ease((S - 200.8) / 1.0));
+        if (ign > 0) {
+          const pA = Ps(Math.max(S_IGN, sT)), pB = sparkAt(S, tmp);
+          u.uTA.value.set(pA[0], pA[1], pA[2]); u.uTB.value.set(pB[0], pB[1], pB[2]);
+          u.uTrI.value = ign * 1.6 * (1 - 0.3 * ease((S - 206.6) / 1));
+          u.uTrW.value = 0.00007 + 0.00005 * ease((S - 203) / 4);
+          const g = nrm(pB);
+          u.uLPn.value.set(g[0], g[1], g[2]);
+          u.uLI.value = ign * ease((0.012 - sT) / 0.01) * 0.9 + 1.6 * Math.exp(-Math.pow((S - 206.95) / 0.2, 2));
+        } else { u.uTrI.value = 0; u.uLI.value = 0; }
+        const alt = Math.hypot(c.pos[0], c.pos[1], c.pos[2]) - 1;
+        u.uSpr.value = clamp((0.1 - alt) / 0.05, 0, 1);
+        u.uSprS.value = clamp(alt * (2 * Math.tan(c.fov * Math.PI / 360) / SN.size()[1]) / (1 / 6371 * 0.43) * 0.55, 0.1, 0.45);
         // hậu kỳ: lúc Mặt Trời còn chói thì hạ phơi sáng; khuất rồi thì mở dần cho phía đêm hiện lên
         const flash = Math.exp(-Math.abs(S - M.DROP) * 5) * 0.0;
         SN.gradeMix({ exp: mix(1.3, 0.7, sunVis), bloom: 0.95, thr: 1.5, streak: mix(0.3, 0.42, sunVis), sat: 1.08, con: 1.05, vig: 0.4, grain: 0.03, ca: 0.012, bars: 1,
