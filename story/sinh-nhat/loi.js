@@ -336,7 +336,7 @@
     SN.beforeFrame && SN.beforeFrame(S);
     setupWorlds(S);
     SN.afterSetup && SN.afterSetup(S);
-    if (SN.HQ) { if (Q.get('bars') === '0') GR.bars = 0; GR.grain *= 0.6; }
+    if (SN.HQ) { if (Q.get('bars') === '0') GR.bars = 0; GR.grain *= Q.get('vid') === '1' ? 0 : 0.6; }   // vid=1: dựng sẵn thành video, bỏ hạt nhiễu (nén nhẹ hơn nhiều)
     else if (DT) { GR.grain *= 0.6; GR.ca *= 0.6; }   // điện thoại: bớt hạt nhiễu, bớt nhoè màu ở mép cho hình trong hơn
     for (const L of SN.lows) {
       if (!L.upMesh.visible) continue;
