@@ -65,7 +65,7 @@
     return m;
   }
   const PRE = `uniform sampler2D tS; uniform vec2 uTx; uniform float uThr; uniform vec2 uSc; in vec2 vUv;
-  vec3 tap(vec2 o){ return texture(tS, vUv * uSc + o * uTx).rgb; }
+  vec3 tap(vec2 o){ return texture(tS, clamp(vUv * uSc + o * uTx, uTx * .5, uSc - uTx * .5)).rgb; }   // không đọc lấn ra ngoài vùng vừa vẽ (độ phân giải động)
   void main(){ // lọc 13 điểm (kiểu Call of Duty) + cắt ngưỡng mềm, chống nháy điểm sáng đơn lẻ
     vec3 a = tap(vec2(-2,-2)), b = tap(vec2(0,-2)), c = tap(vec2(2,-2)), d = tap(vec2(-1,-1)), e = tap(vec2(1,-1)), f = tap(vec2(-2,0)), g = tap(vec2(0,0));
     vec3 h = tap(vec2(2,0)), i = tap(vec2(-1,1)), j = tap(vec2(1,1)), k = tap(vec2(-2,2)), l = tap(vec2(0,2)), m = tap(vec2(2,2));
@@ -100,23 +100,25 @@
   uniform vec3 uLift, uGain, uStreakC; uniform vec2 uZC; uniform vec2 uResF; uniform vec2 uSc; uniform vec2 uTxS; uniform float uSharp; in vec2 vUv;
   float hh(vec2 p){ vec3 q = fract(vec3(p.xyx) * .1031); q += dot(q, q.yzx + 33.33); return fract((q.x + q.y) * q.z); }
   vec3 aces(vec3 x){ return clamp(x * (2.51 * x + .03) / (x * (2.43 * x + .59) + .14), 0., 1.); }
+  // vùng ảnh hợp lệ: khung chỉ vẽ vào góc (độ phân giải động); đọc lấn ra ngoài sẽ dính màu của khung cũ thành vệt ở mép phải, mép trên
+  vec2 cl(vec2 p){ return clamp(p, uTxS * .5, uSc - uTxS * .5); }
   vec3 scn(vec2 uv){
-    vec2 su = uv * uSc;
+    vec2 su = cl(uv * uSc);
     vec3 c = texture(tScene, su).rgb;
     // làm nét viền: so với 4 điểm ảnh kề, đẩy chênh lệch lên nhưng kẹp trong khoảng của chúng (không sinh viền sáng giả)
     if (uSharp > .001) {
-      vec3 n = texture(tScene, su + vec2(0., uTxS.y)).rgb, s = texture(tScene, su - vec2(0., uTxS.y)).rgb;
-      vec3 e = texture(tScene, su + vec2(uTxS.x, 0.)).rgb, w = texture(tScene, su - vec2(uTxS.x, 0.)).rgb;
+      vec3 n = texture(tScene, cl(su + vec2(0., uTxS.y))).rgb, s = texture(tScene, cl(su - vec2(0., uTxS.y))).rgb;
+      vec3 e = texture(tScene, cl(su + vec2(uTxS.x, 0.))).rgb, w = texture(tScene, cl(su - vec2(uTxS.x, 0.))).rgb;
       vec3 mn = min(c, min(min(n, s), min(e, w))), mx = max(c, max(max(n, s), max(e, w)));
       c = clamp(c + (4. * c - n - s - e - w) * uSharp, mn, mx);
     }
     // lệch màu ở mép (ống kính), nhoè hướng tâm khi lao nhanh
     vec2 dc = uv - .5; float r2 = dot(dc, dc);
     vec2 o = dc * r2 * uCA;
-    if (uCA > 1e-4) { vec3 c0 = texture(tScene, su).rgb; c.r += texture(tScene, (uv - o) * uSc).r - c0.r; c.b += texture(tScene, (uv + o) * uSc).b - c0.b; }
+    if (uCA > 1e-4) { vec3 c0 = texture(tScene, su).rgb; c.r += texture(tScene, cl((uv - o) * uSc)).r - c0.r; c.b += texture(tScene, cl((uv + o) * uSc)).b - c0.b; }
     if (uZoomBlur > .001) {
       vec2 dz = (uv - uZC) * uZoomBlur * .06; vec3 acc = c;
-      for (int i = 1; i < 9; i++) { float fi = float(i); acc += texture(tScene, (uv - dz * fi) * uSc).rgb * (1. - fi / 10.); }
+      for (int i = 1; i < 9; i++) { float fi = float(i); acc += texture(tScene, cl((uv - dz * fi) * uSc)).rgb * (1. - fi / 10.); }
       c = acc / 5.4;
     }
     return max(c, 0.);
@@ -153,14 +155,16 @@
   float linz(float d){ float z = d * 2. - 1.; return 2. * uDof.z * uDof.w / (uDof.w + uDof.z - z * (uDof.w - uDof.z)); }
   float coc(float d){ return clamp(uDof.y * (1. - uDof.x / linz(d)), -uMaxR, uMaxR); }`;
   const DOF_PRE = DOF_HAM + `
-  uniform sampler2D tS; uniform sampler2D tD; uniform vec2 uTxF;
+  uniform sampler2D tS; uniform sampler2D tD; uniform vec2 uTxF, uVpF;
+  vec2 clF(vec2 p){ return min(p, (uVpF - .5) * uTxF); }
   void main(){
-    vec2 uv = gl_FragCoord.xy * 2. * uTxF;
+    vec2 uv = clF(gl_FragCoord.xy * 2. * uTxF);
     vec3 c = texture(tS, uv).rgb;   // một lần lọc tuyến tính ở góc giữa 4 điểm ảnh = trung bình 2×2
-    float d = min(min(texture(tD, uv + vec2(-.5, -.5) * uTxF).r, texture(tD, uv + vec2(.5, -.5) * uTxF).r), min(texture(tD, uv + vec2(-.5, .5) * uTxF).r, texture(tD, uv + vec2(.5, .5) * uTxF).r));
+    float d = min(min(texture(tD, clF(uv + vec2(-.5, -.5) * uTxF)).r, texture(tD, clF(uv + vec2(.5, -.5) * uTxF)).r), min(texture(tD, clF(uv + vec2(-.5, .5) * uTxF)).r, texture(tD, clF(uv + vec2(.5, .5) * uTxF)).r));
     gl_FragColor = vec4(min(c, vec3(40.)), coc(d));
   }`;
-  const DOF_BLUR = `uniform sampler2D tA; uniform vec2 uTxH; uniform float uMaxR, uBuoc;
+  const DOF_BLUR = `uniform sampler2D tA; uniform vec2 uTxH, uVpH; uniform float uMaxR, uBuoc;
+  vec2 clH(vec2 p){ return clamp(p, uTxH * .5, (uVpH - .5) * uTxH); }
   void main(){
     vec2 uv = gl_FragCoord.xy * uTxH;
     vec4 c0 = texture(tA, uv);
@@ -170,7 +174,7 @@
     for (int i = 0; i < 96; i++) {
       if (rad > uMaxR) break;
       float ang = float(i) * 2.39996323;
-      vec4 sm = texture(tA, uv + vec2(cos(ang), sin(ang)) * rad * uTxH);
+      vec4 sm = texture(tA, clH(uv + vec2(cos(ang), sin(ang)) * rad * uTxH));
       float ss = abs(sm.a);
       if (sm.a > c0.a) ss = clamp(ss, 0., cs * 2.);
       float m = smoothstep(rad - .5, rad + .5, ss);
@@ -181,7 +185,7 @@
     gl_FragColor = vec4(col / tot, c0.a);
   }`;
   const DOF_GHEP = DOF_HAM + `
-  uniform sampler2D tS; uniform sampler2D tD; uniform sampler2D tB; uniform vec2 uTxF, uTxH, uVp;
+  uniform sampler2D tS; uniform sampler2D tD; uniform sampler2D tB; uniform vec2 uTxF, uTxH, uVp, uVpF;
   uniform mat4 uInvPV; uniform vec3 uCamP; uniform vec4 uLP[20]; uniform vec4 uLC[20]; uniform vec4 uMist; uniform float uDofOn;
   void main(){
     vec2 uv = gl_FragCoord.xy * uTxF;
@@ -189,7 +193,7 @@
     float d = texture(tD, uv).r;
     if (uDofOn > .5) {
       float c = coc(d) * 2.;
-      vec4 b = texture(tB, gl_FragCoord.xy * .5 * uTxH);
+      vec4 b = texture(tB, min(gl_FragCoord.xy * .5 * uTxH, (uVpF * .5 - .5) * uTxH));
       float k = max(smoothstep(.7, 2.4, abs(c)), smoothstep(.7, 2.4, -b.a * 2.));
       col = mix(col, b.rgb, k);
     }
@@ -216,9 +220,9 @@
     { const dt = new T.DepthTexture(1, 1); dt.type = T.UnsignedIntType; dt.format = T.DepthFormat; dt.minFilter = dt.magFilter = T.NearestFilter; P.scene.depthTexture = dt; }
     P.dA = rt(1, 1); P.dB = rt(1, 1); P.comp = rt(1, 1);
     const v4 = () => { const a = []; for (let i = 0; i < 20; i++) a.push(new T.Vector4(0, 0, 0, 0)); return a; };
-    P.mDofPre = passMat(DOF_PRE, { tS: { value: null }, tD: { value: null }, uTxF: { value: new T.Vector2() }, uDof: { value: new T.Vector4(100, 0, 0.1, 9000) }, uMaxR: { value: 8 } });
-    P.mDofBlur = passMat(DOF_BLUR, { tA: { value: null }, uTxH: { value: new T.Vector2() }, uMaxR: { value: 8 }, uBuoc: { value: 1 } });
-    P.mDofGhep = passMat(DOF_GHEP, { tS: { value: null }, tD: { value: null }, tB: { value: null }, uTxF: { value: new T.Vector2() }, uTxH: { value: new T.Vector2() }, uVp: { value: new T.Vector2(1, 1) },
+    P.mDofPre = passMat(DOF_PRE, { tS: { value: null }, tD: { value: null }, uTxF: { value: new T.Vector2() }, uVpF: { value: new T.Vector2(1, 1) }, uDof: { value: new T.Vector4(100, 0, 0.1, 9000) }, uMaxR: { value: 8 } });
+    P.mDofBlur = passMat(DOF_BLUR, { tA: { value: null }, uTxH: { value: new T.Vector2() }, uVpH: { value: new T.Vector2(1, 1) }, uMaxR: { value: 8 }, uBuoc: { value: 1 } });
+    P.mDofGhep = passMat(DOF_GHEP, { tS: { value: null }, tD: { value: null }, tB: { value: null }, uTxF: { value: new T.Vector2() }, uTxH: { value: new T.Vector2() }, uVp: { value: new T.Vector2(1, 1) }, uVpF: { value: new T.Vector2(1, 1) },
       uDof: { value: new T.Vector4(100, 0, 0.1, 9000) }, uMaxR: { value: 8 }, uDofOn: { value: 1 }, uInvPV: { value: new T.Matrix4() }, uCamP: { value: new T.Vector3() },
       uLP: { value: v4() }, uLC: { value: v4() }, uMist: { value: new T.Vector4(0.003, 0, 6, 2) } });
     P.down = []; P.mats = {};
@@ -296,7 +300,8 @@
     L.sc.add(mesh);
     const up = new T.ShaderMaterial({ uniforms: { tL: { value: L.rt.texture }, uA: { value: 1 }, uTx: { value: new T.Vector2() } }, vertexShader: SN_GLSL.QUAD_V,
       fragmentShader: `uniform sampler2D tL; uniform float uA; uniform vec2 uTx; uniform vec2 uSc; in vec2 vUv;
-      void main(){ vec2 q = vUv * uSc; vec4 c = texture(tL, q) * .5 + (texture(tL, q + vec2(uTx.x, 0.)) + texture(tL, q - vec2(uTx.x, 0.)) + texture(tL, q + vec2(0., uTx.y)) + texture(tL, q - vec2(0., uTx.y))) * .125;
+      vec2 cl(vec2 p){ return clamp(p, uTx * .5, uSc - uTx * .5); }
+      void main(){ vec2 q = cl(vUv * uSc); vec4 c = texture(tL, q) * .5 + (texture(tL, cl(q + vec2(uTx.x, 0.))) + texture(tL, cl(q - vec2(uTx.x, 0.))) + texture(tL, cl(q + vec2(0., uTx.y))) + texture(tL, cl(q - vec2(0., uTx.y)))) * .125;
         gl_FragColor = c * uA; }`, depthTest: false, depthWrite: false, transparent: true });
     up.uniforms.uSc = { value: new T.Vector2(1, 1) };
     up.blending = T.CustomBlending; up.blendSrc = T.OneFactor; up.blendDst = T.OneMinusSrcAlphaFactor;
@@ -460,17 +465,17 @@
     cam3.updateMatrixWorld();
     if (on) {
       const a = P.mDofPre.uniforms;
-      a.tS.value = P.scene.texture; a.tD.value = P.scene.depthTexture; a.uTxF.value.set(1 / W, 1 / H); a.uDof.value.set(D.f, D.k, cam3.near, cam3.far); a.uMaxR.value = maxR;
+      a.tS.value = P.scene.texture; a.tD.value = P.scene.depthTexture; a.uTxF.value.set(1 / W, 1 / H); a.uVpF.value.set(Ws, Hs); a.uDof.value.set(D.f, D.k, cam3.near, cam3.far); a.uMaxR.value = maxR;
       P.dA.viewport.set(0, 0, wh, hh); P.dA.scissor.set(0, 0, wh, hh); P.dA.scissorTest = true;
       blit(P.mDofPre, P.dA);
       const b = P.mDofBlur.uniforms;
-      b.tA.value = P.dA.texture; b.uTxH.value.set(1 / P.dA.width, 1 / P.dA.height); b.uMaxR.value = maxR; b.uBuoc.value = DT ? 1.25 : 0.85;
+      b.tA.value = P.dA.texture; b.uTxH.value.set(1 / P.dA.width, 1 / P.dA.height); b.uVpH.value.set(wh, hh); b.uMaxR.value = maxR; b.uBuoc.value = DT ? 1.25 : 0.85;
       P.dB.viewport.set(0, 0, wh, hh); P.dB.scissor.set(0, 0, wh, hh); P.dB.scissorTest = true;
       blit(P.mDofBlur, P.dB);
     }
     const g = P.mDofGhep.uniforms;
     g.tS.value = P.scene.texture; g.tD.value = P.scene.depthTexture; g.tB.value = P.dB.texture;
-    g.uTxF.value.set(1 / W, 1 / H); g.uTxH.value.set(1 / P.dB.width, 1 / P.dB.height); g.uVp.value.set(Ws, Hs);
+    g.uTxF.value.set(1 / W, 1 / H); g.uTxH.value.set(1 / P.dB.width, 1 / P.dB.height); g.uVp.value.set(Ws, Hs); g.uVpF.value.set(Ws, Hs);
     g.uDof.value.set(D.f, D.k, cam3.near, cam3.far); g.uMaxR.value = maxR; g.uDofOn.value = on;
     if (!_ipv) _ipv = new T.Matrix4();
     _ipv.multiplyMatrices(cam3.projectionMatrix, cam3.matrixWorldInverse).invert(); g.uInvPV.value.copy(_ipv);
@@ -522,6 +527,7 @@
     m.dr = dr;
   }
   SN.tiLe = () => dr;
+  if (NHA) SN._datTiLe = (v) => { dr = v; };   // chỉ mạng nhà: thử lỗi mép khi độ phân giải động thay đổi
   // vẽ thử mọi cảnh một lần khi còn che màn hình: trình duyệt biên dịch shader xong trước khi phát, khỏi giật
   function warm(done) {
     const L = SN.worlds.map((w) => w.warmS != null ? w.warmS : (w.tu + w.den) / 2);
