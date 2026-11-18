@@ -91,7 +91,7 @@
   vec3 norPh(vec3 p){ vec2 e = vec2(.0008, 0.); return normalize(vec3(sdPhong(p + e.xyy) - sdPhong(p - e.xyy), sdPhong(p + e.yxy) - sdPhong(p - e.yxy), sdPhong(p + e.yyx) - sdPhong(p - e.yyx))); }
   // bóng mềm; kẹp là nhựa mờ nên chỉ chắn bớt (để lọt khoảng 4 phần 10)
   float bong(vec3 ro, vec3 rd, float tmax){
-    float rR = 1., rK = 1., t = .0015 + .003 * h12(gl_FragCoord.xy);
+    float rR = 1., rK = 1., t = .0015 + .003 * h12(gl_FragCoord.xy + uSeed);
     for (int i = 0; i < 30; i++) {
       vec3 p = ro + rd * t;
       float a = sdPhong(p), b = dKep(p);

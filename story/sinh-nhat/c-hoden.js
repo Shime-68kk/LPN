@@ -17,8 +17,9 @@
   uniform float uHalo;       // quầng khí mỏng quanh đĩa
   const float RIN = 3.0, ROUT = 14.0;
 
-  vec3 nen(vec3 d){
-    vec3 c = bauTroiSao(d, uPxA) * 1.1;
+  // k: sao điểm bị thấu kính kéo dài thành cung mảnh (sao nằm ngay sau hố đen) thì mờ đi theo độ kéo, khỏi loé vệt xanh tím
+  vec3 nen(vec3 d, float k){
+    vec3 c = bauTroiSao(d, uPxA) * 1.1 * k;
     c += nganHa(d, uMW, uPxA) * .32;
     // tinh vân phía sau: mảng màu vàng – lam mờ
     float a = max(dot(d, uNeb), 0.);
@@ -26,7 +27,7 @@
     c += mix(vec3(.32, .5, .62), vec3(.95, .7, .45), sat(fbm3(d * 5.3) * 1.5 + .5)) * blob * .3;
     // vài thiên hà rất xa: đốm bầu dục mờ
     vec3 g = d * 9.; vec3 gc = floor(g); vec4 hh = h43(gc + 91.);
-    if (hh.w < .07) { vec3 gp = normalize((gc + .5) / 9.); float r = length(d - gp); c += vec3(.9, .85, 1.) * exp(-r * r / (uPxA * uPxA * 9.)) * .5; }
+    if (hh.w < .07) { vec3 gp = normalize((gc + .5) / 9.); float r = length(d - gp); c += vec3(.9, .85, 1.) * exp(-r * r / (uPxA * uPxA * 9.)) * .5 * k; }
     return c;
   }
 
@@ -73,7 +74,7 @@
     vec3 p = uCP, v = rd;
     vec3 hv = cross(p, v); float h2 = dot(hv, hv);
     vec3 col = vec3(0.); float tr = 1.; float hitH = 0.; float minR = 1e9; float nc = 0.;
-    float jit = h12(gl_FragCoord.xy) * .5 + .5;
+    float jit = h12(gl_FragCoord.xy + uSeed) * .5 + .5;
     for (int i = 0; i < 260; i++) {
       if (float(i) >= uNB) break;
       float r2 = dot(p, p); float r = sqrt(r2);
@@ -103,7 +104,9 @@
       }
       p = pn2; v = vn;
     }
-    vec3 bg = nen(normalize(v));
+    vec3 vd = normalize(v);
+    float keo = length(cross(dFdx(vd), dFdy(vd))) / max(uPxA * uPxA, 1e-12);   // tỉ lệ diện tích bầu trời / điểm ảnh: <1 là bị thấu kính phóng to kéo dài
+    vec3 bg = nen(vd, sat(keo));
     col += tr * (1. - hitH) * bg;
     gl_FragColor = vec4(col * uA, uA);
   }`;

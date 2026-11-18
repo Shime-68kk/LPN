@@ -83,6 +83,8 @@
   uniform float uS;          // giây trong bài nhạc
   uniform vec2 uRes;         // số điểm ảnh khung vẽ
   uniform float uPxA;        // góc nhìn của một điểm ảnh (radian)
+  uniform float uSeed;       // dựng video: đổi hạt ngẫu nhiên mỗi lần vẽ lại cùng một khung (bình thường = 0)
+  uniform vec2 uJit;         // dựng video: lệch dưới một điểm ảnh mỗi lần vẽ lại (khử răng cưa)
   #define PI 3.14159265
   #define TAU 6.2831853
   float h11(float p){ p = fract(p * .1031); p *= p + 33.33; p *= p + p; return fract(p); }
@@ -160,7 +162,7 @@
   const TIA = `
   uniform vec3 uCP; uniform mat3 uCR; uniform float uTF; uniform float uAsp; uniform float uA;
   in vec2 vUv;
-  vec3 tiaNhin(vec2 uv){ vec2 n = uv * 2. - 1.; return normalize(uCR * vec3(n.x * uTF * uAsp, n.y * uTF, -1.)); }
+  vec3 tiaNhin(vec2 uv){ vec2 n = (uv + uJit) * 2. - 1.; return normalize(uCR * vec3(n.x * uTF * uAsp, n.y * uTF, -1.)); }
   `;
   window.SN_GLSL = { CHUNG, QUAD_V, TIA, noiseTexture };
 })();

@@ -252,10 +252,17 @@
         };
         let h;
         if (S < 165) {
+          // từ 156.3 máy quay bổ nhào xuống vành, điểm "phía trước trên đường bay" văng khỏi khung: tia trượt dần về giữa khung,
+          // bay ngay trước mặt suốt đoạn lướt (đuôi thu dần vào đầu tia), khỏi vọt ra mép rồi bật lại
+          const wg = ease((S - 156.3) / 1.6);
           const p0 = SN.chieu(mesh.material, spark(S, sp), [0, 0, 0]);
-          h = p0[2] > 0 ? [p0[0], p0[1]] : [0.5, 0.47];
+          const a0 = p0[2] > 0 ? [p0[0], p0[1]] : [0.5, 0.47];
+          h = [mix(a0[0], 0.5, wg), mix(a0[1], 0.47, wg)];
           tr.length = 0;
-          for (let k = 0; k < 14; k++) { const q = SN.chieu(mesh.material, spark(S - k * 0.05, [0, 0, 0]), [0, 0, 0]); tr.push(q[2] > 0 ? [q[0], q[1]] : [-9, -9]); }
+          for (let k = 0; k < 14; k++) {
+            const q = SN.chieu(mesh.material, spark(S - k * 0.05, [0, 0, 0]), [0, 0, 0]);
+            tr.push(q[2] > 0 && wg < 0.999 ? [mix(q[0], h[0], wg), mix(q[1], h[1], wg)] : (wg >= 0.999 ? [h[0], h[1]] : [-9, -9]));
+          }
           camAt(S);   // trả lại máy quay hiện tại cho các lệnh sau
         } else {
           const ed = u.uEarth.value;
@@ -263,7 +270,10 @@
           const k5 = ease((S - 165) / 6);
           h = [mix(0.5, pe[0], k5), mix(0.47, pe[1], k5)]; tr.length = 0;
         }
-        if (S > 146.6) SN.tiaDat(h, tr, a * (S < 176 ? 1 : 1 - ease((S - 179) / 2)), 2.1, lech);
+        if (S > 146.6) {   // trọng số tăng dần từ 0: tia trượt mượt từ chỗ của cảnh hố đen sang
+          const iT = a * (S < 176 ? 1 : 1 - ease((S - 179) / 2));
+          SN.tiaDat(h, tr, iT, 2.1, lech, iT * ease((S - 146.6) / 1.2));
+        }
         // hậu kỳ: vút đi giữa vũ trụ có nhoè hướng tâm nhẹ; cuối đoạn lao về chấm xanh
         const vut = Math.exp(-Math.max(0, S - 146) / 2.2) * 0.26 * ramp(S, 145, 146.5);
         const zb = Math.pow(ease((S - 176.5) / 4.5), 2);

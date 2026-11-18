@@ -31,7 +31,7 @@
   void main(){
     vec3 ro = uCP, rd = tiaNhin(vUv);
     vec3 col = vec3(0.); float Tr = 1.;
-    float t = 2. + 4. * h12(gl_FragCoord.xy);
+    float t = 2. + 4. * h12(gl_FragCoord.xy + uSeed);
     for (int i = 0; i < 64; i++) {
       if (float(i) >= uNS || Tr < .03 || t > 700.) break;
       vec3 p = ro + rd * t;
@@ -39,7 +39,7 @@
       float pill;
       float den = matDo(p, pill, 0.);
       float ds = clamp(bound * .7, 4., 34.) + t * .016;
-      ds *= .75 + .5 * h12(gl_FragCoord.xy + float(i) * 7.13);     // xáo bước, khỏi sọc
+      ds *= .75 + .5 * h12(gl_FragCoord.xy + float(i) * 7.13 + uSeed);     // xáo bước, khỏi sọc
       if (den > .004) {
         float lit = 0.;
         if (pill > .03) { float pill2; float den2 = matDo(p + LDIR * 6., pill2, 1.); lit = sat((pill - den2) * 3.2); }   // mặt hướng về cụm sao: một lớp viền mỏng

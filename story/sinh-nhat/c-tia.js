@@ -34,8 +34,31 @@
     gl_FragColor = vec4(col * uI, 0.);
   }`;
   const D = { h: [0.5, 0.5], tr: [], i: 0, w: 2.2, k: 1 };
-  // cảnh gọi mỗi khung: đầu tia (0..1), mảng các điểm đuôi [[x,y],...] (cũ dần), độ sáng
-  SN.tiaDat = (h, tr, i, w, k) => { D.h[0] = h[0]; D.h[1] = h[1]; D.tr = tr; D.i = Math.max(D.i, i); D.w = w || 2.2; D.k = k == null ? 1 : k; };
+  // cảnh gọi mỗi khung: đầu tia (0..1), mảng các điểm đuôi [[x,y],...] (cũ dần), độ sáng, độ dày, độ đậm đuôi, trọng số.
+  // Lúc chuyển cảnh hai cảnh cùng gọi: vị trí lấy trung bình theo trọng số (mặc định = độ sáng, tăng dần từ 0) nên tia trượt mượt
+  // từ chỗ của cảnh cũ sang chỗ của cảnh mới, không nhảy.
+  const A = { n: 0, h: [0, 0], w: 0, k: 0, tx: [], ty: [], tw: [] };
+  SN._tia = D;   // để đo (chỉ đọc)
+  SN.tiaDat = (h, tr, i, w, k, wt) => {
+    D.i = Math.max(D.i, i);
+    wt = wt == null ? i : wt;
+    if (!(wt > 1e-5)) return;
+    A.n += wt; A.h[0] += h[0] * wt; A.h[1] += h[1] * wt; A.w += (w || 2.2) * wt; A.k += (k == null ? 1 : k) * wt;
+    for (let j = 0; j < tr.length; j++) {
+      const p = tr[j];
+      if (A.tx.length <= j) { A.tx.push(0); A.ty.push(0); A.tw.push(0); }
+      if (!p || p[0] < -5) continue;
+      A.tx[j] += p[0] * wt; A.ty[j] += p[1] * wt; A.tw[j] += wt;
+    }
+  };
+  function gop() {
+    if (A.n > 0) {
+      D.h[0] = A.h[0] / A.n; D.h[1] = A.h[1] / A.n; D.w = A.w / A.n; D.k = A.k / A.n;
+      D.tr = [];
+      for (let j = 0; j < A.tx.length; j++) D.tr.push(A.tw[j] > 0 ? [A.tx[j] / A.tw[j], A.ty[j] / A.tw[j]] : [-9, -9]);
+    }
+    A.n = 0; A.h[0] = A.h[1] = 0; A.w = A.k = 0; A.tx.length = A.ty.length = A.tw.length = 0;
+  }
   SN.dung.push((T) => {
     const trV = []; for (let i = 0; i < NT; i++) trV.push(new T.Vector2(-9999, -9999));
     const mesh = SN.quad(FRAG, { uH: { value: new T.Vector2(0.5, 0.5) }, uTr: { value: trV }, uTrN: { value: 0 }, uI: { value: 0 }, uW: { value: 2 }, uTrK: { value: 1 } });
@@ -43,6 +66,7 @@
     SN.them({
       ten: 'tia', tu: 17, den: 212.5, lop: 90, mesh, warmS: 60,
       cap() {
+        gop();
         const u = mesh.material.uniforms;
         u.uH.value.set(D.h[0], D.h[1]);
         const n = Math.min(NT, D.tr.length);

@@ -50,6 +50,8 @@
   const DO = Q.get('do') === '1' && NHA;
   // ?hq=1 (chỉ mạng nhà): chụp ảnh tĩnh chất lượng cao nhất — đủ độ phân giải màn hình, cảnh nặng vẽ đủ nét; &bars=0 bỏ dải đen
   SN.HQ = NHA && Q.get('hq') === '1';
+  // &mau=K (chỉ khi ?hq=1, dùng để dựng video): mỗi khung vẽ K lần, mỗi lần lệch dưới một điểm ảnh và đổi hạt ngẫu nhiên, cộng dồn rồi chia K — sạch hạt lấm tấm, hết răng cưa
+  const MAU = SN.HQ ? Math.max(1, Math.min(64, (+Q.get('mau') || 1) | 0)) : 1;
 
   // ================= HẬU KỲ =================
   const P = {};
@@ -151,6 +153,7 @@
     P.mPre = passMat(PRE, { tS: { value: null }, uTx: { value: new T.Vector2() }, uThr: { value: 1.0 }, uSc: { value: new T.Vector2(1, 1) } });
     P.mDown = passMat(DOWN, { tS: { value: null }, uTx: { value: new T.Vector2() } });
     P.mUp = passMat(UP, { tS: { value: null }, uTx: { value: new T.Vector2() }, uK: { value: 1 } }, 'add');
+    P.mAcc = passMat(`uniform sampler2D tS; uniform float uK; in vec2 vUv; void main(){ gl_FragColor = vec4(texture(tS, vUv).rgb * uK, uK); }`, { tS: { value: null }, uK: { value: 1 } }, 'add');
     P.mStreak = passMat(STREAK, { tS: { value: null }, uTx: { value: new T.Vector2() }, uStep: { value: 1 } });
     P.fin = passMat(FINAL, {
       tScene: { value: null }, tBloom: { value: null }, tStreak: { value: null },
@@ -165,7 +168,7 @@
     P.oc = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1);
   }
   function sizePost() {
-    P.scene.setSize(W, H);
+    P.scene.setSize(W, H); if (P.acc) P.acc.setSize(W, H);
     let w = W >> (DT ? 2 : 1), h = H >> (DT ? 2 : 1);   // điện thoại: ánh sáng lan bắt đầu ở 1/4 (vốn mềm, nhìn không khác) cho nhẹ
     for (let i = 0; i < 6; i++) { P.down[i].setSize(Math.max(1, w), Math.max(1, h)); w >>= 1; h >>= 1; }
     P.s0.setSize(Math.max(1, W >> 2), Math.max(1, H >> 3)); P.s1.setSize(Math.max(1, W >> 2), Math.max(1, H >> 3));
@@ -174,10 +177,11 @@
   function blit(mat, target) { P.quad.material = mat; renderer.setRenderTarget(target); renderer.render(P.qs, P.oc); }
   SN.post = { grade: null }; // cảnh đặt: SN.post.set({...})
   const GR = { exp: 1, bloom: 0.9, thr: 1.0, streak: 0.45, sat: 1, con: 1, vig: 0.35, grain: 0.03, ca: 0.012, bars: 1, fade: 1, white: 0, warm: 0, zoom: 0, zc: [0.5, 0.5], lift: [0.012, 0.014, 0.022], gain: [1, 1, 1], sc: [0.45, 0.62, 1.0] };
-  function postRender() {
+  function postRender(nguon) {
+    nguon = nguon || P.scene;
     const u = P.fin.uniforms, g = GR;
     // ánh sáng lan: lọc + thu nhỏ 6 tầng rồi phóng ngược cộng dồn
-    P.mPre.uniforms.tS.value = P.scene.texture; P.mPre.uniforms.uTx.value.set(1 / W, 1 / H); P.mPre.uniforms.uThr.value = g.thr; P.mPre.uniforms.uSc.value.set(Ws / W, Hs / H);
+    P.mPre.uniforms.tS.value = nguon.texture; P.mPre.uniforms.uTx.value.set(1 / W, 1 / H); P.mPre.uniforms.uThr.value = g.thr; P.mPre.uniforms.uSc.value.set(Ws / W, Hs / H);
     blit(P.mPre, P.down[0]);
     for (let i = 1; i < 6; i++) { const s = P.down[i - 1]; P.mDown.uniforms.tS.value = s.texture; P.mDown.uniforms.uTx.value.set(1 / s.width, 1 / s.height); blit(P.mDown, P.down[i]); }
     for (let i = 5; i > 0; i--) { const s = P.down[i]; P.mUp.uniforms.tS.value = s.texture; P.mUp.uniforms.uTx.value.set(1 / s.width, 1 / s.height); P.mUp.uniforms.uK.value = 1; blit(P.mUp, P.down[i - 1]); }
@@ -186,7 +190,7 @@
     P.mStreak.uniforms.tS.value = src.texture; P.mStreak.uniforms.uTx.value.set(1 / P.s0.width, 1 / P.s0.height); P.mStreak.uniforms.uStep.value = 1.5; blit(P.mStreak, P.s0);
     P.mStreak.uniforms.tS.value = P.s0.texture; P.mStreak.uniforms.uStep.value = 5; blit(P.mStreak, P.s1);
     P.mStreak.uniforms.tS.value = P.s1.texture; P.mStreak.uniforms.uStep.value = 15; blit(P.mStreak, P.s0);
-    u.tScene.value = P.scene.texture; u.tBloom.value = P.down[0].texture; u.tStreak.value = P.s0.texture;
+    u.tScene.value = nguon.texture; u.tBloom.value = P.down[0].texture; u.tStreak.value = P.s0.texture;
     u.uExp.value = g.exp; u.uBloom.value = g.bloom; u.uStreakK.value = g.streak; u.uSat.value = g.sat; u.uCon.value = g.con; u.uVig.value = g.vig; u.uGrain.value = g.grain;
     u.uCA.value = g.ca; u.uBars.value = g.bars; u.uFade.value = g.fade; u.uWhite.value = g.white; u.uWarm.value = g.warm; u.uZoomBlur.value = g.zoom;
     u.uZC.value.set(g.zc[0], g.zc[1]); u.uLift.value.set(g.lift[0], g.lift[1], g.lift[2]); u.uGain.value.set(g.gain[0], g.gain[1], g.gain[2]); u.uStreakC.value.set(g.sc[0], g.sc[1], g.sc[2]);
@@ -338,18 +342,34 @@
     SN.afterSetup && SN.afterSetup(S);
     if (SN.HQ) { if (Q.get('bars') === '0') GR.bars = 0; GR.grain *= Q.get('vid') === '1' ? 0 : 0.6; }   // vid=1: dựng sẵn thành video, bỏ hạt nhiễu (nén nhẹ hơn nhiều)
     else if (DT) { GR.grain *= 0.6; GR.ca *= 0.6; }   // điện thoại: bớt hạt nhiễu, bớt nhoè màu ở mép cho hình trong hơn
-    for (const L of SN.lows) {
-      if (!L.upMesh.visible) continue;
-      const lw = Math.max(1, Math.round(L.rt.width * d)), lh = Math.max(1, Math.round(L.rt.height * d));
-      L.rt.viewport.set(0, 0, lw, lh); L.rt.scissor.set(0, 0, lw, lh); L.rt.scissorTest = true;
-      L.upMesh.material.uniforms.uSc.value.set(lw / L.rt.width, lh / L.rt.height);
-      renderer.setRenderTarget(L.rt); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(L.sc, P.oc);
+    const K = MAU;
+    if (K > 1) {
+      if (!P.acc) P.acc = rt(W, H);
+      renderer.setRenderTarget(P.acc); renderer.setClearColor(0x000000, 0); renderer.clear();
     }
-    P.scene.viewport.set(0, 0, Ws, Hs); P.scene.scissor.set(0, 0, Ws, Hs); P.scene.scissorTest = true;
-    renderer.setRenderTarget(P.scene); renderer.setClearColor(0x000000, 1); renderer.clear();
-    renderer.render(scene, cam3);
-    postRender();
+    for (let k = 0; k < K; k++) {
+      if (K > 1) {   // dãy Halton: các điểm lệch rải đều trong một điểm ảnh
+        const jx = halton(k + 1, 2) - 0.5, jy = halton(k + 1, 3) - 0.5;
+        SN.uChung.uSeed.value = k * 17.31;
+        SN.uChung.uJit.value.set(jx / Ws, jy / Hs);
+        cam3.setViewOffset(Ws, Hs, jx, -jy, Ws, Hs);
+      }
+      for (const L of SN.lows) {
+        if (!L.upMesh.visible) continue;
+        const lw = Math.max(1, Math.round(L.rt.width * d)), lh = Math.max(1, Math.round(L.rt.height * d));
+        L.rt.viewport.set(0, 0, lw, lh); L.rt.scissor.set(0, 0, lw, lh); L.rt.scissorTest = true;
+        L.upMesh.material.uniforms.uSc.value.set(lw / L.rt.width, lh / L.rt.height);
+        renderer.setRenderTarget(L.rt); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(L.sc, P.oc);
+      }
+      P.scene.viewport.set(0, 0, Ws, Hs); P.scene.scissor.set(0, 0, Ws, Hs); P.scene.scissorTest = true;
+      renderer.setRenderTarget(P.scene); renderer.setClearColor(0x000000, 1); renderer.clear();
+      renderer.render(scene, cam3);
+      if (K > 1) { P.mAcc.uniforms.tS.value = P.scene.texture; P.mAcc.uniforms.uK.value = 1 / K; blit(P.mAcc, P.acc); }
+    }
+    if (K > 1) { cam3.clearViewOffset(); SN.uChung.uSeed.value = 0; SN.uChung.uJit.value.set(0, 0); }
+    postRender(K > 1 ? P.acc : P.scene);
   }
+  function halton(i, b) { let f = 1, r = 0; while (i > 0) { f /= b; r += f * (i % b); i = Math.floor(i / b); } return r; }
   SN.renderAt = renderAt;
   function loop() {
     requestAnimationFrame(loop);
@@ -408,7 +428,7 @@
     cam3 = new T.PerspectiveCamera(50, 1, 0.05, 2e6);
     quadGeo = new T.PlaneGeometry(2, 2);
     noise3 = SN_GLSL.noiseTexture(T);
-    SN.uChung = { uN3: { value: noise3 }, uS: { value: 0 }, uRes: { value: new T.Vector2(1, 1) }, uPxA: { value: 0.001 } };
+    SN.uChung = { uN3: { value: noise3 }, uS: { value: 0 }, uRes: { value: new T.Vector2(1, 1) }, uPxA: { value: 0.001 }, uSeed: { value: 0 }, uJit: { value: new T.Vector2() } };
     if (pinQ) quality = clamp(pinQ, 0.35, 1); else if (DT) dr = 0.85;
     buildPost();
     resize();

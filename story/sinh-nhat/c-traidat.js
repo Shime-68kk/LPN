@@ -75,7 +75,7 @@
     if (t1 <= t0) return vec3(0.);
     const int N = 14; float ds = (t1 - t0) / float(N);
     vec3 sR = vec3(0.), sM = vec3(0.), sMo = vec3(0.); vec2 odV = vec2(0.);
-    float jit = h12(gl_FragCoord.xy);
+    float jit = h12(gl_FragCoord.xy + uSeed);
     for (int i = 0; i < N; i++) {
       vec3 x = ro + rd * (t0 + ds * (float(i) + jit));
       float h = length(x) - 1.;
