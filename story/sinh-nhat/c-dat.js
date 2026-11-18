@@ -646,7 +646,9 @@
     U.uBMm.value.multiplyMatrices(camM.projectionMatrix, camM.matrixWorldInverse);
     const camDo = new T.OrthographicCamera(-230, 230, 230, -230, 1, 5000), camDp = new T.PerspectiveCamera(90, 1, 0.4, 1200);
     let daNuong = false;
+    let demKhung = 0;
     function veBong(rt, cam) {
+      if (SN.DT && rt === rtD && (demKhung & 1)) return;   // điện thoại: bóng động vẽ lại cách một khung (đủ mượt, đỡ nửa tải)
       const r = SN.renderer();
       r.setRenderTarget(rt); r.clear(false, true, false); r.render(sceneB, cam);
     }
@@ -699,6 +701,7 @@
         U.uMayD.value.set(md[0], md[1], md[2]);
       },
       cap(S, a) {
+        demKhung++;
         if (!daNuong) {   // bóng trăng: nướng một lần (lúc làm nóng shader, ảnh đã tải xong); tấm bóng động cũng phải cấp phát trước khi đọc
           daNuong = true; veBong(rtM, camM); U.uBMp.value.y = 1;
           const r = SN.renderer(); r.setRenderTarget(rtD); r.clear(false, true, false);
@@ -754,6 +757,7 @@
           for (let i = 0; i < 19; i++) { const m = U.uMP.value[i], I = U.uMI.value[i]; if (I > 0.01) den.push([m.x, m.y, m.z, I * 55, 1, 0.74, 0.42]); }
           const tat = 1 - ssC(239.6, 240.4, S);
           den.forEach((l) => { l[3] *= tat; });
+          if (SN.DT && den.length > 10) { den.sort((x, y) => y[3] - x[3]); den.length = 10; }   // điện thoại: chỉ 10 nguồn sáng mạnh nhất hắt vào sương
           SN.dof = { f: Math.max(f, 0.5), k, max: mx, den, mist: [0.00045, Y_THUNG, 6, 3.2] };
         }
         // ---------- hậu kỳ theo cảnh ----------

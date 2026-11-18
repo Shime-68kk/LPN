@@ -460,7 +460,7 @@
   let _ipv = null;
   function veDof() {
     const D = SN.dof, wh = Math.max(1, Math.ceil(Ws / 2)), hh = Math.max(1, Math.ceil(Hs / 2));
-    const maxR = clamp(D.max || 8, 1, DT ? 7 : 12);
+    const maxR = clamp(D.max || 8, 1, DT ? 6 : 12);
     const on = D.k > 0.05 ? 1 : 0;
     cam3.updateMatrixWorld();
     if (on) {
@@ -469,7 +469,7 @@
       P.dA.viewport.set(0, 0, wh, hh); P.dA.scissor.set(0, 0, wh, hh); P.dA.scissorTest = true;
       blit(P.mDofPre, P.dA);
       const b = P.mDofBlur.uniforms;
-      b.tA.value = P.dA.texture; b.uTxH.value.set(1 / P.dA.width, 1 / P.dA.height); b.uVpH.value.set(wh, hh); b.uMaxR.value = maxR; b.uBuoc.value = DT ? 1.25 : 0.85;
+      b.tA.value = P.dA.texture; b.uTxH.value.set(1 / P.dA.width, 1 / P.dA.height); b.uVpH.value.set(wh, hh); b.uMaxR.value = maxR; b.uBuoc.value = DT ? 1.4 : 0.85;
       P.dB.viewport.set(0, 0, wh, hh); P.dB.scissor.set(0, 0, wh, hh); P.dB.scissorTest = true;
       blit(P.mDofBlur, P.dB);
     }
