@@ -63,16 +63,22 @@
   uniform float uFogK;       // độ đặc sương
   uniform vec3 uCam;
   uniform float uYV;         // độ cao mặt thung lũng
-  vec3 suong(vec3 col, vec3 wp){
-    float dist = length(wp - uCam);
+  float quangPho(float az){ // ánh đèn thành phố / xóm hắt lên sương, theo phương vị (rad, 0 = bắc, dương = đông)
+    float a1 = abs(mod(az + 1.06 + PI, TAU) - PI), a2 = abs(mod(az - .78 + PI, TAU) - PI), a3 = abs(mod(az + .5 + PI, TAU) - PI);
+    return exp(-a1 * a1 / .045) + .35 * exp(-a2 * a2 / .02) + .25 * exp(-a3 * a3 / .03);
+  }
+  float suongF(vec3 wp, out vec3 fc){
+    vec3 dv = wp - uCam;
+    float dist = length(dv);
     float hv = wp.y - uYV;                                   // cao hơn mặt thung lũng bao nhiêu mét
     float mist = exp(-max(hv, 0.) / 3.6) * (.55 + .9 * smoothstep(-.25, .35, pn(vec3(wp.xz * .0016, .37))));
     float dens = uFogK * (.16 + 2.6 * mist);
-    float f = 1. - exp(-dist * dens);
-    vec3 fc = mix(vec3(.105, .125, .16), vec3(.07, .085, .115), smoothstep(0., 30., hv));
+    fc = mix(vec3(.105, .125, .16), vec3(.07, .085, .115), smoothstep(0., 30., hv));
     fc += uMet * vec3(.08, .12, .1);
-    return mix(col, fc, clamp(f, 0., 1.));
+    fc += vec3(.05, .03, .014) * quangPho(atan(dv.x, -dv.z)) * smoothstep(200., 1300., dist) * exp(-max(hv, 0.) / 40.);
+    return clamp(1. - exp(-dist * dens), 0., 1.);
   }
+  vec3 suong(vec3 col, vec3 wp){ vec3 fc; float f = suongF(wp, fc); return mix(col, fc, f); }
   vec3 anhTrang(vec3 n, float ao){
     float d = max(dot(n, uMoonL), 0.);
     vec3 L = vec3(.36, .42, .55) * d * 2.6;
@@ -85,20 +91,23 @@
     for (int i = 0; i < 19; i++) {
       if (uMI[i] < .001) continue;
       vec3 d = uMP[i] - wp; float l2 = dot(d, d);
+      if (l2 > 4900.) continue;                              // xa quá 70 m: không đáng kể, bỏ qua cho máy yếu
       s += uMI[i] * max(dot(n, d) * inversesqrt(l2 + 1e-4), 0.) * 26. / (l2 + 4.);
     }
     return s * vec3(1., .72, .42);
   }
   vec3 songChe(vec3 wp, float bush){ // sóng sáng lan theo hàng chè sau khi đốm chạm đất
     vec3 s = vec3(0.);
+    float spn = smoothstep(.3, .8, pn(vec3(wp.xz * 1.7, uS * .4)) + .5);
     for (int i = 0; i < 19; i++) {
       float t = uS - uRT[i];
       if (t < 0. || t > 26.) continue;
       float dd = length(wp.xz - uRP[i]);
-      float r = t * 7.5;
-      float ring = exp(-sq((dd - r) / (2.2 + t * .5)));
+      float r = t * 7.5, wr = 2.2 + t * .5;
+      if (dd > r + wr * 3. && dd > 160.) continue;
+      float ring = exp(-sq((dd - r) / wr));
       float lin = exp(-dd / 30.) * exp(-t * .14);
-      float sp = .65 + .7 * smoothstep(.3, .8, pn(vec3(wp.xz * 1.7, uS * .4 + float(i))) + .5);
+      float sp = .65 + .7 * (.5 + .5 * sin(spn * 6.283 + float(i) * 2.4));
       s += (ring * .9 * exp(-t * .17) * sp + lin * .22 * smoothstep(0., 1.5, t)) * (.15 + bush);
     }
     return s * vec3(1., .66, .3);
@@ -111,7 +120,7 @@
   void main(){ vW = (modelMatrix * vec4(position, 1.)).xyz; vN = normal; vRow = aRow; vC = aC; gl_Position = projectionMatrix * viewMatrix * vec4(vW, 1.); }`;
   const TER_F = `
   varying vec3 vW; varying vec3 vN; varying vec3 vRow; varying vec2 vC;
-  uniform vec3 uL[5]; uniform float uLK;
+  uniform vec4 uL[8]; uniform float uLK;
   void main(){
     vec3 n = vN / max(length(vN), 1e-4);
     float tea = vRow.y, rung = vRow.z;
@@ -159,7 +168,7 @@
     col += vec3(.3, .36, .45) * sp * .5;
     col += alb * dongDom(vW, nn) * 3.5;
     col += songChe(vW, bush * tea * aaK + .15 * tea) * mix(.4, 1., tea) * (.35 + top * .9 * tea);
-    for (int i = 0; i < 4; i++) { vec3 dl = uL[i] - vW; float l2 = dot(dl, dl); col += alb * max(dot(nn, dl) * inversesqrt(l2), 0.) * 30. / (l2 + 6.) * vec3(1., .6, .27) * uLK; }
+    if (length(vW.xz - vec2(34., -142.)) < 115.) for (int i = 0; i < 8; i++) { vec3 dl = uL[i].xyz - vW; float l2 = dot(dl, dl); col += alb * uL[i].w * max(dot(nn, dl) * inversesqrt(l2), 0.) * 30. / (l2 + 6.) * vec3(1., .6, .27) * uLK; }
     col = suong(col, vW);
     if (!(dot(col, col) < 1e8)) col = vec3(0.);   // chốt an toàn: không để điểm ảnh hỏng loé thành đốm chói
     gl_FragColor = vec4(col, 1.);
@@ -185,6 +194,8 @@
     col += vec3(.035, .05, .085) * pow(cm, 5.) + vec3(.2, .24, .3) * pow(cm, 80.) * .25;
     col += vec3(.016, .013, .008) * exp(-max(alt, 0.) * 22.);
     col += vec3(.004, .012, .007) * exp(-max(alt, 0.) * 9.);           // dải khí trời phát sáng mờ
+    col += vec3(.05, .03, .014) * quangPho(az) * exp(-max(alt, 0.) * 15.) * 1.3;   // quầng đèn thành phố, xóm phố hắt lên trời
+    col += vec3(.035, .024, .012) * exp(-sq((az - .236) / .16)) * exp(-max(alt, 0.) * 28.);   // quầng đèn doanh trại
     // mây ti mảnh kéo dài theo gió, trăng soi bạc; trôi rất chậm
     vec2 cp = d.xz / (d.y + .1) + vec2(uS * .0035, uS * .001);
     vec2 cq = vec2(cp.x * .55 + cp.y * .3, cp.y * 2.6 - cp.x * .4);
@@ -316,7 +327,7 @@
   }
 
   // ---------- cây ----------
-  function buildTrees(T, U) {
+  function buildTrees(T, U, them) {
     const items = [];
     let s = 31;
     const r = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
@@ -345,6 +356,7 @@
     DOMES.slice(2, 12).forEach((D) => { const m = 2 + Math.floor(r() * 3); for (let k = 0; k < m; k++) { const a = r() * 6.283, rr = r() * D[3] * 0.6; add(D[0] + Math.cos(a) * rr, -(D[1] + Math.sin(a) * rr), 9 + r() * 6, [0, 1, 3][Math.floor(r() * 3)]); } });
     // keo dọc khe thung lũng bên trái
     for (let k = 0; k < 18; k++) add(-140 - r() * 120, -(90 + r() * 160), 12 + r() * 6, [0, 1, 2][Math.floor(r() * 3)]);
+    (them || []).forEach((c) => add(c[0], c[1], c[2], c[3]));
     const n = items.length;
     const ig = new T.InstancedBufferGeometry();
     const base = new T.PlaneGeometry(1, 1);
@@ -361,144 +373,7 @@
   SN.dat.buildTrees = buildTrees;
 
 
-  // ---------- doanh trại ----------
-  const BLD_V = `
-  attribute vec4 aB; // vật liệu, u, v (mét trên mặt tường/mái), mã nhà
-  varying vec3 vW; varying vec3 vN; varying vec4 vB;
-  void main(){ vW = (modelMatrix * vec4(position, 1.)).xyz; vN = normalize((modelMatrix * vec4(normal, 0.)).xyz); vB = aB; gl_Position = projectionMatrix * viewMatrix * vec4(vW, 1.); }`;
-  const BLD_F = `
-  varying vec3 vW; varying vec3 vN; varying vec4 vB;
-  uniform float uThuy; uniform vec3 uL[5]; uniform float uLK;
-  vec3 denCot(vec3 wp, vec3 n){ vec3 s = vec3(0.); for (int i = 0; i < 5; i++) { vec3 d = uL[i] - wp; float l2 = dot(d, d); s += max(dot(n, d) * inversesqrt(l2), 0.) * 30. / (l2 + 6.); } return s * vec3(1., .6, .27) * uLK; }
-  float star5(vec2 p, float r){ // ngôi sao năm cánh
-    float a = atan(p.x, p.y) + PI; float seg = TAU / 5.;
-    a = mod(a, seg) - seg * .5; float l = length(p);
-    vec2 q = l * vec2(cos(a), abs(sin(a)));
-    vec2 k = vec2(cos(seg * .5), sin(seg * .5)) * r; vec2 k2 = vec2(r * .38, 0.);
-    vec2 e = k - k2; vec2 w = q - k2; float h = clamp(dot(w, e) / dot(e, e), 0., 1.);
-    float d = length(w - e * h); float side = e.x * w.y - e.y * w.x; return side > 0. ? -d : d;
-  }
-  void main(){
-    vec3 n = normalize(vN);
-    float mat = vB.x, u = vB.y, v = vB.z, bid = vB.w;
-    vec3 alb = vec3(.5); vec3 emi = vec3(0.); float ao = 1.;
-    float grime = pn(vec3(vW.xz * .45, vW.y * .45)) ;
-    if (mat < .5 || (mat > 3.5 && mat < 4.5)) {            // tường vàng, chân tường ố
-      alb = vec3(.55, .45, .26) * (.88 + .25 * grime) * (.78 + .22 * smoothstep(0., 1.1, v));
-      if (mat > 3.5) {                                      // mặt trước: cửa sổ, cửa đi; nằm dưới hiên nên khuất trăng
-        ao = .42;
-        float bay = floor(u / 3.6), bu = u - bay * 3.6;
-        bool door = mod(bay, 4.) == 1.;
-        vec2 lo = door ? vec2(1.25, 0.) : vec2(1.15, 1.0), hi = door ? vec2(2.35, 2.35) : vec2(2.45, 2.3);
-        vec2 q = vec2(bu, v);
-        float inW = step(lo.x, q.x) * step(q.x, hi.x) * step(lo.y, q.y) * step(q.y, hi.y);
-        float h = h12(vec2(bay * 1.37 + bid * 11.1, bid));
-        float lit = step(.64, h);
-        bool thuy = abs(bid - 1.) < .1 && abs(bay - 10.) < .1;
-        float ed = min(min(q.x - lo.x, hi.x - q.x), min(q.y - lo.y, hi.y - q.y));
-        float frame = 1. - smoothstep(.04, .07, ed);
-        float bars = door ? 0. : step(.86, fract((q.x - lo.x) / .26));
-        vec2 wc = (q - (lo + hi) * .5) / (hi - lo);
-        if (inW > .5) {
-          vec3 warm = vec3(1., .66, .34) * (1.5 + .9 * h) * (1. - .55 * smoothstep(.0, .5, abs(wc.x)) * step(.5, h)); // rèm khép một nửa
-          vec3 inside = lit > .5 ? warm : vec3(.008, .011, .016) + vec3(.02, .03, .05) * smoothstep(.6, -.2, wc.y);
-          if (thuy) inside = vec3(.36, .55, 1.15) * uThuy * 1.6 * (1.25 - .55 * length(wc)) + vec3(.02, .02, .03);
-          if (door && lit < .5) inside = vec3(.006, .007, .01);
-          emi = inside * (1. - frame) * (1. - bars * .85);
-          alb = mix(alb * .25, vec3(.03, .045, .04), frame + bars);   // khung, song sơn xanh sẫm
-        } else {
-          // ánh đèn hắt quanh ô cửa sáng
-          float bay2 = floor(u / 3.6); float h2v = h12(vec2(bay2 * 1.37 + bid * 11.1, bid));
-          float lit2 = step(.64, h2v); bool thuy2 = abs(bid - 1.) < .1 && abs(bay2 - 10.) < .1;
-          vec2 cc = vec2(bay2 * 3.6 + 1.8, 1.65);
-          float gl = exp(-length((vec2(u, v) - cc) * vec2(.8, 1.)) * 1.6);
-          emi += alb * (lit2 * vec3(1., .66, .34) * .9 + (thuy2 ? vec3(.4, .55, 1.) * uThuy * .7 : vec3(0.))) * gl;
-        }
-      }
-    } else if (mat < 1.5) {                                 // mái ngói
-      float course = fract(v / .3), tile = fract(u / .24 + step(.5, fract(v / .6)) * .5);
-      alb = vec3(.2, .085, .055) * (.75 + .35 * grime) * (.7 + .3 * smoothstep(.0, .25, course)) * (.85 + .15 * smoothstep(.0, .12, tile));
-      alb = mix(alb, vec3(.07, .08, .06), smoothstep(.3, .7, pn(vec3(vW.xz * .08, 3.3))) * .5);    // rêu, ố
-    } else if (mat < 2.5) {                                 // cột hiên
-      alb = vec3(.6, .5, .3) * (.85 + .2 * grime); ao = .7;
-    } else if (mat < 3.5) {                                 // nền, sân bê tông
-      alb = vec3(.2, .2, .19) * (.8 + .4 * grime);
-    } else if (mat < 5.5) {                                 // cờ đỏ sao vàng
-      vec2 fp = vec2(u - .9, v - .6);
-      alb = star5(fp, .33) < 0. ? vec3(.8, .62, .05) : vec3(.5, .03, .025);
-    } else alb = vec3(.25);                                  // cột cờ
-    vec3 col = alb * anhTrang(n, ao) + emi;
-    col += alb * denCot(vW, n);
-    col += alb * dongDom(vW, n) * 2.;
-    col = suong(col, vW);
-    gl_FragColor = vec4(col, 1.);
-  }`;
-  const GLOW_V = `attribute vec4 aG; varying vec3 vC; uniform float uPx; void main(){ vec4 mv = viewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv; vC = vec3(1., .62, .3) * aG.x; gl_PointSize = clamp(aG.y * uPx * 300. / max(-mv.z, 1.), 2., 140.); }`;
-  const GLOW_F = `varying vec3 vC; void main(){ float r = length(gl_PointCoord - .5) * 2.; float a = exp(-r * r * 60.) * 3.5 + exp(-r * 4.2) * .3; gl_FragColor = vec4(vC * a * smoothstep(1., .8, r), 1.); }`;
-  function buildCamp(T, U) {
-    const P = [], N = [], B = [];
-    function tri(a, b, c, n, ua, ub, uc, mat, bid) {
-      P.push(...a, ...b, ...c); N.push(...n, ...n, ...n);
-      B.push(mat, ua[0], ua[1], bid, mat, ub[0], ub[1], bid, mat, uc[0], uc[1], bid);
-    }
-    function quad(a, b, c, d, mat, bid, uvA, uvB, uvC, uvD) { // a b c d ngược chiều kim đồng hồ khi nhìn từ phía mặt
-      const e1 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], e2 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
-      let n = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]]; const l = Math.hypot(...n) || 1; n = n.map((x) => x / l);
-      tri(a, b, c, n, uvA, uvB, uvC, mat, bid); tri(a, c, d, n, uvA, uvC, uvD, mat, bid);
-    }
-    function xf(cx, cy, cz, rot) { const c = Math.cos(rot), s2 = Math.sin(rot); return (x, y, z) => [cx + x * c + z * s2, cy + y, cz - x * s2 + z * c]; }
-    function box(t, x0, x1, y0, y1, z0, z1, mat, bid, frontMat) {
-      const p = (x, y, z) => t(x, y, z);
-      quad(p(x0, y0, z1), p(x1, y0, z1), p(x1, y1, z1), p(x0, y1, z1), frontMat == null ? mat : frontMat, bid, [0, 0], [x1 - x0, 0], [x1 - x0, y1 - y0], [0, y1 - y0]); // trước (+z)
-      quad(p(x1, y0, z0), p(x0, y0, z0), p(x0, y1, z0), p(x1, y1, z0), mat, bid, [0, 0], [x1 - x0, 0], [x1 - x0, y1 - y0], [0, y1 - y0]);   // sau
-      quad(p(x0, y0, z0), p(x0, y0, z1), p(x0, y1, z1), p(x0, y1, z0), mat, bid, [0, 0], [z1 - z0, 0], [z1 - z0, y1 - y0], [0, y1 - y0]);   // trái
-      quad(p(x1, y0, z1), p(x1, y0, z0), p(x1, y1, z0), p(x1, y1, z1), mat, bid, [0, 0], [z1 - z0, 0], [z1 - z0, y1 - y0], [0, y1 - y0]);   // phải
-      quad(p(x0, y1, z1), p(x1, y1, z1), p(x1, y1, z0), p(x0, y1, z0), mat, bid, [0, 0], [1, 0], [1, 1], [0, 1]);                             // nóc
-    }
-    const Yp = hDat(34, -142);
-    function nha(cx, cz, L, Dp, rot, bid) {
-      const t = xf(cx, Yp, cz, rot), Hw = 3.4, x0 = -L / 2, x1 = L / 2, zf = Dp / 2;
-      box(t, x0 - 0.3, x1 + 0.3, -0.7, 0.18, -zf - 0.3, zf + 2.6, 3, bid);       // nền + hiên
-      box(t, x0, x1, 0.18, Hw, -zf, zf, 0, bid, 4);                               // thân nhà (mặt trước có cửa)
-      // mái chính hai mái + đầu hồi
-      const ov = 0.9, ry = Hw + 2.1, ey = Hw - 0.15, ez = zf + ov, rl = Math.hypot(ez, ry - ey);
-      quad(t(x0 - 0.8, ey, ez), t(x1 + 0.8, ey, ez), t(x1 + 0.8, ry, 0), t(x0 - 0.8, ry, 0), 1, bid, [0, 0], [L + 1.6, 0], [L + 1.6, rl], [0, rl]);
-      quad(t(x1 + 0.8, ey, -ez), t(x0 - 0.8, ey, -ez), t(x0 - 0.8, ry, 0), t(x1 + 0.8, ry, 0), 1, bid, [0, 0], [L + 1.6, 0], [L + 1.6, rl], [0, rl]);
-      const g = (sx) => { const a = t(sx, Hw, -zf), b = t(sx, Hw, zf), c = t(sx, ry - 0.08, 0); return [a, b, c]; };
-      { const [a, b, c] = g(x1); tri(a, b, c, (() => { const v = t(1, 0, 0), o = t(0, 0, 0); return [v[0] - o[0], v[1] - o[1], v[2] - o[2]]; })(), [0, 0], [Dp, 0], [Dp / 2, 2], 0, bid); }
-      { const [a, b, c] = g(x0); tri(b, a, c, (() => { const v = t(-1, 0, 0), o = t(0, 0, 0); return [v[0] - o[0], v[1] - o[1], v[2] - o[2]]; })(), [0, 0], [Dp, 0], [Dp / 2, 2], 0, bid); }
-      // mái hiên
-      const hy0 = Hw - 0.25, hy1 = Hw - 0.75, hz = zf + 2.5, hl = Math.hypot(2.5, 0.5);
-      quad(t(x0, hy1, hz), t(x1, hy1, hz), t(x1, hy0, zf), t(x0, hy0, zf), 1, bid, [0, 0], [L, 0], [L, hl], [0, hl]);
-      quad(t(x1, hy1 - 0.08, hz), t(x0, hy1 - 0.08, hz), t(x0, hy0 - 0.08, zf), t(x1, hy0 - 0.08, zf), 2, bid, [0, 0], [L, 0], [L, hl], [0, hl]); // mặt dưới hiên
-      for (let x = x0 + 1.8; x <= x1 - 1.0; x += 3.6) box(t, x - 0.15, x + 0.15, 0.18, hy1 + 0.05, hz - 0.45, hz - 0.15, 2, bid);
-    }
-    nha(34, -128, 50, 8.5, 0, 1);
-    nha(31, -153, 44, 8.5, 0, 2);
-    nha(-5, -146, 24, 8, Math.PI / 2, 3);
-    // sân, cột cờ, cờ
-    { const t = xf(34, Yp, -109, 0); box(t, -21, 21, -0.3, 0.06, -7, 7, 3, 0); box(t, -0.07, 0.07, 0.06, 9.5, -0.07, 0.07, 6, 0);
-      quad(t(0.07, 7.9, 0), t(1.87, 7.9, 0.05), t(1.87, 9.1, 0.05), t(0.07, 9.1, 0), 5, 0, [0, 0], [1.8, 0], [1.8, 1.2], [0, 1.2]);
-      quad(t(1.87, 7.9, 0.05), t(0.07, 7.9, 0), t(0.07, 9.1, 0), t(1.87, 9.1, 0.05), 5, 0, [1.8, 0], [0, 0], [0, 1.2], [1.8, 1.2]); }
-    [[8, -112], [60, -112], [34, -97], [-12, -128]].forEach((l) => { const t = xf(l[0], Yp, l[1], 0); box(t, -0.07, 0.07, 0.0, 5.0, -0.07, 0.07, 6, 0); box(t, -0.22, 0.22, 5.0, 5.12, -0.12, 0.12, 6, 0); });
-    const g = new T.BufferGeometry();
-    g.setAttribute('position', new T.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new T.Float32BufferAttribute(N, 3)); g.setAttribute('aB', new T.Float32BufferAttribute(B, 4));
-    const lamps = [[8, Yp + 5.2, -112], [60, Yp + 5.2, -112], [34, Yp + 5.2, -97], [-12, Yp + 5.2, -128], [22, Yp + 2.6, -121.2]];
-    const lv = lamps.map((l) => new T.Vector3(l[0], l[1], l[2]));
-    const mat = new T.ShaderMaterial({ uniforms: Object.assign({}, U, { uThuy: { value: 1 }, uL: { value: lv }, uLK: { value: 1 } }), vertexShader: BLD_V, fragmentShader: SN_GLSL.CHUNG + CHUNG3 + BLD_F });
-    const mesh = new T.Mesh(g, mat); mesh.frustumCulled = false;
-    // quầng đèn
-    const gp = new Float32Array(lamps.length * 3), ga = new Float32Array(lamps.length * 4);
-    lamps.forEach((l, i) => { gp.set(l, i * 3); ga.set([i === 4 ? 2.2 : 3.2, i === 4 ? 2.4 : 4.5, 0, 0], i * 4); });
-    const gg = new T.BufferGeometry(); gg.setAttribute('position', new T.BufferAttribute(gp, 3)); gg.setAttribute('aG', new T.BufferAttribute(ga, 4));
-    const glowM = new T.ShaderMaterial({ uniforms: { uPx: { value: 1 } }, vertexShader: GLOW_V, fragmentShader: GLOW_F, transparent: true, blending: T.AdditiveBlending, depthWrite: false });
-    const glow = new T.Points(gg, glowM); glow.frustumCulled = false; glow.userData.ro = 5;
-    // cửa sổ của em (bay 9 nhà 1): chỗ máy quay zoom vào và đốm sáng cuối cùng bay tới
-    SN.dat.cuaSo = [34 - 25 + 10 * 3.6 + 1.8, Yp + 1.65, -128 + 4.25];
-    SN.dat.Yp = Yp;
-    return { mesh, glow, mat, glowM, lamps: lv };
-  }
-
+  SN.dat.CHUNG3 = CHUNG3;
 
   // ---------- 19 đốm sáng ----------
   const MOTE_V = `
@@ -531,40 +406,47 @@
   }
   // điểm vỡ (cuối đường sao băng, trong không gian 3D phía trên thung lũng) và chỗ hạ của từng đốm
   const MOTES = [];
-  function planMotes(burst) {
+  function planMotes(burst, vel) {
     let s = 77;
     const r = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
     const land = [];
     // rải chỗ hạ trên các đồi chè thấy được và quanh doanh trại, trải đều khung hình
-    const targets = [[-72, 176], [-182, 268], [62, 306], [-26, 424], [-276, 150], [152, 236], [-118, 66], [-130, 560], [190, 470], [-360, 420], [34, 112], [10, 96], [70, 126]];
+    const targets = [[-72, 176], [-182, 268], [62, 306], [-26, 424], [-276, 150], [152, 236], [-118, 66], [-130, 560], [190, 470], [-360, 420]];
+    const tC = SN.dat.tC, Yt = SN.dat.Yp;
+    const trai = [[-12, -15], [14, -2], [-6, 24], [10, 30], [20, 18], [-20, 6], [0, -12], [-14, 44]];   // vườn trong, sân điều lệnh, trước cổng
     for (let i = 0; i < 18; i++) {
+      if (i % 9 >= 5 && tC) { const q = trai[(i * 5) % trai.length], p = tC(q[0] + (r() - 0.5) * 3, 0, q[1] + (r() - 0.5) * 3); land.push([p[0], Yt + 1.2, p[2]]); continue; }
       const T0 = targets[i % targets.length];
-      const a = r() * 6.283, rr = (0.15 + r() * 0.55) * (i % targets.length < 10 ? 70 : 18);
+      const a = r() * 6.283, rr = (0.15 + r() * 0.55) * 70;
       const x = T0[0] + Math.cos(a) * rr, z = -(T0[1] + Math.sin(a) * rr);
       land.push([x, hDat(x, z) + 0.6, z]);
     }
-    land.push(SN.dat.cuaSo.slice());
+    { const w = SN.dat.cuaSo, nn = SN.dat.cuaSoN || [0, 0, 1]; land.push([w[0] + nn[0] * 0.35, w[1], w[2] + nn[2] * 0.35]); }
     for (let i = 0; i < 19; i++) {
       const L = land[i];
       const tLand = i === 18 ? 239.4 : 222.0 + (i / 17) * 13.5 + (r() - 0.5) * 2.4;
-      MOTES.push({ L, tLand, sway: 3 + r() * 9, ph: r() * 6.28, fr: 0.25 + r() * 0.35, spread: [ (r() - 0.5) * 60, (r() - 0.3) * 30, (r() - 0.5) * 60 ], sz: 0.9 + r() * 0.5 });
+      // hướng văng: ngẫu nhiên đều, hơi nghiêng theo đà sao băng; tốc độ 40–95 m/s
+      let dx = r() * 2 - 1, dy = r() * 2 - 1, dz = r() * 2 - 1; const dl = Math.hypot(dx, dy, dz) || 1; dx /= dl; dy /= dl; dz /= dl;
+      MOTES.push({ L, tLand, sway: 3 + r() * 9, ph: r() * 6.28, fr: 0.25 + r() * 0.35, dir: [dx, dy * 0.7 + 0.15, dz], sp: 70 + r() * 80, sz: 0.9 + r() * 0.5 });
     }
-    MOTES.burst = burst;
+    MOTES.burst = burst; MOTES.vel = vel;
   }
-  const T_BURST = M.BOOM + 2.15;
+  const T_BURST = M.BOOM + 2.2;
   function moteAt(i, S, out) {
-    const mo = MOTES[i], B = MOTES.burst;
+    const mo = MOTES[i], B = MOTES.burst, V = MOTES.vel;
     if (S < T_BURST) { out[3] = 0; return out; }
+    const dt = S - T_BURST;
     const life = mo.tLand - T_BURST;
-    const t = clamp((S - T_BURST) / life, 0, 1);
-    // toả ra quanh điểm vỡ trong 1.5 giây đầu, rồi lả lướt rơi về chỗ hạ
-    const e = ease(clamp((S - T_BURST) / 1.6, 0, 1));
-    const sx = B[0] + mo.spread[0] * e, sy = B[1] + mo.spread[1] * e, sz = B[2] + mo.spread[2] * e;
+    const t = clamp(dt / life, 0, 1);
+    // lúc vỡ: các mảnh giữ nguyên đà lao của sao băng và văng ra mọi phía ngay (nhanh nhất ở khoảnh khắc đầu),
+    // lực cản làm chậm dần theo hàm mũ — không có khung nào đứng yên; rồi lả lướt rơi về chỗ hạ như tuyết ấm
+    const kV = 0.8 * (1 - Math.exp(-dt / 0.8)), kR = 0.62 * (1 - Math.exp(-dt / 0.62));
+    const sx = B[0] + V[0] * kV + mo.dir[0] * mo.sp * kR, sy = B[1] + V[1] * kV + mo.dir[1] * mo.sp * kR, sz = B[2] + V[2] * kV + mo.dir[2] * mo.sp * kR;
     const k = Math.pow(t, 1.25);
     const kk = k * k * (3 - 2 * k);
-    const sw = Math.sin((S - T_BURST) * mo.fr * 2 + mo.ph) * mo.sway * Math.sin(Math.PI * t);
-    out[0] = mix(sx, mo.L[0], kk) + sw; out[1] = mix(sy, mo.L[1], kk) + Math.sin((S - T_BURST) * 0.7 + mo.ph) * 2 * (1 - t); out[2] = mix(sz, mo.L[2], kk) + sw * 0.6;
-    const flash = Math.exp(-(S - T_BURST) * 2.2) * 2.5;
+    const sw = Math.sin(dt * mo.fr * 2 + mo.ph) * mo.sway * Math.sin(Math.PI * t);
+    out[0] = mix(sx, mo.L[0], kk) + sw; out[1] = mix(sy, mo.L[1], kk) + Math.sin(dt * 0.7 + mo.ph) * 2 * (1 - t); out[2] = mix(sz, mo.L[2], kk) + sw * 0.6;
+    const flash = Math.exp(-dt * 2.6) * 3.2;
     out[3] = (1 + flash) * (t < 1 ? 1 : Math.exp(-(S - mo.tLand) * 3));
     return out;
   }
@@ -572,16 +454,25 @@
 
   // ---------- máy quay ----------
   const CAMK = SN.duong([
-    // S, x, độ cao tuyệt đối thêm (m trên mặt đất tại chỗ đứng ban đầu), z, hướng (độ), ngóc (độ), góc nhìn dọc
-    [205.0, 0, 1.6, 0, 338, 13, 60],
+    // S, x, độ cao tuyệt đối thêm (m trên mặt đất tại chỗ đứng ban đầu), z, hướng (độ, liên tục: 360 chứ không về 0, kẻo nội suy quay ngược cả vòng), ngóc (độ), góc nhìn dọc
+    [207.65, 0.3, 4.8, 2.4, 336.4, 18, 63.5],
+    [209.4, 0.04, 1.85, 0.25, 337.7, 13.7, 60.4],
+    [211.2, 0, 1.6, 0, 338, 13, 60],
     [216.5, 0, 1.6, 0, 338.5, 12.6, 60],
-    [224.0, 2.5, 1.9, -10, 346, 8.5, 56],
-    [231.0, 9.5, 2.2, -36, 0, 3.0, 46],
-    [237.0, 17.0, 2.3, -62, 8, 1.0, 32],
-    [242.0, 20.0, 2.3, -70, 12, 0.4, 13],
+    [224.0, 0.5, 1.9, -10, 346, 8.5, 56],
+    [231.0, 6.0, 2.4, -36, 360, 3.0, 46],
+    [237.0, 17.0, 6.6, -62, 368, 1.0, 32],
+    [242.0, 20.0, 8.4, -70, 372, 0.4, 13],
   ]);
   const CAM = { pos: [0, 0, 0], tgt: [0, 0, 0], fov: 56 };
+  const DCQ = SN.NHA && SN.Q.get('dc') ? SN.Q.get('dc').split(',').map(Number) : null;
   function camAt(S) {
+    if (DCQ) {
+      const yaw = DCQ[3] * D2R, pit = DCQ[4] * D2R;
+      CAM.pos = [DCQ[0], DCQ[1], DCQ[2]];
+      CAM.tgt = [DCQ[0] + Math.sin(yaw) * Math.cos(pit) * 10, DCQ[1] + Math.sin(pit) * 10, DCQ[2] - Math.cos(yaw) * Math.cos(pit) * 10];
+      CAM.fov = DCQ[5]; return CAM;
+    }
     const c = CAMK(S);
     const y = Math.max(hDat(c[0], c[2]) + 1.3, c[1]);
     const yaw = c[3] * D2R, pit = c[4] * D2R;
@@ -613,7 +504,7 @@
     const group = new T.Group();
     // trời
     const skyM = new T.ShaderMaterial({ uniforms: Object.assign({}, U, { uMoonD: { value: moonD }, uMA: { value: new T.Vector3() }, uMB: { value: new T.Vector3() }, uMT: { value: 0 }, uMI2: { value: 0 }, uTrain: { value: 0 } }),
-      vertexShader: SKY_V, fragmentShader: SN_GLSL.CHUNG + SKY_F, depthWrite: false, depthTest: false, side: T.BackSide });
+      vertexShader: SKY_V, fragmentShader: SN_GLSL.CHUNG + CHUNG3 + SKY_F, depthWrite: false, depthTest: false, side: T.BackSide });
     const sky = new T.Mesh(new T.SphereGeometry(10, 48, 24), skyM); sky.frustumCulled = false; sky.userData.ro = -9; group.add(sky);
     // sao
     const SD = window.SN_SAO.d, ns = SD.length / 5;
@@ -625,18 +516,19 @@
     // địa hình
     const terM = new T.ShaderMaterial({ uniforms: U, vertexShader: TER_V, fragmentShader: SN_GLSL.CHUNG + CHUNG3 + TER_F, extensions: { derivatives: true } });
     const ter = new T.Mesh(buildTerrain(T), terM); ter.frustumCulled = false; group.add(ter);
-    // doanh trại
-    const camp = buildCamp(T, U); group.add(camp.mesh); group.add(camp.glow);
-    terM.uniforms.uL = { value: camp.lamps }; terM.uniforms.uLK = { value: 1 };
+    // nhà cửa: doanh trại nhiều dãy nhà tầng, xóm phố, thành phố xa, đường, đèn, xe (c-nha.js)
+    const nha = SN.dat.dungNha(T, U);
+    group.add(nha.mesh); group.add(nha.co); group.add(nha.vungMesh); group.add(nha.sangP); group.add(nha.xeP);
+    terM.uniforms.uL = { value: nha.lamps }; terM.uniforms.uLK = { value: 1 };
     // cây
-    const trees = buildTrees(T, U); group.add(trees);
+    const trees = buildTrees(T, U, nha.cay); group.add(trees);
     const motes = buildMotes(T); group.add(motes.pts);
     group.visible = false;
     SN.scene().add(group);
     const an = SN.NHA ? (SN.Q.get('an') || '') : '';
     if (an.includes('s')) stars.visible = false; if (an.includes('c')) trees.visible = false; if (an.includes('t')) ter.visible = false; if (an.includes('k')) sky.visible = false;
     group.userData.an = an;
-    if (an.includes('n')) { camp.mesh.visible = false; } if (an.includes('g')) camp.glow.visible = false;
+    if (an.includes('n')) { nha.mesh.visible = false; nha.co.visible = false; } if (an.includes('g')) { nha.sangP.visible = false; nha.vungMesh.visible = false; }
     const etaD = window.SN_SAO.eta;
     // sao băng: từ ngay chòm W (gần Eta Cas) vụt xuống phía phải, về phía doanh trại
     const MA = new T.Vector3(etaD[0], etaD[1], etaD[2]).normalize();
@@ -644,8 +536,12 @@
     const MB = new T.Vector3(Math.cos(al2) * Math.sin(az2), Math.sin(al2), -Math.cos(al2) * Math.cos(az2));
     skyM.uniforms.uMA.value.copy(MA); skyM.uniforms.uMB.value.copy(MB);
     U.uMetP.value.copy(MA.clone().add(MB).normalize());
-    // điểm vỡ: theo hướng cuối đường sao băng, cách máy quay ~540 m
-    planMotes([MB.x * 540, 1.6 + MB.y * 540, MB.z * 540]);
+    // điểm vỡ: theo hướng cuối đường sao băng, cách máy quay ~540 m; vận tốc lúc vỡ = đà của đầu sao băng (tiếp tuyến cung trời)
+    {
+      const dot = MA.dot(MB), tg = MB.clone().sub(MA).sub(MB.clone().multiplyScalar(1 - dot));
+      const vK = 540 * 0.68 / 2.2;
+      planMotes([MB.x * 540, 1.6 + MB.y * 540, MB.z * 540], [tg.x * vK, tg.y * vK, tg.z * vK]);
+    }
     const mt4 = [0, 0, 0, 0];
     MOTES.forEach((mo, i) => { U.uRP.value[i].set(mo.L[0], mo.L[2]); U.uRT.value[i] = mo.tLand; });
     SN.them({
@@ -660,7 +556,7 @@
         U.uCam.value.copy(cam.position);
         SN.uChung.uPxA.value = 2 * Math.tan(c.fov * D2R / 2) / Math.max(1, SN.size()[1]);
         starM.uniforms.uPx.value = SN.size()[1] / 900;
-        camp.glowM.uniforms.uPx.value = SN.size()[1] / 900;
+        nha.uPx(SN.size()[1] / 900);
         motes.m.uniforms.uPx.value = SN.size()[1] / 900;
       },
       cap(S, a) {
@@ -668,10 +564,12 @@
         const t = (S - M.BOOM) / 2.2;
         const mt = clamp(t, 0, 1);
         const su = skyM.uniforms;
-        su.uMT.value = 1 - Math.pow(1 - mt, 1.6);
-        su.uMI2.value = t > -0.02 && t < 1.15 ? Math.min(1, (t + 0.02) * 12) * (t < 0.92 ? 0.75 + 0.6 * mt : Math.max(0, 1 - (t - 0.92) / 0.23) * 1.35) : 0;
+        // lao nhanh, chỉ hãm rất nhẹ — đến lúc vỡ vẫn đang lao (không treo lơ lửng); sáng dần như bốc cháy, loé mạnh lúc vỡ rồi tắt ngay
+        su.uMT.value = mt * (1.32 - 0.32 * mt);
+        su.uMI2.value = t > -0.02 && t < 1.08 ? Math.min(1, (t + 0.02) * 12) * (t < 1 ? 0.7 + 0.75 * mt * mt : Math.max(0, 1 - (t - 1) / 0.08) * 1.45) : 0;
         su.uTrain.value = t > 0.1 ? Math.min(1, (t - 0.1) * 2) * Math.exp(-Math.max(0, t - 1) * 0.55) : 0;
-        camp.mat.uniforms.uThuy.value = 0.85 + 0.12 * Math.sin(S * 1.3) + 0.06 * Math.sin(S * 4.1 + 1) + 2.2 * ease((S - 238.6) / 1.6);
+        nha.mat.uniforms.uThuy.value = 0.85 + 0.12 * Math.sin(S * 1.3) + 0.06 * Math.sin(S * 4.1 + 1) + 2.2 * ease((S - 238.6) / 1.6);
+        nha.cap(S, U.uCam.value);
         for (let i = 0; i < 19; i++) {
           moteAt(i, S, mt4);
           motes.pos[i * 3] = mt4[0]; motes.pos[i * 3 + 1] = mt4[1]; motes.pos[i * 3 + 2] = mt4[2];
@@ -679,7 +577,7 @@
           U.uMP.value[i].set(mt4[0], mt4[1], mt4[2]); U.uMI.value[i] = mt4[3] * 0.6;
         }
         motes.g.attributes.position.needsUpdate = true; motes.g.attributes.aI.needsUpdate = true; motes.g.attributes.aSz.needsUpdate = true;
-        U.uMet.value = su.uMI2.value * 0.55 + (t > 0.85 && t < 1.4 ? Math.exp(-Math.abs(t - 1.0) * 9) * 0.9 : 0);
+        U.uMet.value = su.uMI2.value * 0.55 + (t > 0.9 && t < 1.6 ? Math.exp(-Math.abs(t - 1.0) * 7) * 1.1 : 0);
         SN.gradeMix({ exp: 1.3, bloom: 0.85, thr: 0.9, streak: 0.4, sat: 0.9, con: 1.08, vig: 0.46, grain: 0.035, ca: 0.0, bars: 0, lift: [0.012, 0.016, 0.026], gain: [0.98, 1.0, 1.04], sc: [0.5, 0.7, 1.0], white: 0 }, a);
       },
     });
