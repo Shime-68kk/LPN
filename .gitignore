@@ -11,3 +11,5 @@ tools/trailer-music/src/
 
 # Danh sách file cho chế độ offline: tạo lúc build (tools/offline-list.mjs); bản ở gốc chỉ để thử trong mạng nhà
 /offline.json
+tools/trailer-music/out/
+tools/sinh-nhat/node_modules

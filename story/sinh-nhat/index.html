@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#000000" />
+<title>Phút đầu tiên</title>
+<!-- Trang luôn tối: tô nền ngay từ đầu để chuyển trang không chớp sáng. Chưa mở khoá web thì về trang nhà. -->
+<script>
+  document.documentElement.style.background = '#000';
+  try { if ((localStorage.getItem('lpn:unlock') !== 'a9ed65df' || (localStorage.getItem('lpn:preview') !== '1' && (!localStorage.getItem('lpn:relock3') || false))) && !/^(localhost|127\.0\.0\.1|192\.168\.)/.test(location.hostname)) location.replace('../../home/'); } catch (e) { /* bỏ qua */ }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@200;300;400&family=Cormorant+Garamond:ital,wght@0,400;1,400;1,500&family=Dancing+Script:wght@600&family=Patrick+Hand&display=swap" />
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+  canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; background: #000; }
+  .lop { position: fixed; left: 0; right: 0; pointer-events: none; text-align: center; color: #eee6da; }
+  #dan { bottom: calc(13vh + env(safe-area-inset-bottom)); font: 300 clamp(15px, 2.15vw, 26px)/1.45 'Be Vietnam Pro', sans-serif; letter-spacing: .01em; opacity: 0; padding: 0 9vw; text-shadow: 0 1px 14px rgba(0,0,0,.85), 0 0 2px rgba(0,0,0,.6); will-change: opacity, transform; }
+  #nam { bottom: calc(6.2vh + env(safe-area-inset-bottom)); font: 300 clamp(10px, 1.15vw, 14px)/1 'Be Vietnam Pro', sans-serif; letter-spacing: .32em; text-transform: none; opacity: 0; color: #d9d2c6; text-shadow: 0 1px 10px rgba(0,0,0,.9); }
+  #ket { top: 50%; transform: translateY(-50%); padding: 0 8vw; }
+  #ket p { margin: 0 0 1.25em; font: italic 400 clamp(17px, 2.5vw, 32px)/1.42 'Cormorant Garamond', serif; color: #f1e7d6; opacity: 0; transform: translateY(8px); transition: opacity 2.2s ease, transform 2.6s ease; text-shadow: 0 0 22px rgba(0,0,0,.6); }
+  #ket p.hien { opacity: 1; transform: none; }
+  #ket p.chot { font-style: normal; font-weight: 400; letter-spacing: .02em; color: #fff3df; margin-top: .4em; }
+  #mo { position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; color: #e9e1d4; font-family: 'Be Vietnam Pro', sans-serif; transition: opacity 1.4s ease; cursor: default; }
+  #mo.di { opacity: 0; pointer-events: none; }
+  #mo h1 { margin: 0 0 .7em; font: italic 400 clamp(26px, 4.2vw, 46px)/1.1 'Cormorant Garamond', serif; letter-spacing: .02em; color: #f3eadb; }
+  #mo .nho { margin: 0; font: 300 clamp(13px, 1.6vw, 17px)/1.8 'Be Vietnam Pro', sans-serif; color: rgba(233,225,212,.62); text-align: center; padding: 0 8vw; }
+  #mo .thanh { width: min(220px, 40vw); height: 1px; margin: 2.2em 0 0; background: rgba(255,255,255,.12); overflow: hidden; }
+  #mo-thanh { height: 100%; background: rgba(255,236,206,.75); transform-origin: left; transform: scaleX(0); transition: transform .4s ease; }
+  #mo .bam { margin-top: 1.9em; font: 300 clamp(13px, 1.5vw, 16px)/1 'Be Vietnam Pro', sans-serif; letter-spacing: .28em; color: rgba(255,240,220,.0); transition: color 1.2s ease; }
+  #mo.san { cursor: pointer; }
+  #mo.san .bam { color: rgba(255,240,220,.86); animation: tho 2.8s ease-in-out infinite; }
+  #mo.san .thanh { opacity: 0; transition: opacity .8s ease; }
+  @keyframes tho { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+  #thu { position: fixed; inset: 0; z-index: 15; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; opacity: 0; pointer-events: none; transition: opacity 2.4s ease; background: radial-gradient(ellipse at 50% 40%, rgba(24,20,16,.92), rgba(0,0,0,.98)); }
+  #thu.hien { opacity: 1; pointer-events: auto; }
+  #thu .giay { max-width: 620px; margin: 9vh auto 6vh; padding: 7vh 8vw 6vh; background: linear-gradient(180deg, #f6eedd, #efe4cf); color: #3a2f25; box-shadow: 0 30px 80px rgba(0,0,0,.6); border-radius: 3px; background-image: repeating-linear-gradient(180deg, transparent 0 33px, rgba(120,96,70,.13) 33px 34px), linear-gradient(180deg, #f6eedd, #efe4cf); }
+  #thu .giay p { margin: 0 0 1.05em; font: 400 clamp(17px, 2.3vw, 21px)/34px 'Patrick Hand', cursive; }
+  #thu .giay .ten { font: 600 clamp(22px, 2.9vw, 27px)/34px 'Dancing Script', cursive; color: #5a3d2a; }
+  #thu .giay .ky { display: block; text-align: right; font: 600 30px/34px 'Dancing Script', cursive; color: #5a3d2a; }
+  #cuoi { position: fixed; left: 0; right: 0; bottom: calc(3.2vh + env(safe-area-inset-bottom)); z-index: 16; display: flex; justify-content: center; gap: 28px; opacity: 0; pointer-events: none; transition: opacity 1.6s ease; }
+  #cuoi.hien { opacity: 1; pointer-events: auto; }
+  #cuoi button { appearance: none; border: 0; background: rgba(0,0,0,.35); color: #f2e8d8; font: 300 15px/1 'Be Vietnam Pro', sans-serif; letter-spacing: .14em; padding: 12px 18px; border-radius: 22px; cursor: pointer; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  #xoay { display: none; position: fixed; inset: 0; z-index: 30; background: #000; color: #e9e1d4; align-items: center; justify-content: center; text-align: center; font: 300 16px/1.7 'Be Vietnam Pro', sans-serif; padding: 0 12vw; }
+  @media (orientation: portrait) and (pointer: coarse) { #xoay { display: flex; } }
+  body.khong3d { background: radial-gradient(ellipse at 50% 60%, #0b1220, #000 70%); }
+  body.khong3d canvas { display: none; }
+</style>
+</head>
+<body>
+<canvas id="cv" aria-label="Phút đầu tiên"></canvas>
+<audio id="nhac" src="am/nhac.mp3?v=1" preload="auto" playsinline></audio>
+<div id="dan" class="lop"></div>
+<div id="nam" class="lop"></div>
+<div id="ket" class="lop"></div>
+<div id="thu"><div class="giay"></div></div>
+<div id="cuoi"><button id="lai">Xem lại</button><button id="ve">Về trang truyện</button></div>
+<div id="mo">
+  <h1>Phút đầu tiên</h1>
+  <p class="nho">Đeo tai nghe vào nha.<br>Tắt bớt đèn, rồi xem đến cuối.</p>
+  <div class="thanh"><div id="mo-thanh"></div></div>
+  <div class="bam">CHẠM ĐỂ BẮT ĐẦU</div>
+</div>
+<div id="xoay">Xoay ngang điện thoại để xem nha.</div>
+<script src="../bang2/lib/three-k2.js?v=1"></script>
+<script src="glsl.js?v=1"></script>
+<script src="loi.js?v=1"></script>
+<script src="c-tia.js?v=1"></script>
+<script src="c-sao.js?v=1"></script>
+<script src="c-tinhvan.js?v=1"></script>
+<script src="c-hoden.js?v=1"></script>
+<script src="c-sautho.js?v=1"></script>
+<script src="c-traidat.js?v=1"></script>
+<script src="c-roi.js?v=1"></script>
+<script src="sao.js?v=1"></script>
+<script src="c-dat.js?v=1"></script>
+<script src="c-kep.js?v=1"></script>
+<script src="chu.js?v=1"></script>
+<script src="../../home/offline.js?v=1"></script>
+</body>
+</html>

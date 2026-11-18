@@ -943,6 +943,7 @@
       "scene": "dem",
       "cast": ["quang"],
       "announce": { "kicker": "Đúng 0 giờ, ngày 24/11", "title": "Đã có chương mới!", "text": "Chương 23 · Phút đầu tiên", "ok": "Xem đếm ngược", "later": "Để sau" },
+      "game": { "page": "sinh-nhat/", "title": "Phút đầu tiên", "text": "Đeo tai nghe vào, xoay ngang điện thoại, tắt bớt đèn nha.", "btn": "Bấm play" },
       "lines": [
         { "who": "none", "text": "Ngày thứ 110" }
       ]
