@@ -1,28 +1,35 @@
 'use strict';
-// SAO THỔ (S 140–182): văng khỏi hố đen → lao qua rừng khối băng trong vành đai (sát máy quay, đơn vị mét) →
-// vọt lên khỏi mặt phẳng vành đai: sao Thổ ngược sáng (Mặt Trời nấp sau hành tinh, như ảnh tàu Cassini "Ngày Trái Đất mỉm cười"):
-// hành tinh là vầng tối viền sáng, vành đai rực lên khi ánh sáng xuyên qua; một chấm xanh nhỏ dưới vành đai là Trái Đất.
+// SAO THỔ (S 145–182). Sau cú quăng quanh hố đen, tia sáng vút lên giữa vũ trụ (để trọn cảm giác bay):
+//  146–157 bay giữa trời sao và dải Ngân Hà; phía trước Mặt Trời là ngôi sao sáng nhất, sao Thổ còn nhỏ bên cạnh.
+//  158–161 lướt sát trên vành sao Thổ vài chục mét: biển hạt băng tròn, sáng trong, nhiều cỡ, viền loé nắng, lấp lánh,
+//          trôi qua dưới chân (không lao vào mặt), xa dần hoà vào mặt vành.
+//  162.5   vút lên khỏi vành, Mặt Trời trượt ra sau mép hành tinh (loé "nhẫn kim cương") → sao Thổ ngược sáng như ảnh Cassini,
+//          một chấm xanh nhỏ là Trái Đất; 176–182 lao về chấm xanh.
 // Đơn vị hành tinh: 1000 km. Bán kính xích đạo 60.3, cực 54.4. Vành: C 74.5–92, B 92–117.5, khe Cassini, A 122–136.8, F 140.2.
+// Lớp hạt băng tính theo mét quanh máy quay (độ cao máy quay trên mặt vành tính theo mét).
 (() => {
   const SN = window.SN, M = SN.M, { clamp, mix, ease, io, ramp } = SN.u;
   const FRAG = `
   uniform vec3 uSunD;     // hướng tới Mặt Trời
   uniform vec3 uEarth;    // hướng tới Trái Đất (chấm xanh)
   uniform float uEarthK;  // độ sáng chấm xanh (to dần khi lao tới)
-  uniform vec3 uFOff;     // vị trí máy quay trong rừng băng (mét, quấn vòng)
-  uniform float uRock;    // còn ở trong vành (1) hay đã lên cao (0)
-  uniform float uRet;     // độ cao máy quay so với mặt phẳng vành (1000 km)
+  uniform vec3 uFOff;     // gốc lưới hạt băng (mét), trôi theo hướng bay
+  uniform float uHm;      // độ cao máy quay trên mặt phẳng vành (mét)
+  uniform float uHat;     // độ hiện lớp hạt băng
+  uniform float uDen;     // mật độ hạt (theo độ dày vành chỗ máy quay)
   const float RE = 60.3, RP = 54.4;
   vec2 elip(vec3 ro, vec3 rd){ vec3 s = vec3(1., RE / RP, 1.); vec3 o = ro * s, d = rd * s; float a = dot(d, d), b = dot(o, d), c = dot(o, o) - RE * RE, h = b * b - a * c; if (h < 0.) return vec2(-1.); h = sqrt(h); return vec2(-b - h, -b + h) / a; }
-  float vanh(float r){ // độ dày quang học theo bán kính
+  float vanhF(float r, float fr){ // độ dày quang học theo bán kính; fr = bề rộng một điểm ảnh theo bán kính (gợn nhỏ hơn thì gộp trung bình)
+    float k3 = 1. - smoothstep(.15, .6, fr * 3.1), k9 = 1. - smoothstep(.15, .6, fr * 9.3), k4 = 1. - smoothstep(.15, .6, fr * 4.4), k17 = 1. - smoothstep(.1, .5, fr * 17.);
     float t = 0.;
-    t += smoothstep(74.5, 75.5, r) * (1. - smoothstep(91.5, 92.2, r)) * (.12 + .08 * sin(r * 3.1));          // vành C
-    t += smoothstep(92., 93., r) * (1. - smoothstep(117., 117.6, r)) * (1.1 + .7 * sin(r * 1.7) + .4 * sin(r * 9.3));   // vành B dày
-    t += smoothstep(122., 122.4, r) * (1. - smoothstep(136.4, 136.8, r)) * (.55 + .2 * sin(r * 4.4)) * (1. - .8 * exp(-sq((r - 133.6) / .2)));  // vành A + khe Encke
-    t += exp(-sq((r - 140.2) / .12)) * .6;                                                                     // vành F
-    t *= .75 + .5 * pn(vec3(r * 2.2, .3, .7)) + .3 * pn(vec3(r * 17., .1, .2));                               // vô số vành con
+    t += smoothstep(74.5, 75.5, r) * (1. - smoothstep(91.5, 92.2, r)) * (.12 + .08 * sin(r * 3.1) * k3);          // vành C
+    t += smoothstep(92., 93., r) * (1. - smoothstep(117., 117.6, r)) * (1.1 + .7 * sin(r * 1.7) + .4 * sin(r * 9.3) * k9);   // vành B dày
+    t += smoothstep(122., 122.4, r) * (1. - smoothstep(136.4, 136.8, r)) * (.55 + .2 * sin(r * 4.4) * k4) * (1. - .8 * exp(-sq((r - 133.6) / max(.2, fr))) * min(1., .2 / max(fr, .2)));  // vành A + khe Encke
+    t += exp(-sq((r - 140.2) / max(.12, fr))) * .6 * min(1., .12 / max(fr, .12));                            // vành F
+    t *= .75 + .5 * pn(vec3(r * 2.2, .3, .7)) + .3 * pn(vec3(r * 17., .1, .2)) * k17;                         // vô số vành con
     return max(t, 0.);
   }
+  float vanh(float r){ return vanhF(r, 0.); }
   vec3 mauVanh(float r){ return r < 92. ? vec3(.55, .58, .62) : (r < 118. ? vec3(.9, .8, .62) : vec3(.75, .72, .66)); }
   bool bongTho(vec3 p){ return elip(p, uSunD).x > 0.; }
   vec3 vanhMau(vec3 ro, vec3 rd, out float tr, out float tHit){
@@ -31,21 +38,29 @@
     float t = -ro.y / rd.y;
     if (t <= 0.) return vec3(0.);
     vec3 p = ro + rd * t; float r = length(p.xz);
-    float tau = vanh(r);
+    float tau = vanhF(r, fwidth(r));
     if (tau < .001) return vec3(0.);
     tHit = t;
-    float mu = abs(rd.y);
+    float mu = abs(rd.y), mu0 = max(abs(uSunD.y), .004);
     float a = 1. - exp(-tau / max(mu, .02));
     tr = 1. - a;
-    // ngược sáng: ánh sáng xuyên vành (tán xạ thuận) sáng nhất ở vành mỏng; vành dày tối hơn khi nhìn xuyên
     float cosg = dot(rd, uSunD);
-    float fwd = pow(max(cosg, 0.), 3.) * 2.2 + .25;
-    float through = exp(-tau * .9);
-    vec3 c = mauVanh(r) * a * (fwd * (.25 + 1.6 * through) + .15);
-    if (bongTho(p)) c *= .05;                                 // bóng sao Thổ đổ lên vành
+    float pha = .3 + 1.9 * pow(max(cosg, 0.), 6.) + .45 * pow(max(cosg, 0.), 2.);   // hạt băng tán xạ mạnh về phía trước
+    vec3 c;
+    if (ro.y * uSunD.y > 0.) c = mauVanh(r) * a * (mu0 / (mu0 + mu)) * pha * 1.7;   // nhìn mặt được nắng: phản xạ (sáng dần sát chân trời)
+    else { float through = exp(-tau * .9); c = mauVanh(r) * a * pha * (.25 + 1.6 * through) * .6; }   // nhìn mặt kia: ánh xuyên vành
+    c += mauVanh(r) * a * .012;
+    if (dot(-p, uSunD) > 0.) { float bs = length(cross(p, uSunD) * vec3(1., RE / RP, 1.)); c *= mix(.05, 1., smoothstep(RE - 1.6, RE + 1.6, bs)); }   // bóng sao Thổ đổ lên vành, mép mềm
     // ánh hành tinh hắt lên vành (vàng nhạt)
     c += mauVanh(r) * a * vec3(.9, .75, .5) * .05 * smoothstep(140., 70., r);
-    return c * mix(1.2, .45, uRock);
+    return c * mix(1.15, .85, uHat);
+  }
+  // ---- Mặt Trời: chấm sáng gắt + quầng; khuất sau hành tinh (mép mềm cho loé nhẫn kim cương) ----
+  float matTroiVis(vec3 ro){
+    float tc = dot(-ro, uSunD); if (tc < 0.) return 1.;
+    vec3 cp = ro + uSunD * tc;
+    float b = length(cp * vec3(1., RE / RP, 1.));
+    return smoothstep(RE - .35, RE + .5, b);
   }
   vec3 hanhTinh(vec3 ro, vec3 rd, float t){
     vec3 p = ro + rd * t; vec3 n = normalize(p * vec3(1., (RE / RP) * (RE / RP), 1.));
@@ -55,7 +70,8 @@
     float d = dot(n, uSunD);
     vec3 col = alb * max(d, 0.) * 1.5;
     // viền sáng khí quyển khi ngược sáng
-    float rim = pow(1. - max(dot(n, -rd), 0.), 6.) * pow(max(dot(rd, uSunD), 0.), 2.);
+    float ecl = 1. - matTroiVis(ro);
+    float rim = pow(1. - max(dot(n, -rd), 0.), 6.) * pow(max(dot(rd, uSunD), 0.), 2.) * smoothstep(-.3, .55, dot(n, uSunD) + .8 * ecl);
     col += vec3(1., .85, .6) * rim * 3.5;
     // phía đêm: ánh vành hắt (rất mờ), bóng vành đổ lên hành tinh
     col += alb * vec3(.6, .55, .45) * .025 * (.5 + .5 * n.y * sign(p.y + .001));
@@ -63,131 +79,195 @@
     if (tv > 0.) col *= mix(1., exp(-vanh(sr) * 1.5), .9);
     return col;
   }
-  // ---- rừng khối băng sát máy quay (mét) ----
-  vec4 h4c(vec3 c){ return h43(c + 31.); }
-  float daBang(vec3 q, out vec3 cid){
-    float s = 26.; vec3 c = floor(q / s); vec3 f = q - (c + .5) * s;
-    cid = c;
-    vec4 h = h4c(c);
-    if (h.w > .2 || abs(c.y) > 1.) return s * .5;
-    vec3 o = (h.xyz - .5) * s * .5;
-    float rad = 1.2 + 4.5 * h.x * h.x;
-    vec3 g = (f - o) / rad;
-    float d = (max(max(abs(g.x * .9 + g.y * .3), abs(g.y * .8 - g.z * .4)), abs(g.z + g.x * .2)) * .55 + length(g) * .45 - 1.) * rad;   // khối có cạnh
-    d += pn((f - o) * .07 + h.xyz * 9.) * rad * .22 + pn((f - o) * .25) * rad * .035;
-    return d;
-  }
-  vec4 rungBang(vec3 rd, out float tHit){
-    tHit = 1e9;
-    float t = 1.;
-    vec3 cid;
-    for (int i = 0; i < 44; i++) {
-      vec3 q = uFOff + rd * t;
-      if (abs(q.y) > 60.) { if (q.y * rd.y > 0.) break; }
-      float d = daBang(q, cid);
-      if (d < .02 * t) { tHit = t; break; }
-      t += max(d * .6, .03 * t);
-      if (t > 520.) break;
+  // ---- biển hạt băng (mét): các lớp ngang trong bề dày vành, mỗi ô tối đa một hạt tròn; vẽ từ lớp trên xuống ----
+  vec4 hatBang(vec3 rd){
+    vec4 acc = vec4(0.);
+    if (rd.y > -1e-4) return acc;
+    vec3 eye = vec3(0., uHm, 0.);
+    for (int k = 0; k < 8; k++) {
+      float fk = float(k);
+      // 6 lớp tảng (cao → thấp) rồi 2 lớp hạt li ti sát mặt vành cho mặt vành có độ lấm tấm
+      float yk = k < 6 ? (2.5 - fk) * 2.1 : -.4 - (fk - 6.) * 1.3;
+      float c = k < 6 ? 6.5 + fk * 2.2 : 1.9 + (fk - 6.) * 1.1;
+      float t = (yk - uHm) / rd.y;
+      if (t <= 0.) continue;
+      vec2 hp = rd.xz * t + uFOff.xz;
+      vec2 cid = floor(hp / c);
+      vec4 h = h43(vec3(cid, fk * 7.13 + 3.1));
+      if (h.w > uDen) continue;
+      float R = k < 6 ? c * (.035 + .23 * pow(h.z, 3.6)) : c * (.05 + .1 * h.z);   // phần lớn hạt nhỏ, lác đác hạt to
+      vec2 cc = (cid + .5 + (h.xy - .5) * max(1. - 2.4 * R / c, 0.)) * c;  // tâm (nằm gọn trong ô)
+      vec3 P = vec3(cc.x - uFOff.x, yk + (fract(h.x * 7.31) - .5) * 1.2, cc.y - uFOff.z);
+      vec3 o = eye - P;
+      float b = dot(o, rd), oo = dot(o, o);
+      float tc = -b;
+      if (tc <= 0.) continue;
+      // hạt không tròn: bán kính đổi theo hướng (cục tuyết đá lồi lõm)
+      vec3 cpv = o + rd * tc; float cpl = length(cpv);
+      vec3 ud = cpv / max(cpl, 1e-4);
+      float Rl = R * (1. + .34 * pn(ud * .28 + h.xyz * 11.) + .1 * pn(ud * .62 + h.zxy * 7.));
+      float dmin = cpl - Rl;
+      float pw = tc * uPxA * 1.1;
+      float cov = 1. - smoothstep(-pw, pw, dmin);
+      cov *= 1. - smoothstep(.5, 2.2, pw / R);                             // nhỏ hơn điểm ảnh: mặt vành đã gánh phần trung bình
+      if (cov <= 0.) continue;
+      float disc = b * b - (oo - Rl * Rl);
+      vec3 n0 = disc > 0. ? normalize(o + rd * (-b - sqrt(disc))) : ud;
+      vec3 n = normalize(n0 + .55 * vec3(pn(n0 * .34 + h.xyz * 5.), pn(n0 * .34 + h.yzx * 5. + 3.), pn(n0 * .34 + h.zxy * 5. + 7.)));
+      // băng nước: trắng hơi xanh, mặt hướng nắng sáng, viền loé khi nhìn ngược nắng, lấp lánh tinh thể
+      // băng tuyết nhám: mặt hướng nắng sáng, chuyển mềm sang tối; ngược nắng thì cả hạt trong và sáng dịu, mép sáng hơn
+      float nl = dot(n, uSunD);
+      vec3 ice = vec3(.78, .82, .88) * (.78 + .35 * h.x);
+      float rim = pow(1. - max(dot(n0, -rd), 0.), 2.);
+      float nguoc = pow(max(dot(rd, uSunD), 0.), 3.);
+      float gr = .72 + .45 * (pn(n0 * 5.1 + h.xyz * 9.) + .5 * pn(n0 * 13. + h.yzx * 4.));   // mặt sần như tuyết
+      vec3 cl = ice * gr * (smoothstep(-.15, .7, nl) * .95 + .02);
+      cl += vec3(.75, .86, 1.) * nguoc * (.12 + .25 * rim) * gr;
+      cl += vec3(1., .95, .88) * rim * smoothstep(0., .55, dot(n0, uSunD)) * 1.3;   // viền nắng ở phía hạt hướng về Mặt Trời
+      cl += vec3(1.) * pow(max(dot(reflect(rd, n), uSunD), 0.), 40.) * 1.1 * step(.62, fract(h.y * 13.7));   // vài hạt lấp lánh
+      cl += vec3(.9, .76, .52) * .02 * (.5 + .5 * n.y);                   // ánh sao Thổ hắt lên
+      cl *= exp(-tc / 900.);
+      acc.rgb += (1. - acc.a) * cl * cov;
+      acc.a += (1. - acc.a) * cov;
+      if (acc.a > .985) break;
     }
-    if (tHit > 1e8) return vec4(0.);
-    vec3 q = uFOff + rd * tHit; vec2 e = vec2(.06 * tHit * .01 + .02, 0.);
-    vec3 n = normalize(vec3(daBang(q + e.xyy, cid) - daBang(q - e.xyy, cid), daBang(q + e.yxy, cid) - daBang(q - e.yxy, cid), daBang(q + e.yyx, cid) - daBang(q - e.yyx, cid)));
-    float back = pow(max(dot(-n, uSunD), 0.), 2.) ;
-    float rim = pow(1. - max(dot(n, -rd), 0.), 3.) * (.4 + 1.6 * max(dot(rd, uSunD), 0.));
-    float sss = pow(max(dot(rd, uSunD), 0.), 4.) * .6;
-    vec3 ice = vec3(.22, .25, .3);
-    vec3 col = ice * (max(dot(n, uSunD), 0.) * .9 + .015) + vec3(.7, .8, .95) * rim * .55 + vec3(.45, .62, .85) * sss * .5 + vec3(.9, .75, .5) * .012;
-    // lấp lánh tinh thể băng
-    col += vec3(1.) * pow(max(dot(reflect(rd, n), uSunD), 0.), 120.) * 3. * step(.6, pn(q * 3.) + .5);
-    float fog = exp(-tHit * .004);
-    return vec4(col * fog, fog);
+    return acc;
   }
   void main(){
     vec3 ro = uCP, rd = tiaNhin(vUv);
     vec3 col = bauTroiSao(rd, uPxA) * .7 + nganHa(rd, normalize(vec3(.4, .6, .7)), uPxA) * .25;
+    // Mặt Trời: ngôi sao sáng nhất, gắt và nhỏ; quầng mềm
+    float vis = matTroiVis(ro);
+    float ca = dot(rd, uSunD), sa = sqrt(max(2. - 2. * ca, 0.));
+    vec3 sun = vec3(1., .93, .82) * (exp(-sa * sa / (uPxA * uPxA * 2.2)) * 40. + exp(-sa / .0035) * 1.6 + exp(-sa / .03) * .22 + exp(-sa / .2) * .04);
+    col += sun * vis;
     // Trái Đất: chấm xanh
     float de = length(rd - uEarth);
     col += vec3(.45, .62, 1.) * (exp(-de * de / (uPxA * uPxA * 1.6)) * 5. + exp(-de / (uPxA * 5.)) * .25) * uEarthK;
-    // quầng sáng quanh hành tinh (Mặt Trời nấp sau)
+    // quầng sáng quanh hành tinh khi Mặt Trời nấp sau
     vec2 tp = elip(ro, rd);
-    float b = length(cross(ro, rd)) ; float alt = b - RE;
-    if (tp.x < 0.) col += vec3(1., .85, .62) * exp(-max(alt, 0.) / 2.5) * pow(max(dot(rd, uSunD), 0.), 2.) * 1.2 * (dot(-ro, rd) > 0. ? 1. : 0.);
+    float b = length(cross(ro, rd)); float alt = b - RE;
+    if (tp.x < 0.) { vec3 cn = normalize(ro + rd * max(dot(-ro, rd), 0.)); col += vec3(1., .85, .62) * exp(-max(alt, 0.) / 2.5) * pow(max(dot(rd, uSunD), 0.), 2.) * 1.2 * (1. - vis * .7) * smoothstep(-.3, .55, dot(cn, uSunD) + .8 * (1. - vis)) * (dot(-ro, rd) > 0. ? 1. : 0.); }
     float trR, tR; vec3 rc = vanhMau(ro, rd, trR, tR);
     if (tp.x > 0.) {
       vec3 pc = hanhTinh(ro, rd, tp.x);
       if (tR < tp.x) col = rc + trR * pc; else col = pc;
     } else col = rc + trR * col;
-    // lớp hạt sát mặt phẳng vành khi máy quay ở trong vành: dải sáng mờ ở chân trời
-    if (uRock > 0.) {
-      float hz = exp(-abs(rd.y) * 70.) * .1 * uRock;
-      col += vec3(.75, .78, .85) * hz * (.4 + pow(max(dot(rd, uSunD), 0.), 2.));
-      float tb; vec4 rk = rungBang(rd, tb);
-      col = mix(col, rk.rgb, rk.a > 0. ? (1. - .0) : 0.) * (rk.a > 0. ? 1. : 1.);
-      if (rk.a > 0.) col = rk.rgb + (1. - rk.a) * col;
+    // biển hạt băng khi lướt sát vành
+    if (uHat > .001) {
+      float hz = exp(-abs(rd.y) * 60.) * .04 * uHat;
+      col += vec3(.75, .8, .88) * hz * (.4 + pow(max(dot(rd, uSunD), 0.), 2.));
+      vec4 hb = hatBang(rd);
+      col = col * (1. - hb.a * uHat) + hb.rgb * uHat;
     }
+    // loé nhẫn kim cương: Mặt Trời đang trượt ra sau mép hành tinh
+    float nhan = vis * (1. - vis) * 4.;
+    col += vec3(1., .9, .75) * nhan * (exp(-sa / .006) * 3. + exp(-sa / .05) * .35);
     gl_FragColor = vec4(col * uA, uA);
   }`;
-  // máy quay: [S, bán kính, độ cao (1000 km), góc phương vị (độ), nhìn vào trong (độ), ngóc (độ), góc nhìn]
-  const CK = SN.duong([
-    [140.0, 129.0, 0.00003, 10, 42, 2, 62],
-    [152.0, 129.0, 0.00003, 30, 46, 3, 64],
-    [159.5, 129.0, 0.00004, 46, 50, 4, 64],
-    [163.0, 131.0, 6.0, 52, 62, -12, 58],
-    [168.0, 150.0, 18.0, 60, 72, -14, 54],
-    [176.0, 175.0, 26.0, 68, 76, -12, 50],
-    [182.0, 185.0, 28.0, 70, 80, -12, 46],
-  ]);
   const R = Math.PI / 180;
-  const C = { pos: [0, 0, 0], tgt: [0, 0, 0], up: [0, 1, 0], fov: 60 };
+  const nrm = (a) => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
+  // Mặt Trời: phía sau sao Thổ nhìn từ phía máy quay (+z), cao hơn mặt phẳng vành 1.5°
+  const SUN = nrm([0.08, 0.026, -1.0]);
+  const PHI0 = Math.atan2(-SUN[0], -SUN[2]);   // phương đối diện Mặt Trời trên mặt phẳng vành
+  // máy quay: [S, bán kính (1000 km), lệch khỏi trục đối Mặt Trời (độ), log10 độ cao trên mặt vành (mét),
+  //            nhìn (0 về sao Thổ … 1 về Mặt Trời), lệch ngang (độ), ngóc (độ), nghiêng (độ), góc nhìn]
+  const CK = SN.duong([
+    [144.5, 1750, 12.5, 8.2, 0.42, 2, 2, -8, 52],
+    [151.0, 1000, 15.0, 7.85, 0.5, 0, 0, 5, 50],
+    [156.0, 340, 25.0, 6.9, 0.55, -3, -2, 7, 54],
+    [158.3, 150, 35.0, 3.0, 0.5, -6, -6, 3, 62],
+    [159.8, 134, 33.0, 1.72, 0.38, -8, -8, 0, 64],
+    [161.0, 131, 30.0, 1.85, 0.4, -6, -7, -2, 64],
+    [162.6, 145, 24.0, 6.2, 0.5, 0, -4, -4, 60],
+    [166.0, 168, 15.0, 7.1, 0.3, 4, -8, -6, 56],
+    [172.0, 180, 10.0, 7.38, 0.2, 6, -11, -4, 50],
+    [176.0, 186, 9.0, 7.43, 0.2, 6, -12, -3, 48],
+    [182.0, 190, 9.0, 7.45, 0.2, 6, -12, -3, 46],
+  ]);
+  const C = { pos: [0, 0, 0], tgt: [0, 0, 0], up: [0, 1, 0], fov: 60, hm: 1e9, r: 0 };
   function camAt(S) {
     const c = CK(S);
-    const r = c[0], y = c[1], az = c[2] * R;
-    const pos = [Math.cos(az) * r, y, Math.sin(az) * r];
-    // tiếp tuyến (chiều bay) quay vào trong một góc
-    const tan = [-Math.sin(az), 0, Math.cos(az)], inn = [-Math.cos(az), 0, -Math.sin(az)];
-    const k = c[3] * R, pt = c[4] * R;
-    let d = [tan[0] * Math.cos(k) + inn[0] * Math.sin(k), 0, tan[2] * Math.cos(k) + inn[2] * Math.sin(k)];
-    d = [d[0] * Math.cos(pt), Math.sin(pt), d[2] * Math.cos(pt)];
-    C.pos = pos; C.tgt = [pos[0] + d[0], pos[1] + d[1], pos[2] + d[2]]; C.up = [0, 1, 0]; C.fov = c[5];
+    const r = c[0], ph = PHI0 + c[1] * R, hm = Math.pow(10, c[2]), y = hm / 1e6;
+    const pos = [Math.sin(ph) * r, y, Math.cos(ph) * r];
+    const toS = nrm([-pos[0], -pos[1], -pos[2]]);
+    let L = nrm([toS[0] + (SUN[0] - toS[0]) * c[3], toS[1] + (SUN[1] - toS[1]) * c[3], toS[2] + (SUN[2] - toS[2]) * c[3]]);
+    const yaw = c[4] * R, pit = c[5] * R;
+    const lx = L[0] * Math.cos(yaw) + L[2] * Math.sin(yaw), lz = -L[0] * Math.sin(yaw) + L[2] * Math.cos(yaw), hl = Math.hypot(lx, lz) || 1;
+    const el = Math.atan2(L[1], hl) + pit;
+    L = [lx / hl * Math.cos(el), Math.sin(el), lz / hl * Math.cos(el)];
+    const rgt = nrm([-L[2], 0, L[0]]);
+    const up0 = [rgt[1] * L[2] - rgt[2] * L[1], rgt[2] * L[0] - rgt[0] * L[2], rgt[0] * L[1] - rgt[1] * L[0]];
+    const rl = c[6] * R;
+    C.pos = pos; C.tgt = [pos[0] + L[0], pos[1] + L[1], pos[2] + L[2]];
+    C.up = [up0[0] * Math.cos(rl) + rgt[0] * Math.sin(rl), up0[1] * Math.cos(rl) + rgt[1] * Math.sin(rl), up0[2] * Math.cos(rl) + rgt[2] * Math.sin(rl)];
+    C.fov = c[7]; C.hm = hm; C.r = r;
     return C;
   }
+  // độ dày vành chỗ máy quay (để biết có hạt băng hay khe trống)
+  const dayVanh = (r) => { const ss = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); }; return ss(74.5, 76, r) * (1 - ss(91.5, 92.2, r)) * 0.25 + ss(92, 93, r) * (1 - ss(117, 117.6, r)) * 0.85 + ss(122, 122.6, r) * (1 - ss(136.2, 136.8, r)) * 0.62; };
+  // sau khi khuất: Mặt Trời nấp đúng sau tâm sao Thổ nhìn từ máy quay lúc 172, hơi dưới mặt phẳng vành → vành sáng ngược, quầng trọn vòng
+  const SUN_SAU = (() => { const p = camAt(172).pos.slice(); const t = nrm([-p[0], -p[1], -p[2]]); return nrm([t[0], t[1] + 0.02, t[2]]); })();
   SN.dung.push((T) => {
-    // Mặt Trời nấp sau sao Thổ nhìn từ chặng cuối; Trái Đất: chấm dưới vành bên phải
-    const c176 = camAt(172);
-    const toSat = [-c176.pos[0], -c176.pos[1], -c176.pos[2]], l = Math.hypot(...toSat);
-    const sunD = new T.Vector3(toSat[0] / l, toSat[1] / l + 0.02, toSat[2] / l).normalize();
-    const mesh = SN.quad(FRAG, { uSunD: { value: sunD }, uEarth: { value: new T.Vector3() }, uEarthK: { value: 0 }, uFOff: { value: new T.Vector3() }, uRock: { value: 1 }, uRet: { value: 0 } });
+    const sunD = new T.Vector3(SUN[0], SUN[1], SUN[2]);
+    const mesh = SN.quad(FRAG, { uSunD: { value: sunD }, uEarth: { value: new T.Vector3() }, uEarthK: { value: 0 }, uFOff: { value: new T.Vector3() }, uHm: { value: 1e9 }, uHat: { value: 0 }, uDen: { value: 0 } });
+    const tr = [], sp = [0, 0, 0];
     SN.them({
-      ten: 'sautho', tu: 140.2, den: 182, lop: 40, mesh, warmS: 150,
-      a: (S) => ramp(S, 140.6, 143.0) * (1 - ramp(S, 180.6, 181.8)),
+      ten: 'sautho', tu: 144.8, den: 182, lop: 40, mesh, warmS: 159.8,
+      a: (S) => ramp(S, 145.3, 147.9) * (1 - ramp(S, 180.6, 181.8)),
       cap(S, a) {
         const u = mesh.material.uniforms;
+        // Mặt Trời đã khuất sau hành tinh (từ 162.9) thì hạ dần xuống dưới mặt phẳng vành: vành bừng sáng ngược (ánh xuyên),
+        // không ai thấy Mặt Trời xê dịch vì nó đang nấp sau sao Thổ
+        { const ky = ease((S - 162.9) / 3.2); const sd = nrm([SUN[0] + (SUN_SAU[0] - SUN[0]) * ky, SUN[1] + (SUN_SAU[1] - SUN[1]) * ky, SUN[2] + (SUN_SAU[2] - SUN[2]) * ky]); u.uSunD.value.set(sd[0], sd[1], sd[2]); }
         const c = camAt(S);
-        const cc = { pos: c.pos.slice(), tgt: c.tgt.slice(), up: c.up.slice(), fov: c.fov };
+        const cc = { pos: c.pos.slice(), tgt: c.tgt.slice(), up: c.up.slice(), fov: c.fov, hm: c.hm, r: c.r };
         const f = SN.camQuad(mesh.material, cc.pos, cc.tgt, cc.up, cc.fov);
+        const fx = f.f.slice(), rx = f.r.slice(), ux = f.u.slice();
         SN.uChung.uPxA.value = 2 * Math.tan(cc.fov * Math.PI / 360) / Math.max(1, SN.size()[1]);
-        // rừng băng: chạy theo máy quay (mét), quấn vòng để khỏi mất chính xác
-        // tích phân hướng bay (tiếp tuyến) × tốc độ để khối băng trôi đúng chiều
-        let ox = 0, oz = 0; const n = 60, s0 = 140, s1 = Math.min(S, 162);
-        for (let i = 0; i < n; i++) { const ss = s0 + (s1 - s0) * (i + 0.5) / n, az = CK(ss)[2] * R; ox += -Math.sin(az); oz += Math.cos(az); }
-        const v = 230 * (s1 - s0) / n;
-        u.uFOff.value.set(((ox * v) % 5200 + 5200) % 5200, 22 + 6 * Math.sin(S * 0.7), ((oz * v) % 5200 + 5200) % 5200);
-        u.uRock.value = 1 - ease((S - 159.6) / 1.8);
+        // biển hạt băng: chỉ khi sát mặt vành; trôi theo hướng bay (70 m/s, tích phân hướng bay để đúng chiều)
+        u.uHm.value = cc.hm;
+        u.uHat.value = (1 - ramp(Math.log10(cc.hm), 2.55, 3.2)) * (dayVanh(cc.r) > 0.05 ? 1 : 0);
+        u.uDen.value = clamp(dayVanh(cc.r) * 0.62, 0, 0.6);
+        let ox = 0, oz = 0; const n = 40, s0 = 157, s1 = clamp(S, s0, 163);
+        for (let i = 0; i < n; i++) {
+          const ta = s0 + (s1 - s0) * i / n, tb = s0 + (s1 - s0) * (i + 1) / n;
+          const pa = camAt(ta).pos.slice(), pb = camAt(tb).pos;
+          const dx = pb[0] - pa[0], dz = pb[2] - pa[2], dl = Math.hypot(dx, dz) || 1;
+          ox += dx / dl * 70 * (tb - ta); oz += dz / dl * 70 * (tb - ta);
+        }
+        u.uFOff.value.set(ox, 0, oz);
         // Trái Đất: trước mặt, hơi dưới phải khung hình; to và sáng dần khi lao tới
-        const fx = f.f, rx = f.r, ux = f.u;
         const e = [fx[0] * 0.92 + rx[0] * 0.3 - ux[0] * 0.22, fx[1] * 0.92 + rx[1] * 0.3 - ux[1] * 0.22, fx[2] * 0.92 + rx[2] * 0.3 - ux[2] * 0.22];
         if (S < 169) { const el = Math.hypot(...e); u.uEarth.value.set(e[0] / el, e[1] / el, e[2] / el); SN.saoTho_e = u.uEarth.value.clone(); }
         else if (SN.saoTho_e) u.uEarth.value.copy(SN.saoTho_e);
         u.uEarthK.value = ease((S - 168.5) / 2) * (1 + 6 * Math.pow(ease((S - 176) / 5.5), 2));
-        // tia sáng lao về phía chấm xanh
-        const ed = u.uEarth.value;
-        const sp = SN.chieu(mesh.material, [cc.pos[0] + ed.x * 50, cc.pos[1] + ed.y * 50, cc.pos[2] + ed.z * 50], [0, 0, 0]);
-        const lead = 0.35 * (1 - ease((S - 172) / 6));
-        const hx = mix(0.5, sp[0], 1 - lead * 0), hy = mix(0.5, sp[1], 1 - lead * 0);
-        const h = S < 165 ? [0.5, 0.47] : [mix(0.5, hx, ease((S - 165) / 6)), mix(0.47, hy, ease((S - 165) / 6))];
-        SN.tiaDat(h, [], a * (S < 176 ? 1 : 1 - ease((S - 179) / 2)), 2.1, 0);
+        // tia sáng: bay trước máy quay, hơi lệch dưới phải; đuôi là đường nó vừa đi (thấy rõ lúc vút giữa vũ trụ)
+        const lech = ease((S - 146.4) / 2.2) * (1 - ease((S - 157) / 2));
+        const spark = (t, out) => {
+          const q = camAt(t + 0.55).pos;
+          const dd = Math.hypot(q[0] - cc.pos[0], q[1] - cc.pos[1], q[2] - cc.pos[2]);
+          out[0] = q[0] + (rx[0] * 0.05 - ux[0] * 0.03) * dd * lech; out[1] = q[1] + (rx[1] * 0.05 - ux[1] * 0.03) * dd * lech; out[2] = q[2] + (rx[2] * 0.05 - ux[2] * 0.03) * dd * lech;
+          return out;
+        };
+        let h;
+        if (S < 165) {
+          const p0 = SN.chieu(mesh.material, spark(S, sp), [0, 0, 0]);
+          h = p0[2] > 0 ? [p0[0], p0[1]] : [0.5, 0.47];
+          tr.length = 0;
+          for (let k = 0; k < 14; k++) { const q = SN.chieu(mesh.material, spark(S - k * 0.05, [0, 0, 0]), [0, 0, 0]); tr.push(q[2] > 0 ? [q[0], q[1]] : [-9, -9]); }
+          camAt(S);   // trả lại máy quay hiện tại cho các lệnh sau
+        } else {
+          const ed = u.uEarth.value;
+          const pe = SN.chieu(mesh.material, [cc.pos[0] + ed.x * 50, cc.pos[1] + ed.y * 50, cc.pos[2] + ed.z * 50], [0, 0, 0]);
+          const k5 = ease((S - 165) / 6);
+          h = [mix(0.5, pe[0], k5), mix(0.47, pe[1], k5)]; tr.length = 0;
+        }
+        if (S > 146.6) SN.tiaDat(h, tr, a * (S < 176 ? 1 : 1 - ease((S - 179) / 2)), 2.1, lech);
+        // hậu kỳ: vút đi giữa vũ trụ có nhoè hướng tâm nhẹ; cuối đoạn lao về chấm xanh
+        const vut = Math.exp(-Math.max(0, S - 146) / 2.2) * 0.26 * ramp(S, 145, 146.5);
         const zb = Math.pow(ease((S - 176.5) / 4.5), 2);
-        SN.gradeMix({ exp: 1.1, bloom: 0.9, thr: 1.1, streak: 0.5, sat: 1.08, con: 1.08, vig: 0.42, grain: 0.035, ca: 0.012 + 0.04 * zb, bars: 1, lift: [0.008, 0.01, 0.016], gain: [1.02, 1.0, 0.98], zoom: zb * 0.9, zc: [h[0], h[1]] }, a);
+        SN.gradeMix({ exp: 1.08, bloom: 0.9, thr: 1.1, streak: 0.62, sat: 1.08, con: 1.08, vig: 0.42, grain: 0.035, ca: 0.012 + 0.04 * zb, bars: 1, lift: [0.008, 0.01, 0.016], gain: [1.02, 1.0, 0.98], zoom: zb * 0.9 + vut, zc: [h[0], h[1]] }, a);
       },
     });
   });

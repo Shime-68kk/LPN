@@ -168,8 +168,8 @@
     });
     const tr = [];
     SN.them({
-      ten: 'hoden', tu: 99, den: 147, lop: 30, mesh, warmS: 126,
-      a: (S) => ramp(S, 99.5, 104.5) * (1 - ramp(S, 143.2, 146.6)),
+      ten: 'hoden', tu: 99, den: 148, lop: 30, mesh, warmS: 126,
+      a: (S) => ramp(S, 99.5, 104.5) * (1 - ramp(S, 145.0, 147.7)),   // để trọn cú vút lên rồi mới nhường cảnh sao Thổ
       cap(S, a) {
         const u = mesh.material.uniforms;
         camAt(S, C);
