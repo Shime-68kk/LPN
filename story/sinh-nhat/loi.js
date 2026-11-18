@@ -39,6 +39,11 @@
 
   let T = null, renderer = null, cvs = null, scene = null, cam3 = null, quadGeo = null, noise3 = null;
   let W = 0, H = 0, basePR = 1, quality = 1, pinQ = parseFloat(Q.get('q')) || 0;
+  // ĐỘ PHÂN GIẢI ĐỘNG: khung cảnh vẽ vào một góc của bộ đệm cỡ đầy đủ theo tỉ lệ dr (không cấp phát lại → không giật).
+  // Mỗi cảnh tự học tỉ lệ vừa sức máy (cảnh nặng hạ, cảnh nhẹ giữ nét tối đa), đổi cảnh thì dùng ngay tỉ lệ đã học.
+  let dr = 1, Ws = 1, Hs = 1;
+  const DR_MIN = 0.5;
+  const DRQ = NHA && Q.get('dr') ? parseFloat(Q.get('dr')) : 0;   // chỉ mạng nhà: ghim tỉ lệ để thử
   let ready = false, failed = false, started = false;
   let DT = false; try { DT = matchMedia('(pointer: coarse)').matches; } catch (e) { /* bỏ qua */ }
   SN.DT = DT;
@@ -57,8 +62,8 @@
     if (blend === 'add') { m.transparent = true; m.blending = T.CustomBlending; m.blendSrc = T.OneFactor; m.blendDst = T.OneFactor; m.blendEquation = T.AddEquation; }
     return m;
   }
-  const PRE = `uniform sampler2D tS; uniform vec2 uTx; uniform float uThr; in vec2 vUv;
-  vec3 tap(vec2 o){ return texture(tS, vUv + o * uTx).rgb; }
+  const PRE = `uniform sampler2D tS; uniform vec2 uTx; uniform float uThr; uniform vec2 uSc; in vec2 vUv;
+  vec3 tap(vec2 o){ return texture(tS, vUv * uSc + o * uTx).rgb; }
   void main(){ // lọc 13 điểm (kiểu Call of Duty) + cắt ngưỡng mềm, chống nháy điểm sáng đơn lẻ
     vec3 a = tap(vec2(-2,-2)), b = tap(vec2(0,-2)), c = tap(vec2(2,-2)), d = tap(vec2(-1,-1)), e = tap(vec2(1,-1)), f = tap(vec2(-2,0)), g = tap(vec2(0,0));
     vec3 h = tap(vec2(2,0)), i = tap(vec2(-1,1)), j = tap(vec2(1,1)), k = tap(vec2(-2,2)), l = tap(vec2(0,2)), m = tap(vec2(2,2));
@@ -90,20 +95,29 @@
   }`;
   const FINAL = `uniform sampler2D tScene; uniform sampler2D tBloom; uniform sampler2D tStreak;
   uniform float uExp, uBloom, uStreakK, uSat, uCon, uVig, uGrain, uCA, uBars, uFade, uWhite, uTime, uWarm, uZoomBlur;
-  uniform vec3 uLift, uGain, uStreakC; uniform vec2 uZC; uniform vec2 uResF; in vec2 vUv;
+  uniform vec3 uLift, uGain, uStreakC; uniform vec2 uZC; uniform vec2 uResF; uniform vec2 uSc; uniform vec2 uTxS; uniform float uSharp; in vec2 vUv;
   float hh(vec2 p){ vec3 q = fract(vec3(p.xyx) * .1031); q += dot(q, q.yzx + 33.33); return fract((q.x + q.y) * q.z); }
   vec3 aces(vec3 x){ return clamp(x * (2.51 * x + .03) / (x * (2.43 * x + .59) + .14), 0., 1.); }
   vec3 scn(vec2 uv){
+    vec2 su = uv * uSc;
+    vec3 c = texture(tScene, su).rgb;
+    // làm nét viền: so với 4 điểm ảnh kề, đẩy chênh lệch lên nhưng kẹp trong khoảng của chúng (không sinh viền sáng giả)
+    if (uSharp > .001) {
+      vec3 n = texture(tScene, su + vec2(0., uTxS.y)).rgb, s = texture(tScene, su - vec2(0., uTxS.y)).rgb;
+      vec3 e = texture(tScene, su + vec2(uTxS.x, 0.)).rgb, w = texture(tScene, su - vec2(uTxS.x, 0.)).rgb;
+      vec3 mn = min(c, min(min(n, s), min(e, w))), mx = max(c, max(max(n, s), max(e, w)));
+      c = clamp(c + (4. * c - n - s - e - w) * uSharp, mn, mx);
+    }
     // lệch màu ở mép (ống kính), nhoè hướng tâm khi lao nhanh
     vec2 dc = uv - .5; float r2 = dot(dc, dc);
     vec2 o = dc * r2 * uCA;
-    vec3 c = vec3(texture(tScene, uv - o).r, texture(tScene, uv).g, texture(tScene, uv + o).b);
+    if (uCA > 1e-4) { vec3 c0 = texture(tScene, su).rgb; c.r += texture(tScene, (uv - o) * uSc).r - c0.r; c.b += texture(tScene, (uv + o) * uSc).b - c0.b; }
     if (uZoomBlur > .001) {
       vec2 dz = (uv - uZC) * uZoomBlur * .06; vec3 acc = c;
-      for (int i = 1; i < 9; i++) { float fi = float(i); acc += texture(tScene, uv - dz * fi).rgb * (1. - fi / 10.); }
+      for (int i = 1; i < 9; i++) { float fi = float(i); acc += texture(tScene, (uv - dz * fi) * uSc).rgb * (1. - fi / 10.); }
       c = acc / 5.4;
     }
-    return c;
+    return max(c, 0.);
   }
   void main(){
     vec2 uv = vUv;
@@ -134,7 +148,7 @@
     P.down = []; P.mats = {};
     for (let i = 0; i < 6; i++) P.down.push(rt(1, 1));
     P.s0 = rt(1, 1); P.s1 = rt(1, 1);
-    P.mPre = passMat(PRE, { tS: { value: null }, uTx: { value: new T.Vector2() }, uThr: { value: 1.0 } });
+    P.mPre = passMat(PRE, { tS: { value: null }, uTx: { value: new T.Vector2() }, uThr: { value: 1.0 }, uSc: { value: new T.Vector2(1, 1) } });
     P.mDown = passMat(DOWN, { tS: { value: null }, uTx: { value: new T.Vector2() } });
     P.mUp = passMat(UP, { tS: { value: null }, uTx: { value: new T.Vector2() }, uK: { value: 1 } }, 'add');
     P.mStreak = passMat(STREAK, { tS: { value: null }, uTx: { value: new T.Vector2() }, uStep: { value: 1 } });
@@ -144,6 +158,7 @@
       uCA: { value: 0.012 }, uBars: { value: 1 }, uFade: { value: 1 }, uWhite: { value: 0 }, uTime: { value: 0 }, uWarm: { value: 0 }, uZoomBlur: { value: 0 },
       uLift: { value: new T.Vector3(0.012, 0.014, 0.022) }, uGain: { value: new T.Vector3(1, 1, 1) }, uStreakC: { value: new T.Vector3(0.45, 0.62, 1.0) },
       uZC: { value: new T.Vector2(0.5, 0.5) }, uResF: { value: new T.Vector2(1, 1) },
+      uSc: { value: new T.Vector2(1, 1) }, uTxS: { value: new T.Vector2(1, 1) }, uSharp: { value: 0 },
     });
     P.quad = new T.Mesh(quadGeo, P.mPre); P.quad.frustumCulled = false;
     P.qs = new T.Scene(); P.qs.add(P.quad);
@@ -151,7 +166,7 @@
   }
   function sizePost() {
     P.scene.setSize(W, H);
-    let w = W >> 1, h = H >> 1;
+    let w = W >> (DT ? 2 : 1), h = H >> (DT ? 2 : 1);   // điện thoại: ánh sáng lan bắt đầu ở 1/4 (vốn mềm, nhìn không khác) cho nhẹ
     for (let i = 0; i < 6; i++) { P.down[i].setSize(Math.max(1, w), Math.max(1, h)); w >>= 1; h >>= 1; }
     P.s0.setSize(Math.max(1, W >> 2), Math.max(1, H >> 3)); P.s1.setSize(Math.max(1, W >> 2), Math.max(1, H >> 3));
     P.fin.uniforms.uResF.value.set(W, H);
@@ -162,7 +177,7 @@
   function postRender() {
     const u = P.fin.uniforms, g = GR;
     // ánh sáng lan: lọc + thu nhỏ 6 tầng rồi phóng ngược cộng dồn
-    P.mPre.uniforms.tS.value = P.scene.texture; P.mPre.uniforms.uTx.value.set(1 / W, 1 / H); P.mPre.uniforms.uThr.value = g.thr;
+    P.mPre.uniforms.tS.value = P.scene.texture; P.mPre.uniforms.uTx.value.set(1 / W, 1 / H); P.mPre.uniforms.uThr.value = g.thr; P.mPre.uniforms.uSc.value.set(Ws / W, Hs / H);
     blit(P.mPre, P.down[0]);
     for (let i = 1; i < 6; i++) { const s = P.down[i - 1]; P.mDown.uniforms.tS.value = s.texture; P.mDown.uniforms.uTx.value.set(1 / s.width, 1 / s.height); blit(P.mDown, P.down[i]); }
     for (let i = 5; i > 0; i--) { const s = P.down[i]; P.mUp.uniforms.tS.value = s.texture; P.mUp.uniforms.uTx.value.set(1 / s.width, 1 / s.height); P.mUp.uniforms.uK.value = 1; blit(P.mUp, P.down[i - 1]); }
@@ -176,6 +191,9 @@
     u.uCA.value = g.ca; u.uBars.value = g.bars; u.uFade.value = g.fade; u.uWhite.value = g.white; u.uWarm.value = g.warm; u.uZoomBlur.value = g.zoom;
     u.uZC.value.set(g.zc[0], g.zc[1]); u.uLift.value.set(g.lift[0], g.lift[1], g.lift[2]); u.uGain.value.set(g.gain[0], g.gain[1], g.gain[2]); u.uStreakC.value.set(g.sc[0], g.sc[1], g.sc[2]);
     u.uTime.value = (u.uTime.value + 0.6180339) % 1;
+    u.uSc.value.set(Ws / W, Hs / H); u.uTxS.value.set(1 / W, 1 / H);
+    // càng phóng to từ ảnh nhỏ càng cần làm nét; điện thoại (màn rất mịn) làm nét thêm
+    u.uSharp.value = SN.HQ ? 0.12 : clamp(0.14 + (1 - dr) * 0.5 + (DT ? 0.1 : 0), 0, 0.42);
     blit(P.fin, null);
   }
 
@@ -196,9 +214,10 @@
     const L = { mesh, scale, rt: rt(1, 1), sc: new T.Scene() };
     L.sc.add(mesh);
     const up = new T.ShaderMaterial({ uniforms: { tL: { value: L.rt.texture }, uA: { value: 1 }, uTx: { value: new T.Vector2() } }, vertexShader: SN_GLSL.QUAD_V,
-      fragmentShader: `uniform sampler2D tL; uniform float uA; uniform vec2 uTx; in vec2 vUv;
-      void main(){ vec4 c = texture(tL, vUv) * .5 + (texture(tL, vUv + vec2(uTx.x, 0.)) + texture(tL, vUv - vec2(uTx.x, 0.)) + texture(tL, vUv + vec2(0., uTx.y)) + texture(tL, vUv - vec2(0., uTx.y))) * .125;
+      fragmentShader: `uniform sampler2D tL; uniform float uA; uniform vec2 uTx; uniform vec2 uSc; in vec2 vUv;
+      void main(){ vec2 q = vUv * uSc; vec4 c = texture(tL, q) * .5 + (texture(tL, q + vec2(uTx.x, 0.)) + texture(tL, q - vec2(uTx.x, 0.)) + texture(tL, q + vec2(0., uTx.y)) + texture(tL, q - vec2(0., uTx.y))) * .125;
         gl_FragColor = c * uA; }`, depthTest: false, depthWrite: false, transparent: true });
+    up.uniforms.uSc = { value: new T.Vector2(1, 1) };
     up.blending = T.CustomBlending; up.blendSrc = T.OneFactor; up.blendDst = T.OneMinusSrcAlphaFactor;
     L.upMesh = new T.Mesh(quadGeo, up); L.upMesh.frustumCulled = false; L.upMesh.visible = false; scene.add(L.upMesh);
     L.rt.setSize(Math.max(1, W * scale | 0), Math.max(1, H * scale | 0)); up.uniforms.uTx.value.set(1 / L.rt.width, 1 / L.rt.height);
@@ -240,7 +259,7 @@
   SN.cam3 = () => cam3;
   SN.scene = () => scene;
   SN.renderer = () => renderer;
-  SN.size = () => [W, H];
+  SN.size = () => [Ws, Hs];
   SN.grade = GR;
 
   // ================= ĐỒNG HỒ =================
@@ -266,8 +285,8 @@
   function resize() {
     if (!renderer) return;
     const w = window.innerWidth, h = window.innerHeight;
-    basePR = SN.HQ ? (window.devicePixelRatio || 1) : Math.min(window.devicePixelRatio || 1, DT ? 1.5 : 1.75);
-    const pr = basePR * quality;
+    basePR = SN.HQ ? (window.devicePixelRatio || 1) : Math.min(window.devicePixelRatio || 1, DT ? 1.6 : 1.75);
+    const pr = basePR * (pinQ ? quality : 1);
     renderer.setPixelRatio(pr); renderer.setSize(w, h, false);
     W = Math.floor(w * pr); H = Math.floor(h * pr);
     sizePost();
@@ -301,22 +320,32 @@
       order++;
     }
     if (geoWorld && geoWorld.may) geoWorld.may(S, cam3);
+    SN.canhNay = act.filter((x) => x[0].ten !== 'tia' && x[1] > 0.3).map((x) => x[0].ten).join('+');
     return act;
   }
-  let lastT = 0, frameMs = 16, slowN = 0, thuNet = 0, khoaNet = false, msTruoc = 0, needResize = false;
+  let lastT = 0, needResize = false;
   let doEl = null, doN = 0, doT = 0;
   function renderAt(S) {
+    if (DRQ) dr = DRQ;
+    const d = SN.HQ || pinQ ? 1 : dr;
+    Ws = Math.max(1, Math.round(W * d)); Hs = Math.max(1, Math.round(H * d));
+    SN.uChung.uRes.value.set(Ws, Hs);
     SN.uChung.uS.value = S;
-    SN.uChung.uPxA.value = 2 * Math.tan(cam3.fov * Math.PI / 360) / Math.max(1, H);
+    SN.uChung.uPxA.value = 2 * Math.tan(cam3.fov * Math.PI / 360) / Math.max(1, Hs);
     SN.gradeReset();
     SN.beforeFrame && SN.beforeFrame(S);
     setupWorlds(S);
     SN.afterSetup && SN.afterSetup(S);
     if (SN.HQ) { if (Q.get('bars') === '0') GR.bars = 0; GR.grain *= 0.6; }
+    else if (DT) { GR.grain *= 0.6; GR.ca *= 0.6; }   // điện thoại: bớt hạt nhiễu, bớt nhoè màu ở mép cho hình trong hơn
     for (const L of SN.lows) {
       if (!L.upMesh.visible) continue;
+      const lw = Math.max(1, Math.round(L.rt.width * d)), lh = Math.max(1, Math.round(L.rt.height * d));
+      L.rt.viewport.set(0, 0, lw, lh); L.rt.scissor.set(0, 0, lw, lh); L.rt.scissorTest = true;
+      L.upMesh.material.uniforms.uSc.value.set(lw / L.rt.width, lh / L.rt.height);
       renderer.setRenderTarget(L.rt); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(L.sc, P.oc);
     }
+    P.scene.viewport.set(0, 0, Ws, Hs); P.scene.scissor.set(0, 0, Ws, Hs); P.scene.scissorTest = true;
     renderer.setRenderTarget(P.scene); renderer.setClearColor(0x000000, 1); renderer.clear();
     renderer.render(scene, cam3);
     postRender();
@@ -331,17 +360,32 @@
     if (needResize) { needResize = false; resize(); }
     const S = clock();
     try { renderAt(S); SN.chu && SN.chu.cap(S, playing || !isNaN(fixS)); } catch (e) { console.error(e); failed = true; ready = false; SN.fallback && SN.fallback(e); return; }
-    if (DO) { doN++; if (now - doT > 500) { doEl.textContent = 'S ' + S.toFixed(2) + ' · ' + Math.round(doN * 1000 / (now - doT)) + ' khung/giây · nét ' + Math.round(quality * 100) + '% · ' + W + '×' + H; doN = 0; doT = now; } }
-    if (!pinQ && playing && gap > 0 && gap < 250) {
-      frameMs = frameMs * 0.94 + gap * 0.06;
-      const lim = 1000 / 60 * 1.3;
-      if (khoaNet) { /* máy bị trình duyệt ghìm tốc độ (tiết kiệm pin): hạ nét vô ích */ }
-      else if (thuNet > 0) { if (--thuNet === 0) { if (frameMs > msTruoc * 0.88) { quality = Math.min(1, quality + 0.15); khoaNet = true; needResize = true; } slowN = 0; } }
-      else if (frameMs > lim && ++slowN > 45 && quality > 0.5) { msTruoc = frameMs; thuNet = 70; quality = Math.max(0.5, quality - 0.15); slowN = 0; needResize = true; }
-      else if (frameMs < 1000 / 60 * 1.06 && quality < 1 && ++slowN > 240) { quality = Math.min(1, quality + 0.1); slowN = 0; needResize = true; }
-      else if (frameMs <= lim) slowN = Math.max(0, slowN - 1);
-    }
+    if (DO) { doN++; if (now - doT > 500) { doEl.textContent = 'S ' + S.toFixed(2) + ' · ' + Math.round(doN * 1000 / (now - doT)) + ' khung/giây · nét ' + Math.round((pinQ ? quality : dr) * 100) + '% · ' + Ws + '×' + Hs + ' · ' + (SN.canhNay || ''); doN = 0; doT = now; } }
+    if (!pinQ && !SN.HQ && !DRQ && playing && gap > 0 && gap < 250) dieuKhien(gap);
   }
+  // tỉ lệ động: khung chậm (> 19 ms) thì hạ ngay theo căn bậc hai tỉ lệ thời gian; nhanh đều 40 khung thì nâng một chút,
+  // không vượt "trần" cảnh đó đã học (trần nới dần, phòng khi cảnh nhẹ đi). Trình duyệt ghìm 30 khung/giây (tiết kiệm pin)
+  // thì hạ nét cũng vô ích: phát hiện ra thì lấy 30 làm mốc và giữ nét.
+  const nho = {};
+  let khoaN = 0, chamN = 0, nhanhN = 0, gapTB = 16.7, keyTruoc = '', muc = 1000 / 60, dayN = 0;
+  function dieuKhien(gap) {
+    const key = SN.canhNay || '';
+    let m = nho[key]; if (!m) m = nho[key] = { dr: Math.min(dr, 1), tran: 1 };
+    if (key !== keyTruoc) { keyTruoc = key; dr = m.dr; chamN = 0; nhanhN = 0; gapTB = muc; }
+    gapTB = gapTB * 0.8 + gap * 0.2;
+    m.tran = Math.min(1, m.tran + 0.0004);
+    if (gap > muc * 1.15) { chamN++; nhanhN = 0; } else { chamN = Math.max(0, chamN - 0.5); if (gap < muc * 1.08) nhanhN++; }
+    if (chamN >= 3) {
+      const truoc = dr;
+      dr = Math.max(DR_MIN, dr * Math.sqrt(muc / Math.max(gapTB, muc)) * 0.97);
+      m.tran = Math.min(m.tran, truoc * 0.97);
+      chamN = 0; nhanhN = 0;
+      // ở đáy mà vẫn ~30 khung: có thể trình duyệt đang ghìm 30 → lấy 30 làm mốc, trả nét
+      if (dr <= DR_MIN + 0.01 && gapTB > 28 && ++dayN > 4 && muc < 20) { muc = 1000 / 30; dr = 1; m.tran = 1; for (const k in nho) { nho[k].dr = 1; nho[k].tran = 1; } }
+    } else if (nhanhN >= 40 && dr < m.tran) { dr = Math.min(m.tran, dr + 0.03); nhanhN = 0; }
+    m.dr = dr;
+  }
+  SN.tiLe = () => dr;
   // vẽ thử mọi cảnh một lần khi còn che màn hình: trình duyệt biên dịch shader xong trước khi phát, khỏi giật
   function warm(done) {
     const L = SN.worlds.map((w) => w.warmS != null ? w.warmS : (w.tu + w.den) / 2);
@@ -365,7 +409,7 @@
     quadGeo = new T.PlaneGeometry(2, 2);
     noise3 = SN_GLSL.noiseTexture(T);
     SN.uChung = { uN3: { value: noise3 }, uS: { value: 0 }, uRes: { value: new T.Vector2(1, 1) }, uPxA: { value: 0.001 } };
-    if (pinQ) quality = clamp(pinQ, 0.35, 1); else if (DT) quality = 0.85;
+    if (pinQ) quality = clamp(pinQ, 0.35, 1); else if (DT) dr = 0.85;
     buildPost();
     resize();
     window.addEventListener('resize', () => { needResize = true; });

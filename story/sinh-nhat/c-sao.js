@@ -9,6 +9,8 @@
   uniform vec3 uSs;      // nơi tia sáng ra đời (trên bề mặt)
   uniform float uBirth;  // loé sáng lúc ra đời
   uniform float uK;      // độ sáng tổng
+  uniform vec3 uVP[39];  // 3 vòng lửa × 13 điểm, tính sẵn trong JS (không đổi theo thời gian)
+  uniform vec4 uVB[3];   // mặt cầu bao từng vòng
   const vec3 SPOT = vec3(.0501, .9958, -.0753);
   vec2 cau(vec3 ro, vec3 rd, float r){ float b = dot(ro, rd), c = dot(ro, ro) - r * r, h = b * b - c; if (h < 0.) return vec2(-1.); h = sqrt(h); return vec2(-b - h, -b + h); }
   // vòng lửa plasma: đường cong nối hai chân A, B trên bề mặt, cao h
@@ -24,33 +26,33 @@
     return best;
   }
   // vòng lửa: tính giải tích khoảng cách từ tia nhìn tới từng đoạn của vòng → mịn, không lấm tấm
-  vec3 motVong(vec3 ro, vec3 rd, float tMax, vec3 A, vec3 B, float h, float w0, float k){
+  vec3 motVong(vec3 ro, vec3 rd, float tMax, int o, vec4 bs, float w0, float k){
     vec3 acc = vec3(0.);
-    { vec3 c = normalize(A + B) * (1. + h * .55); float rr = length(A - B) * .6 + h * .6 + .06; vec3 oc = ro - c; float bb = dot(oc, rd), cc = dot(oc, oc) - rr * rr; if (bb * bb - cc < 0.) return acc; }   // tia không đi gần vòng: bỏ qua
-    vec3 pa = vongP(A, B, h, 0.);
+    { vec3 oc = ro - bs.xyz; float bb = dot(oc, rd), cc = dot(oc, oc) - bs.w * bs.w; if (bb * bb - cc < 0.) return acc; }   // tia không đi gần vòng: bỏ qua
+    float R = w0 * 7.5;                         // xa ống lửa hơn thế thì ánh sáng ≈ 0: khỏi tra nhiễu
+    vec3 pa = uVP[o];
     for (int i = 1; i <= 12; i++) {
-      float tt = float(i) / 12.; vec3 pb = vongP(A, B, h, tt);
+      vec3 pb = uVP[o + i];
       vec3 u = pb - pa; float L = length(u); u /= L;
       vec3 w = ro - pa;
       float b = dot(rd, u), d = dot(rd, w), e = dot(u, w);
       float den = max(1. - b * b, 1e-4);
       float tr = clamp((b * e - d) / den, 0., tMax);
       float ts = clamp((e - b * d) / den, 0., L);
-      vec3 pr = ro + rd * tr, ps = pa + u * ts;
-      float dist = length(pr - ps);
-      float t01 = (float(i) - 1. + ts / L) / 12.;
-      float ww = w0 * (1. + .9 * sin(t01 * 9. + uS * .3)) * (.8 + .5 * pn(ps * 40.));
-      float th = .55 + .9 * sat(pn(ps * 110. + vec3(0., uS * .05, 0.)) * 2.2 + .5);     // sợi plasma
-      acc += vec3(1., .32, .12) * exp(-sq(dist / ww)) * th * k / sqrt(den);
+      float dist = length(ro + rd * tr - pa - u * ts);
+      if (dist < R) {
+        vec3 ps = pa + u * ts;
+        float t01 = (float(i) - 1. + ts / L) / 12.;
+        float ww = w0 * (1. + .9 * sin(t01 * 9. + uS * .3)) * (.8 + .5 * pn(ps * 40.));
+        float th = .55 + .9 * sat(pn(ps * 110. + vec3(0., uS * .05, 0.)) * 2.2 + .5);     // sợi plasma
+        acc += vec3(1., .32, .12) * exp(-sq(dist / ww)) * th * k / sqrt(den);
+      }
       pa = pb;
     }
     return acc;
   }
   vec3 vongLua(vec3 ro, vec3 rd, float tMax){
-    vec3 c = motVong(ro, rd, tMax, normalize(vec3(-.19, .96, -.2)), normalize(vec3(.12, .97, -.2)), .26, .016, .55);
-    c += motVong(ro, rd, tMax, normalize(vec3(.32, .93, -.13)), normalize(vec3(.38, .91, -.03)), .1, .009, .45);
-    c += motVong(ro, rd, tMax, normalize(vec3(-.42, .89, -.12)), normalize(vec3(-.34, .92, -.21)), .14, .011, .4);
-    return c;
+    return motVong(ro, rd, tMax, 0, uVB[0], .016, .55) + motVong(ro, rd, tMax, 13, uVB[1], .009, .45) + motVong(ro, rd, tMax, 26, uVB[2], .011, .4);
   }
   vec3 beMat(vec3 n, vec3 rd, float dist){
     float mu = max(dot(n, -rd), 0.);
@@ -171,7 +173,16 @@
     [53.0, 0.0, 1.9, 0.2, 0.0, 60],
   ]);
   SN.dung.push((T) => {
-    const mesh = SN.quad(FRAG, { uSs: { value: new T.Vector3(...SS) }, uBirth: { value: 0 }, uK: { value: 1 } });
+    // ba vòng lửa: [chân A, chân B, độ cao] → 13 điểm mỗi vòng + mặt cầu bao (giống công thức cũ trong shader)
+    const VONG = [[[-.19, .96, -.2], [.12, .97, -.2], .26], [[.32, .93, -.13], [.38, .91, -.03], .1], [[-.42, .89, -.12], [-.34, .92, -.21], .14]];
+    const vp = [], vb = [];
+    for (const [A0, B0, h] of VONG) {
+      const A = nrm(A0), B = nrm(B0);
+      for (let i = 0; i <= 12; i++) { const t = i / 12, m = nrm([A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t, A[2] + (B[2] - A[2]) * t]), k = 1 + h * Math.sin(Math.PI * t); vp.push(new T.Vector3(m[0] * k, m[1] * k, m[2] * k)); }
+      const c = nrm([A[0] + B[0], A[1] + B[1], A[2] + B[2]]), ck = 1 + h * 0.55, rr = Math.hypot(A[0] - B[0], A[1] - B[1], A[2] - B[2]) * 0.6 + h * 0.6 + 0.06;
+      vb.push(new T.Vector4(c[0] * ck, c[1] * ck, c[2] * ck, rr));
+    }
+    const mesh = SN.quad(FRAG, { uSs: { value: new T.Vector3(...SS) }, uBirth: { value: 0 }, uK: { value: 1 }, uVP: { value: vp }, uVB: { value: vb } });
     const tr = [];
     SN.them({
       ten: 'sao', tu: 0, den: 53, lop: 10, mesh, warmS: 14,

@@ -7,6 +7,7 @@
   const FRAG = `
   uniform vec2 uH; uniform vec2 uTr[${NT}]; uniform float uTrN; uniform float uI; uniform float uW; uniform float uTrK;
   void main(){
+    if (uI <= 0.) discard;                          // không cảnh nào gọi tia: bỏ ngay, khỏi tốn
     vec2 px = vUv * uRes;
     vec2 hp = uH * uRes;
     vec2 dd = px - hp;
@@ -20,6 +21,8 @@
       if (float(i) >= uTrN - 1.) break;
       vec2 a = uTr[i] * uRes, b = uTr[i + 1] * uRes;
       if (a.x < -1000. || b.x < -1000.) continue;
+      vec2 lo = min(a, b) - w * 2.2, hi = max(a, b) + w * 2.2;   // đuôi chỉ là sợi mảnh: điểm ảnh ở xa đoạn này thì bỏ qua
+      if (px.x < lo.x || px.y < lo.y || px.x > hi.x || px.y > hi.y) continue;
       vec2 ab = b - a, ap = px - a;
       float t = clamp(dot(ap, ab) / max(dot(ab, ab), 1e-3), 0., 1.);
       float d = length(ap - ab * t);

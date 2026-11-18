@@ -199,8 +199,10 @@
     // mây ti mảnh kéo dài theo gió, trăng soi bạc; trôi rất chậm
     vec2 cp = d.xz / (d.y + .1) + vec2(uS * .0035, uS * .001);
     vec2 cq = vec2(cp.x * .55 + cp.y * .3, cp.y * 2.6 - cp.x * .4);
-    float ci = smoothstep(.12, .5, fbm4(vec3(cq * .5, .2)) + .25 * pn(vec3(cq * 2.2, 1.1))) * smoothstep(.03, .3, d.y);
-    col = mix(col, vec3(.05, .062, .085) + vec3(.07, .08, .1) * pow(cm, 3.), ci * .32);
+    if (d.y > .03) {                                                     // mây chỉ có ở trời cao: dưới đó khỏi tính
+      float ci = smoothstep(.12, .5, fbm4(vec3(cq * .5, .2)) + .25 * pn(vec3(cq * 2.2, 1.1))) * smoothstep(.03, .3, d.y);
+      col = mix(col, vec3(.05, .062, .085) + vec3(.07, .08, .1) * pow(cm, 3.), ci * .32);
+    }
     // sao băng: đầu sáng xanh trắng, đuôi dài; vệt khí phát sáng còn lại sau đó
     if (uMI2 > 0. || uTrain > 0.) {
       vec3 ab = uMB - uMA; vec3 head = normalize(uMA + ab * uMT);
@@ -222,11 +224,13 @@
       col += uTrain * vec3(.35, .75, .55) * exp(-dl2 * dl2 / (px * px * (3. + uTrain * 0.))) * smoothstep(0., .15, t2) * 1.4;
     }
     // núi xa hai lớp, chìm trong sương
-    float m1 = nui(az, 2.2, .010, .034);
-    float m2 = nui(az + 1.3, 3.6, .003, .02);
     vec3 fogC = vec3(.072, .088, .118) + vec3(.03, .035, .04);
-    if (alt < m1) col = mix(col, vec3(.055, .068, .092), .85);
-    if (alt < m2) col = mix(col, vec3(.042, .052, .072), .9);
+    if (alt < .046) {                                                    // núi xa chỉ sát chân trời
+      float m1 = nui(az, 2.2, .010, .034);
+      float m2 = nui(az + 1.3, 3.6, .003, .02);
+      if (alt < m1) col = mix(col, vec3(.055, .068, .092), .85);
+      if (alt < m2) col = mix(col, vec3(.042, .052, .072), .9);
+    }
     if (alt < .0) col = fogC * .9;
     gl_FragColor = vec4(col, 1.);
   }`;
