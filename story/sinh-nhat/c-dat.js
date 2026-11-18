@@ -293,13 +293,13 @@
       vec3 ax = normalize(cross(uMayD, vec3(0., 1., 0.))), ay = cross(ax, uMayD);
       vec2 q = vec2(dot(d, ax), dot(d, ay)) * vec2(3.2, 7.5);                 // toạ độ quanh tâm đám mây (kéo dài theo chiều ngang)
       float shape = 1. - smoothstep(.25, 1., length(q));
-      float m = shape * 1.15 + fbm4(vec3(q * 1.6, 1.7)) * .9 + pn(vec3(q * 4.3, 3.1)) * .22 - .62;
-      float dens = smoothstep(0., .35, m);
+      float m = shape * 1.2 + fbm4(vec3(q * 1.3, 1.7)) * .85 + pn(vec3(q * 3.1, 3.1)) * .1 - .62;
+      float dens = smoothstep(0., .45, m);
       float lit = smoothstep(-.2, .5, fbm3(vec3(q * 2.1 + vec2(.3, -.6), 5.2)) + q.y * .3);    // mặt trên hứng trăng sáng hơn
       vec3 cMoon = mix(vec3(.03, .036, .05), vec3(.075, .085, .11), lit);
       col = mix(col, cMoon, dens * .9);
-      float core = exp(-dot(q, q) * 9.);
-      col += vec3(.5, 1., .68) * uMay * (dens * (.1 + 1.6 * core) * (.6 + .6 * lit) + exp(-dot(q, q) * 2.) * .12);
+      float core = exp(-dot(q, q) * 5.);
+      col += vec3(.5, 1., .68) * uMay * (dens * (.08 + 1.2 * core) * (.7 + .5 * lit) + exp(-dot(q, q) * 1.6) * .1);
     }
     // núi xa hai lớp, chìm trong sương
     vec3 fogC = vec3(.072, .088, .118) + vec3(.03, .035, .04);
