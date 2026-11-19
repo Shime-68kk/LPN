@@ -208,7 +208,7 @@
 
   const LOI = [
     'Chúc em có một tuổi mười chín thật rực rỡ.',
-    'Anh thật may mắn. Món quà lớn nhất năm nay của anh, là em.',
+    'Mong em luôn bình an, luôn vui, và có thật nhiều điều em mong ước.',
     'Hôm nay có lẽ mình chưa gặp được nhau, dù với anh đây là ngày quan trọng nhất trong năm. Nhưng không sao đâu, anh vẫn ở đây chờ em. Đợi em học quân sự xong, anh sẽ đến tìm em, rồi mình bù cho nhau một ngày sinh nhật thật vui nhé.',
   ];
 
