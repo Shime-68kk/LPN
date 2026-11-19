@@ -942,7 +942,7 @@
       "early": { "quang": "2026-11-18T00:00:00+07:00" },
       "scene": "dem",
       "cast": ["quang"],
-      "announce": { "kicker": "Đúng 0 giờ, ngày 24/11", "title": "Đã có chương mới!", "text": "Chương 23 · Phút đầu tiên", "ok": "Xem đếm ngược", "later": "Để sau" },
+      "announce": { "theme": "sao", "kicker": "Chương 23 · Ra mắt 0:00 · 24/11", "title": "Phút đầu tiên", "text": "Có một tia sáng đã lên đường từ rất lâu, trước cả khi em biết đến nó. Đúng nửa đêm, nó sẽ tới. Đeo tai nghe vào, và đừng đến muộn nha.", "ok": "Xem đếm ngược", "later": "Để sau" },
       "game": { "page": "sinh-nhat/", "title": "Phút đầu tiên", "text": "Đeo tai nghe vào, xoay ngang điện thoại, tắt bớt đèn nha.", "btn": "Bấm play" },
       "lines": [
         { "who": "none", "text": "Ngày thứ 110" }
