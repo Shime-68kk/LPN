@@ -64,6 +64,7 @@ self.addEventListener('install', (e) => { self.skipWaiting(); e.waitUntil(sync(t
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys()
     .then((names) => Promise.all(names.filter((n) => !KEEP.includes(n)).map((n) => caches.delete(n))))
+    .then(() => caches.open(CACHE)).then((c) => c.delete(keyOf(ROOT + 'story/sinh-nhat/')))   // bỏ bản trang phim lưu trước khi có ô nhập mã
     .then(() => self.clients.claim()).catch(() => {}));
 });
 
@@ -163,9 +164,16 @@ self.addEventListener('fetch', (e) => {
   }
 });
 
+// Trang phim chương 23 trước giờ mở: luôn lấy bản mới từ mạng (bản lưu cũ có thể chưa có ô nhập mã).
+// Mất mạng thì báo mất mạng, không mở bản đã lưu. Từ giờ mở trở đi: như mọi trang khác.
+const SN_PAGE = new URL('story/sinh-nhat/', ROOT).pathname, SN_MO = Date.parse('2026-11-24T00:00:00+07:00');
+
 async function serve(e, req, url) {
   const key = keyOf(url), ext = extOf(url), range = req.headers.get('range');
   const page = req.mode === 'navigate' || ext === 'html' || ext === '';
+  if (page && Date.now() < SN_MO && (url.pathname === SN_PAGE || url.pathname === SN_PAGE + 'index.html')) {
+    return fetch(req, { cache: 'no-store' }).then((res) => { if (storable(res)) e.waitUntil(put(key, res.clone(), req.url).catch(() => {})); return res; }, () => offlinePage());
+  }
   let fresh = page || ext === 'json' || ext === 'txt';
   if (!fresh && (ext === 'js' || ext === 'css')) { const v = url.searchParams.get('v'), m = await meta(); fresh = !v || m.v[key] !== v; }
   const c = await caches.open(CACHE);
