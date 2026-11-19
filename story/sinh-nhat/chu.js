@@ -21,8 +21,8 @@
     [193.5, 199.5, 'Việt Nam. Sắp nửa đêm.'],
   ];
   const KET = [
-    [249.0, 'Tia sáng ấy rời ngôi sao Eta Cassiopeiae vào tháng Sáu năm 2007,<br>trước khi em chào đời.'],
-    [254.6, 'Nó đi mười chín năm. Không tua nhanh được.'],
+    [249.0, 'Tia sáng ấy rời ngôi sao Eta Cassiopeiae năm 2007,<br>năm em chào đời.'],
+    [254.6, 'Nó đi mười chín năm, bằng đúng tuổi em. Không tua nhanh được.'],
     [259.0, 'Và tới đúng đêm nay.'],
     [263.6, 'Chúc mừng sinh nhật mười chín tuổi.'],
   ];
@@ -30,7 +30,7 @@
   // dòng năm / giờ ở chân màn hình
   function namAt(S) {
     if (S < 7) return '';
-    if (S < 52) return 'Tháng 6 · 2007';
+    if (S < 52) return '2007';
     const yr = (a, b, t) => String(Math.floor(a + (b - a) * t));
     if (S < 100) return yr(2007.6, 2011.7, (S - 52) / 48);
     if (S < 140) { const t = (S - 100) / 40; return yr(2011.7, 2014.0, t * t * (3 - 2 * t) * 0.6 + t * 0.4); }
