@@ -699,9 +699,11 @@
       // Bảng báo kiểu cuộn băng (Băng số 1) có hình cuộn băng; chương thường chỉ có chữ;
       // sâu thám tử chỉ còn dùng cho hồ sơ vụ án, ảnh bìa cho bài hát mới.
       const tape = a.theme === 'tape';
+      const sao = a.theme === 'sao';   // Chương 23: mẩu giấy viết tay như chương thường, thêm nét bút vẽ một ngôi sao băng ở góc
       const plain = !tape && !it.song && !it.isCase;
       $('news').classList.toggle('is-tape', tape);
       $('news').classList.toggle('is-plain', plain);
+      $('news-sky').hidden = !sao;
       $('news-logo').hidden = tape || plain;
       $('news-art').hidden = !tape;
       if (tape) { const lab = $('news-art').querySelector('text'); if (lab) lab.textContent = a.tape || 'BĂNG SỐ 1'; } // Băng số 2 ghi nhãn riêng
@@ -713,7 +715,7 @@
         const tick = () => {
           const s = Math.max(0, Math.round((at - Date.now()) / 1000));
           // Mẩu giấy viết tay: đếm bằng lời (còn 9 tiếng 12 phút nữa); cuộn băng: đồng hồ số.
-          if (plain) { const h = Math.floor(s / 3600), m = Math.ceil(s % 3600 / 60); $('news-count').textContent = s ? 'còn ' + (h ? h + ' tiếng ' : '') + (m ? m + ' phút ' : '') + 'nữa' : 'mở rồi đó'; }
+          if (plain) { const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.ceil(s % 3600 / 60); $('news-count').textContent = s ? 'còn ' + (d ? d + ' ngày ' : '') + (h ? h + ' tiếng ' : '') + (!d && m ? m + ' phút ' : '') + 'nữa' : 'mở rồi đó'; }
           else $('news-count').textContent = s ? 'Còn ' + pad(Math.floor(s / 3600)) + ':' + pad(Math.floor(s % 3600 / 60)) + ':' + pad(s % 60) : 'Đã mở';
         };
         tick();
