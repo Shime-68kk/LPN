@@ -65,7 +65,7 @@
     return m;
   }
   const PRE = `uniform sampler2D tS; uniform vec2 uTx; uniform float uThr; uniform vec2 uSc; in vec2 vUv;
-  vec3 tap(vec2 o){ return texture(tS, clamp(vUv * uSc + o * uTx, uTx * .5, uSc - uTx * .5)).rgb; }   // không đọc lấn ra ngoài vùng vừa vẽ (độ phân giải động)
+  vec3 tap(vec2 o){ vec3 v = texture(tS, clamp(vUv * uSc + o * uTx, uTx * .5, uSc - uTx * .5)).rgb; return dot(v, v) < 1e9 ? v : vec3(0.); }   // điểm hỏng số (NaN/vô cực) coi là đen, không loé thành vệt   // không đọc lấn ra ngoài vùng vừa vẽ (độ phân giải động)
   void main(){ // lọc 13 điểm (kiểu Call of Duty) + cắt ngưỡng mềm, chống nháy điểm sáng đơn lẻ
     vec3 a = tap(vec2(-2,-2)), b = tap(vec2(0,-2)), c = tap(vec2(2,-2)), d = tap(vec2(-1,-1)), e = tap(vec2(1,-1)), f = tap(vec2(-2,0)), g = tap(vec2(0,0));
     vec3 h = tap(vec2(2,0)), i = tap(vec2(-1,1)), j = tap(vec2(1,1)), k = tap(vec2(-2,2)), l = tap(vec2(0,2)), m = tap(vec2(2,2));
@@ -102,23 +102,24 @@
   vec3 aces(vec3 x){ return clamp(x * (2.51 * x + .03) / (x * (2.43 * x + .59) + .14), 0., 1.); }
   // vùng ảnh hợp lệ: khung chỉ vẽ vào góc (độ phân giải động); đọc lấn ra ngoài sẽ dính màu của khung cũ thành vệt ở mép phải, mép trên
   vec2 cl(vec2 p){ return clamp(p, uTxS * .5, uSc - uTxS * .5); }
+  vec3 tx(vec2 p){ vec3 v = texture(tScene, p).rgb; return dot(v, v) < 1e9 ? v : vec3(0.); }
   vec3 scn(vec2 uv){
     vec2 su = cl(uv * uSc);
-    vec3 c = texture(tScene, su).rgb;
+    vec3 c = tx(su);
     // làm nét viền: so với 4 điểm ảnh kề, đẩy chênh lệch lên nhưng kẹp trong khoảng của chúng (không sinh viền sáng giả)
     if (uSharp > .001) {
-      vec3 n = texture(tScene, cl(su + vec2(0., uTxS.y))).rgb, s = texture(tScene, cl(su - vec2(0., uTxS.y))).rgb;
-      vec3 e = texture(tScene, cl(su + vec2(uTxS.x, 0.))).rgb, w = texture(tScene, cl(su - vec2(uTxS.x, 0.))).rgb;
+      vec3 n = tx(cl(su + vec2(0., uTxS.y))), s = tx(cl(su - vec2(0., uTxS.y)));
+      vec3 e = tx(cl(su + vec2(uTxS.x, 0.))), w = tx(cl(su - vec2(uTxS.x, 0.)));
       vec3 mn = min(c, min(min(n, s), min(e, w))), mx = max(c, max(max(n, s), max(e, w)));
       c = clamp(c + (4. * c - n - s - e - w) * uSharp, mn, mx);
     }
     // lệch màu ở mép (ống kính), nhoè hướng tâm khi lao nhanh
     vec2 dc = uv - .5; float r2 = dot(dc, dc);
     vec2 o = dc * r2 * uCA;
-    if (uCA > 1e-4) { vec3 c0 = texture(tScene, su).rgb; c.r += texture(tScene, cl((uv - o) * uSc)).r - c0.r; c.b += texture(tScene, cl((uv + o) * uSc)).b - c0.b; }
+    if (uCA > 1e-4) { vec3 c0 = tx(su); c.r += tx(cl((uv - o) * uSc)).r - c0.r; c.b += tx(cl((uv + o) * uSc)).b - c0.b; }
     if (uZoomBlur > .001) {
       vec2 dz = (uv - uZC) * uZoomBlur * .06; vec3 acc = c;
-      for (int i = 1; i < 9; i++) { float fi = float(i); acc += texture(tScene, cl((uv - dz * fi) * uSc)).rgb * (1. - fi / 10.); }
+      for (int i = 1; i < 9; i++) { float fi = float(i); acc += tx(cl((uv - dz * fi) * uSc)) * (1. - fi / 10.); }
       c = acc / 5.4;
     }
     return max(c, 0.);
@@ -160,6 +161,7 @@
   void main(){
     vec2 uv = clF(gl_FragCoord.xy * 2. * uTxF);
     vec3 c = texture(tS, uv).rgb;   // một lần lọc tuyến tính ở góc giữa 4 điểm ảnh = trung bình 2×2
+    if (!(dot(c, c) < 1e9)) c = vec3(0.);
     float d = min(min(texture(tD, clF(uv + vec2(-.5, -.5) * uTxF)).r, texture(tD, clF(uv + vec2(.5, -.5) * uTxF)).r), min(texture(tD, clF(uv + vec2(-.5, .5) * uTxF)).r, texture(tD, clF(uv + vec2(.5, .5) * uTxF)).r));
     gl_FragColor = vec4(min(c, vec3(40.)), coc(d));
   }`;
@@ -190,6 +192,7 @@
   void main(){
     vec2 uv = gl_FragCoord.xy * uTxF;
     vec3 col = texture(tS, uv).rgb;
+    if (!(dot(col, col) < 1e9)) col = vec3(0.);
     float d = texture(tD, uv).r;
     if (uDofOn > .5) {
       float c = coc(d) * 2.;
