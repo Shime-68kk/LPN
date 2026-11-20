@@ -166,7 +166,7 @@ self.addEventListener('fetch', (e) => {
 
 // Trang phim chương 23 trước giờ mở: luôn lấy bản mới từ mạng (bản lưu cũ có thể chưa có ô nhập mã).
 // Mất mạng thì báo mất mạng, không mở bản đã lưu. Từ giờ mở trở đi: như mọi trang khác.
-const SN_PAGE = new URL('story/sinh-nhat/', ROOT).pathname, SN_MO = Date.parse('2026-11-24T00:00:00+07:00');
+const SN_PAGE = new URL('story/sinh-nhat/', ROOT).pathname, SN_MO = Date.parse('2026-11-21T00:00:00+07:00');   // mở sớm 21/11 theo lời anh Quang: từ nay như mọi trang khác
 
 async function serve(e, req, url) {
   const key = keyOf(url), ext = extOf(url), range = req.headers.get('range');

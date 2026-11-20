@@ -648,9 +648,9 @@
       const fc = force && list.find((c) => c.id === force && c.announce);
       if (fc) { this.item = { key: fc.id, a: fc.announce, href: '../story/?play=' + encodeURIComponent(fc.id), openAt: fc.openAt, preview: true }; this.show(); return; }
       if (this.item) return;
-      const ch = list.find((c) => c.announce && !done[c.id] && !seen[c.id]);
+      const ch = list.find((c) => c.announce && !done[c.id] && !seen[c.announce.key || c.id]);   // announce.key: báo lại khi chương đổi từ đếm ngược sang đã mở
       const cs = list.find((c) => c.case && c.case.announce && done[c.id] && !flags[c.case.id + 'Done'] && !seen[c.case.announce.key]);
-      if (ch) this.item = { key: ch.id, a: ch.announce, href: '../story/?play=' + encodeURIComponent(ch.id), openAt: ch.openAt }; // chưa tới giờ mở: trang cốt truyện hiện đếm ngược
+      if (ch) this.item = { key: ch.announce.key || ch.id, a: ch.announce, href: '../story/?play=' + encodeURIComponent(ch.id), openAt: ch.openAt }; // chưa tới giờ mở: trang cốt truyện hiện đếm ngược
       else if (cs) this.item = { key: cs.case.announce.key, a: cs.case.announce, href: '../story/' + cs.case.page, isCase: true };
       this.show();
     },
