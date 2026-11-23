@@ -946,6 +946,38 @@
       "lines": [
         { "who": "none", "text": "Ngày thứ 110" }
       ]
+    },
+    {
+      "id": "c26",
+      "title": "Nửa tuổi đứng ngoài cửa",
+      "cost": 0,
+      "anyOrder": true,
+      "scene": "dem",
+      "cast": ["quang"],
+      "announce": { "key": "c26", "kicker": "Chương 24 · Mới", "title": "Nửa tuổi đứng ngoài cửa", "text": "Một chương nhỏ cho ngày sinh nhật em. Đọc hết sẽ có thiệp nha.", "ok": "Đọc ngay", "later": "Để sau" },
+      "game": { "page": "../home/?thiep=19", "title": "Có thiệp cho em", "text": "Anh có một tấm thiệp sinh nhật cho em. Trong thiệp còn món quà Phút đầu tiên nữa.", "btn": "Mở thiệp" },
+      "lines": [
+        { "who": "none", "text": "24/11 · Ngày thứ 110" },
+        { "scene": "dem" },
+        { "cast": ["quang"] },
+        { "who": "ke", "text": "Mười hai giờ đêm. Ở Thái Nguyên, em ngủ rồi. Ở Hà Nội, cậu vẫn thức." },
+        { "who": "ke", "text": "Cậu ngồi đếm tuổi mười tám của em. Ba trăm sáu mươi lăm ngày." },
+        { "who": "ke", "text": "Một trăm mười ngày cuối, cậu ở bên em." },
+        { "who": "ke", "text": "Những ngày trước đó, cậu cũng ở đấy. Chỉ là đứng ngoài cửa." },
+        { "who": "ke", "text": "Đứng gần nửa năm. Không gõ nữa. Cũng không bỏ đi." },
+        { "who": "ke", "text": "Rồi em mở cửa, bằng một câu hỏi thăm mà em cứ tưởng chẳng có gì." },
+        { "scene": "nang" },
+        { "who": "ke", "text": "Năm giờ sáng, còi thổi. Em dậy, gấp chăn, xếp hàng, như mọi sáng." },
+        { "who": "ke", "text": "Chẳng ai trong đó biết hôm nay là ngày gì." },
+        { "who": "ke", "text": "Ở Hà Nội, có một người vẫn chưa ngủ. Thức để là người đầu tiên biết." },
+        { "who": "quang", "text": "Chúc mừng sinh nhật em." },
+        { "scene": "dem" },
+        { "cast": ["quang", "thuy"] },
+        { "who": "ke", "text": "Tuổi mười tám, cậu đến muộn. Nửa tuổi đứng ngoài cửa." },
+        { "who": "ke", "text": "Tuổi mười chín, em không phải mở cửa nữa. Cậu ở trong nhà từ ngày đầu tiên rồi." },
+        { "who": "ke", "text": "Mít ướt mười chín tuổi, đọc đến đây mà khóc cũng được. Cậu tập lau rồi." },
+        { "who": "quang", "text": "Mười chín tuổi, mình đi cùng nhau từ đầu nhé." }
+      ]
     }
   ]
 }
