@@ -694,7 +694,7 @@
     },
     show() {
       const it = this.item;
-      if (!it || document.documentElement.classList.contains('need-lock') || !$('news').hidden || !$('tram').hidden) return;
+      if (!it || document.documentElement.classList.contains('need-lock') || !$('news').hidden || !$('tram').hidden || (window.SN19 && SN19.open)) return;
       const a = it.a;
       // Bảng báo kiểu cuộn băng (Băng số 1) có hình cuộn băng; chương thường chỉ có chữ;
       // sâu thám tử chỉ còn dùng cho hồ sơ vụ án, ảnh bìa cho bài hát mới.
@@ -790,7 +790,7 @@
   if (AskPush.ready()) {
     let tries = 0;
     const wait = setInterval(() => {
-      const free = !document.documentElement.classList.contains('need-lock') && $('news').hidden && $('tram').hidden && $('backdrop').hidden;
+      const free = !document.documentElement.classList.contains('need-lock') && $('news').hidden && $('tram').hidden && $('backdrop').hidden && !(window.SN19 && SN19.open);
       if (free) { clearInterval(wait); setTimeout(() => { if ($('news').hidden) AskPush.show(); }, 1200); }
       else if (++tries > 900) clearInterval(wait);
     }, 1000);
@@ -910,10 +910,12 @@
       pendingSyncReload = false;
       if (reloadOnce()) return;
     }
-    setTimeout(() => { Tram.show(); News.show(); }, 400);
+    setTimeout(() => { if (!(window.SN19 && SN19.show())) Tram.show(); News.show(); }, 400);
   };
   Lock.syncPrompt();
-  setTimeout(() => Tram.show(), 300); // sau khi màn khoá (nếu có) đã bật
+  // Thiệp sinh nhật 24/11 (sinh-nhat.js) bật trước; đóng thiệp thì mới tới các bảng báo khác.
+  if (window.SN19) SN19.onClose = () => News.show();
+  setTimeout(() => { if (!(window.SN19 && SN19.show())) Tram.show(); }, 300); // sau khi màn khoá (nếu có) đã bật
   $('lock-who').addEventListener('click', async (e) => {
     const b = e.target.closest('button');
     const S = window.Sync;
